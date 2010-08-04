@@ -1,0 +1,282 @@
+module flexim.linux.process;
+
+import flexim.all;
+
+import std.c.string;
+
+const uint LD_STACK_BASE = 0xc0000000;
+const uint LD_MAX_ENVIRON = 0x40000; /* 16KB for environment */
+const uint LD_STACK_SIZE = 0x100000; /* 8MB stack size */
+
+//extern(C)
+//	extern __gshared char** environ;
+
+struct FdMap {
+	public:
+		int fd = -1;
+		string filename = "NULL";
+		int mode = 0;
+		int flags = 0;
+		bool isPipe = false;
+		int readPipeSource = 0;
+		ulong fileOffset = 0;
+};
+
+class Process {
+	public:
+		this(string cwd, string[] args) {
+			this.cwd = cwd;
+			this.args = args;
+
+			this.argc = this.args.length;
+
+			foreach(arg; this.args) {
+				this.argv = this.argv ~ cast(char*) toStringz(arg);
+			}
+
+			this.uid = 100;
+			this.euid = 100;
+			this.gid = 100;
+			this.egid = 100;
+
+			this.pid = 100;
+			this.ppid = 99;
+		}
+
+		void loadInternal(Thread thread, ELF32Binary binary) {
+			uint data_base = 0;
+			uint data_size = 0;
+			uint envAddr, argAddr;
+			uint stack_ptr;
+
+			foreach(phdr; binary.phdrs) {
+				if(phdr.p_type == PT_LOAD && phdr.p_vaddr > data_base) {
+					data_base = phdr.p_vaddr;
+					data_size = phdr.p_memsz;
+				}
+			}
+
+			foreach(shdr; binary.shdrs) {
+				if(shdr.sh_type == SHT_PROGBITS || shdr.sh_type == SHT_NOBITS) {
+
+					Elf32_Word new_section_type, new_section_flags;
+					Elf32_Addr new_section_addr;
+
+					new_section_addr = shdr.sh_addr;
+
+					if(shdr.sh_size > 0 && (shdr.sh_flags & SHF_ALLOC)) {
+						logging[LogCategory.PROCESS].infof("Loading %s (%d bytes) at address 0x%08x", binary.getSectionName(shdr), shdr.sh_size, new_section_addr);
+
+						MemoryAccessType perm = MemoryAccessType.INIT | MemoryAccessType.READ;
+
+						/* Permissions */
+						if(shdr.sh_flags & SHF_WRITE)
+							perm |= MemoryAccessType.WRITE;
+						if(shdr.sh_flags & SHF_EXECINSTR)
+							perm |= MemoryAccessType.EXEC;
+
+						thread.mem.map(shdr.sh_addr, shdr.sh_size, perm);
+
+						if(shdr.sh_type == SHT_NOBITS) {
+							thread.mem.zero(shdr.sh_addr, shdr.sh_size);
+						} else {
+							ubyte* buf = binary.ptr!(ubyte)(shdr.sh_offset);
+							thread.mem.initBlock(shdr.sh_addr, shdr.sh_size, buf);
+						}
+					}
+				} else if(shdr.sh_type == SHT_DYNAMIC || shdr.sh_type == SHT_DYNSYM) {
+					logging[LogCategory.PROCESS].fatal("dynamic linking is not supported");
+				}
+			}
+
+			this.prog_entry = binary.ehdr.e_entry;
+
+			const uint STACK_BASE = 0xc0000000;
+			const uint MMAP_BASE = 0xd4000000;
+			const uint MAX_ENVIRON = (16 * 1024);
+			const uint STACK_SIZE = (1024 * 1024);
+
+			thread.mem.map(STACK_BASE - STACK_SIZE, STACK_SIZE, MemoryAccessType.READ | MemoryAccessType.WRITE);
+			thread.mem.zero(STACK_BASE - STACK_SIZE, STACK_SIZE);
+
+			stack_ptr = STACK_BASE - MAX_ENVIRON;
+
+			thread.intRegs[StackPointerReg] = stack_ptr;
+
+			/*write argc to stack*/
+			thread.mem.writeWord(stack_ptr, this.argc);
+			thread.setSyscallArg(0, this.argc);
+			stack_ptr += 4;
+
+			/*skip stack_ptr past argv pointer array*/
+			argAddr = stack_ptr;
+			thread.setSyscallArg(1, argAddr);
+			stack_ptr += (this.argc + 1) * 4;
+
+			/*skip env pointer array*/
+			envAddr = stack_ptr;
+			foreach(i, e; this.env) {
+				stack_ptr += 4;
+			}
+			stack_ptr += 4;
+
+			/*write argv to stack*/
+			foreach(i, arg; this.argv) {
+				thread.mem.writeWord(argAddr + i * Addr.sizeof, stack_ptr);
+				thread.mem.writeString(stack_ptr, arg);
+				/*0 already at the end of the string as done by initialization*/
+				stack_ptr += strlen(arg) + 1;
+			}
+
+			/*0 already at the end argv pointer array*/
+
+			/*write env to stack*/
+			foreach(i, e; this.env) {
+				thread.mem.writeWord(envAddr + i * Addr.sizeof, stack_ptr);
+				thread.mem.writeString(stack_ptr, e);
+				stack_ptr += strlen(e) + 1;
+			}
+
+			/*0 already at the end argv pointer array*/
+
+			/*stack overflow*/
+			if(stack_ptr + 4 >= STACK_BASE) {
+				logging[LogCategory.PROCESS].fatal("Environment overflow. Need to increase MAX_ENVIRON.");
+			}
+
+			/* initialize brk point to 4k byte boundary */
+			Addr abrk = data_base + data_size + MEM_PAGESIZE;
+			abrk -= abrk % MEM_PAGESIZE;
+
+			this.brk = abrk;
+
+			this.mmap_brk = MMAP_BASE;
+
+			thread.npc = this.prog_entry;
+			thread.nnpc = thread.npc + Addr.sizeof;
+		}
+
+		bool load(Thread thread) {
+			ELF32Binary binary = new ELF32Binary();
+
+			binary.parse(this.args[0]);
+
+			this.loadInternal(thread, binary);
+
+			return true;
+		}
+
+		// map simulator fd sim_fd to target fd tgt_fd
+		void dup_fd(int sim_fd, int tgt_fd) {
+			if(tgt_fd < 0 || tgt_fd > MAX_FD)
+				logging[LogCategory.PROCESS].panicf("Process.dup_fd tried to dup past MAX_FD (%d)", tgt_fd);
+
+			FdMap fdo = this.fd_map[tgt_fd];
+			fdo.fd = sim_fd;
+		}
+
+		// generate new target fd for sim_fd
+		int alloc_fd(int sim_fd, string filename, int flags, int mode, bool pipe) {
+			// in case open() returns an error, don't allocate a new fd
+			if(sim_fd == -1)
+				return -1;
+
+			// find first free target fd
+			for(int free_fd = 0; free_fd <= MAX_FD; ++free_fd) {
+				FdMap fdo = this.fd_map[free_fd];
+				if(fdo.fd == -1) {
+					fdo.fd = sim_fd;
+					fdo.filename = filename;
+					fdo.mode = mode;
+					fdo.fileOffset = 0;
+					fdo.flags = flags;
+					fdo.isPipe = pipe;
+					fdo.readPipeSource = 0;
+					return free_fd;
+				}
+			}
+
+			logging[LogCategory.PROCESS].panic("Process.alloc_fd: out of file descriptors!");
+			return 0;
+		}
+
+		// free target fd (e.g., after close)
+		void free_fd(int tgt_fd) {
+			FdMap fdo = this.fd_map[tgt_fd];
+			if(fdo.fd == -1)
+				logging[LogCategory.PROCESS].warnf("Process.free_fd: request to free unused fd %d", tgt_fd);
+
+			fdo.fd = -1;
+			fdo.filename = "NULL";
+			fdo.mode = 0;
+			fdo.fileOffset = 0;
+			fdo.flags = 0;
+			fdo.isPipe = false;
+			fdo.readPipeSource = 0;
+		}
+
+		// look up simulator fd for given target fd
+		int sim_fd(int tgt_fd) {
+			if(tgt_fd > MAX_FD)
+				return -1;
+
+			return this.fd_map[tgt_fd].fd;
+		}
+
+		// look up simulator fd_map object for a given target fd
+		FdMap* sim_fd_obj(int tgt_fd) {
+			if(tgt_fd > MAX_FD)
+				logging[LogCategory.PROCESS].panic("sim_fd_obj called in fd out of range.");
+
+			return &this.fd_map[tgt_fd];
+		}
+
+		string fullPath(string filename) {
+			if(filename[0] == '/' || this.cwd == null || this.cwd == "")
+				return filename;
+
+			string full = this.cwd;
+			if(this.cwd[this.cwd.length - 1] != '/')
+				full ~= '/';
+
+			return full ~ filename;
+		}
+
+		mixin Property!(string, "cwd", PROTECTED, PUBLIC, PRIVATE);
+
+		mixin Property!(string[], "args");
+
+		mixin Property!(int, "argc");
+
+		mixin Property!(char*[], "argv");
+
+		mixin Property!(char*[], "env");
+
+		mixin Property!(char*, "prog_fname");
+
+		mixin Property!(Addr, "brk");
+
+		mixin Property!(Addr, "mmap_brk");
+
+		mixin Property!(Addr, "prog_entry");
+
+		// Id of the owner of the process
+		mixin Property!(uint, "uid");
+
+		mixin Property!(uint, "euid");
+
+		mixin Property!(uint, "gid");
+
+		mixin Property!(uint, "egid");
+
+		// pid of the process and it's parent
+		mixin Property!(uint, "pid");
+
+		mixin Property!(uint, "ppid");
+
+		mixin Property!(Addr, "argvp");
+
+		// file descriptor remapping support
+		static const int MAX_FD = 256; // max legal fd value
+		FdMap fd_map[MAX_FD + 1];
+}

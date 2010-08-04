@@ -1,0 +1,56 @@
+http://cloc.sourceforge.net v 1.51  T=0.5 s (78.0 files/s, 21948.0 lines/s)
+-----------------------------------------------------------------------------------------------------
+File                                                              blank        comment           code
+-----------------------------------------------------------------------------------------------------
+/tmp/L1e1gnAtag/Flexim5/flexim/isa/mips/isa.d                        17              0           1862
+/tmp/L1e1gnAtag/Flexim5/flexim/memsys/moesi.d                       305              1           1041
+/tmp/L1e1gnAtag/Flexim5/flexim/linux/syscall.d                       88             19            583
+/tmp/L1e1gnAtag/Flexim5/flexim/util/elf.d                            88             12            430
+/tmp/L1e1gnAtag/Flexim5/flexim/isa/mips/integer.d                   101              0            417
+/tmp/L1e1gnAtag/Flexim5/flexim/memsys/mem.d                         101             55            379
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/instruction.d                     84             12            347
+/tmp/L1e1gnAtag/Flexim5/flexim/memsys/cache.d                       107              0            323
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/bpred.d                           77              1            321
+/tmp/L1e1gnAtag/Flexim5/flexim/isa/mips/mem.d                        87              0            299
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/ooo/thread.d                      94             37            276
+/tmp/L1e1gnAtag/Flexim5/flexim/isa/mips/branch.d                     61              0            259
+/tmp/L1e1gnAtag/Flexim5/flexim/util/events.d                         94              7            254
+/tmp/L1e1gnAtag/Flexim5/flexim/linux/process.d                       72             23            187
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/ooo/common.d                      51              0            164
+/tmp/L1e1gnAtag/Flexim5/flexim/memsys/common.d                       64              0            164
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/registers.d                       40              8            142
+/tmp/L1e1gnAtag/Flexim5/flexim/simulators/cpu.d                      42              0            124
+/tmp/L1e1gnAtag/Flexim5/flexim/simulators/memsys.d                   47              4            124
+/tmp/L1e1gnAtag/Flexim5/flexim/isa/mips/misc.d                       33              0            102
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/thread.d                          46              0            100
+/tmp/L1e1gnAtag/Flexim5/flexim/util/logging.d                        26             10            100
+/tmp/L1e1gnAtag/Flexim5/flexim/isa/mips/basic.d                      22              0             95
+/tmp/L1e1gnAtag/Flexim5/flexim/simulators/common.d                   30              1             94
+/tmp/L1e1gnAtag/Flexim5/flexim/memsys/predefined.d                   43              1             84
+/tmp/L1e1gnAtag/Flexim5/flexim/memsys/mmu.d                          29              0             78
+/tmp/L1e1gnAtag/Flexim5/flexim/util/bits.d                           21             20             70
+/tmp/L1e1gnAtag/Flexim5/flexim/util/queues.d                         19              0             58
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/processor.d                       11              0             48
+/tmp/L1e1gnAtag/Flexim5/flexim/all.d                                 10              0             45
+/tmp/L1e1gnAtag/Flexim5/flexim/memsys/tm.d                           16             12             33
+/tmp/L1e1gnAtag/Flexim5/flexim/util/faults.d                          9              0             32
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/core.d                             7              0             31
+/tmp/L1e1gnAtag/Flexim5/flexim/cpu/fu.d                               9              0             31
+/tmp/L1e1gnAtag/Flexim5/build.xml                                     1              0             26
+/tmp/L1e1gnAtag/Flexim5/flexim/util/misc.d                            4              0             13
+/tmp/L1e1gnAtag/Flexim5/flexim/main.d                                 6              2             10
+/tmp/L1e1gnAtag/Flexim5/test.sh                                       3             27              4
+/tmp/L1e1gnAtag/Flexim5/flexim/build_number.d                         4              1              2
+-----------------------------------------------------------------------------------------------------
+SUM:                                                               1969            253           8752
+-----------------------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+D                               37           1965            226           8722
+XML                              1              1              0             26
+Bourne Shell                     1              3             27              4
+-------------------------------------------------------------------------------
+SUM:                            39           1969            253           8752
+-------------------------------------------------------------------------------
