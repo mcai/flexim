@@ -2,6 +2,6 @@
 buildtype = EXECUTABLE
 out = bin
 outname = Flexim
-buildtool = /home/itecgo/Flexim/code/flexim/build.sh
+buildtool = make
 extraOptions = $DEEBUILDER.SRCMODULES
 

@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
  
- module flexim.main;
+module flexim.main;
 
 import flexim.all;
 

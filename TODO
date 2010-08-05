@@ -1,1 +1,92 @@
-1. implement fast simulation without microarchitectural details first. learn from multi2sim 1.0.
+Plain TODOs
+	1. xml configuration using std.xml
+	3. program option parsing using std.getopt
+
+hints:
+	2. standardize the whole project, conforming to gnu/linux conventions as closely as possible
+	3. refactor existing OoO implementation, especially data structures and their walk code
+
+top priorities:
+	1. integration of nonblocking cache with OoO (icache, dcache, shared level two cache, itlb, dtlb)
+	2. integration of branch predictor with OoO
+	3. support of multicore simulation
+	4. use valgrind, kcachegrind, Intel VTune etc., to find the performance bottleneck of the simulator, and improve it.
+	6. integration of detailed simulation of dram controllers
+	7. speedup the simulation utilizing the underlying multicore host machine
+	
+highest priorities:
+	1. support of cache partitioning
+	2. support of checkpointing, based on the implementation of branch prediction and pipeline recovering
+
+games:
+	1. play with the socket streaming capabilities in D
+	2. play with std.bitmanip
+
+
+1. ilp core + mlp core, shared l2 cache, thread spawning. cache bypassing & partitioning.
+
+
+hardware support of partitionable caches:
+
+	(cited from "Fair Cache Sharing and Partitioning in a Chip Multiprocessor Architecture")
+	In general, hardware support for partitionable caches can
+	be categorized into two approaches. The first approach re-
+	lies on modifying the cache placement algorithm by re-
+	stricting where data can be placed in the cache [14, 10].
+	This approach relies on configurable cache hardware or pro-
+	grammable partition registers. The drawbacks of this ap-
+	proach are that it modifies the underlying cache hardware,
+	may increase the cache access time due to having to locate
+	the correct partition, and makes the cache unavailable during
+	reconfiguration.
+
+
+	An alternative approach is to modify the cache replace-
+	ment algorithm [19]. In this approach, partitioning the cache
+	is incremental: on each cache miss, we can reallocate a cache
+	line from another thread to the thread that suffers the cache
+	miss by selecting the line for replacement. Because a re-
+	placement only occurs on cache misses, this approach does
+	not add to cache access time. In addition, selecting a line
+	to be replaced can be overlapped with the cache miss la-
+	tency. Finally, due to the incremental repartitioning nature,
+	the repartitioning does not make the cache unavailable. It
+	involves writing to a counter the target number of lines and
+	tracking the current number of lines already allocated to a
+	thread. In this paper, we apply the second approach.
+
+
+emergent priorities:
+
+1. implementation of explicit MSHRs
+2. stack distance diagram.
+
+	Common eviction policies such as LRU have the stack property. Thus, each set in a cache can be
+	seen as an LRU stack, where lines are sorted by their last access cycle. In that
+	way, the first line of the LRU stack is the Most Recently Used (MRU) line while
+	the last line is the LRU line. The position that a line has in the LRU stack
+	when it is accessed again is defined as the stack distance of the access. 
+
+MLP-Aware DCP:
+1. initial partition:
+	each core receives assoc/numCore ways of the shared l2 cache.
+
+	The key contribution of this paper is the
+	method to obtain MLP-aware SDHs that we explain in the following Subsection.
+
+2. run a period and obtain MLP-aware SDHs.
+
+3. decide a new partition to minimize total MLP-costs of L2 accesses.
+
+4. multiply all the values of the MLP-aware SDHs by 1/2. 
+
+5. goto step 2.
+
+
+
+
+
+
+
+
+

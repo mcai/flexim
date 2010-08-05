@@ -1,3 +1,11 @@
-A modular and highly configurable multicore simulator written in the D language
+  Flexim: A modular and highly configurable multicore simulator written in D
 
-Flexim is a modular and highly configurable architectural simulator for evaluating emerging multicore processors. Based on the past experience and guided by a few key software engineering concepts, it is developed from scratch in the object-oriented D system programing language to obtain good maintainability, reusability and modularity of the simulator code, and advocates further extensions via plugins. Its main components include a classic five-stage out-of-order issue processor core, multi-level coherent memory hierarchy with diectory-based MOESI coherence, and various supporting modules.
+  Flexim is a modular and highly configurable architectural simulator for evaluating
+emerging multicore processors. Based on the past experience and guided by a few
+key software engineering concepts, it is developed from scratch in the object-oriented
+D system programing language to obtain good maintainability, reusability and modularity
+of the simulator code, and advocates further extensions via plugins. Its main components
+include a classic five-stage out-of-order issue processor core, multi-level coherent
+memory hierarchy with diectory-based MOESI coherence, and various supporting modules.
+
+  Please see INSTALL for instructions on compiling and running Flexim.
