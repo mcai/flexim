@@ -17,10 +17,7 @@
 			</descent.D>
 		</sequential>
 	</macrodef>
-	<target name="build-number">
-		<descent.DBldNum file="${src.dir}/flexim/build_number.d" fqn="flexim.build_number" />
-	</target>
-	<target name="compile" depends="build-number" description="Compiles flexim">
+	<target name="compile" description="Compiles flexim">
 		<compile bldtrg="flexim/main" />
 	</target>
 </project>

@@ -72,5 +72,3 @@ public import flexim.util.faults;
 public import flexim.util.logging;
 public import flexim.util.misc;
 public import flexim.util.queues;
-
-public import flexim.build_number;

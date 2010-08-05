@@ -26,8 +26,8 @@ import flexim.all;
 import std.file;
 
 void main(string[] args) {
-	logging[LogCategory.SIMULATOR].infof("Flexim 5 Multicore Simulator for MIPS32 LE (build: %s)", buildnumber);
-	logging[LogCategory.SIMULATOR].info("Copyright (C) 2008 - 2010 Min Cai. All Rights Reserved.\n");
+	logging[LogCategory.SIMULATOR].info("Flexim - A modular and highly configurable multicore simulator written in D");
+	logging[LogCategory.SIMULATOR].info("Copyright (c) 2010 Min Cai <itecgo@163.com>.\n");
 
 	string[] programArgs = args[1 .. args.length];
 
