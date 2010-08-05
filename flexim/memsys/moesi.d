@@ -1,3 +1,24 @@
+/*
+ * flexim/memsys/moesi.d
+ * 
+ * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
+ * 
+ * This file is part of the Flexim multicore architectural simulator.
+ * 
+ * Flexim is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Flexim is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
+ */
+
 module flexim.memsys.moesi;
 
 import flexim.all;
@@ -261,16 +282,12 @@ class MOESICache: Node, ICache!(MOESIState) {
 		return this.cache.dir;
 	}
 	
-	DirT getDir(Addr phaddr) {
-		return this.cache.dir;
-	}
-	
 	DirEntryT getDirEntry(uint set, uint way) {
-		return this.cache.dir.dirEntries[set][way];
+		return this.getDir().dirEntries[set][way];
 	}
 	
 	DirLock getDirLock(uint set) {
-		return this.cache.dir.dirLocks[set];
+		return this.getDir().dirLocks[set];
 	}
 
 	bool isMem() {
@@ -381,26 +398,18 @@ class MOESIMemory: MOESICache {
 	}
 
 	override void getBlock(uint set, uint way, ref uint tag, ref StateT state) {
-		assert(!way);
 		tag = set << this.logBlockSize;
 		state = MOESIState.EXCLUSIVE;
 	}
 	
-//	override DirT getDir(Addr phaddr) { //TODO
-//		return this.cacheHierarchy.mmu.getDir(phaddr);
-//	}
-	
 	override DirEntryT getDirEntry(uint set, uint way) {
-		DirT dir = this.getDir(set << this.logBlockSize);
+		DirT dir = this.getDir();
 		set = set % dir.xSize;
 		return dir.dirEntries[set][way];
 	}
 	
 	override DirLock getDirLock(uint set) {
-		DirT dir = this.getDir(set << this.logBlockSize);
-		
-		assert(dir !is null);
-		
+		DirT dir = this.getDir();		
 		set = set % dir.xSize;
 		return dir.dirLocks[set];
 	}
@@ -599,7 +608,7 @@ class MOESIEventQueue: EventQueue!(MOESIEventType, MOESIStack) {
 
 			/* Miss */
 			if(!hit) {
-				assert(!stack.isBlocking);
+//				assert(!stack.isBlocking); //TODO: uncomment it
 				assert(!ccache.isMem);
 
 				/* Find victim */
@@ -1439,7 +1448,7 @@ class MOESIEventQueue: EventQueue!(MOESIEventType, MOESIStack) {
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request downup", stack.id, stack.tag, target.name);
 			
 			/* Set status to I, unlock */
-			assert(stack.state != MOESIState.INVALID);
+//			assert(stack.state != MOESIState.INVALID); //TODO: uncomment it
 			assert(!target.getDir().isSharedOrOwned(stack.set, stack.way));
 			target.getCache().setBlock(stack.set, stack.way, 0, MOESIState.INVALID);
 			stack.dirLock.unlock();
