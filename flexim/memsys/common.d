@@ -69,7 +69,7 @@ class P2PInterconnect : Interconnect {
 	}
 
 	override void send(Message msg, Node sender, Node receiver, uint latency = 1) {		
-		logging[LogCategory.NET].infof("%s.send(msg = %s, sender = %s, receiver = %s, latency = %d)", this.name, to!string(msg), to!string(sender), to!string(receiver), latency);
+		logging[LogCategory.NET].infof("%s.send(msg = %s, sender = %s, receiver = %s, latency = %d)", this.name, to!(string)(msg), to!(string)(sender), to!(string)(receiver), latency);
 		
 		Simulator.singleInstance.eventQueue.schedule(SimulatorEventType.GENERAL,
 				new SimulatorEventContext("Interconnect", new Callback3!(Interconnect, Message, Node)(this, msg, sender, &receiver.receive)), latency);

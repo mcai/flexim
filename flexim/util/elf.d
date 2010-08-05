@@ -407,7 +407,7 @@ class ELF32Binary {
 		}
 		
 		string getSectionName(Elf32_Shdr shdr) {
-			return to!string(this.shstr + shdr.sh_name);
+			return to!(string)(this.shstr + shdr.sh_name);
 		}
 
 		T* ptr(T)(uint offset) {

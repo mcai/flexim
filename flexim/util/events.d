@@ -68,7 +68,7 @@ class Callback1(Param1T): Callback {
 	override string toString() {
 		string str;
 		
-//		str ~= format("Callback1[m1: %s]", to!string(this.m1));
+//		str ~= format("Callback1[m1: %s]", to!(string)(this.m1));
 		
 		return str;
 	}
@@ -119,7 +119,7 @@ class Callback2(Param1T, Param2T): Callback {
 	override string toString() {
 		string str;
 		
-//		str ~= format("Callback2[m1: %s, m2: %s]", to!string(this.m1), to!string(this.m2));
+//		str ~= format("Callback2[m1: %s, m2: %s]", to!(string)(this.m1), to!(string)(this.m2));
 		
 		return str;
 	}
@@ -173,7 +173,7 @@ class Callback3(Param1T, Param2T, Param3T): Callback {
 	override string toString() {
 		string str;
 		
-//		str ~= format("Callback3[m1: %s, m2: %s, m3: %s]", to!string(this.m1), to!string(this.m2), to!string(this.m3));
+//		str ~= format("Callback3[m1: %s, m2: %s, m3: %s]", to!(string)(this.m1), to!(string)(this.m2), to!(string)(this.m3));
 		
 		return str;
 	}
@@ -264,7 +264,7 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
 		}
 
 		void schedule(Event!(EventTypeT, EventContextT) event) {
-			assert(this.events.length < event_queue_size, to!string(this));
+			assert(this.events.length < event_queue_size, to!(string)(this));
 			
 			this.events.insert(event);
 
@@ -337,7 +337,7 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
 			
 			foreach(i, event; this.eventArray) {
 				if(event !is null) {
-					writefln("    [%d] event: %s", i, to!string(event));
+					writefln("    [%d] event: %s", i, to!(string)(event));
 				}
 			}
 			

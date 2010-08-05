@@ -71,7 +71,7 @@ class OoOThread: Thread {
 
 			this.totalInsts++;
 
-			logging[LogCategory.DEBUG].infof("thread %s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
+			logging[LogCategory.DEBUG].infof("t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
 		}
 	}
 

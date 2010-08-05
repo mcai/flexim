@@ -140,44 +140,44 @@ class MOESICache: Node, ICache!(MOESIState) {
 		logging[LogCategory.CONFIG].infof(indent ~ "[%s] number of sets: %d, block size: %d, assoc: %d, hit latency: %d, miss latency: %d", this.name, this.cache.numSets, this.cache.blockSize,
 				this.cache.assoc, this.hitLatency, this.missLatency);
 	}
+	
+	void appendStatStr(T)(string str, string indent, string key, T value) {
+		str ~= format(indent ~ "  " ~ "%s: %s\n", key, to!(string)(value));
+	}	
 
 	void dumpStats(string indent) {
 		string str;
 
 		str ~= format(indent ~ "[%s] -----\n", this.name);
 		
-		void appendStatStr(T)(string key, T value) {
-			str ~= format(indent ~ "  " ~ "%s: %s\n", key, to!string(value));
-		}
-		
-		appendStatStr("Accesses", this.stats["accesses"]);
-		appendStatStr("Hits", this.stats["hits"]);
-		appendStatStr("Misses", this.stats["accesses"] - this.stats["hits"]);
-		appendStatStr("HitRatio", this.stats["accesses"] != 0 ? cast(double)(this.stats["hits"]) / cast(double)(this.stats["accesses"]) : 0.0);
-		appendStatStr("Evictions", this.stats["evictions"]);
-		appendStatStr("Retries", this.stats["readRetries"] + this.stats["writeRetries"]);
-		appendStatStr("ReadRetries", this.stats["readRetries"]);
-		appendStatStr("WriteRetries", this.stats["writeRetries"]);
-		appendStatStr("NoRetryAccesses", this.stats["noRetryAccesses"]);
-		appendStatStr("NoRetryHits", this.stats["noRetryHits"]);
-		appendStatStr("NoRetryMisses", this.stats["noRetryAccesses"] - this.stats["noRetryHits"]);
-		appendStatStr("NoRetryHitRatio", this.stats["noRetryAccesses"] != 0 ? cast(double)(this.stats["noRetryHits"]) / cast(double)(this.stats["noRetryAccesses"]) : 0.0);
-		appendStatStr("NoRetryReads", this.stats["noRetryReads"]);
-		appendStatStr("NoRetryReadHits", this.stats["noRetryReadHits"]);
-		appendStatStr("NoRetyrReadMisses", this.stats["noRetryReads"] - this.stats["noRetryReadHits"]);
-		appendStatStr("NoRetryWrites", this.stats["noRetryWrites"]);
-		appendStatStr("NoRetryWriteHits", this.stats["noRetryWriteHits"]);
-		appendStatStr("NoRetryWriteMisses", this.stats["noRetryWrites"] - this.stats["noRetryWriteHits"]);
-		appendStatStr("Reads", this.stats["reads"]);
-		appendStatStr("BlockingReads", this.stats["blockingReads"]);
-		appendStatStr("NonblockingReads", this.stats["nonblockingReads"]);
-		appendStatStr("ReadHits", this.stats["readHits"]);
-		appendStatStr("ReadMisses", this.stats["reads"] - this.stats["readHits"]);
-		appendStatStr("Writes", this.stats["writes"]);
-		appendStatStr("BlockingWrites", this.stats["blockingWrites"]);
-		appendStatStr("NonblockingWrites", this.stats["nonblockingWrites"]);
-		appendStatStr("WriteHits", this.stats["writeHits"]);
-		appendStatStr("WriteMisses", this.stats["writes"] - this.stats["writeHits"]);
+		appendStatStr(str, indent, "Accesses", this.stats["accesses"]);
+		appendStatStr(str, indent, "Hits", this.stats["hits"]);
+		appendStatStr(str, indent, "Misses", this.stats["accesses"] - this.stats["hits"]);
+		appendStatStr(str, indent, "HitRatio", this.stats["accesses"] != 0 ? cast(double)(this.stats["hits"]) / cast(double)(this.stats["accesses"]) : 0.0);
+		appendStatStr(str, indent, "Evictions", this.stats["evictions"]);
+		appendStatStr(str, indent, "Retries", this.stats["readRetries"] + this.stats["writeRetries"]);
+		appendStatStr(str, indent, "ReadRetries", this.stats["readRetries"]);
+		appendStatStr(str, indent, "WriteRetries", this.stats["writeRetries"]);
+		appendStatStr(str, indent, "NoRetryAccesses", this.stats["noRetryAccesses"]);
+		appendStatStr(str, indent, "NoRetryHits", this.stats["noRetryHits"]);
+		appendStatStr(str, indent, "NoRetryMisses", this.stats["noRetryAccesses"] - this.stats["noRetryHits"]);
+		appendStatStr(str, indent, "NoRetryHitRatio", this.stats["noRetryAccesses"] != 0 ? cast(double)(this.stats["noRetryHits"]) / cast(double)(this.stats["noRetryAccesses"]) : 0.0);
+		appendStatStr(str, indent, "NoRetryReads", this.stats["noRetryReads"]);
+		appendStatStr(str, indent, "NoRetryReadHits", this.stats["noRetryReadHits"]);
+		appendStatStr(str, indent, "NoRetyrReadMisses", this.stats["noRetryReads"] - this.stats["noRetryReadHits"]);
+		appendStatStr(str, indent, "NoRetryWrites", this.stats["noRetryWrites"]);
+		appendStatStr(str, indent, "NoRetryWriteHits", this.stats["noRetryWriteHits"]);
+		appendStatStr(str, indent, "NoRetryWriteMisses", this.stats["noRetryWrites"] - this.stats["noRetryWriteHits"]);
+		appendStatStr(str, indent, "Reads", this.stats["reads"]);
+		appendStatStr(str, indent, "BlockingReads", this.stats["blockingReads"]);
+		appendStatStr(str, indent, "NonblockingReads", this.stats["nonblockingReads"]);
+		appendStatStr(str, indent, "ReadHits", this.stats["readHits"]);
+		appendStatStr(str, indent, "ReadMisses", this.stats["reads"] - this.stats["readHits"]);
+		appendStatStr(str, indent, "Writes", this.stats["writes"]);
+		appendStatStr(str, indent, "BlockingWrites", this.stats["blockingWrites"]);
+		appendStatStr(str, indent, "NonblockingWrites", this.stats["nonblockingWrites"]);
+		appendStatStr(str, indent, "WriteHits", this.stats["writeHits"]);
+		appendStatStr(str, indent, "WriteMisses", this.stats["writes"] - this.stats["writeHits"]);
 
 		logging[LogCategory.CONFIG].info(str);
 	}
@@ -356,7 +356,7 @@ class MOESICache: Node, ICache!(MOESIState) {
 
 	CacheQueueEntryT[][Addr] pendingRequests;
 	
-	private Stats m_stats;
+	private Stats m_stats;	
 }
 
 class MOESIMemory: MOESICache {
@@ -489,6 +489,7 @@ class MOESIStack {
 	MOESIEventType retEvent;
 	MOESIStack retStack;
 }
+
 
 class MOESIEventQueue: EventQueue!(MOESIEventType, MOESIStack) {
 	public:
@@ -967,7 +968,7 @@ class MOESIEventQueue: EventQueue!(MOESIEventType, MOESIStack) {
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict writeback exclusive", stack.id, stack.tag, target.name);
 
 			/* Status = O/S/I */
-			assert(stack.state != MOESIState.INVALID, to!string(stack));
+			assert(stack.state != MOESIState.INVALID, to!(string)(stack));
 			if(stack.state == MOESIState.OWNED || stack.state == MOESIState.SHARED) {
 				MOESIStack newStack = new MOESIStack(stack.id, target, stack.tag, this, MOESIEventType.EVICT_WRITEBACK_FINISH, stack);
 				newStack.target = target.next;
