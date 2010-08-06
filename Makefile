@@ -1,16 +1,16 @@
+EXECUTABLE = flexim
+SRC = build.rf
+
 DC = dmd
-DFLAGS = 
-#DFLAGS = -debug -gc
+DCFLAGS = 
+# DCFLAGS = -debug -gc
 
-
-BIN=bin
-D_FILES = build.rf
-TARGET = $(BIN)/flexim
+TARGET = bin/$(EXECUTABLE)
 
 all: $(TARGET)
 
-$(TARGET): $(D_FILES)
-	$(DC) $(DFLAGS) @$< -of$@
-
 clean:
 	rm -rf $(TARGET).o $(TARGET)
+
+$(TARGET): $(SRC)
+	$(DC) $(DCFLAGS) @$< -of$@
