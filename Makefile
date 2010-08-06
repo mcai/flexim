@@ -1,5 +1,7 @@
 DC = dmd
-DFLAGS = -debug -gc
+DFLAGS = 
+#DFLAGS = -debug -gc
+
 
 BIN=bin
 D_FILES = build.rf

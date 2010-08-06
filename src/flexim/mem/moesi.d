@@ -218,7 +218,7 @@ class MOESICache: Node, ICache!(MOESIState) {
 			MOESIStack newStack = new MOESIStack(m.request.id, this, m.request.addr, new Callback1!(Addr)(m.request.addr, &this.endReadAccess));
 			this.cacheHierarchy.eventQueue.schedule(MOESIEventType.LOAD, newStack, 0);
 		} else if(m.request.type == RequestType.WRITE) {
-			MOESIStack newStack = new MOESIStack(m.request.id, this, m.request.addr, new Callback1!(Addr)(m.request.addr, null));
+			MOESIStack newStack = new MOESIStack(m.request.id, this, m.request.addr, new Callback0({}));
 			this.cacheHierarchy.eventQueue.schedule(MOESIEventType.STORE, newStack, 0);
 		}
 	}
@@ -434,7 +434,7 @@ class MOESIMemory: MOESICache {
 ulong moesi_stack_id = 0;
 
 class MOESIStack {
-	this(ulong id, ICache!(MOESIState) ccache, uint addr, Callback callback) {
+	this(ulong id, ICache!(MOESIState) ccache, uint addr, Invokable callback) {
 		this.id = id;
 		this.ccache = ccache;
 		this.addr = addr;
@@ -484,7 +484,7 @@ class MOESIStack {
 	bool isEviction;
 	bool isRetry;
 
-	Callback callback;
+	Invokable callback;
 
 	MOESIEventType retEvent;
 	MOESIStack retStack;

@@ -132,7 +132,7 @@ enum RequestType: string {
 }
 
 class Request {
-	this(RequestType type, Addr pc, Addr addr, Callback1!(Request) onCompletedCallback) {
+	this(RequestType type, Addr pc, Addr addr, Callback onCompletedCallback) {
 		this.id = currentRequestID++;
 		this.type = type;
 		this.pc = pc;
@@ -148,7 +148,7 @@ class Request {
 	RequestType type;
 	Addr pc;
 	Addr addr;
-	Callback1!(Request) onCompletedCallback;
+	Callback onCompletedCallback;
 }
 
 class Sequencer(RequestT, CacheT): Node {

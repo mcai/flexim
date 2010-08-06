@@ -26,7 +26,7 @@ import flexim.all;
 class CPURequest: Request {	
 	alias addr phaddr;
 	
-	this(RequestType type, DynamicInst uop, Addr pc, Addr vtaddr, RUUStation rs, Addr phaddr, Callback1!(Request) onCompletedCallback) {
+	this(RequestType type, DynamicInst uop, Addr pc, Addr vtaddr, RUUStation rs, Addr phaddr, Callback onCompletedCallback) {
 		super(type, pc, phaddr, onCompletedCallback);
 
 		this.uop = uop;

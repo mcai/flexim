@@ -23,58 +23,67 @@ module flexim.util.events;
 
 import flexim.all;
 
-interface Callback {
+interface Invokable {
 	void invoke();
 }
 
-class Callback0: Callback {
-	alias void delegate() CallbackT;
-
-	this(CallbackT callback) {
-		this.callback = callback;
+class Callback: Invokable {	
+	class Invoker: Invokable {
+		alias void delegate() CallbackT;
+	
+		this(CallbackT callback) {
+			this.callback = callback;
+		}
+	
+		override void invoke() {
+			if(this.callback !is null) {
+				this.callback();
+			}
+		}
+	
+		CallbackT callback;
+	}
+	
+	this() {
 	}
 
 	override void invoke() {
 		if(this.callback !is null) {
-			this.callback();
+			this.callback.invoke();
 		}
 	}
-	
-	override string toString() {
-		string str;
-		
-		str ~= "Callback0";
-		
-		return str;
-	}
 
-	CallbackT callback;
+	Invoker callback;
 }
 
-class Callback1(Param1T): Callback {
-	alias void delegate(Param1T m1) CallbackT;
-
-	this(Param1T m1, CallbackT callback) {
-		this.m1 = m1;
-		this.callback = callback;
+class Callback0 : Callback {
+	this(void delegate() del) {
+		this.callback = new Invoker({del();});	
 	}
+}
 
-	override void invoke() {
-		if(this.callback !is null) {
-			this.callback(this.m1);
-		}
-	}
-	
-	override string toString() {
-		string str;
-		
-//		str ~= format("Callback1[m1: %s]", to!(string)(this.m1));
-		
-		return str;
-	}
+class Callback1(Param1T) : Callback {
+	this(Param1T m1, void delegate(Param1T) del) {		
+		this.callback = new Invoker({del(m1);});
+	}	
+}
 
-	Param1T m1;
-	CallbackT callback;
+class Callback2(Param1T, Param2T) : Callback {
+	this(Param1T m1, void delegate(Param1T, Param2T) del) {
+		this.callback = new Invoker({del(m1, m2);});
+	}	
+}
+
+class Callback3(Param1T, Param2T, Param3T) : Callback {
+	this(Param1T m1, Param2T m2, Param3T m3, void delegate(Param1T, Param2T, Param3T) del) {		
+		this.callback = new Invoker({del(m1, m2, m3);});
+	}
+}
+
+class Callback4(Param1T, Param2T, Param3T, Param4T) : Callback {
+	this(Param1T m1, Param2T m2, Param3T m3, Param4T m4, void delegate(Param1T, Param2T, Param3T, Param4T) del) {		
+		this.callback = new Invoker({del(m1, m2, m3, m4);});
+	}
 }
 
 class ContextCallback1(Param1T) {
@@ -90,43 +99,6 @@ class ContextCallback1(Param1T) {
 		}
 	}
 	
-	override string toString() {
-		string str;
-		
-		str ~= "ContextCallback1";
-		
-		return str;
-	}
-	
-	CallbackT callback;
-}
-
-class Callback2(Param1T, Param2T): Callback {
-	alias void delegate(Param1T m1, Param2T m2) CallbackT;
-
-	this(Param1T m1, Param2T m2, CallbackT callback) {
-		this.m1 = m1;
-		this.m2 = m2;
-		this.callback = callback;
-	}
-
-	override void invoke() {
-		if(this.callback !is null) {
-			this.callback(this.m1, this.m2);
-		}
-	}
-	
-	override string toString() {
-		string str;
-		
-//		str ~= format("Callback2[m1: %s, m2: %s]", to!(string)(this.m1), to!(string)(this.m2));
-		
-		return str;
-	}
-
-	Param1T m1;
-	Param2T m2;
-
 	CallbackT callback;
 }
 
@@ -142,45 +114,6 @@ class ContextCallback2(Param1T, Param2T) {
 			this.callback(m1, m2);
 		}
 	}
-	
-	override string toString() {
-		string str;
-		
-		str ~= "ContextCallback2";
-		
-		return str;
-	}
-
-	CallbackT callback;
-}
-
-class Callback3(Param1T, Param2T, Param3T): Callback {
-	alias void delegate(Param1T m1, Param2T m2, Param3T m3) CallbackT;
-
-	this(Param1T m1, Param2T m2, Param3T m3, CallbackT callback) {
-		this.m1 = m1;
-		this.m2 = m2;
-		this.m3 = m3;
-		this.callback = callback;
-	}
-
-	override void invoke() {
-		if(this.callback !is null) {
-			this.callback(this.m1, this.m2, this.m3);
-		}
-	}
-	
-	override string toString() {
-		string str;
-		
-//		str ~= format("Callback3[m1: %s, m2: %s, m3: %s]", to!(string)(this.m1), to!(string)(this.m2), to!(string)(this.m3));
-		
-		return str;
-	}
-
-	Param1T m1;
-	Param2T m2;
-	Param3T m3;
 
 	CallbackT callback;
 }
@@ -197,13 +130,21 @@ class ContextCallback3(Param1T, Param2T, Param3T) {
 			this.callback(m1, m2, m3);
 		}
 	}
-	
-	override string toString() {
-		string str;
-		
-		str ~= "ContextCallback3";
-		
-		return str;
+
+	CallbackT callback;
+}
+
+class ContextCallback4(Param1T, Param2T, Param3T, Param4T) {
+	alias void delegate(Param1T m1, Param2T m2, Param3T m3, Param4T m4) CallbackT;
+
+	this(CallbackT callback) {
+		this.callback = callback;
+	}
+
+	void invoke(Param1T m1, Param2T m2, Param3T m3, Param4T m4) {
+		if(this.callback !is null) {
+			this.callback(m1, m2, m3, m4);
+		}
 	}
 
 	CallbackT callback;
@@ -351,10 +292,6 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
 
 		Event!(EventTypeT, EventContextT)[] eventArray;
 		BinaryHeap!(Event!(EventTypeT, EventContextT)[]) events;
-}
-
-interface Invokable {
-	void invoke();
 }
 
 class EventCallbackInvoker(EventTypeT, ContextT, alias EventQueueT = EventQueue!(EventTypeT, ContextT)) : Invokable {

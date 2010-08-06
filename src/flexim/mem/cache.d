@@ -120,7 +120,7 @@ class DirLock {
 		this.x = x;
 	}
 
-	bool lock(Callback callback) {
+	bool lock(Invokable callback) {
 		if(this.locked) {
 			if(callback !is null) {
 				this.waiters ~= callback;
@@ -153,7 +153,7 @@ class DirLock {
 
 	bool locked;
 
-	Callback[] waiters;
+	Invokable[] waiters;
 
 	uint x;
 }

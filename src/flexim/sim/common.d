@@ -45,7 +45,7 @@ class SimulatorEventContext {
 		this(name, new Callback0(del));
 	}
 
-	this(string name, Callback callback) {
+	this(string name, Invokable callback) {
 		this.name = name;
 		this.callback = callback;
 	}
@@ -60,7 +60,7 @@ class SimulatorEventContext {
 	}
 
 	string name;
-	Callback callback;
+	Invokable callback;
 }
 
 class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext) {
