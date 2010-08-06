@@ -53,6 +53,9 @@ class Core {
 		}
 	}
 
+	void opAddAssign(uint i) {
+	}
+
 	string name;
 	Processor processor;
 	Thread[] threads;

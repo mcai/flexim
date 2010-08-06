@@ -42,28 +42,28 @@ public import flexim.cpu.thread;
 public import flexim.cpu.ooo.common;
 public import flexim.cpu.ooo.thread;
 
-public import flexim.isa.mips.basic;
-public import flexim.isa.mips.branch;
-public import flexim.isa.mips.integer;
-public import flexim.isa.mips.isa;
-public import flexim.isa.mips.mem;
-public import flexim.isa.mips.misc;
+public import flexim.isa.basic;
+public import flexim.isa.branch;
+public import flexim.isa.integer;
+public import flexim.isa.isa;
+public import flexim.isa.mem;
+public import flexim.isa.misc;
 
 public import flexim.linux.process;
 public import flexim.linux.syscall;
 
-public import flexim.memsys.cache;
-public import flexim.memsys.common;
-public import flexim.memsys.moesi;
-public import flexim.memsys.predefined;
-public import flexim.memsys.tm;
+public import flexim.mem.cache;
+public import flexim.mem.common;
+public import flexim.mem.moesi;
+public import flexim.mem.predefined;
+public import flexim.mem.tm;
 
-public import flexim.memsys.mmu;
-public import flexim.memsys.mem;
+public import flexim.mem.mmu;
+public import flexim.mem.mem;
 
-public import flexim.simulators.common;
-public import flexim.simulators.cpu;
-public import flexim.simulators.memsys;
+public import flexim.sim.common;
+public import flexim.sim.cpu;
+public import flexim.sim.memsys;
 
 public import flexim.util.bits;
 public import flexim.util.elf;

@@ -1,5 +1,3 @@
-PATH=$PATH:/bin:/usr/bin
-
 DC = dmd
 DFLAGS = -debug -gc
 

@@ -1,5 +1,5 @@
 /*
- * flexim/isa/mips/isa.d
+ * flexim/isa/isa.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.isa.mips.isa;
+module flexim.isa.isa;
 
 import flexim.all;
 

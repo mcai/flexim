@@ -1,5 +1,5 @@
 /*
- * flexim/memsys/cache.d
+ * flexim/mem/cache.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.memsys.cache;
+module flexim.mem.cache;
 
 import flexim.all;
 
@@ -226,7 +226,7 @@ class CacheBlock(StateT) {
 	ulong lastAccess;
 }
 
-abstract class StatsBase(ValueT) {
+abstract class StatsBase(ValueT) {	
 	this() {
 		this.init();
 	}

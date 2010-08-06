@@ -1,5 +1,5 @@
 /*
- * flexim/simulators/common.d
+ * flexim/sim/common.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.simulators.common;
+module flexim.sim.common;
 
 import flexim.all;
 
