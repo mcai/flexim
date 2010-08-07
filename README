@@ -1,11 +1,38 @@
-  Flexim: A modular and highly configurable multicore simulator written in D
+--------------------------------
+Flexim - A modular and highly configurable multicore simulator written in D
+--------------------------------
 
-  Flexim is a modular and highly configurable architectural simulator for evaluating
-emerging multicore processors. Based on the past experience and guided by a few
-key software engineering concepts, it is developed from scratch in the object-oriented
-D system programing language to obtain good maintainability, reusability and modularity
-of the simulator code, and advocates further extensions via plugins. Its main components
-include a classic five-stage out-of-order issue processor core, multi-level coherent
-memory hierarchy with diectory-based MOESI coherence, and various supporting modules.
+Brief Introduction:
+   Flexim is a modular and highly configurable architectural simulator for evaluating
+   emerging multicore processors. Based on the past experience and guided by a few
+   key software engineering concepts, it is developed from scratch in the object-oriented
+   D system programing language to obtain good maintainability, reusability and modularity
+   of the simulator code, and advocates further extensions via plugins. Its main components
+   include a classic five-stage out-of-order issue processor core, multi-level coherent
+   memory hierarchy with diectory-based MOESI coherence, and various supporting modules.
 
-  Please see INSTALL for instructions on compiling and running Flexim.
+What you need to build your own Flexim:
+ - Make sure that you have a Ubuntu 10.04 linux machine.
+   Other popular linux distros may work as well if you are lucky.
+ 
+ - Make sure that you have DMD 2.0 installed.
+   If not, go to this page and download "dmd D 2.0 compiler 1-click install for Ubuntu"
+   http://www.digitalmars.com/d/download.html
+
+How to build your own Flexim:
+  In the main directory of the distribution (the one that this file is in), type
+  the following to make Flexim:
+    make
+
+  And you can remove all the built files using the command:
+    make clean
+
+How to run your own Flexim:
+  In the subdirectory bin/, you can find the previously built flexim executable.
+  Run the following command to simulate a MIPS32 Little Endian executable:
+    'bin/flexim <path-to-mipsel-executable> <args>'.
+
+Help Source:
+  If you have any questions, please feel free to contact:
+	Min Cai <itecgo@163.com>
+  

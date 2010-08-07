@@ -1,8 +1,0 @@
-Installation Instructions
-*************************
-
-Generally, in a typical linux distro, make sure DMD 2.0 is installed
-before execute the following commands from the console:
-
-	'make' and 
-	'bin/flexim <path-to-mipsel-executable> <args>'.
