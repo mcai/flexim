@@ -23,13 +23,13 @@ module flexim.mem.predefined;
 
 import flexim.all;
 
-class MemorySystem(RequestT, alias ICacheT = ICache!(MOESIState), alias CacheT = MOESICache, alias InterconnectT = P2PInterconnect, alias EventQueueT = MOESIEventQueue): CacheHierarchy!(ICacheT, MOESIState) {
+class MemorySystem(RequestT, alias ICacheT = ICache!(MESIState), alias CacheT = MESICache, alias InterconnectT = P2PInterconnect, alias EventQueueT = MESIEventQueue): CacheHierarchy!(ICacheT, MESIState) {
 	alias Sequencer!(RequestT, CacheT) SequencerT;
 	
 	this(uint endNodeCount) {
 		this.endNodeCount = endNodeCount;
 
-		this.mmu = new MMU!(MOESIState)();
+		this.mmu = new MMU!(MESIState)();
 
 		this.createMemoryHierarchy();
 		
@@ -45,8 +45,8 @@ class MemorySystem(RequestT, alias ICacheT = ICache!(MOESIState), alias CacheT =
 //		this.l2 = new CacheT(this, "l2", false, 64, 4, 2, 4, 7, false, true);
 		this.caches ~= this.l2;
 
-		//		this.mem = new MOESIMemory(this, "mem", 400, 300);
-		this.mem = new MOESIMemory(this, "mem", 4, 3);
+		//		this.mem = new MESIMemory(this, "mem", 400, 300);
+		this.mem = new MESIMemory(this, "mem", 4, 3);
 
 		this.seqIs = new SequencerT[this.endNodeCount];
 		this.l1Is = new CacheT[this.endNodeCount];
@@ -119,15 +119,15 @@ class MemorySystem(RequestT, alias ICacheT = ICache!(MOESIState), alias CacheT =
 		}
 	}
 	
-	MMU!(MOESIState) mmu() {
+	MMU!(MESIState) mmu() {
 		return this.m_mmu;
 	}
 	
-	void mmu(MMU!(MOESIState) value) {
+	void mmu(MMU!(MESIState) value) {
 		this.m_mmu = value;
 	}
 	
-	MMU!(MOESIState) m_mmu;
+	MMU!(MESIState) m_mmu;
 
 	uint endNodeCount;
 
@@ -138,7 +138,7 @@ class MemorySystem(RequestT, alias ICacheT = ICache!(MOESIState), alias CacheT =
 	SequencerT[] seqDs;
 
 	CacheT l2;
-	MOESIMemory mem;
+	MESIMemory mem;
 
 	ICacheT[] caches;
 

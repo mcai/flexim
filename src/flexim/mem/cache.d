@@ -268,7 +268,7 @@ abstract class StatsBase(ValueT) {
 	ValueT[string] entries;
 }
 
-class MOESICacheStats: StatsBase!(ulong) {
+class MESICacheStats: StatsBase!(ulong) {
 	protected override void init() {
 		this.init("accesses");
 		this.init("hits");
@@ -298,7 +298,7 @@ class MOESICacheStats: StatsBase!(ulong) {
 	}
 }
 
-alias MOESICacheStats Stats;
+alias MESICacheStats Stats;
 
 interface ICache(StateT) {
 	alias CacheBlock!(StateT) CacheBlockT;

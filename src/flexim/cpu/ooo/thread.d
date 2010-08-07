@@ -398,7 +398,7 @@ void setNpcFromFetchNpc() {
 	this.npc = this.fetchNpc;
 }
 
-MMU!(MOESIState) mmu() {
+MMU!(MESIState) mmu() {
 	return this.core.processor.simulator.memorySystem.mmu;
 }
 

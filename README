@@ -15,7 +15,7 @@ Flexim - A modular and highly configurable multicore simulator written in D
    D system programing language to obtain good maintainability, reusability and modularity
    of the simulator code, and advocates further extensions via plugins. Its main components
    include a classic five-stage out-of-order issue processor core, multi-level coherent
-   memory hierarchy with diectory-based MOESI coherence, and various supporting modules.
+   memory hierarchy with diectory-based MESI coherence, and various supporting modules.
 
 == System Requirements ==
  1. Make sure that you have a Ubuntu 10.04 linux machine.

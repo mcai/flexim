@@ -124,19 +124,19 @@ class Thread {
 	
 	uint id;
 
-	Sequencer!(CPURequest, MOESICache) seqI() {
+	Sequencer!(CPURequest, MESICache) seqI() {
 		return this.core.processor.simulator.memorySystem.seqIs[this.id];
 	}
 	
-	MOESICache l1I() {
+	MESICache l1I() {
 		return this.core.processor.simulator.memorySystem.l1Is[this.id];
 	}
 
-	Sequencer!(CPURequest, MOESICache) seqD() {
+	Sequencer!(CPURequest, MESICache) seqD() {
 		return this.core.processor.simulator.memorySystem.seqDs[this.id];
 	}
 	
-	MOESICache l1D() {
+	MESICache l1D() {
 		return this.core.processor.simulator.memorySystem.l1Ds[this.id];
 	}
 

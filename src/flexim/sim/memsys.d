@@ -31,8 +31,8 @@ class TestMemSysRequest: Request {
 
 alias MemorySystem!(TestMemSysRequest) TestMemSysMemorySystem;
 
-class MOESIMemorySystemSimulator: Simulator {
-	alias Sequencer!(TestMemSysRequest, MOESICache) SequencerT;
+class MESIMemorySystemSimulator: Simulator {
+	alias Sequencer!(TestMemSysRequest, MESICache) SequencerT;
 
 	this() {
 		this.memorySystem = new TestMemSysMemorySystem(2);
@@ -78,7 +78,7 @@ class MOESIMemorySystemSimulator: Simulator {
 		return this.memorySystem.seqIs[0];
 	}
 
-	MOESICache l1I0() {
+	MESICache l1I0() {
 		return this.memorySystem.l1Is[0];
 	}
 
@@ -86,7 +86,7 @@ class MOESIMemorySystemSimulator: Simulator {
 		return this.memorySystem.seqDs[0];
 	}
 
-	MOESICache l1D0() {
+	MESICache l1D0() {
 		return this.memorySystem.l1Ds[0];
 	}
 
@@ -94,7 +94,7 @@ class MOESIMemorySystemSimulator: Simulator {
 		return this.memorySystem.seqIs[1];
 	}
 
-	MOESICache l1I1() {
+	MESICache l1I1() {
 		return this.memorySystem.l1Is[1];
 	}
 
@@ -102,7 +102,7 @@ class MOESIMemorySystemSimulator: Simulator {
 		return this.memorySystem.seqDs[1];
 	}
 
-	MOESICache l1D1() {
+	MESICache l1D1() {
 		return this.memorySystem.l1Ds[1];
 	}
 	

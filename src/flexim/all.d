@@ -54,7 +54,7 @@ public import flexim.linux.syscall;
 
 public import flexim.mem.cache;
 public import flexim.mem.common;
-public import flexim.mem.moesi;
+public import flexim.mem.mesi;
 public import flexim.mem.predefined;
 public import flexim.mem.tm;
 

@@ -20,8 +20,8 @@ src/flexim/main.d
 src/flexim/mem/cache.d
 src/flexim/mem/common.d
 src/flexim/mem/mem.d
+src/flexim/mem/mesi.d
 src/flexim/mem/mmu.d
-src/flexim/mem/moesi.d
 src/flexim/mem/predefined.d
 src/flexim/mem/tm.d
 src/flexim/sim/common.d

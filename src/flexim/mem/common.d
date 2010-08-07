@@ -121,7 +121,7 @@ abstract class Node {
 
 interface CacheHierarchy(CacheT, StateT) {
 	MMU!(StateT) mmu();
-	MOESIEventQueue eventQueue(); //TODO: you'd better not bind MOESI here
+	MESIEventQueue eventQueue(); //TODO: you'd better not bind MESI here
 }
 
 uint currentRequestID = 1;
