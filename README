@@ -30,7 +30,7 @@ How to build your own Flexim:
 How to run your own Flexim:
   In the subdirectory bin/, you can find the previously built flexim executable.
   Run the following command to simulate a MIPS32 Little Endian executable:
-    'bin/flexim <path-to-mipsel-executable> <args>'.
+    ./flexim <path-to-mipsel-executable> <args>
 
 Help Source:
   If you have any questions, please feel free to contact:
