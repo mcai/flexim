@@ -35,9 +35,13 @@ class MOESIMemorySystemSimulator: Simulator {
 	alias Sequencer!(TestMemSysRequest, MOESICache) SequencerT;
 
 	this() {
-		this.memorySystem = new TestMemSysMemorySystem(1);
-
+		this.memorySystem = new TestMemSysMemorySystem(2);
 		this.addEventProcessor(this.memorySystem.eventQueue);
+		
+		this.xxEventQueue = new XXEventQueue();
+		this.addEventProcessor(this.xxEventQueue);
+		
+		this.init();
 	}
 
 	void dumpConfigs() {
@@ -70,122 +74,106 @@ class MOESIMemorySystemSimulator: Simulator {
 		}
 	}
 
-	SequencerT seqI() {
+	SequencerT seqI0() {
 		return this.memorySystem.seqIs[0];
 	}
 
-	MOESICache l1I() {
+	MOESICache l1I0() {
 		return this.memorySystem.l1Is[0];
 	}
 
-	SequencerT seqD() {
+	SequencerT seqD0() {
 		return this.memorySystem.seqDs[0];
 	}
 
-	MOESICache l1D() {
+	MOESICache l1D0() {
 		return this.memorySystem.l1Ds[0];
 	}
 
-	TestMemSysRequest newReadRequest(Addr phaddr) {
-		void callback(Request req) {
-			assert(req.id in this.requestStartTime);
-
-			this.numReadRequestsServiced++;
-
-			logging[LogCategory.TEST].infof("#################### read request completed: %s, cycles spent: %d", to!(string)(req), this.currentCycle - this.requestStartTime[req.id]);
-			
-			this.requestStartTime.remove(req.id);
-		}
-
-		TestMemSysRequest req = new TestMemSysRequest(RequestType.READ, phaddr, &callback);
-		return req;
+	SequencerT seqI1() {
+		return this.memorySystem.seqIs[1];
 	}
 
-	void readOne(SequencerT seq) {
-		if(!this.pendingReadRequests.empty) {
-			TestMemSysRequest req = this.pendingReadRequests.front;
+	MOESICache l1I1() {
+		return this.memorySystem.l1Is[1];
+	}
+
+	SequencerT seqD1() {
+		return this.memorySystem.seqDs[1];
+	}
+
+	MOESICache l1D1() {
+		return this.memorySystem.l1Ds[1];
+	}
+	
+	enum XXEventType: string {
+		READ = "READ",
+		WRITE = "WRITE"
+	}
+	
+	class XXSchedule {
+		this(SequencerT seq, TestMemSysRequest req) {
+			this.seq = seq;
+			this.req = req;
+		}
+		
+		SequencerT seq;
+		TestMemSysRequest req;
+	}
+	
+	class XXEventQueue : EventQueue!(XXEventType, XXSchedule) {
+		this() {
+			super("XXEventQueue");
+			
+			this.registerHandler(XXEventType.READ, &this.handler);
+			this.registerHandler(XXEventType.WRITE, &this.handler);
+		}
+
+		void handler(XXEventType eventType, XXSchedule context, ulong when) {
+			SequencerT seq = context.seq;
+			TestMemSysRequest req = context.req;
+			
+			logging[LogCategory.DEBUG].infof("handler (seq: %s, req: %s)", seq, req);
+			
 			seq.read(req);
-			
-			this.requestStartTime[req.id] = this.currentCycle;
-
-			this.pendingReadRequests.popFront();
-
-			this.numReadRequestsSent++;
 		}
 	}
-
-	TestMemSysRequest newWriteRequest(Addr phaddr) {
-		TestMemSysRequest req = new TestMemSysRequest(RequestType.WRITE, phaddr, null);
-		return req;
-	}
-
-	void writeOne(SequencerT seq) {
-		if(!this.pendingWriteRequests.empty) {
-			TestMemSysRequest req = this.pendingWriteRequests.front;
-			seq.write(req);
-			
-			this.requestStartTime[req.id] = this.currentCycle;
-
-			this.pendingWriteRequests.popFront();
+	
+	XXEventQueue xxEventQueue;
+	
+	void schedule(SequencerT seq, RequestType reqType, Addr phaddr, ulong lat) {
+		void callback(Request req) {
+			this.numRemainingRequests--;
 		}
+		
+		TestMemSysRequest req = new TestMemSysRequest(RequestType.READ, phaddr, &callback);
+		this.xxEventQueue.schedule(XXEventType.READ, new XXSchedule(seq, req), lat);
+		this.numRemainingRequests++;
 	}
-
-	Addr newPhaddr() {
-		return 0xFF + uniform(0, 0xFF) * 0xFF;
-//				return 0x5e80;
+	
+	void init() {
+		this.schedule(this.seqD0, RequestType.READ, 0x01, 0);
+		this.schedule(this.seqD1, RequestType.READ, 0x01, 100);
 	}
-
+	
 	void run() {
-		this.dumpConfigs();
-
-		while(this.currentCycle <= 10000) {
-
-			if(this.currentCycle % 10 == 0 && this.currentCycle <= 5000)
-				for(uint i = 0; i < 2; i++) {
-					this.pendingReadRequests ~= this.newReadRequest(this.newPhaddr());
-//					this.pendingWriteRequests ~= this.newWriteRequest(this.newPhaddr());
-				}
-
-			uint max_request_width = 1;
-
-			for(uint i = 0; i < max_request_width && !this.pendingReadRequests.empty; i++) {
-//				this.readOne(this.seqI);
-				this.readOne(this.seqD);
-			}
-
-			for(uint i = 0; i < max_request_width && !this.pendingWriteRequests.empty; i++) {
-//				this.writeOne(this.seqI);
-				this.writeOne(this.seqD);
-			}
-
+		while(this.numRemainingRequests > 0) {
 			foreach(eventProcessor; this.eventProcessors) {
 				eventProcessor.processEvents();
 			}
 
 			this.currentCycle++;
 		}
-
-		this.dumpStats();
-
-		logging[LogCategory.TEST].haltf("memory system test completed, numReadRequestsSent: %d, numReadRequestsServiced: %d", this.numReadRequestsSent, this.numReadRequestsServiced);
-		
-		ulong[] pendingReqIds;
-		
-		foreach(reqId, startTime; this.requestStartTime) {
-			pendingReqIds ~= reqId;
-		}
-		
-		pendingReqIds.sort();
-		
-		foreach(reqId; pendingReqIds) {
-			writefln("pending read request, id: %d", reqId);
-		}
 	}
+	
+	/////////////////////////////////////////////////////////////////////////////////
 
 	TestMemSysMemorySystem memorySystem;
 
 	TestMemSysRequest[] pendingReadRequests;
 	TestMemSysRequest[] pendingWriteRequests;
+	
+	ulong numRemainingRequests;
 
 	ulong numReadRequestsSent;
 	ulong numReadRequestsServiced;

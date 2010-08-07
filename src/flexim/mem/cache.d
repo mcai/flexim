@@ -26,27 +26,46 @@ import flexim.all;
 enum CacheMonitoringEventType: string {
 	DIR_ENTRY_ADD_SHARER = "DIR_ENTRY_ADD_SHARER",
 	DIR_ENTRY_REMOVE_SHARER = "DIR_ENTRY_REMOVE_SHARER",
-	DIR_ENTRY_SET_OWNER = "DIR_ENTRY_SET_OWNER"
+	DIR_ENTRY_SET_OWNER = "DIR_ENTRY_SET_OWNER",
+	DIR_LOCK_LOCK = "DIR_LOCK_LOCK",
+	DIR_LOCK_UNLOCK = "DIR_LOCK_UNLOCK"
 }
 
-alias ContextCallback3!(uint, uint, CacheMonitoringEventType) CacheMonitoringCallback;
+alias ContextCallback4!(uint, uint, CacheMonitoringEventType, string) CacheMonitoringCallback;
+
+class CacheMonitor {
+	this() {
+	}
+
+	void invoke(uint x, uint y, CacheMonitoringEventType eventType, string msg) {
+		foreach(monitor; this.callbacks) {
+			monitor.invoke(x, y, eventType, msg);
+		}
+	}
+
+	CacheMonitoringCallback[] callbacks;
+}
 
 class DirEntry(StateT) {
 	this(uint x, uint y) {
 		this.x = x;
 		this.y = y;
+		
+		this.monitor = new CacheMonitor();
 	}
 
 	alias ICache!(StateT) ICacheT;
 
 	void addSharer(ICacheT node) {
-		this.invokeMonitors(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_ADD_SHARER);
+		assert(node !is null);
+		this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_ADD_SHARER, node.name);
 
 		this.sharers ~= node;
 	}
 
 	void removeSharer(ICacheT node) {
-		this.invokeMonitors(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_REMOVE_SHARER);
+		assert(node !is null);
+		this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_REMOVE_SHARER, node.name);
 
 		bool hasFound = false;
 		uint indexFound;
@@ -82,12 +101,6 @@ class DirEntry(StateT) {
 		return this.sharers.length > 0 || this.owner !is null;
 	}
 
-	void invokeMonitors(uint x, uint y, CacheMonitoringEventType eventType) {
-		foreach(monitor; this.monitors) {
-			monitor.invoke(x, y, eventType);
-		}
-	}
-
 	override string toString() {
 		string str;
 
@@ -101,7 +114,7 @@ class DirEntry(StateT) {
 	}
 
 	void owner(ICacheT value) {
-		this.invokeMonitors(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_SET_OWNER);
+		this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_SET_OWNER, value !is null ? value.name : "NULL");
 
 		this.m_owner = value;
 	}
@@ -111,28 +124,34 @@ class DirEntry(StateT) {
 
 	uint x;
 	uint y;
-
-	ContextCallback3!(uint, uint, CacheMonitoringEventType)[] monitors;
+	
+	CacheMonitor monitor;
 }
-
 class DirLock {
 	this(uint x) {
 		this.x = x;
+		
+		this.monitor = new CacheMonitor();
 	}
 
-	bool lock(Invokable callback) {
+	bool lock(Addr addr, Invokable callback) {
+		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_LOCK, format("0x%x", addr));
+			
 		if(this.locked) {
 			if(callback !is null) {
 				this.waiters ~= callback;
 			}
 			return false;
-		} else {
+		} else {			
+			this.lockAddr = addr;
 			this.locked = true;
 			return true;
 		}
 	}
 
 	void unlock() {
+		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_UNLOCK, format("0x%x", this.lockAddr));
+
 		foreach(waiter; this.waiters) {
 			if(waiter !is null) {
 				waiter.invoke();
@@ -156,6 +175,10 @@ class DirLock {
 	Invokable[] waiters;
 
 	uint x;
+	
+	Addr lockAddr;
+	
+	CacheMonitor monitor;
 }
 
 class Dir(StateT) {
@@ -166,6 +189,8 @@ class Dir(StateT) {
 	this(uint xSize, uint ySize) {
 		this.xSize = xSize;
 		this.ySize = ySize;
+		
+		this.monitor = new CacheMonitor();
 
 		this.dirEntries = new DirEntryT[][this.xSize];
 		for(uint i = 0; i < this.xSize; i++) {
@@ -173,19 +198,14 @@ class Dir(StateT) {
 
 			for(uint j = 0; j < this.ySize; j++) {
 				this.dirEntries[i][j] = new DirEntryT(i, j);
-				this.dirEntries[i][j].monitors ~= new ContextCallback3!(uint, uint, CacheMonitoringEventType)(&this.invokeMonitors);
+				this.dirEntries[i][j].monitor.callbacks ~= new CacheMonitoringCallback(&this.monitor.invoke);
 			}
 		}
 
 		this.dirLocks = new DirLock[this.xSize];
 		for(uint i = 0; i < this.xSize; i++) {
 			this.dirLocks[i] = new DirLock(i);
-		}
-	}
-
-	void invokeMonitors(uint x, uint y, CacheMonitoringEventType eventType) {
-		foreach(monitor; this.monitors) {
-			monitor.invoke(x, y, eventType);
+			this.dirLocks[i].monitor.callbacks ~= new CacheMonitoringCallback(&this.monitor.invoke);
 		}
 	}
 
@@ -199,7 +219,7 @@ class Dir(StateT) {
 	DirEntryT[][] dirEntries;
 	DirLock[] dirLocks;
 
-	ContextCallback3!(uint, uint, CacheMonitoringEventType)[] monitors;
+	CacheMonitor monitor;
 }
 
 class CacheBlock(StateT) {

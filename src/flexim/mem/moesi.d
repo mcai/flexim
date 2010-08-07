@@ -118,7 +118,7 @@ class MOESICache: Node, ICache!(MOESIState) {
 
 		this.cache = new CacheT(blockSize, assoc, numSets, MOESIState.INVALID);
 		
-		this.cache.dir.monitors ~= new CacheMonitoringCallback(&this.xx);
+		this.cache.dir.monitor.callbacks ~= new CacheMonitoringCallback(&this.monitor);
 
 		this.hitLatency = hitLatency;
 		this.missLatency = missLatency;
@@ -132,8 +132,8 @@ class MOESICache: Node, ICache!(MOESIState) {
 		this.lowerInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleLowerInterconnectMessage);
 	}
 	
-	void xx(uint set, uint way, CacheMonitoringEventType eventType) {
-		logging[LogCategory.DEBUG].infof("%s %s (set=%d, way=%d)", this.name, eventType, set, way);
+	void monitor(uint set, uint way, CacheMonitoringEventType eventType, string msg) {
+		logging[LogCategory.DEBUG].infof("%s %s (set=%d, way=%s) %s", this.name, eventType, set, way != -1 ? format("%d", way) : "N/A", msg);
 	}
 
 	void dumpConfigs(string indent) {
@@ -631,7 +631,7 @@ class MOESIEventQueue: EventQueue!(MOESIEventType, MOESIStack) {
 				stack.ret();
 				return;
 			}
-			if(!stack.dirLock.lock(new Callback3!(MOESIEventType, MOESIStack, ulong)(MOESIEventType.FIND_AND_LOCK, stack, 0, &this.schedule))) {
+			if(!stack.dirLock.lock(stack.addr, new Callback3!(MOESIEventType, MOESIStack, ulong)(MOESIEventType.FIND_AND_LOCK, stack, 0, &this.schedule))) {
 				return;
 			}
 

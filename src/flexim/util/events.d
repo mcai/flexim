@@ -44,7 +44,8 @@ class Callback: Invokable {
 		CallbackT callback;
 	}
 	
-	this() {
+	this(Invoker callback) {
+		this.callback = callback;
 	}
 
 	override void invoke() {
@@ -58,31 +59,31 @@ class Callback: Invokable {
 
 class Callback0 : Callback {
 	this(void delegate() del) {
-		this.callback = new Invoker({del();});	
+		super(new Invoker({del();}));
 	}
 }
 
 class Callback1(Param1T) : Callback {
-	this(Param1T m1, void delegate(Param1T) del) {		
-		this.callback = new Invoker({del(m1);});
+	this(Param1T m1, void delegate(Param1T) del) {
+		super(new Invoker({del(m1);}));
 	}	
 }
 
 class Callback2(Param1T, Param2T) : Callback {
 	this(Param1T m1, void delegate(Param1T, Param2T) del) {
-		this.callback = new Invoker({del(m1, m2);});
+		super(new Invoker({del(m1, m2);}));
 	}	
 }
 
 class Callback3(Param1T, Param2T, Param3T) : Callback {
 	this(Param1T m1, Param2T m2, Param3T m3, void delegate(Param1T, Param2T, Param3T) del) {		
-		this.callback = new Invoker({del(m1, m2, m3);});
+		super(new Invoker({del(m1, m2, m3);}));
 	}
 }
 
 class Callback4(Param1T, Param2T, Param3T, Param4T) : Callback {
 	this(Param1T m1, Param2T m2, Param3T m3, Param4T m4, void delegate(Param1T, Param2T, Param3T, Param4T) del) {		
-		this.callback = new Invoker({del(m1, m2, m3, m4);});
+		super(new Invoker({del(m1, m2, m3, m4);}));
 	}
 }
 
