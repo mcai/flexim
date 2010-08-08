@@ -121,14 +121,11 @@ class DirLock {
 		this.monitor = new CacheMonitor();
 	}
 
-	bool lock(ulong lockerStackId, Invokable callback) {		
+	bool lock(ulong lockerStackId) {		
 		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_LOCK, format("locked=%s, lockerStackId=%s", 
 			this.locked, this.locked ? format("%d", this.lockerStackId) : "N/A"));
 			
 		if(this.locked) {
-			if(callback !is null) {
-				this.waiters.insert(0, callback);
-			}
 			return false;
 		} else {			
 			this.lockerStackId = lockerStackId;
@@ -140,27 +137,18 @@ class DirLock {
 	void unlock() {
 		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_UNLOCK, format("lockerStackId=%d", this.lockerStackId));
 
-		foreach(waiter; this.waiters) {
-			if(waiter !is null) {
-				waiter.invoke();
-			}
-		}
-
-		this.waiters.clear();
 		this.locked = false;
 	}
 
 	override string toString() {
 		string str;
 
-		str ~= format("DirLock[locked: %s, waiters.length: %d]", this.locked, this.waiters.length);
+		str ~= format("DirLock[locked: %s]", this.locked);
 
 		return str;
 	}
 
 	bool locked;
-
-	Invokable[] waiters;
 
 	uint x;
 	

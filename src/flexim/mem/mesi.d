@@ -637,14 +637,11 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Lock entry */
 			stack.dirLock = ccache.getDirLock(stack.set);
-			if(stack.dirLock.locked && !stack.isBlocking) {
+			if(!stack.dirLock.lock(stack.id)) {
 				logging[LogCategory.DEBUG].infof("  0x%x %s block already locked: set=%d, way=%d, lockerStackId=%d",
 						stack.tag, ccache.name, stack.set, stack.way, stack.dirLock.lockerStackId);
 				ret.isErr = true;
 				stack.ret();
-				return;
-			}
-			if(!stack.dirLock.lock(stack.id, new Callback3!(MESIEventType, MESIStack, ulong)(MESIEventType.FIND_AND_LOCK, stack, 0, &this.schedule))) {
 				return;
 			}
 
@@ -1121,10 +1118,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request action", stack.id, stack.tag, target.name);
 
-			/* Check block locking error. If read request is down-up, there should not
-			 * have been any error while locking. */
+			/* Check block locking error. */
 			if(stack.isErr) {
-				assert(ccache.next == target);
 				ret.isErr = true;
 				this.schedule(MESIEventType.READ_REQUEST_REPLY, stack, 0);
 				return;
@@ -1359,10 +1354,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request action", stack.id, stack.tag, target.name);
 
-			/* Check lock error. If write request is down-up, there should
-			 * have been no error. */
+			/* Check lock error. */
 			if(stack.isErr) {
-				assert(ccache.next == target);
 				ret.isErr = true;
 				this.schedule(MESIEventType.WRITE_REQUEST_REPLY, stack, 0);
 				return;
