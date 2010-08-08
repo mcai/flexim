@@ -17,6 +17,9 @@ Flexim - A modular and highly configurable multicore simulator written in D
    include a classic five-stage out-of-order issue processor core, multi-level coherent
    memory hierarchy with directory-based MESI coherence, and various supporting modules.
 
+== Status ==
+   CAUTION: This program is currently in its ALPHA quality. Please keep an eye on its rapid development.
+
 == System Requirements ==
  1. Make sure that you have a Ubuntu 10.04 linux machine.
    Other popular linux distros may work as well if you are lucky.
@@ -35,7 +38,7 @@ Flexim - A modular and highly configurable multicore simulator written in D
       make clean
     Note: By default, the flexim binary is placed in the bin/ folder.
 
- 3. In the subdirectory bin/, you can simulate a MIPS32 LE program using the command:
+ 3. In the subdirectory build/, you can simulate a MIPS32 LE program using the command:
     ./flexim <path-to-mipsel-executable> <args>
 
 == Contact Information ==
