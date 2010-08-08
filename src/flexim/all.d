@@ -49,8 +49,8 @@ public import flexim.drivers.simulations;
 
 public import flexim.isa.basic;
 public import flexim.isa.branch;
+public import flexim.isa.common;
 public import flexim.isa.integer;
-public import flexim.isa.isa;
 public import flexim.isa.mem;
 public import flexim.isa.misc;
 

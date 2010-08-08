@@ -14,8 +14,8 @@ src/flexim/drivers/parsers.d
 src/flexim/drivers/simulations.d
 src/flexim/isa/basic.d
 src/flexim/isa/branch.d
+src/flexim/isa/common.d
 src/flexim/isa/integer.d
-src/flexim/isa/isa.d
 src/flexim/isa/mem.d
 src/flexim/isa/misc.d
 src/flexim/linux/process.d

@@ -1,5 +1,5 @@
 /*
- * main.d
+ * flexim/main.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
