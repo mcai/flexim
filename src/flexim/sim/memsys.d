@@ -106,11 +106,6 @@ class MESIMemorySystemSimulator: Simulator {
 		return this.memorySystem.l1Ds[1];
 	}
 	
-	enum XXEventType: string {
-		READ = "READ",
-		WRITE = "WRITE"
-	}
-	
 	class XXSchedule {
 		this(SequencerT seq, TestMemSysRequest req) {
 			this.seq = seq;
@@ -121,21 +116,26 @@ class MESIMemorySystemSimulator: Simulator {
 		TestMemSysRequest req;
 	}
 	
-	class XXEventQueue : EventQueue!(XXEventType, XXSchedule) {
+	class XXEventQueue : EventQueue!(RequestType, XXSchedule) {
 		this() {
 			super("XXEventQueue");
 			
-			this.registerHandler(XXEventType.READ, &this.handler);
-			this.registerHandler(XXEventType.WRITE, &this.handler);
+			this.registerHandler(RequestType.READ, &this.handler);
+			this.registerHandler(RequestType.WRITE, &this.handler);
 		}
 
-		void handler(XXEventType eventType, XXSchedule context, ulong when) {
+		void handler(RequestType eventType, XXSchedule context, ulong when) {
 			SequencerT seq = context.seq;
 			TestMemSysRequest req = context.req;
 			
 			logging[LogCategory.DEBUG].infof("handler (seq: %s, req: %s)", seq, req);
 			
-			seq.read(req);
+			if(eventType == RequestType.READ) {
+				seq.read(req);
+			}
+			else {
+				seq.write(req);
+			}
 		}
 	}
 	
@@ -146,18 +146,21 @@ class MESIMemorySystemSimulator: Simulator {
 			this.numRemainingRequests--;
 		}
 		
-		TestMemSysRequest req = new TestMemSysRequest(RequestType.READ, phaddr, &callback);
-		this.xxEventQueue.schedule(XXEventType.READ, new XXSchedule(seq, req), lat);
+		TestMemSysRequest req = new TestMemSysRequest(reqType, phaddr, &callback);
+		this.xxEventQueue.schedule(reqType, new XXSchedule(seq, req), lat);
 		this.numRemainingRequests++;
 	}
 	
 	void init() {
-		this.schedule(this.seqD0, RequestType.READ, 0x01, 0);
-		this.schedule(this.seqD1, RequestType.READ, 0x01, 100);
+		for(uint i = 0; i < 100; i++) {
+			this.schedule(this.seqD0, RequestType.READ, i, 0 + i * 10);
+			this.schedule(this.seqD1, RequestType.WRITE, i+1, 50 + i * 10);
+			this.schedule(this.seqD1, RequestType.READ, i+2, 100 + i * 10);
+		}
 	}
 	
 	void run() {
-		while(this.numRemainingRequests > 0) {
+		while(this.numRemainingRequests > 0 && this.currentCycle < 10000) {
 			foreach(eventProcessor; this.eventProcessors) {
 				eventProcessor.processEvents();
 			}

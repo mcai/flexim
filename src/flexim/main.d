@@ -32,8 +32,8 @@ void main(string[] args) {
 	string[] programArgs = args[1 .. args.length];
 
 //	Simulator simulator = new FastCPUSimulator(getcwd(), programArgs);
-//	Simulator simulator = new OoOCPUSimulator(getcwd(), programArgs);
-	Simulator simulator = new MESIMemorySystemSimulator();
+	Simulator simulator = new OoOCPUSimulator(getcwd(), programArgs);
+//	Simulator simulator = new MESIMemorySystemSimulator();
 	
 	simulator.run();
 }

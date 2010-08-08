@@ -26,7 +26,7 @@ import flexim.all;
 string message(string caption, string text) {
 	string strCurrentCycle = Simulator.singleInstance !is null ? to!(string)(Simulator.singleInstance.currentCycle) : "INIT";
 	//	return format("[%s: %s] %s", strCurrentCycle, caption, text);
-	return format("[%s] %s", strCurrentCycle, text);
+	return format("[%s] \t%s", strCurrentCycle, text);
 }
 
 enum LogCategory: string {

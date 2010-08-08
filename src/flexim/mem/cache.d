@@ -24,8 +24,9 @@ module flexim.mem.cache;
 import flexim.all;
 
 enum CacheMonitoringEventType: string {
-	DIR_ENTRY_ADD_SHARER = "DIR_ENTRY_ADD_SHARER",
-	DIR_ENTRY_REMOVE_SHARER = "DIR_ENTRY_REMOVE_SHARER",
+	CACHE_SET_BLOCK = "CACHE_SET_BLOCK",
+	DIR_ENTRY_SET_SHARER = "DIR_ENTRY_SET_SHARER",
+	DIR_ENTRY_UNSET_SHARER = "DIR_ENTRY_UNSET_SHARER",
 	DIR_ENTRY_SET_OWNER = "DIR_ENTRY_SET_OWNER",
 	DIR_LOCK_LOCK = "DIR_LOCK_LOCK",
 	DIR_LOCK_UNLOCK = "DIR_LOCK_UNLOCK"
@@ -54,47 +55,33 @@ class DirEntry(StateT) {
 		this.monitor = new CacheMonitor();
 	}
 
-	alias ICache!(StateT) ICacheT;
-
-	void addSharer(ICacheT node) {
+	void setSharer(MESICache node) {
 		assert(node !is null);
-		this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_ADD_SHARER, node.name);
-
-		this.sharers ~= node;
+        if(!canFind(this.sharers, node)) {
+			this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_SET_SHARER, node.name);
+			
+			this.sharers ~= node;
+        }
 	}
 
-	void removeSharer(ICacheT node) {
+	void unsetSharer(MESICache node) {
 		assert(node !is null);
-		this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_REMOVE_SHARER, node.name);
-
-		bool hasFound = false;
-		uint indexFound;
-
-		foreach(i, sharer; this.sharers) {
-			if(sharer.name == node.name) {
-				hasFound = true;
-				indexFound = i;
-				break;
+		if(canFind(this.sharers, node)) {
+			this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_UNSET_SHARER, node.name);
+	
+			uint indexFound;	
+			foreach(i, sharer; this.sharers) {
+				if(sharer == node) {
+					indexFound = i;
+					break;
+				}
 			}
-		}
-
-//		assert(hasFound); //TODO: uncomment it
-
-		if(hasFound) {
 			this.sharers = this.sharers.remove(indexFound);
 		}
 	}
 
-	bool isSharer(ICacheT node) {
-		uint indexFound;
-
-		foreach(i, sharer; this.sharers) {
-			if(sharer.name == node.name) {
-				return true;
-			}
-		}
-
-		return false;
+	bool isSharer(MESICache node) {
+		return canFind(this.sharers, node);
 	}
 
 	bool isSharedOrOwned() {
@@ -109,18 +96,18 @@ class DirEntry(StateT) {
 		return str;
 	}
 
-	ICacheT owner() {
+	MESICache owner() {
 		return this.m_owner;
 	}
 
-	void owner(ICacheT value) {
+	void owner(MESICache value) {
 		this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_SET_OWNER, value !is null ? value.name : "NULL");
 
 		this.m_owner = value;
 	}
 
-	ICacheT m_owner;
-	ICacheT[] sharers;
+	MESICache m_owner;
+	MESICache[] sharers;
 
 	uint x;
 	uint y;
@@ -134,23 +121,24 @@ class DirLock {
 		this.monitor = new CacheMonitor();
 	}
 
-	bool lock(Addr addr, Invokable callback) {
-		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_LOCK, format("0x%x", addr));
+	bool lock(ulong lockerStackId, Invokable callback) {		
+		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_LOCK, format("locked=%s, lockerStackId=%s", 
+			this.locked, this.locked ? format("%d", this.lockerStackId) : "N/A"));
 			
 		if(this.locked) {
 			if(callback !is null) {
-				this.waiters ~= callback;
+				this.waiters.insert(0, callback);
 			}
 			return false;
 		} else {			
-			this.lockAddr = addr;
+			this.lockerStackId = lockerStackId;
 			this.locked = true;
 			return true;
 		}
 	}
 
 	void unlock() {
-		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_UNLOCK, format("0x%x", this.lockAddr));
+		this.monitor.invoke(this.x, -1, CacheMonitoringEventType.DIR_LOCK_UNLOCK, format("lockerStackId=%d", this.lockerStackId));
 
 		foreach(waiter; this.waiters) {
 			if(waiter !is null) {
@@ -176,7 +164,7 @@ class DirLock {
 
 	uint x;
 	
-	Addr lockAddr;
+	ulong lockerStackId;
 	
 	CacheMonitor monitor;
 }
@@ -246,103 +234,6 @@ class CacheBlock(StateT) {
 	ulong lastAccess;
 }
 
-abstract class StatsBase(ValueT) {	
-	this() {
-		this.init();
-	}
-
-	protected abstract void init();
-
-	protected abstract void init(string index);
-
-	ref ValueT opIndex(string index) {
-		assert(index in this.entries, index);
-		return this.entries[index];
-	}
-
-	void opIndexAssign(ValueT value, string index) {
-		assert(index in this.entries, index);
-		this.entries[index] = value;
-	}
-
-	ValueT[string] entries;
-}
-
-class MESICacheStats: StatsBase!(ulong) {
-	protected override void init() {
-		this.init("accesses");
-		this.init("hits");
-		this.init("evictions");
-		this.init("reads");
-		this.init("blockingReads");
-		this.init("nonblockingReads");
-		this.init("readHits");
-		this.init("writes");
-		this.init("blockingWrites");
-		this.init("nonblockingWrites");
-		this.init("writeHits");
-
-		this.init("readRetries");
-		this.init("writeRetries");
-
-		this.init("noRetryAccesses");
-		this.init("noRetryHits");
-		this.init("noRetryReads");
-		this.init("noRetryReadHits");
-		this.init("noRetryWrites");
-		this.init("noRetryWriteHits");
-	}
-
-	protected override void init(string index) {
-		this.entries[index] = 0;
-	}
-}
-
-alias MESICacheStats Stats;
-
-interface ICache(StateT) {
-	alias CacheBlock!(StateT) CacheBlockT;
-	alias CacheSet!(StateT) CacheSetT;
-	alias Cache!(StateT) CacheT;
-
-	alias DirEntry!(StateT) DirEntryT;
-	alias Dir!(StateT) DirT;
-
-	alias CacheHierarchy!(typeof(this), StateT) CacheHierarchyT;
-
-	string name();
-
-	bool findBlock(uint addr, ref uint set, ref uint way, ref uint tag, ref StateT state);
-
-	void getBlock(uint set, uint way, ref uint tag, ref StateT state);
-
-	uint blockSize();
-
-	DirT getDir();
-
-	DirEntryT getDirEntry(uint set, uint way);
-
-	DirLock getDirLock(uint set);
-
-	bool isMem();
-
-	uint hitLatency();
-
-	uint missLatency();
-
-	typeof(this) next();
-
-	CacheHierarchyT cacheHierarchy();
-
-	void dumpConfigs(string indent);
-
-	void dumpStats(string indent);
-
-	Stats stats();
-
-	CacheT getCache();
-}
-
 class CacheSet(StateT) {
 	alias CacheBlock!(StateT) CacheBlockT;
 	alias Cache!(StateT) CacheT;
@@ -363,10 +254,6 @@ class CacheSet(StateT) {
 
 	CacheBlockT opIndex(uint i) {
 		return this.blks[i];
-	}
-
-	void opIndexAssign(CacheBlockT value, uint i) {
-		this.blks[i] = value;
 	}
 
 	int opApply(int delegate(ref uint, ref CacheBlockT) dg) {
@@ -419,6 +306,9 @@ class Cache(StateT) {
 		}
 
 		this.dir = new DirT(this.numSets, this.assoc);
+		
+		this.monitor = new CacheMonitor();
+		this.dir.monitor.callbacks ~= new CacheMonitoringCallback(&this.monitor.invoke);
 	}
 
 	bool findBlock(uint addr, ref uint set, ref uint way, ref uint tag, ref StateT state) {
@@ -445,6 +335,7 @@ class Cache(StateT) {
 	}
 
 	void setBlock(uint set, uint way, uint tag, StateT state) {
+		this.monitor.invoke(set, way, CacheMonitoringEventType.CACHE_SET_BLOCK, format("0x%x, %s", tag, state));
 		assert(set >= 0 && set < this.numSets);
 		assert(way >= 0 && way < this.assoc);
 		this.accessBlock(set, way);
@@ -520,6 +411,8 @@ class Cache(StateT) {
 	CacheSetT[] sets;
 
 	DirT dir;
+
+	CacheMonitor monitor;
 }
 
 class CacheQueueEntry(StateT: CacheBlockState) {

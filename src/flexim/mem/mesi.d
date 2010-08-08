@@ -24,7 +24,7 @@ module flexim.mem.mesi;
 import flexim.all;
 
 uint retry_lat(ICache)(ICache ccache) {
-	return ccache.hitLatency + uniform(0, ccache.hitLatency);
+	return ccache.hitLatency + uniform(0, ccache.hitLatency + 2);
 }
 
 class MESIState: CacheBlockState {
@@ -98,7 +98,37 @@ enum MESIEventType: string {
 	INVALIDATE_FINISH = "INVALIDATE_FINISH"
 }
 
-class MESICache: Node, ICache!(MESIState) {
+class MESICacheStats: Stats!(ulong) {
+	protected override void init() {
+		this.init("accesses");
+		this.init("hits");
+		this.init("evictions");
+		this.init("reads");
+		this.init("blockingReads");
+		this.init("nonblockingReads");
+		this.init("readHits");
+		this.init("writes");
+		this.init("blockingWrites");
+		this.init("nonblockingWrites");
+		this.init("writeHits");
+
+		this.init("readRetries");
+		this.init("writeRetries");
+
+		this.init("noRetryAccesses");
+		this.init("noRetryHits");
+		this.init("noRetryReads");
+		this.init("noRetryReadHits");
+		this.init("noRetryWrites");
+		this.init("noRetryWriteHits");
+	}
+
+	protected override void init(string index) {
+		this.entries[index] = 0;
+	}
+}
+
+class MESICache: Node {
 	alias MESIState StateT;
 
 	alias CacheBlock!(StateT) CacheBlockT;
@@ -106,8 +136,11 @@ class MESICache: Node, ICache!(MESIState) {
 	alias Cache!(StateT) CacheT;
 
 	alias CacheQueueEntry!(StateT) CacheQueueEntryT;
-
-	alias ICache!(StateT) ICacheT;
+   
+    alias DirEntry!(StateT) DirEntryT;
+    alias Dir!(StateT) DirT;
+	
+	alias CacheHierarchy!(typeof(this), StateT) CacheHierarchyT;
 
 	this(CacheHierarchyT cacheHierarchy, string name, bool isPrivate, uint blockSize, uint assoc, uint numSets, uint hitLatency, uint missLatency, bool lowestPrivate, bool llc) {
 		super(name, isPrivate);
@@ -116,7 +149,7 @@ class MESICache: Node, ICache!(MESIState) {
 
 		this.cache = new CacheT(blockSize, assoc, numSets, MESIState.INVALID);
 		
-		this.cache.dir.monitor.callbacks ~= new CacheMonitoringCallback(&this.monitor);
+		this.cache.monitor.callbacks ~= new CacheMonitoringCallback(&this.monitor);
 
 		this.hitLatency = hitLatency;
 		this.missLatency = missLatency;
@@ -124,14 +157,14 @@ class MESICache: Node, ICache!(MESIState) {
 		this.lowestPrivate = lowestPrivate;
 		this.llc = llc;
 
-		this.stats = new Stats();
+		this.stats = new MESICacheStats();
 
 		this.upperInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleUpperInterconnectMessage);
 		this.lowerInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleLowerInterconnectMessage);
 	}
 	
 	void monitor(uint set, uint way, CacheMonitoringEventType eventType, string msg) {
-		logging[LogCategory.DEBUG].infof("%s %s (set=%d, way=%s) %s", this.name, eventType, set, way != -1 ? format("%d", way) : "N/A", msg);
+		logging[LogCategory.DEBUG].infof("  %s %s (set=%d, way=%s) %s", this.name, eventType, set, way != -1 ? format("%d", way) : "N/A", msg);
 	}
 
 	void dumpConfigs(string indent) {
@@ -139,9 +172,9 @@ class MESICache: Node, ICache!(MESIState) {
 				this.cache.assoc, this.hitLatency, this.missLatency);
 	}
 	
-	void appendStatStr(T)(string str, string indent, string key, T value) {
+	void appendStatStr(T)(ref string str, string indent, string key, T value) {
 		str ~= format(indent ~ "  " ~ "%s: %s\n", key, to!(string)(value));
-	}	
+	}
 
 	void dumpStats(string indent) {
 		string str;
@@ -308,15 +341,11 @@ class MESICache: Node, ICache!(MESIState) {
 		this.m_missLatency = value;
 	}
 
-	override string name() {
-		return super.name;
-	}
-
-	ICacheT next() {
+	MESICache next() {
 		return this.m_next;
 	}
 
-	void next(ICacheT value) {
+	void next(MESICache value) {
 		this.m_next = value;
 	}
 
@@ -328,16 +357,12 @@ class MESICache: Node, ICache!(MESIState) {
 		this.m_cacheHierarchy = value;
 	}
 	
-	Stats stats() {
+	MESICacheStats stats() {
 		return this.m_stats;
 	}
 	
-	void stats(Stats value) {
+	void stats(MESICacheStats value) {
 		this.m_stats = value;
-	}
-	
-	override CacheT getCache() {
-		return this.cache;
 	}
 
 	CacheT cache;
@@ -348,19 +373,17 @@ class MESICache: Node, ICache!(MESIState) {
 	bool lowestPrivate;
 	bool llc;
 
-	private ICacheT m_next;
+	private MESICache m_next;
 
 	CacheHierarchyT m_cacheHierarchy;
 
 	CacheQueueEntryT[][Addr] pendingRequests;
 	
-	private Stats m_stats;	
+	private MESICacheStats m_stats;	
 }
 
 class MESIMemory: MESICache {
 	alias MESIState StateT;
-
-	alias ICache!(StateT) ICacheT;
 
 	this(CacheHierarchyT cacheHierarchy, string name, uint readLatency, uint writeLatency) {
 		super(cacheHierarchy, name, false, 64, 4, 1024, 0, 400, false, false);
@@ -416,30 +439,22 @@ class MESIMemory: MESICache {
 		return true;
 	}
 
-	override string name() {
-		return super.name;
-	}
-
-	ICacheT next() {
+	MESICache next() {
 		return null;
-	}
-	
-	override CacheT getCache() {
-		return this.cache;
 	}
 }
 
 ulong mesi_stack_id = 0;
 
 class MESIStack {
-	this(ulong id, ICache!(MESIState) ccache, uint addr, Invokable callback) {
+	this(ulong id, MESICache ccache, uint addr, Invokable callback) {
 		this.id = id;
 		this.ccache = ccache;
 		this.addr = addr;
 		this.callback = callback;
 	}
 
-	this(ulong id, ICache!(MESIState) ccache, uint addr, MESIEventQueue eventQueue, MESIEventType retEvent, MESIStack retStack) {
+	this(ulong id, MESICache ccache, uint addr, MESIEventQueue eventQueue, MESIEventType retEvent, MESIStack retStack) {
 		this.retEvent = retEvent;
 		this.retStack = retStack;
 
@@ -463,7 +478,7 @@ class MESIStack {
 
 	ulong id;
 
-	ICache!(MESIState) ccache, target, except;
+	MESICache ccache, target, except;
 
 	uint addr, set, way, tag;
 	uint srcSet, srcWay, srcTag;
@@ -546,7 +561,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.FIND_AND_LOCK(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s find and lock (blocking=%s)",
 					stack.id, stack.addr, ccache.name, stack.isBlocking);
@@ -561,8 +576,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			/* Look for block. */
 			bool hit = ccache.findBlock(stack.addr, stack.set, stack.way, stack.tag, stack.state);
 			if(hit) {
-				logging[LogCategory.DEBUG].infof("  %d 0x%x %s hit: set=%d, way=%d, state=%s",
-						stack.id, stack.tag, ccache.name, stack.set, stack.way, stack.state);
+				logging[LogCategory.DEBUG].infof("  0x%x %s hit: set=%d, way=%d, state=%s",
+						stack.tag, ccache.name, stack.set, stack.way, stack.state);
 			}
 			
 			/* Stats */
@@ -607,36 +622,36 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Miss */
 			if(!hit) {
-//				assert(!stack.isBlocking); //TODO: uncomment it
+				assert(!stack.isBlocking);
 				assert(!ccache.isMem);
 
 				/* Find victim */
-				stack.way = ccache.getCache().replaceBlock(stack.set);
-				ccache.getCache().getBlock(stack.set, stack.way, dumbTag, stack.state);
+				stack.way = ccache.cache.replaceBlock(stack.set);
+				ccache.cache.getBlock(stack.set, stack.way, dumbTag, stack.state);
 				assert(stack.state != MESIState.INVALID || !ccache.getDir().isSharedOrOwned(stack.set, stack.way), 
 						format("stack.state=%s, ccache.getDirEntry(set=%d, way=%d)=%s", 
 								stack.state, stack.set, stack.way, ccache.getDirEntry(stack.set, stack.way)));
-				logging[LogCategory.DEBUG].infof("  %d 0x%x %s miss -> lru: set=%d, way=%d, state=%s",
-						stack.id, stack.tag, ccache.name, stack.set, stack.way, stack.state);
+				logging[LogCategory.DEBUG].infof("  0x%x %s miss -> lru: set=%d, way=%d, state=%s",
+						stack.tag, ccache.name, stack.set, stack.way, stack.state);
 			}
 
 			/* Lock entry */
 			stack.dirLock = ccache.getDirLock(stack.set);
 			if(stack.dirLock.locked && !stack.isBlocking) {
-				logging[LogCategory.DEBUG].infof("  %d 0x%x %s block already locked: set=%d, way=%d",
-						stack.id, stack.tag, ccache.name, stack.set, stack.way);
+				logging[LogCategory.DEBUG].infof("  0x%x %s block already locked: set=%d, way=%d, lockerStackId=%d",
+						stack.tag, ccache.name, stack.set, stack.way, stack.dirLock.lockerStackId);
 				ret.isErr = true;
 				stack.ret();
 				return;
 			}
-			if(!stack.dirLock.lock(stack.addr, new Callback3!(MESIEventType, MESIStack, ulong)(MESIEventType.FIND_AND_LOCK, stack, 0, &this.schedule))) {
+			if(!stack.dirLock.lock(stack.id, new Callback3!(MESIEventType, MESIStack, ulong)(MESIEventType.FIND_AND_LOCK, stack, 0, &this.schedule))) {
 				return;
 			}
 
 			/* Entry is locked. Record the transient tag so that a subsequent lookup
 			 * detects that the block is being brought. */
 			if(!ccache.isMem) {
-				ccache.getCache()[stack.set][stack.way].transientTag = stack.tag;
+				ccache.cache[stack.set][stack.way].transientTag = stack.tag;
 			}
 
 			/* On miss, evict if victim is a valid block. */
@@ -658,7 +673,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.FIND_AND_LOCK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s find and lock finish (err=%s)",
 					stack.id, stack.tag, ccache.name, stack.isErr);
@@ -667,7 +682,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* If evict produced err, return err */
 			if(stack.isErr) {
-				ccache.getCache().getBlock(stack.set, stack.way, dumbTag, stack.state);
+				ccache.cache.getBlock(stack.set, stack.way, dumbTag, stack.state);
 				assert(stack.state != MESIState.INVALID);
 				assert(stack.isEviction);
 				ret.isErr = true;
@@ -679,7 +694,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			/* Eviction */
 			if(stack.isEviction) {
 				ccache.stats["evictions"]++;
-				ccache.getCache().getBlock(stack.set, stack.way, dumbTag, stack.state);
+				ccache.cache.getBlock(stack.set, stack.way, dumbTag, stack.state);
 				assert(stack.state == MESIState.INVALID);
 			}
 
@@ -698,7 +713,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.LOAD(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s load", stack.id, stack.addr, ccache.name);
 
@@ -714,7 +729,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.LOAD_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 				
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s load action", stack.id, stack.tag, ccache.name);
 
@@ -744,7 +759,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.LOAD_MISS(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s load miss", stack.id, stack.tag, ccache.name);
 
@@ -760,7 +775,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 
 			/* Set block state to excl/shared depending on return var 'shared'. Also set the tag of the block. */
-			ccache.getCache().setBlock(stack.set, stack.way, stack.tag, stack.isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
+			ccache.cache.setBlock(stack.set, stack.way, stack.tag, stack.isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
 
 			/* Continue */
 			this.schedule(MESIEventType.LOAD_FINISH, stack, 0);
@@ -770,13 +785,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.LOAD_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s load finish", stack.id, stack.tag, ccache.name);
 
 			/* Update LRU, unlock, and return. */
 			if(!ccache.isMem) {
-				ccache.getCache().accessBlock(stack.set, stack.way);
+				ccache.cache.accessBlock(stack.set, stack.way);
 			}
 			stack.dirLock.unlock();
 			stack.ret();
@@ -786,7 +801,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.STORE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s store", stack.id, stack.addr, ccache.name);
 
@@ -802,7 +817,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.STORE_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s store action", stack.id, stack.tag, ccache.name);
 
@@ -820,7 +835,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(stack.state == MESIState.MODIFIED || stack.state == MESIState.EXCLUSIVE) {
 				this.schedule(MESIEventType.STORE_FINISH, stack, 0);
 			}
-			/* Miss - status=O/S/I */
+			/* Miss - status=S/I */
 			else {
 				MESIStack newStack = new MESIStack(stack.id, ccache, stack.tag, this, MESIEventType.STORE_FINISH, stack);
 				newStack.target = ccache.next;
@@ -832,7 +847,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.STORE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s store finish", stack.id, stack.tag, ccache.name);
 
@@ -849,8 +864,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Update LRU, tag/status, unlock, and return. */
 			if(!ccache.isMem) {
-				ccache.getCache().accessBlock(stack.set, stack.way);
-				ccache.getCache().setBlock(stack.set, stack.way, stack.tag, MESIState.MODIFIED);
+				ccache.cache.accessBlock(stack.set, stack.way);
+				ccache.cache.setBlock(stack.set, stack.way, stack.tag, MESIState.MODIFIED);
 			}
 			stack.dirLock.unlock();
 			stack.ret();
@@ -860,8 +875,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 
 			/* Default ret value */
 			ret.isErr = false;
@@ -890,7 +905,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict action", stack.id, stack.tag, ccache.name);
 
@@ -913,8 +928,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict receive", stack.id, stack.tag, target.name);
 
@@ -930,8 +945,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_WRITEBACK(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict writeback", stack.id, stack.tag, target.name);
 
@@ -945,7 +960,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			/* No writeback */
 			if(!stack.isWriteback) {
 				this.schedule(MESIEventType.EVICT_PROCESS, stack, 0);
-			} 
+			}
 			/* Writeback */
 			else {				
 				MESIStack newStack = new MESIStack(stack.id, target, 0, this, MESIEventType.EVICT_WRITEBACK_EXCLUSIVE, stack);
@@ -960,8 +975,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_WRITEBACK_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict writeback exclusive", stack.id, stack.tag, target.name);
 
@@ -982,8 +997,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_WRITEBACK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict writeback finish", stack.id, stack.tag, target.name);
 
@@ -997,8 +1012,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Set tag, status and lru */
 			if(!target.isMem) {
-				target.getCache().setBlock(stack.set, stack.way, stack.tag, MESIState.MODIFIED);
-				target.getCache().accessBlock(stack.set, stack.way);
+				target.cache.setBlock(stack.set, stack.way, stack.tag, MESIState.MODIFIED);
+				target.cache.accessBlock(stack.set, stack.way);
 			}
 			this.schedule(MESIEventType.EVICT_PROCESS, stack, 0);
 		}
@@ -1007,15 +1022,15 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_PROCESS(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict process", stack.id, stack.tag, target.name);
 
 			/* Remove sharer, owner, and unlock */
 			DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
-			dirEntry.removeSharer(ccache);
-			if(dirEntry.owner !is null && dirEntry.owner.name == ccache.name) {
+			dirEntry.unsetSharer(ccache);
+			if(dirEntry.owner == ccache) {
 				dirEntry.owner = null;
 			}
 			stack.dirLock.unlock();
@@ -1027,8 +1042,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict reply", stack.id, stack.tag, target.name);
 
@@ -1039,13 +1054,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_REPLY_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict reply receive", stack.id, stack.tag, ccache.name);
 
 			/* Invalidate block if there was no error. */
 			if(!stack.isErr) {
-				ccache.getCache().setBlock(stack.srcSet, stack.srcWay, 0, MESIState.INVALID);
+				ccache.cache.setBlock(stack.srcSet, stack.srcWay, 0, MESIState.INVALID);
 			}
 			assert(!ccache.getDir().isSharedOrOwned(stack.srcSet, stack.srcWay));
 			this.schedule(MESIEventType.EVICT_FINISH, stack, 0);
@@ -1055,7 +1070,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.EVICT_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict finish", stack.id, stack.tag, ccache.name);
 
@@ -1066,8 +1081,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request", stack.id, stack.addr, ccache.name);
 
@@ -1076,8 +1091,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			ret.isErr = false;
 
 			/* Send request to target */
-			assert((ccache.next !is null && ccache.next.name == target.name) ||
-					(target.next !is null && target.next.name == ccache.name));
+			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.READ_REQUEST_RECEIVE, stack, 8);
 		}
 
@@ -1085,14 +1099,14 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request receive", stack.id, stack.addr, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.addr, this, MESIEventType.READ_REQUEST_ACTION, stack);
-			newStack.isBlocking = (target.next !is null && target.next.name == ccache.name);
+			newStack.isBlocking = (target.next == ccache);
 			newStack.isRead = true;
 			newStack.isRetry = false;
 			this.schedule(MESIEventType.FIND_AND_LOCK, newStack, 0);
@@ -1102,49 +1116,48 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request action", stack.id, stack.tag, target.name);
 
 			/* Check block locking error. If read request is down-up, there should not
 			 * have been any error while locking. */
 			if(stack.isErr) {
-				assert(ccache.next !is null && ccache.next.name == target.name); 	
+				assert(ccache.next == target);
 				ret.isErr = true;
 				this.schedule(MESIEventType.READ_REQUEST_REPLY, stack, 0);
 				return;
 			}
 
-			this.schedule(ccache.next !is null && ccache.next.name == target.name ? MESIEventType.READ_REQUEST_UPDOWN : MESIEventType.READ_REQUEST_DOWNUP, stack, 0);
+			this.schedule(ccache.next == target ? MESIEventType.READ_REQUEST_UPDOWN : MESIEventType.READ_REQUEST_DOWNUP, stack, 0);
 		}
 
 		void READ_REQUEST_UPDOWN(MESIEventType eventType, MESIStack stack, ulong when) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request updown", stack.id, stack.tag, target.name);
 
 			stack.pending = 1;
 
-			/* Status = M/O/E/S */
+			/* Status = M/E/S */
 			if(stack.state != MESIState.INVALID) {
 				DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
 				
 				/* Check: block requested by ccache is not already owned by ccache */
-				assert(!(dirEntry.owner !is null && dirEntry.owner.name == ccache.name), 
-						format("ccache: %s, target: %s, dirEntry.owner: %s (set=%d, way=%d)", 
+				assert(dirEntry.owner != ccache, format("ccache: %s, target: %s, dirEntry.owner: %s (set=%d, way=%d)", 
 								ccache.name, target.name, dirEntry.owner.name, stack.set % target.getDir().xSize, stack.way));
 				
 				/* Send read request to owners other than ccache for the block. */
-				if(dirEntry.owner !is null && dirEntry.owner.name != ccache.name) {
+				if(dirEntry.owner !is null && dirEntry.owner != ccache) {
 					/* Send read request */
 					stack.pending++;
 					MESIStack newStack = new MESIStack(stack.id, target, stack.tag, this, MESIEventType.READ_REQUEST_UPDOWN_FINISH, stack);
-					newStack.target = cast(ICache!(MESIState)) (dirEntry.owner);
+					newStack.target = dirEntry.owner;
 					this.schedule(MESIEventType.READ_REQUEST, newStack, 0);
 				}
 				this.schedule(MESIEventType.READ_REQUEST_UPDOWN_FINISH, stack, 0);
@@ -1162,8 +1175,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_UPDOWN_MISS(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request updown miss", stack.id, stack.tag, target.name);
 
@@ -1178,9 +1191,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			/* Set block state to excl/shared depending on the return value 'shared'
 			 * that comes from a read request into the next cache level.
 			 * Also set the tag of the block. */
-			target.getCache().setBlock(stack.set, stack.way, stack.tag, stack.isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s set block (set=%d, way=%d) to state=%s",
-					stack.id, stack.tag, target.name, stack.set, stack.way, stack.isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
+			target.cache.setBlock(stack.set, stack.way, stack.tag, stack.isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
 			this.schedule(MESIEventType.READ_REQUEST_UPDOWN_FINISH, stack, 0);
 		}
 
@@ -1188,8 +1199,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 
 			/* Ignore while pending requests */
 			assert(stack.pending > 0);
@@ -1202,13 +1213,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(!target.isMem) {
 				/* Set owner to null for the directory entry if not owned by ccache. */
 				DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
-				if(dirEntry.owner !is null && dirEntry.owner.name != ccache.name) {
+				if(dirEntry.owner !is null && dirEntry.owner != ccache) {
 					dirEntry.owner = null;
 				}
 
 				/* Set ccache as sharer, and check whether there is other cache sharing it. */
 				bool isShared = false;
-				dirEntry.addSharer(ccache);
+				dirEntry.setSharer(ccache);
 				if(dirEntry.sharers.length > 1) {
 					isShared = true;
 				}
@@ -1223,7 +1234,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Respond with data, update LRU, unlock */
 			if(!target.isMem) {
-				target.getCache().accessBlock(stack.set, stack.way);
+				target.cache.accessBlock(stack.set, stack.way);
 			}
 			stack.dirLock.unlock();
 			this.schedule(MESIEventType.READ_REQUEST_REPLY, stack, 0);
@@ -1233,8 +1244,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request downup", stack.id, stack.tag, target.name);
 
@@ -1248,7 +1259,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(dirEntry.owner !is null) {
 				stack.pending++;
 				MESIStack newStack = new MESIStack(stack.id, target, stack.tag, this, MESIEventType.READ_REQUEST_DOWNUP_FINISH, stack);
-				newStack.target = cast(ICache!(MESIState)) (dirEntry.owner);
+				newStack.target = dirEntry.owner;
 				this.schedule(MESIEventType.READ_REQUEST, newStack, 0);
 			}
 
@@ -1259,8 +1270,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_DOWNUP_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 
 			/* Ignore while pending requests */
 			assert(stack.pending > 0);
@@ -1275,8 +1286,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			dirEntry.owner = null;
 
 			/* Set status to S, update LRU, unlock */
-			target.getCache().setBlock(stack.set, stack.way, stack.tag, MESIState.SHARED);
-			target.getCache().accessBlock(stack.set, stack.way);
+			target.cache.setBlock(stack.set, stack.way, stack.tag, MESIState.SHARED);
+			target.cache.accessBlock(stack.set, stack.way);
 			stack.dirLock.unlock();
 			this.schedule(MESIEventType.READ_REQUEST_REPLY, stack, 0);
 		}
@@ -1285,13 +1296,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request reply", stack.id, stack.tag, target.name);
 
-			assert((ccache.next !is null && ccache.next.name == target.name) ||
-					(target.next !is null && target.next.name == ccache.name));
+			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.READ_REQUEST_FINISH, stack, 2);
 		}
 
@@ -1299,7 +1309,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.READ_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
+			MESICache ccache = stack.ccache;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request finish", stack.id, stack.tag, ccache.name);
 
@@ -1310,8 +1320,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request", stack.id, stack.addr, ccache.name);
 
@@ -1319,8 +1329,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			ret.isErr = false;
 
 			/* Send request to target */
-			assert((ccache.next !is null && ccache.next.name == target.name) ||
-					(target.next !is null && target.next.name == ccache.name));
+			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.WRITE_REQUEST_RECEIVE, stack, 2);
 		}
 
@@ -1328,14 +1337,14 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request receive", stack.id, stack.addr, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.addr, this, MESIEventType.WRITE_REQUEST_ACTION, stack);
-			newStack.isBlocking = (target.next !is null && target.next.name == ccache.name);
+			newStack.isBlocking = target.next == ccache;
 			newStack.isRead = false;
 			newStack.isRetry = false;
 			this.schedule(MESIEventType.FIND_AND_LOCK, newStack, 0);
@@ -1345,15 +1354,15 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request action", stack.id, stack.tag, target.name);
 
 			/* Check lock error. If write request is down-up, there should
 			 * have been no error. */
 			if(stack.isErr) {
-				assert(ccache.next !is null && ccache.next.name == target.name);
+				assert(ccache.next == target);
 				ret.isErr = true;
 				this.schedule(MESIEventType.WRITE_REQUEST_REPLY, stack, 0);
 				return;
@@ -1371,20 +1380,20 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%s %s write request exclusive", stack.id, stack.tag, target.name);
 
-			this.schedule(ccache.next !is null && ccache.next.name == target.name ? MESIEventType.WRITE_REQUEST_UPDOWN : MESIEventType.WRITE_REQUEST_DOWNUP, stack, 0);
+			this.schedule(ccache.next == target ? MESIEventType.WRITE_REQUEST_UPDOWN : MESIEventType.WRITE_REQUEST_DOWNUP, stack, 0);
 		}
 
 		void WRITE_REQUEST_UPDOWN(MESIEventType eventType, MESIStack stack, ulong when) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request updown", stack.id, stack.tag, target.name);
 
@@ -1392,7 +1401,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(stack.state == MESIState.MODIFIED || stack.state == MESIState.EXCLUSIVE) {
 				this.schedule(MESIEventType.WRITE_REQUEST_UPDOWN_FINISH, stack, 0);
 			} 
-			/* status = O/S/I */
+			/* status = S/I */
 			else {
 				MESIStack newStack = new MESIStack(stack.id, target, stack.tag, this, MESIEventType.WRITE_REQUEST_UPDOWN_FINISH, stack);
 				newStack.target = target.next;
@@ -1404,8 +1413,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request updown finish", stack.id, stack.tag, target.name);
 
@@ -1420,15 +1429,15 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(!target.isMem) {
 				/* Set ccache as sharer and owner. */
 				DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
-				dirEntry.addSharer(ccache);
+				dirEntry.setSharer(ccache);
 				dirEntry.owner = ccache;
 			}
 
-			/* Update LRU, set status: M->M, O/E/S/I->E */
+			/* Update LRU, set status: M->M, E/S/I->E */
 			if(!target.isMem) {
-				target.getCache().accessBlock(stack.set, stack.way);
+				target.cache.accessBlock(stack.set, stack.way);
 				if(stack.state != MESIState.MODIFIED) {
-					target.getCache().setBlock(stack.set, stack.way, stack.tag, MESIState.EXCLUSIVE);
+					target.cache.setBlock(stack.set, stack.way, stack.tag, MESIState.EXCLUSIVE);
 				}
 			}
 			
@@ -1441,15 +1450,15 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request downup", stack.id, stack.tag, target.name);
 			
 			/* Set status to I, unlock */
-//			assert(stack.state != MESIState.INVALID); //TODO: uncomment it
+			assert(stack.state != MESIState.INVALID);
 			assert(!target.getDir().isSharedOrOwned(stack.set, stack.way));
-			target.getCache().setBlock(stack.set, stack.way, 0, MESIState.INVALID);
+			target.cache.setBlock(stack.set, stack.way, 0, MESIState.INVALID);
 			stack.dirLock.unlock();
 			this.schedule(MESIEventType.WRITE_REQUEST_REPLY, stack, 0);
 		}
@@ -1458,13 +1467,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request reply", stack.id, stack.tag, target.name);
 
-			assert((ccache.next !is null && ccache.next.name == target.name) ||
-					(target.next !is null && target.next.name == ccache.name));
+			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.WRITE_REQUEST_FINISH, stack, 2);
 		}
 
@@ -1472,8 +1480,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request finish", stack.id, stack.tag, ccache.name);
 
@@ -1484,8 +1492,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.INVALIDATE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 
 			/* Get block info */
 			ccache.getBlock(stack.set, stack.way, stack.tag, stack.state);
@@ -1495,15 +1503,20 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Send write request to all upper level sharers but ccache */
 			DirEntry!(MESIState) dirEntry = ccache.getDirEntry(stack.set, stack.way);
+			
+			MESICache[] sharersToRemove;
+			
 			foreach(sharer; dirEntry.sharers) {
 				/* Skip 'except' */
-				if(sharer.name == stack.except.name) {
-					continue;
+				if(sharer != stack.except) {
+					sharersToRemove ~= sharer;
 				}
-
+			}
+			
+			foreach(sharer; sharersToRemove) {				
 				/* Clear sharer and owner */
-				dirEntry.removeSharer(sharer);				
-				if(dirEntry.owner !is null && dirEntry.owner.name == sharer.name) {
+				dirEntry.unsetSharer(sharer);
+				if(dirEntry.owner == sharer) {
 					dirEntry.owner = null;
 				}
 
@@ -1521,8 +1534,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			logging[LogCategory.MESI].infof("%s.INVALIDATE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
-			ICache!(MESIState) ccache = stack.ccache;
-			ICache!(MESIState) target = stack.target;
+			MESICache ccache = stack.ccache;
+			MESICache target = stack.target;
 			
 			logging[LogCategory.DEBUG].infof("%d 0x%x %s invalidate finish", stack.id, stack.tag, ccache.name);
 

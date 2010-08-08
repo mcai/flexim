@@ -23,7 +23,7 @@ module flexim.mem.predefined;
 
 import flexim.all;
 
-class MemorySystem(RequestT, alias ICacheT = ICache!(MESIState), alias CacheT = MESICache, alias InterconnectT = P2PInterconnect, alias EventQueueT = MESIEventQueue): CacheHierarchy!(ICacheT, MESIState) {
+class MemorySystem(RequestT, alias CacheT = MESICache, alias InterconnectT = P2PInterconnect, alias EventQueueT = MESIEventQueue): CacheHierarchy!(MESICache, MESIState) {
 	alias Sequencer!(RequestT, CacheT) SequencerT;
 	
 	this(uint endNodeCount) {
@@ -140,7 +140,7 @@ class MemorySystem(RequestT, alias ICacheT = ICache!(MESIState), alias CacheT = 
 	CacheT l2;
 	MESIMemory mem;
 
-	ICacheT[] caches;
+	CacheT[] caches;
 
 	Interconnect[] interconnects;
 	

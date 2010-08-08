@@ -36,3 +36,25 @@ template Property(T, string _name, string setter_modifier = PUBLIC, string gette
 	mixin(getter_modifier ~ ": " ~ T.stringof ~ " " ~ _name ~ "() { return m_" ~ _name ~ ";}");
 	mixin(field_modifier ~ ": " ~ T.stringof ~ " m_" ~ _name ~ ";");
 }
+
+abstract class Stats(ValueT) {	
+	this() {
+		this.init();
+	}
+
+	protected abstract void init();
+
+	protected abstract void init(string index);
+
+	ref ValueT opIndex(string index) {
+		assert(index in this.entries, index);
+		return this.entries[index];
+	}
+
+	void opIndexAssign(ValueT value, string index) {
+		assert(index in this.entries, index);
+		this.entries[index] = value;
+	}
+
+	ValueT[string] entries;
+}

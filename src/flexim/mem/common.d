@@ -23,7 +23,7 @@ module flexim.mem.common;
 
 import flexim.all;
 
-uint currentMessageID = 1;
+uint currentMessageID = 0;
 
 class Message {	
 	this(Request request) {
@@ -46,7 +46,7 @@ class Message {
 	CacheBlockState arg;
 }
 
-uint currentDeviceID = 1;
+uint currentDeviceID = 0;
 
 abstract class Interconnect {
 	this(string name) {
@@ -124,7 +124,7 @@ interface CacheHierarchy(CacheT, StateT) {
 	MESIEventQueue eventQueue(); //TODO: you'd better not bind MESI here
 }
 
-uint currentRequestID = 1;
+uint currentRequestID = 0;
 
 enum RequestType: string {
 	READ = "READ",
