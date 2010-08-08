@@ -42,6 +42,11 @@ public import flexim.cpu.thread;
 public import flexim.cpu.ooo.common;
 public import flexim.cpu.ooo.thread;
 
+public import flexim.drivers.benchmarks;
+public import flexim.drivers.configs;
+public import flexim.drivers.parsers;
+public import flexim.drivers.simulations;
+
 public import flexim.isa.basic;
 public import flexim.isa.branch;
 public import flexim.isa.integer;

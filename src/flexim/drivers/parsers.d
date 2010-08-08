@@ -1,5 +1,5 @@
 /*
- * main.d
+ * flexim/drivers/parsers.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -18,21 +18,29 @@
  * You should have received a copy of the GNU General Public License
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
- 
-module flexim.main;
+
+module flexim.drivers.parsers;
 
 import flexim.all;
 
-import std.file;
-
-void main(string[] args) {
-	logging[LogCategory.SIMULATOR].info("Flexim - A modular and highly configurable multicore simulator written in D");
-	logging[LogCategory.SIMULATOR].info("Copyright (c) 2010 Min Cai <itecgo@163.com>.\n");
-
-	string[] programArgs = args[1 .. args.length];
-
-	Simulator simulator = new CPUSimulator(getcwd(), programArgs);
-	//Simulator simulator = new MESIMemorySystemSimulator();
-	
-	simulator.run();
+interface StartupParser {
+	void parse(string[] args);
 }
+
+class CommandLineStartupParser: StartupParser {
+	override void parse(string[] args) {
+		//TODO
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+

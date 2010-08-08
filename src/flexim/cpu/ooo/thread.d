@@ -49,6 +49,8 @@ class OoOThread: Thread {
 
 		this.setFetchNpcFromNpc();
 		this.setFetchNnpcFromNnpc();
+		
+		Simulator.singleInstance.addEventProcessor(this.eventq);
 	}
 
 	void commit() {
