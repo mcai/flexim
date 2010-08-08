@@ -1,6 +1,6 @@
 [compileoptions]
 buildtype = EXECUTABLE
-out = bin
+out = build
 outname = Flexim
 buildtool = make PATH=$PATH:/bin:/usr/bin:/home/itecgo/Flexim2/refs/dmd2/linux/bin
 extraOptions = $DEEBUILDER.SRCMODULES
