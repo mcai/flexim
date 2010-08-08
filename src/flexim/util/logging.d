@@ -72,7 +72,10 @@ class Logging {
 //		this.enable(LogCategory.MISC);
 //		this.enable(LogCategory.OOO);
 		this.enable(LogCategory.TEST);
-		this.enable(LogCategory.DEBUG);
+		
+		debug {
+			this.enable(LogCategory.DEBUG);
+		}
 	}
 
 	Logger opIndex(LogCategory index) {
