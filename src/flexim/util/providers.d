@@ -1,5 +1,5 @@
 /*
- * flexim/main.d
+ * flexim/util/providers.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -18,21 +18,15 @@
  * You should have received a copy of the GNU General Public License
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
- 
-module flexim.main;
+
+module flexim.util.providers;
 
 import flexim.all;
 
-import std.file;
+interface CurrentCycleProvider {
+	ulong currentCycle();
+}
 
-void main(string[] args) {
-	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
-	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.\n");
-
-	string[] programArgs = args[1 .. args.length];
-
-	Simulator simulator = new CPUSimulator(getcwd(), programArgs);
-	//Simulator simulator = new MESIMemorySystemSimulator();
-	
-	simulator.run();
+interface SchedulerProvider(EventTypeT, EventContextT) {
+	void schedule(EventTypeT eventType, EventContextT context, ulong delay = 0);
 }

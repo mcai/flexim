@@ -29,8 +29,7 @@ enum SimulatorEventType: string {
 	GENERAL = "GENERAL",
 	HALT = "HALT",
 	FATAL = "FATAL",
-	PANIC = "PANIC",
-	NET = "NET"
+	PANIC = "PANIC"
 }
 
 class SimulatorEventContext {
@@ -74,7 +73,6 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 			this.registerHandler(SimulatorEventType.HALT, &this.haltHandler);
 			this.registerHandler(SimulatorEventType.FATAL, &this.fatalHandler);
 			this.registerHandler(SimulatorEventType.PANIC, &this.panicHandler);
-			this.registerHandler(SimulatorEventType.NET, &this.netHandler);
 		}
 
 		void generalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
@@ -107,12 +105,6 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 			}
 			this.simulator.dumpStats();
 			exit(-1);
-		}
-
-		void netHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-			if(context.callback !is null) {
-				context.callback.invoke();
-			}
 		}
 
 		Simulator simulator;

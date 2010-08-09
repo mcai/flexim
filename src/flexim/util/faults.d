@@ -28,7 +28,7 @@ class Fault {
 		abstract string getName();
 
 		void invoke(Thread thread) {
-			logging[LogCategory.INSTRUCTION].panicf("fault (%s) detected @ PC %p", this.getName(), thread.pc);
+			logging.panicf(LogCategory.INSTRUCTION, "fault (%s) detected @ PC %p", this.getName(), thread.pc);
 		}
 }
 
@@ -43,7 +43,7 @@ class UnimplFault: Fault {
 		}
 
 		override void invoke(Thread thread) {
-			logging[LogCategory.INSTRUCTION].panicf("UnimplFault (%s)\n", this.panicStr);
+			logging.panicf(LogCategory.INSTRUCTION, "UnimplFault (%s)\n", this.panicStr);
 		}
 
 	private:
@@ -57,6 +57,6 @@ class ReservedInstructionFault: Fault {
 		}
 
 		override void invoke(Thread thread) {
-			logging[LogCategory.INSTRUCTION].panicf("ReservedInstructionFault (%s)\n", this.getName());
+			logging.panicf(LogCategory.INSTRUCTION, "ReservedInstructionFault (%s)\n", this.getName());
 		}
 }

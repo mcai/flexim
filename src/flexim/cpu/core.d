@@ -34,14 +34,14 @@ class Core {
 	}
 
 	void dumpConfigs(string indent) {
-		logging[LogCategory.CONFIG].infof(indent ~ "[Core %s]", this.name);
+		logging.infof(LogCategory.CONFIG, indent ~ "[Core %s]", this.name);
 		foreach(thread; this.threads) {
 			thread.dumpConfigs(indent ~ "  ");
 		}
 	}
 
 	void dumpStats(string indent) {
-		logging[LogCategory.STAT].infof(indent ~ "[Core %s]", this.name);
+		logging.infof(LogCategory.STAT, indent ~ "[Core %s]", this.name);
 		foreach(thread; this.threads) {
 			thread.dumpStats(indent ~ "  ");
 		}

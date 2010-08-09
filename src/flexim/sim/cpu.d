@@ -81,24 +81,24 @@ class CPUSimulator : Simulator {
 	}
 
 	void dumpConfigs() {
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.CONFIG].info("Simulation Configurations");
-		logging[LogCategory.CONFIG].info("----------------------------------------------------------");
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.CONFIG].info("[Simulator]");
+		logging.info(LogCategory.CONFIG, "");
+		logging.info(LogCategory.CONFIG, "Simulation Configurations");
+		logging.info(LogCategory.CONFIG, "----------------------------------------------------------");
+		logging.info(LogCategory.CONFIG, "");
+		logging.info(LogCategory.CONFIG, "[Simulator]");
 		this.processor.dumpConfigs("  ");
 		this.memorySystem.l2.dumpConfigs("  ");
 		this.memorySystem.mem.dumpConfigs("  ");
 
-		logging[LogCategory.CONFIG].info("");
+		logging.info(LogCategory.CONFIG, "");
 	}
 
 	void dumpStats() {
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.STAT].info("Simulation Statistics");
-		logging[LogCategory.STAT].info("----------------------------------------------------------");
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.STAT].infof("[Simulator] total cycles: %d", this.currentCycle);
+		logging.info(LogCategory.CONFIG, "");
+		logging.info(LogCategory.STAT, "Simulation Statistics");
+		logging.info(LogCategory.STAT, "----------------------------------------------------------");
+		logging.info(LogCategory.CONFIG, "");
+		logging.infof(LogCategory.STAT, "[Simulator] total cycles: %d", this.currentCycle);
 		this.processor.dumpStats("  ");
 		this.memorySystem.l2.dumpStats("  ");
 		this.memorySystem.mem.dumpStats("  ");

@@ -164,11 +164,11 @@ class MESICache: Node {
 	}
 	
 	void monitor(uint set, uint way, CacheMonitoringEventType eventType, string msg) {
-		logging[LogCategory.DEBUG].infof("  %s %s (set=%d, way=%s) %s", this.name, eventType, set, way != -1 ? format("%d", way) : "N/A", msg);
+		logging.infof(LogCategory.DEBUG, "  %s %s (set=%d, way=%s) %s", this.name, eventType, set, way != -1 ? format("%d", way) : "N/A", msg);
 	}
 
 	void dumpConfigs(string indent) {
-		logging[LogCategory.CONFIG].infof(indent ~ "[%s] number of sets: %d, block size: %d, assoc: %d, hit latency: %d, miss latency: %d", this.name, this.cache.numSets, this.cache.blockSize,
+		logging.infof(LogCategory.CONFIG, indent ~ "[%s] number of sets: %d, block size: %d, assoc: %d, hit latency: %d, miss latency: %d", this.name, this.cache.numSets, this.cache.blockSize,
 				this.cache.assoc, this.hitLatency, this.missLatency);
 	}
 	
@@ -210,11 +210,11 @@ class MESICache: Node {
 		appendStatStr(str, indent, "WriteHits", this.stats["writeHits"]);
 		appendStatStr(str, indent, "WriteMisses", this.stats["writes"] - this.stats["writeHits"]);
 
-		logging[LogCategory.CONFIG].info(str);
+		logging.info(LogCategory.CONFIG, str);
 	}
 
 	CacheQueueEntryT findMatchingRequest(Request request) {
-		logging[LogCategory.CACHE].infof("%s.findMatchingRequest(%s)", this.name, request);
+		logging.infof(LogCategory.CACHE, "%s.findMatchingRequest(%s)", this.name, request);
 
 		if(request.addr in this.pendingRequests) {
 			foreach(queueEntry; this.pendingRequests[request.addr]) {
@@ -228,7 +228,7 @@ class MESICache: Node {
 	}
 
 	void removePendingRequest(CacheQueueEntryT queueEntry) {
-		logging[LogCategory.CACHE].infof("%s.removePendingRequest(%s)", this.name, queueEntry);
+		logging.infof(LogCategory.CACHE, "%s.removePendingRequest(%s)", this.name, queueEntry);
 
 		if(queueEntry.request.addr in this.pendingRequests) {
 			foreach(indexFound, queueEntryFound; this.pendingRequests[queueEntry.request.addr]) {
@@ -240,7 +240,7 @@ class MESICache: Node {
 	}
 
 	void handleUpperInterconnectMessage(Interconnect interconnect, Message m, Node sender) {
-		logging[LogCategory.MESI].infof("%s.handleUpperInterconnectMessage(%s, %s)", this.name, interconnect, m);
+		logging.infof(LogCategory.MESI, "%s.handleUpperInterconnectMessage(%s, %s)", this.name, interconnect, m);
 
 		if(m.request.type == RequestType.READ) {
 			CacheQueueEntryT queueEntry = new CacheQueueEntryT(interconnect, null, sender, m.request);
@@ -255,7 +255,7 @@ class MESICache: Node {
 	}
 
 	void handleLowerInterconnectMessage(Interconnect interconnect, Message m, Node sender) {
-		logging[LogCategory.MESI].infof("%s.handleLowerInterconnectMessage(%s, %s)", this.name, interconnect, m);
+		logging.infof(LogCategory.MESI, "%s.handleLowerInterconnectMessage(%s, %s)", this.name, interconnect, m);
 		assert(0);
 	}
 
@@ -395,7 +395,7 @@ class MESIMemory: MESICache {
 	}
 
 	void handleUpperInterconnectMessage(Interconnect interconnect, Message m, Node sender) {
-		logging[LogCategory.MESI].infof("%s.handleUpperInterconnectMessage(%s, %s, %s)", this.name, interconnect, m, sender);
+		logging.infof(LogCategory.MESI, "%s.handleUpperInterconnectMessage(%s, %s, %s)", this.name, interconnect, m, sender);
 
 		Message message = new Message(m.request);
 		message.hasData = true;
@@ -558,12 +558,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void FIND_AND_LOCK(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.FIND_AND_LOCK(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.FIND_AND_LOCK(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s find and lock (blocking=%s)",
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s find and lock (blocking=%s)",
 					stack.id, stack.addr, ccache.name, stack.isBlocking);
 
 			/* Default return values */
@@ -576,7 +576,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			/* Look for block. */
 			bool hit = ccache.findBlock(stack.addr, stack.set, stack.way, stack.tag, stack.state);
 			if(hit) {
-				logging[LogCategory.DEBUG].infof("  0x%x %s hit: set=%d, way=%d, state=%s",
+				logging.infof(LogCategory.DEBUG, "  0x%x %s hit: set=%d, way=%d, state=%s",
 						stack.tag, ccache.name, stack.set, stack.way, stack.state);
 			}
 			
@@ -631,14 +631,14 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 				assert(stack.state != MESIState.INVALID || !ccache.getDir().isSharedOrOwned(stack.set, stack.way), 
 						format("stack.state=%s, ccache.getDirEntry(set=%d, way=%d)=%s", 
 								stack.state, stack.set, stack.way, ccache.getDirEntry(stack.set, stack.way)));
-				logging[LogCategory.DEBUG].infof("  0x%x %s miss -> lru: set=%d, way=%d, state=%s",
+				logging.infof(LogCategory.DEBUG, "  0x%x %s miss -> lru: set=%d, way=%d, state=%s",
 						stack.tag, ccache.name, stack.set, stack.way, stack.state);
 			}
 
 			/* Lock entry */
 			stack.dirLock = ccache.getDirLock(stack.set);
 			if(!stack.dirLock.lock(stack.id)) {
-				logging[LogCategory.DEBUG].infof("  0x%x %s block already locked: set=%d, way=%d, lockerStackId=%d",
+				logging.infof(LogCategory.DEBUG, "  0x%x %s block already locked: set=%d, way=%d, lockerStackId=%d",
 						stack.tag, ccache.name, stack.set, stack.way, stack.dirLock.lockerStackId);
 				ret.isErr = true;
 				stack.ret();
@@ -667,12 +667,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void FIND_AND_LOCK_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.FIND_AND_LOCK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.FIND_AND_LOCK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s find and lock finish (err=%s)",
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s find and lock finish (err=%s)",
 					stack.id, stack.tag, ccache.name, stack.isErr);
 
 			uint dumbTag = 0;
@@ -707,12 +707,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void LOAD(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.LOAD(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.LOAD(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s load", stack.id, stack.addr, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load", stack.id, stack.addr, ccache.name);
 
 			/* Call find and lock */
 			MESIStack newStack = new MESIStack(stack.id, ccache, stack.addr, this, MESIEventType.LOAD_ACTION, stack);
@@ -723,18 +723,18 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void LOAD_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.LOAD_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.LOAD_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 				
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s load action", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load action", stack.id, stack.tag, ccache.name);
 
 			/* Error locking */
 			if(stack.isErr) {
 				ccache.stats["readRetries"]++;
 				uint retryLat = retry_lat(ccache);
-				logging[LogCategory.DEBUG].infof("  lock error, retrying in %d cycles", retryLat);
+				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.LOAD, stack, retryLat);
 				return;
@@ -753,19 +753,19 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void LOAD_MISS(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.LOAD_MISS(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.LOAD_MISS(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s load miss", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load miss", stack.id, stack.tag, ccache.name);
 
 			/* Error on read request. Unlock block and retry load. */
 			if(stack.isErr) {
 				ccache.stats["readRetries"]++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
-				logging[LogCategory.DEBUG].infof("  lock error, retrying in %d cycles", retryLat);
+				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.LOAD, stack, retryLat);
 				return;
@@ -779,12 +779,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void LOAD_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.LOAD_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.LOAD_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s load finish", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load finish", stack.id, stack.tag, ccache.name);
 
 			/* Update LRU, unlock, and return. */
 			if(!ccache.isMem) {
@@ -795,12 +795,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void STORE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.STORE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.STORE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s store", stack.id, stack.addr, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s store", stack.id, stack.addr, ccache.name);
 
 			/* Call find and lock */
 			MESIStack newStack = new MESIStack(stack.id, ccache, stack.addr, this, MESIEventType.STORE_ACTION, stack);
@@ -811,18 +811,18 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void STORE_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.STORE_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.STORE_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s store action", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s store action", stack.id, stack.tag, ccache.name);
 
 			/* Error locking */
 			if(stack.isErr) {
 				ccache.stats["writeRetries"]++;
 				uint retryLat = retry_lat(ccache);
-				logging[LogCategory.DEBUG].infof("  lock error, retrying in %d cycles", retryLat);
+				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.STORE, stack, retryLat);
 				return;
@@ -841,19 +841,19 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void STORE_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.STORE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.STORE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s store finish", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s store finish", stack.id, stack.tag, ccache.name);
 
 			/* Error in write request, unlock block and retry store. */
 			if(stack.isErr) {
 				ccache.stats["writeRetries"]++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
-				logging[LogCategory.DEBUG].infof("  lock error, retrying in %d cycles", retryLat);
+				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.STORE, stack, retryLat);
 				return;
@@ -869,7 +869,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
@@ -881,7 +881,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			/* Get block info */
 			ccache.getBlock(stack.set, stack.way, stack.tag, stack.state);
 			assert(stack.state != MESIState.INVALID || !ccache.getDir().isSharedOrOwned(stack.set, stack.way));
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict (set=%d, way=%d, state=%s)",
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict (set=%d, way=%d, state=%s)",
 					stack.id, stack.tag, ccache.name, stack.set, stack.way, stack.state);
 
 			/* Save some data */
@@ -899,12 +899,12 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict action", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict action", stack.id, stack.tag, ccache.name);
 
 			/* status = I */
 			if(stack.state == MESIState.INVALID) {
@@ -922,13 +922,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict receive", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict receive", stack.id, stack.tag, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.srcTag, this, MESIEventType.EVICT_WRITEBACK, stack);
@@ -939,13 +939,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_WRITEBACK(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_WRITEBACK(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_WRITEBACK(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict writeback", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict writeback", stack.id, stack.tag, target.name);
 
 			/* Error locking block */
 			if(stack.isErr) {
@@ -969,13 +969,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_WRITEBACK_EXCLUSIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_WRITEBACK_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_WRITEBACK_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict writeback exclusive", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict writeback exclusive", stack.id, stack.tag, target.name);
 
 			/* Status = S/I */
 			assert(stack.state != MESIState.INVALID, to!(string)(stack));
@@ -991,13 +991,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_WRITEBACK_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_WRITEBACK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_WRITEBACK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict writeback finish", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict writeback finish", stack.id, stack.tag, target.name);
 
 			/* Error in write request */
 			if(stack.isErr) {
@@ -1016,13 +1016,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_PROCESS(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_PROCESS(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_PROCESS(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict process", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict process", stack.id, stack.tag, target.name);
 
 			/* Remove sharer, owner, and unlock */
 			DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
@@ -1036,24 +1036,24 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_REPLY(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict reply", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict reply", stack.id, stack.tag, target.name);
 
 			this.schedule(MESIEventType.EVICT_REPLY_RECEIVE, stack, 2);
 		}
 
 		void EVICT_REPLY_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_REPLY_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_REPLY_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict reply receive", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict reply receive", stack.id, stack.tag, ccache.name);
 
 			/* Invalidate block if there was no error. */
 			if(!stack.isErr) {
@@ -1064,24 +1064,24 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void EVICT_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.EVICT_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.EVICT_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s evict finish", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict finish", stack.id, stack.tag, ccache.name);
 
 			stack.ret();
 		}
 
 		void READ_REQUEST(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request", stack.id, stack.addr, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request", stack.id, stack.addr, ccache.name);
 
 			/* Default return values*/
 			ret.isShared = false;
@@ -1093,13 +1093,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request receive", stack.id, stack.addr, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request receive", stack.id, stack.addr, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.addr, this, MESIEventType.READ_REQUEST_ACTION, stack);
@@ -1110,13 +1110,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request action", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request action", stack.id, stack.tag, target.name);
 
 			/* Check block locking error. */
 			if(stack.isErr) {
@@ -1129,13 +1129,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_UPDOWN(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request updown", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request updown", stack.id, stack.tag, target.name);
 
 			stack.pending = 1;
 
@@ -1167,13 +1167,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_UPDOWN_MISS(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_UPDOWN_MISS(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_UPDOWN_MISS(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request updown miss", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request updown miss", stack.id, stack.tag, target.name);
 
 			/* Check error */
 			if(stack.isErr) {
@@ -1191,7 +1191,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_UPDOWN_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
@@ -1203,7 +1203,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(stack.pending > 0) {
 				return;
 			}
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request updown finish", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request updown finish", stack.id, stack.tag, target.name);
 			
 			if(!target.isMem) {
 				/* Set owner to null for the directory entry if not owned by ccache. */
@@ -1236,13 +1236,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_DOWNUP(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request downup", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request downup", stack.id, stack.tag, target.name);
 
 			/* Check: status must not be invalid.
 			 * By default, only one pending request. */
@@ -1262,7 +1262,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_DOWNUP_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_DOWNUP_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_DOWNUP_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
@@ -1274,7 +1274,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(stack.pending > 0) {
 				return;
 			}
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request downup finish", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request downup finish", stack.id, stack.tag, target.name);
 
 			/* Set owner of the block to null. */
 			DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
@@ -1288,37 +1288,37 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void READ_REQUEST_REPLY(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request reply", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request reply", stack.id, stack.tag, target.name);
 
 			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.READ_REQUEST_FINISH, stack, 2);
 		}
 
 		void READ_REQUEST_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.READ_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s read request finish", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request finish", stack.id, stack.tag, ccache.name);
 
 			stack.ret();
 		}
 
 		void WRITE_REQUEST(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request", stack.id, stack.addr, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request", stack.id, stack.addr, ccache.name);
 
 			/* Default return values */
 			ret.isErr = false;
@@ -1329,13 +1329,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void WRITE_REQUEST_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request receive", stack.id, stack.addr, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request receive", stack.id, stack.addr, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.addr, this, MESIEventType.WRITE_REQUEST_ACTION, stack);
@@ -1346,13 +1346,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void WRITE_REQUEST_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request action", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request action", stack.id, stack.tag, target.name);
 
 			/* Check lock error. */
 			if(stack.isErr) {
@@ -1370,25 +1370,25 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void WRITE_REQUEST_EXCLUSIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%s %s write request exclusive", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%s %s write request exclusive", stack.id, stack.tag, target.name);
 
 			this.schedule(ccache.next == target ? MESIEventType.WRITE_REQUEST_UPDOWN : MESIEventType.WRITE_REQUEST_DOWNUP, stack, 0);
 		}
 
 		void WRITE_REQUEST_UPDOWN(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request updown", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request updown", stack.id, stack.tag, target.name);
 
 			/* status = M/E */
 			if(stack.state == MESIState.MODIFIED || stack.state == MESIState.EXCLUSIVE) {
@@ -1403,13 +1403,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void WRITE_REQUEST_UPDOWN_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request updown finish", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request updown finish", stack.id, stack.tag, target.name);
 
 			/* Error in write request to next cache level */
 			if(stack.isErr) {
@@ -1440,13 +1440,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void WRITE_REQUEST_DOWNUP(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request downup", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request downup", stack.id, stack.tag, target.name);
 			
 			/* Set status to I, unlock */
 			assert(stack.state != MESIState.INVALID);
@@ -1457,32 +1457,32 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void WRITE_REQUEST_REPLY(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request reply", stack.id, stack.tag, target.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request reply", stack.id, stack.tag, target.name);
 
 			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.WRITE_REQUEST_FINISH, stack, 2);
 		}
 
 		void WRITE_REQUEST_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.WRITE_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s write request finish", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request finish", stack.id, stack.tag, ccache.name);
 
 			stack.ret();
 		}
 
 		void INVALIDATE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.INVALIDATE(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.INVALIDATE(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
@@ -1490,7 +1490,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Get block info */
 			ccache.getBlock(stack.set, stack.way, stack.tag, stack.state);
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s invalidate (set=%d, way=%d, state=%s)",
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s invalidate (set=%d, way=%d, state=%s)",
 					stack.id, stack.tag, ccache.name, stack.set, stack.way, stack.state);
 			stack.pending = 1;
 
@@ -1524,13 +1524,13 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 		}
 
 		void INVALIDATE_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging[LogCategory.MESI].infof("%s.INVALIDATE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
+			logging.infof(LogCategory.MESI, "%s.INVALIDATE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
 
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 			
-			logging[LogCategory.DEBUG].infof("%d 0x%x %s invalidate finish", stack.id, stack.tag, ccache.name);
+			logging.infof(LogCategory.DEBUG, "%d 0x%x %s invalidate finish", stack.id, stack.tag, ccache.name);
 
 			/* Ignore while pending */
 			assert(stack.pending > 0);

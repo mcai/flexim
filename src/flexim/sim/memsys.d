@@ -45,11 +45,11 @@ class MESIMemorySystemSimulator: Simulator {
 	}
 
 	void dumpConfigs() {
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.CONFIG].info("Simulation Configurations");
-		logging[LogCategory.CONFIG].info("----------------------------------------------------------");
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.CONFIG].info("[Simulator]");
+		logging.info(LogCategory.CONFIG, "");
+		logging.info(LogCategory.CONFIG, "Simulation Configurations");
+		logging.info(LogCategory.CONFIG, "----------------------------------------------------------");
+		logging.info(LogCategory.CONFIG, "");
+		logging.info(LogCategory.CONFIG, "[Simulator]");
 		
 		this.memorySystem.mem.dumpConfigs("  ");
 
@@ -57,15 +57,15 @@ class MESIMemorySystemSimulator: Simulator {
 			cache.dumpConfigs("  ");
 		}
 
-		logging[LogCategory.CONFIG].info("");
+		logging.info(LogCategory.CONFIG, "");
 	}
 
 	void dumpStats() {
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.STAT].info("Simulation Statistics");
-		logging[LogCategory.STAT].info("----------------------------------------------------------");
-		logging[LogCategory.CONFIG].info("");
-		logging[LogCategory.STAT].infof("[Simulator] total cycles: %d", this.currentCycle);
+		logging.info(LogCategory.CONFIG, "");
+		logging.info(LogCategory.STAT, "Simulation Statistics");
+		logging.info(LogCategory.STAT, "----------------------------------------------------------");
+		logging.info(LogCategory.CONFIG, "");
+		logging.infof(LogCategory.STAT, "[Simulator] total cycles: %d", this.currentCycle);
 		
 		this.memorySystem.mem.dumpStats("  ");
 
@@ -128,7 +128,7 @@ class MESIMemorySystemSimulator: Simulator {
 			SequencerT seq = context.seq;
 			TestMemSysRequest req = context.req;
 			
-			logging[LogCategory.DEBUG].infof("handler (seq: %s, req: %s)", seq, req);
+			logging.infof(LogCategory.DEBUG, "handler (seq: %s, req: %s)", seq, req);
 			
 			if(eventType == RequestType.READ) {
 				seq.read(req);

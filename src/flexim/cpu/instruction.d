@@ -270,7 +270,7 @@ string disassemble(MachInst machInst, Addr pc, Thread thread) {
 			}
 		break;
 		default:
-			logging[LogCategory.INSTRUCTION].fatal("you can not reach here");
+			logging.fatal(LogCategory.INSTRUCTION, "you can not reach here");
 	}
 
 	return buf;

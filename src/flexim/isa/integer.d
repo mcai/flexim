@@ -62,7 +62,7 @@ class Add: IntOp {
 
 		override void execute(Thread thread) {
 			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]] + cast(int) thread.intRegs[this[RT]];
-			logging[LogCategory.INSTRUCTION].warn("Add: overflow trap not implemented.");
+			logging.warn(LogCategory.INSTRUCTION, "Add: overflow trap not implemented.");
 		}
 }
 
@@ -79,7 +79,7 @@ class Addi: IntImmOp {
 
 		override void execute(Thread thread) {
 			thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] + this.sextImm;
-			logging[LogCategory.INSTRUCTION].warn("Addi: overflow trap not implemented.");
+			logging.warn(LogCategory.INSTRUCTION, "Addi: overflow trap not implemented.");
 		}
 }
 
@@ -130,7 +130,7 @@ class Sub: IntOp {
 
 		override void execute(Thread thread) {
 			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]] - cast(int) thread.intRegs[this[RT]];
-			logging[LogCategory.INSTRUCTION].warn("Sub: overflow trap not implemented.");
+			logging.warn(LogCategory.INSTRUCTION, "Sub: overflow trap not implemented.");
 		}
 }
 

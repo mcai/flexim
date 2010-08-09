@@ -290,7 +290,7 @@ class Memory {
 			assert(isAligned(src));
 			assert(isAligned(size));
 			if((src < dest && src + size > dest) || (dest < src && dest + size > src))
-				logging[LogCategory.MEMORY].fatal("mem_copy: cannot copy overlapping regions");
+				logging.fatal(LogCategory.MEMORY, "mem_copy: cannot copy overlapping regions");
 
 			/* Copy */
 			while(size > 0) {
@@ -320,7 +320,7 @@ class Memory {
 				return null;
 
 			if((page.perm & access) != access && this.safe) {
-				logging[LogCategory.MEMORY].fatalf("Memory.getBuffer: permission denied at 0x%x", addr);
+				logging.fatalf(LogCategory.MEMORY, "Memory.getBuffer: permission denied at 0x%x", addr);
 			}
 
 			return &page.data[offset];
@@ -342,18 +342,18 @@ class Memory {
 					/* Return 0s and exit. */
 					case MemoryAccessType.READ:
 					case MemoryAccessType.EXEC:
-						logging[LogCategory.MEMORY].warnf("Memory.accessPageBoundary: unsafe reading 0x%x", addr);
+						logging.warnf(LogCategory.MEMORY, "Memory.accessPageBoundary: unsafe reading 0x%x", addr);
 						memset(buf, 0, size);
 						return;
 
 						/* Create page */
 					case MemoryAccessType.WRITE:
 					case MemoryAccessType.INIT:
-						logging[LogCategory.MEMORY].warnf("Memory.accessPageBoundary: unsafe writing 0x%x", addr);
+						logging.warnf(LogCategory.MEMORY, "Memory.accessPageBoundary: unsafe writing 0x%x", addr);
 						page = addPage(addr, MemoryAccessType.READ | MemoryAccessType.WRITE | MemoryAccessType.EXEC | MemoryAccessType.INIT);
 					break;
 					default:
-						logging[LogCategory.MEMORY].panic("Memory.accessPageBoundary: unknown access");
+						logging.panic(LogCategory.MEMORY, "Memory.accessPageBoundary: unknown access");
 				}
 			}
 
@@ -363,7 +363,7 @@ class Memory {
 					throw new SegmentationFaultException(addr);
 				}
 				if((page.perm & access) != access) {
-					logging[LogCategory.MEMORY].fatalf("Memory.accessPageBoundary: permission denied at 0x%x, page.perm: 0x%x, access: 0x%x", addr, page.perm, access);
+					logging.fatalf(LogCategory.MEMORY, "Memory.accessPageBoundary: permission denied at 0x%x, page.perm: 0x%x, access: 0x%x", addr, page.perm, access);
 				}
 			}
 
@@ -381,7 +381,7 @@ class Memory {
 					memcpy(data, buf, size);
 				break;
 				default:
-					logging[LogCategory.MEMORY].panic("Memory.accessPageBoundary: unknown access");
+					logging.panic(LogCategory.MEMORY, "Memory.accessPageBoundary: unknown access");
 			}
 		}
 
@@ -474,7 +474,7 @@ class Memory {
 		 * access 'size' bytes at 'addr'. These two fields do not need to be
 		 * aligned to page boundaries. If some page already exists, add permissions. */
 		void map(uint addr, int size, MemoryAccessType perm) {
-			logging[LogCategory.MEMORY].infof("Memory.map(), addr: 0x%08x ~ 0x%08x, size: %d, perm: 0x%x", addr, addr + size, size, perm);
+			logging.infof(LogCategory.MEMORY, "Memory.map(), addr: 0x%08x ~ 0x%08x, size: %d, perm: 0x%x", addr, addr + size, size, perm);
 			uint tag1, tag2, tag;
 			MemoryPage page;
 

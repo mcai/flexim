@@ -55,14 +55,14 @@ class Processor {
 		}
 		
 		void dumpConfigs(string indent) {
-			logging[LogCategory.CONFIG].info(indent ~ "[Processor]");
+			logging.info(LogCategory.CONFIG, indent ~ "[Processor]");
 			foreach(core; this.cores) {
 				core.dumpConfigs(indent ~ "  ");
 			}
 		}
 		
 		void dumpStats(string indent) {
-			logging[LogCategory.STAT].info(indent ~ "[Processor]");
+			logging.info(LogCategory.STAT, indent ~ "[Processor]");
 			foreach(core; this.cores) {
 				core.dumpStats(indent ~ "  ");
 			}

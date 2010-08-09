@@ -459,7 +459,7 @@ class ELF32Binary {
 
 					case SHT_DYNAMIC:
 					case SHT_DYNSYM:
-						logging[LogCategory.ELF].fatal("dynamic linking is not supported");
+						logging.fatal(LogCategory.ELF, "dynamic linking is not supported");
 					break;
 
 					case SHT_STRTAB:

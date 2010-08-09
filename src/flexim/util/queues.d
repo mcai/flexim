@@ -74,7 +74,9 @@ class Queue(EntryT) {
 	void opOpAssign(string op, EntryT)(EntryT entry)
 		if(op == "~")
 	{
-		assert(this.size < this.capacity, format("[%d] %s", Simulator.singleInstance.currentCycle, this));
+		if(this.size >= this.capacity) {
+			logging.fatalf(LogCategory.MISC, "%s", this);
+		}
 		this.entries ~= entry;
 	}
 

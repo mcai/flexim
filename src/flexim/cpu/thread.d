@@ -80,14 +80,14 @@ class Thread {
 	}
 
 	void dumpConfigs(string indent) {
-		logging[LogCategory.CONFIG].infof(indent ~ "[Thread %s]", this.name);
+		logging.infof(LogCategory.CONFIG, indent ~ "[Thread %s]", this.name);
 
 		this.l1I.dumpConfigs(indent ~ "  ");
 		this.l1D.dumpConfigs(indent ~ "  ");
 	}
 
 	void dumpStats(string indent) {
-		logging[LogCategory.STAT].infof(indent ~ "[Thread %s] total instructions: %d", this.name, this.totalInsts);
+		logging.infof(LogCategory.STAT, indent ~ "[Thread %s] total instructions: %d", this.name, this.totalInsts);
 
 		this.l1I.dumpStats(indent ~ "  ");
 		this.l1D.dumpStats(indent ~ "  ");

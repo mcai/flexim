@@ -70,7 +70,7 @@ class Callback1(Param1T) : Callback {
 }
 
 class Callback2(Param1T, Param2T) : Callback {
-	this(Param1T m1, void delegate(Param1T, Param2T) del) {
+	this(Param1T m1, Param2T m2, void delegate(Param1T, Param2T) del) {
 		super(new Invoker({del(m1, m2);}));
 	}	
 }
@@ -183,7 +183,7 @@ interface EventProcessor {
 
 const uint event_queue_size = 10000; 
 
-class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
+class EventQueue(EventTypeT: string, EventContextT): EventProcessor, CurrentCycleProvider, SchedulerProvider!(EventTypeT, EventContextT) {
 	alias void delegate(EventTypeT, EventContextT, ulong) EventHandler;
 
 	public:
@@ -192,15 +192,19 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
 	        this.eventArray = new Event!(EventTypeT, EventContextT)[event_queue_size];
 			this.events = BinaryHeap!(Event!(EventTypeT, EventContextT)[])(this.eventArray, 0);
 		}
+		
+		ulong currentCycle() {
+			return Simulator.singleInstance.currentCycle;
+		}
 
 		void registerHandler(EventTypeT eventType, EventHandler eventHandler) {
 			this.eventHandlers[eventType] ~= eventHandler;
 		}
 
-		void schedule(EventTypeT eventType, EventContextT context, ulong delay) {
+		void schedule(EventTypeT eventType, EventContextT context, ulong delay = 0) {
 			assert(delay >= 0);
-			ulong when = Simulator.singleInstance.currentCycle + delay;
-			ulong scheduled = Simulator.singleInstance.currentCycle;
+			ulong when = this.currentCycle + delay;
+			ulong scheduled = this.currentCycle;
 
 			this.schedule(new Event!(EventTypeT, EventContextT)(eventType, context, scheduled, when));
 		}
@@ -210,17 +214,17 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
 			
 			this.events.insert(event);
 
-			logging[LogCategory.EVENT_QUEUE].infof("  %s.schedule(%s)", this.name, to!(string)(event));
+			logging.infof(LogCategory.EVENT_QUEUE, "  %s.schedule(%s)", this.name, to!(string)(event));
 		}
 
 		void execute(EventTypeT eventType, EventContextT context) {
-			this.execute(new Event!(EventTypeT, EventContextT)(eventType, context, Simulator.singleInstance.currentCycle, Simulator.singleInstance.currentCycle));
+			this.execute(new Event!(EventTypeT, EventContextT)(eventType, context, this.currentCycle, this.currentCycle));
 		}
 
 		void execute(Event!(EventTypeT, EventContextT) event) {
 			assert(event.eventType in this.eventHandlers);
 			
-			logging[LogCategory.EVENT_QUEUE].infof("  %s.execute(%s)", this.name, to!(string)(event));
+			logging.infof(LogCategory.EVENT_QUEUE, "  %s.execute(%s)", this.name, to!(string)(event));
 
 			foreach(eventHandler; this.eventHandlers[event.eventType]) {
 				eventHandler(event.eventType, event.context, event.when);
@@ -237,8 +241,8 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
 				Event!(EventTypeT, EventContextT) event = this.events.front;
 
 				/* must we process it? */
-				assert(event.when >= Simulator.singleInstance.currentCycle);
-				if(event.when != Simulator.singleInstance.currentCycle) {
+				assert(event.when >= this.currentCycle);
+				if(event.when != this.currentCycle) {
 					break;
 				}
 

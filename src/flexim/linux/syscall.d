@@ -177,7 +177,7 @@ SyscallReturn open_impl(SyscallDesc desc, Thread thread) {
 
 	// any target flags left?
 	if(tgtFlags != 0)
-		logging[LogCategory.SYSCALL].fatalf("Syscall: open: cannot decode flags 0x%x", tgtFlags);
+		logging.fatalf(LogCategory.SYSCALL, "Syscall: open: cannot decode flags 0x%x", tgtFlags);
 
 	// Adjust path for current working directory
 	path = thread.process.fullPath(to!(string)(path));
@@ -237,7 +237,7 @@ extern(C)
 
 SyscallReturn exit_impl(SyscallDesc desc, Thread thread) {
 	int index = 0;
-	logging[LogCategory.SYSCALL].haltf("target called exit(%d)", thread.getSyscallArg(index) & 0xff);
+	logging.haltf(LogCategory.SYSCALL, "target called exit(%d)", thread.getSyscallArg(index) & 0xff);
 	return 1;
 }
 
@@ -672,7 +672,7 @@ class SyscallEmul {
 			if(syscall_idx >= 0 && syscall_idx < this.syscallDescs.length && (syscall_idx in this.syscallDescs)) {
 				this.syscallDescs[syscall_idx].doSyscall(thread);
 			} else {
-				logging[LogCategory.SYSCALL].warnf("Syscall %d (%d) out of range", callnum, syscall_idx);
+				logging.warnf(LogCategory.SYSCALL, "Syscall %d (%d) out of range", callnum, syscall_idx);
 				thread.setSyscallReturn(-EINVAL);
 			}
 		}
@@ -698,7 +698,9 @@ class SyscallDesc {
 		void doSyscall(Thread thread) {
 			int index = 0;
 
-			assert(this.action != null, format("%d: syscall %s has not been implemented yet.\n", Simulator.singleInstance.currentCycle, this.name));
+			if(this.action is null) {
+				logging.fatalf(LogCategory.SYSCALL, "syscall %s has not been implemented yet.", this.name);
+			}
 
 			SyscallReturn retval = this.action(this, thread);
 

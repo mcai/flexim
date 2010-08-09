@@ -86,7 +86,7 @@ class Process {
 					new_section_addr = shdr.sh_addr;
 
 					if(shdr.sh_size > 0 && (shdr.sh_flags & SHF_ALLOC)) {
-						logging[LogCategory.PROCESS].infof("Loading %s (%d bytes) at address 0x%08x", binary.getSectionName(shdr), shdr.sh_size, new_section_addr);
+						logging.infof(LogCategory.PROCESS, "Loading %s (%d bytes) at address 0x%08x", binary.getSectionName(shdr), shdr.sh_size, new_section_addr);
 
 						MemoryAccessType perm = MemoryAccessType.INIT | MemoryAccessType.READ;
 
@@ -106,7 +106,7 @@ class Process {
 						}
 					}
 				} else if(shdr.sh_type == SHT_DYNAMIC || shdr.sh_type == SHT_DYNSYM) {
-					logging[LogCategory.PROCESS].fatal("dynamic linking is not supported");
+					logging.fatal(LogCategory.PROCESS, "dynamic linking is not supported");
 				}
 			}
 
@@ -162,7 +162,7 @@ class Process {
 
 			/*stack overflow*/
 			if(stack_ptr + 4 >= STACK_BASE) {
-				logging[LogCategory.PROCESS].fatal("Environment overflow. Need to increase MAX_ENVIRON.");
+				logging.fatal(LogCategory.PROCESS, "Environment overflow. Need to increase MAX_ENVIRON.");
 			}
 
 			/* initialize brk point to 4k byte boundary */
@@ -190,7 +190,7 @@ class Process {
 		// map simulator fd sim_fd to target fd tgt_fd
 		void dup_fd(int sim_fd, int tgt_fd) {
 			if(tgt_fd < 0 || tgt_fd > MAX_FD)
-				logging[LogCategory.PROCESS].panicf("Process.dup_fd tried to dup past MAX_FD (%d)", tgt_fd);
+				logging.panicf(LogCategory.PROCESS, "Process.dup_fd tried to dup past MAX_FD (%d)", tgt_fd);
 
 			FdMap fdo = this.fd_map[tgt_fd];
 			fdo.fd = sim_fd;
@@ -217,7 +217,7 @@ class Process {
 				}
 			}
 
-			logging[LogCategory.PROCESS].panic("Process.alloc_fd: out of file descriptors!");
+			logging.panic(LogCategory.PROCESS, "Process.alloc_fd: out of file descriptors!");
 			return 0;
 		}
 
@@ -225,7 +225,7 @@ class Process {
 		void free_fd(int tgt_fd) {
 			FdMap fdo = this.fd_map[tgt_fd];
 			if(fdo.fd == -1)
-				logging[LogCategory.PROCESS].warnf("Process.free_fd: request to free unused fd %d", tgt_fd);
+				logging.warnf(LogCategory.PROCESS, "Process.free_fd: request to free unused fd %d", tgt_fd);
 
 			fdo.fd = -1;
 			fdo.filename = "NULL";
@@ -247,7 +247,7 @@ class Process {
 		// look up simulator fd_map object for a given target fd
 		FdMap* sim_fd_obj(int tgt_fd) {
 			if(tgt_fd > MAX_FD)
-				logging[LogCategory.PROCESS].panic("sim_fd_obj called in fd out of range.");
+				logging.panic(LogCategory.PROCESS, "sim_fd_obj called in fd out of range.");
 
 			return &this.fd_map[tgt_fd];
 		}

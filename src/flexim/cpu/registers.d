@@ -127,14 +127,14 @@ class IntRegisterFile : RegisterFile!(IntReg) {
 	override IntReg opIndex(uint index) {
 		assert(index < NumIntRegs);
 		IntReg value = this.regs[index];
-		logging[LogCategory.THREAD].infof("    Reading int reg %d as %#x.", index, value);
+		logging.infof(LogCategory.THREAD, "    Reading int reg %d as %#x.", index, value);
 		return value;
 	}
 	
 	override void opIndexAssign(IntReg value, uint index) {
 		assert(index < NumIntRegs);
 		this.regs[index] = value;
-		logging[LogCategory.THREAD].infof("    Setting int reg %d to %#x.", index, value);
+		logging.infof(LogCategory.THREAD, "    Setting int reg %d to %#x.", index, value);
 	}
 
 	string dump() {
@@ -184,27 +184,27 @@ class FloatRegisterFile : RegisterFile!(FloatReg) {
 	override FloatReg opIndex(uint index) {
 		assert(index < NumFloatRegs);
 		FloatReg value = this.regs.f[index];
-		logging[LogCategory.THREAD].infof("    Reading float reg %d as %f, %#x.", index, value, this.regs.i[index]);
+		logging.infof(LogCategory.THREAD, "    Reading float reg %d as %f, %#x.", index, value, this.regs.i[index]);
 		return value;
 	}
 	
 	override void opIndexAssign(FloatReg value, uint index) {
 		assert(index < NumFloatRegs);
 		this.regs.f[index] = value;
-		logging[LogCategory.THREAD].infof("    Setting float reg %d to %f, %#x.", index, value, this.regs.i[index]);
+		logging.infof(LogCategory.THREAD, "    Setting float reg %d to %f, %#x.", index, value, this.regs.i[index]);
 	}
 	
 	FloatRegBits opIndex(uint index) {
 		assert(index < NumFloatRegs);
 		FloatRegBits value = this.regs.i[index];
-		logging[LogCategory.THREAD].infof("    Reading float reg %d bits as %#x, %f.", index, value, this.regs.f[index]);
+		logging.infof(LogCategory.THREAD, "    Reading float reg %d bits as %#x, %f.", index, value, this.regs.f[index]);
 		return value;
 	}
 	
 	void opIndexAssign(FloatRegBits value, uint index) {
 		assert(index < NumFloatRegs);
 		this.regs.i[index] = value;
-		logging[LogCategory.THREAD].infof("    Setting float reg %d bits to %#x, %#f.", index, value, this.regs.i[index]);
+		logging.infof(LogCategory.THREAD, "    Setting float reg %d bits to %#x, %#f.", index, value, this.regs.i[index]);
 	}
 	
 	FloatRegs regs;

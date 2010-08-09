@@ -48,9 +48,13 @@ class Message {
 
 uint currentDeviceID = 0;
 
-abstract class Interconnect {
+abstract class Interconnect: SchedulerProvider!(SimulatorEventType, SimulatorEventContext) {
 	this(string name) {
 		this.name = name;
+	}
+
+	void schedule(SimulatorEventType eventType, SimulatorEventContext context, ulong delay = 0) {
+		Simulator.singleInstance.eventQueue.schedule(eventType, context, delay);
 	}
 
 	override string toString() {
@@ -69,10 +73,9 @@ class P2PInterconnect : Interconnect {
 	}
 
 	override void send(Message msg, Node sender, Node receiver, uint latency = 1) {		
-		logging[LogCategory.NET].infof("%s.send(msg = %s, sender = %s, receiver = %s, latency = %d)", this.name, to!(string)(msg), to!(string)(sender), to!(string)(receiver), latency);
+		logging.infof(LogCategory.NET, "%s.send(msg = %s, sender = %s, receiver = %s, latency = %d)", this.name, to!(string)(msg), to!(string)(sender), to!(string)(receiver), latency);
 		
-		Simulator.singleInstance.eventQueue.schedule(SimulatorEventType.GENERAL,
-				new SimulatorEventContext("Interconnect", new Callback3!(Interconnect, Message, Node)(this, msg, sender, &receiver.receive)), latency);
+		this.schedule(SimulatorEventType.GENERAL, new SimulatorEventContext("Interconnect", new Callback3!(Interconnect, Message, Node)(this, msg, sender, &receiver.receive)), latency);
 	}
 }
 
@@ -94,7 +97,7 @@ abstract class Node {
 	}
 
 	void receive(Interconnect interconnect, Message msg, Node sender) {
-		logging[LogCategory.NET].infof("%s.receive(%s, %s, %s)", this.name, interconnect, msg, sender);
+		logging.infof(LogCategory.NET, "%s.receive(%s, %s, %s)", this.name, interconnect, msg, sender);
 
 		if(interconnect == this.upperInterconnect) {
 			foreach(handler; this.upperInterconnectMessageReceived) {
@@ -171,7 +174,7 @@ class Sequencer(RequestT, CacheT): Node {
 	}
 
 	void read(RequestT req) {
-		logging[LogCategory.REQUEST].infof("%s.read(%s)", this.name, req);
+		logging.infof(LogCategory.REQUEST, "%s.read(%s)", this.name, req);
 
 		assert(req !is null);
 		assert(req.type == RequestType.READ);
@@ -193,7 +196,7 @@ class Sequencer(RequestT, CacheT): Node {
 	}
 
 	void write(RequestT req) {
-		logging[LogCategory.REQUEST].infof("%s.write(%s)", this.name, req);
+		logging.infof(LogCategory.REQUEST, "%s.write(%s)", this.name, req);
 
 		assert(req !is null);
 		assert(req.type == RequestType.WRITE);
@@ -210,7 +213,7 @@ class Sequencer(RequestT, CacheT): Node {
 	}
 
 	void completeRequest(RequestT req) {
-		logging[LogCategory.REQUEST].infof("%s.completeRequest(%s)", this.name, req);
+		logging.infof(LogCategory.REQUEST, "%s.completeRequest(%s)", this.name, req);
 
 		if(req.onCompletedCallback !is null) {
 			req.onCompletedCallback.invoke();
@@ -218,7 +221,7 @@ class Sequencer(RequestT, CacheT): Node {
 	}
 
 	void handleLowerInterconnectMessage(Interconnect interconnect, Message msg, Node sender) {
-		logging[LogCategory.REQUEST].infof("%s.handleLowerInterconnectMessage(%s, %s, %s)", this.name, interconnect, msg, sender);
+		logging.infof(LogCategory.REQUEST, "%s.handleLowerInterconnectMessage(%s, %s, %s)", this.name, interconnect, msg, sender);
 
 		Addr blockPhaddr = this.blockAddress(msg.request.addr);
 

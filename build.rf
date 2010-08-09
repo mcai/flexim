@@ -37,4 +37,5 @@ src/flexim/util/events.d
 src/flexim/util/faults.d
 src/flexim/util/logging.d
 src/flexim/util/misc.d
+src/flexim/util/providers.d
 src/flexim/util/queues.d

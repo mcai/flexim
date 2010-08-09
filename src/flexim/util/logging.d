@@ -23,12 +23,6 @@ module flexim.util.logging;
 
 import flexim.all;
 
-string message(string caption, string text) {
-	string strCurrentCycle = Simulator.singleInstance !is null ? to!(string)(Simulator.singleInstance.currentCycle) : "INIT";
-	//	return format("[%s: %s] %s", strCurrentCycle, caption, text);
-	return format("[%s] \t%s", strCurrentCycle, text);
-}
-
 enum LogCategory: string {
 	EVENT_QUEUE = "EVENT_QUEUE",
 	SIMULATOR = "SIMULATOR",
@@ -53,12 +47,12 @@ enum LogCategory: string {
 	DEBUG = "DEBUG"
 }
 
-class Logging {
+class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, SimulatorEventContext) {
 	static this() {
-		singleInstance = new Logging();
+		singleInstance = new Logger();
 	}
-
-	this() {
+	
+	this() {		
 //		this.enable(LogCategory.EVENT_QUEUE);
 		this.enable(LogCategory.SIMULATOR);
 //		this.enable(LogCategory.PROCESSOR);
@@ -77,14 +71,7 @@ class Logging {
 			this.enable(LogCategory.DEBUG);
 		}
 	}
-
-	Logger opIndex(LogCategory index) {
-		if(!(index in this.loggers)) {
-			this.loggers[index] = new Logger(this, index);
-		}
-		return this.loggers[index];
-	}
-
+	
 	void enable(LogCategory category) {
 		this.logSwitches[category] = true;
 	}
@@ -96,67 +83,68 @@ class Logging {
 	bool enabled(LogCategory category) {
 		return category in this.logSwitches && this.logSwitches[category];
 	}
-
-	bool[LogCategory] logSwitches;
-	Logger[LogCategory] loggers;
-
-	static Logging singleInstance;
-}
-
-alias Logging.singleInstance logging;
-
-class Logger {
-	this(Logging logging, LogCategory category) {
-		this.logging = logging;
-		this.category = category;
+	
+	ulong currentCycle() {
+		return Simulator.singleInstance !is null ? Simulator.singleInstance.currentCycle : 0;
 	}
 
-	void infof(T...)(T args) {
-		this.info(format(args));
+	void schedule(SimulatorEventType eventType, SimulatorEventContext context, ulong delay = 0) {
+		Simulator.singleInstance.eventQueue.schedule(eventType, context, delay);
+	}
+	
+	string message(string caption, string text) {
+		return format("[%d] \t%s", this.currentCycle, text);
 	}
 
-	void info(string text) {
-		if(this.logging.enabled(this.category)) {
-			stdout.writeln(message(this.category ~ "|" ~ "info", text));
+	void infof(LogCategory, T...)(LogCategory category, T args) {
+		this.info(category, format(args));
+	}
+
+	void info(LogCategory category, string text) {
+		if(this.enabled(category)) {
+			stdout.writeln(this.message(category ~ "|" ~ "info", text));
 		}
 	}
 
-	void warnf(T...)(T args) {
-		this.warn(format(args));
+	void warnf(LogCategory, T...)(LogCategory category, T args) {
+		this.warn(category, format(args));
 	}
 
-	void warn(string text) {
-		stderr.writeln(message(this.category ~ "|" ~ "warn", text));
+	void warn(LogCategory category, string text) {
+		stderr.writeln(this.message(category ~ "|" ~ "warn", text));
 	}
 
-	void fatalf(T...)(T args) {
-		this.fatal(format(args));
+	void fatalf(LogCategory, T...)(LogCategory category, T args) {
+		this.fatal(category, format(args));
 	}
 
-	void fatal(string text) {		
-		Simulator.singleInstance.eventQueue.schedule(SimulatorEventType.FATAL, new SimulatorEventContext(message(this.category ~ "|" ~ "fatal", text)), 0);
+	void fatal(LogCategory category, string text) {		
+		this.schedule(SimulatorEventType.FATAL, new SimulatorEventContext(this.message(category ~ "|" ~ "fatal", text)), 0);
 	}
 
-	void panicf(T...)(T args) {
-		this.panic(format(args));
+	void panicf(LogCategory, T...)(LogCategory category, T args) {
+		this.panic(category, format(args));
 	}
 
-	void panic(string text) {
-		stderr.writeln(message(this.category ~ "|" ~ "panic", text));
+	void panic(LogCategory category, string text) {
+		stderr.writeln(this.message(category ~ "|" ~ "panic", text));
 		
-		Simulator.singleInstance.eventQueue.schedule(SimulatorEventType.PANIC, new SimulatorEventContext(message(this.category ~ "|" ~ "panic", text)), 0);
+		this.schedule(SimulatorEventType.PANIC, new SimulatorEventContext(this.message(category ~ "|" ~ "panic", text)), 0);
 	}
 
-	void haltf(T...)(T args) {		
-		this.halt(format(args));
+	void haltf(LogCategory, T...)(LogCategory category, T args) {		
+		this.halt(category, format(args));
 	}
 
-	void halt(string text) {
-		stderr.writeln(message(this.category ~ "|" ~ "halt", text));
+	void halt(LogCategory category, string text) {
+		stderr.writeln(this.message(category ~ "|" ~ "halt", text));
 		
-		Simulator.singleInstance.eventQueue.schedule(SimulatorEventType.HALT, new SimulatorEventContext(message(this.category ~ "|" ~ "halt", text)), 0);
+		this.schedule(SimulatorEventType.HALT, new SimulatorEventContext(this.message(category ~ "|" ~ "halt", text)), 0);
 	}
 
-	Logging logging;
-	LogCategory category;
+	bool[LogCategory] logSwitches;
+	
+	static Logger singleInstance;
 }
+
+alias Logger.singleInstance logging;
