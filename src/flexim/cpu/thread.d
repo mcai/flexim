@@ -51,9 +51,9 @@ class Thread {
 		this.process.load(this);
 	}
 
-	IntReg getSyscallArg(ref int i) {
+	IntReg getSyscallArg(int i) {
 		assert(i < 6);
-		return this.intRegs[FirstArgumentReg + i++];
+		return this.intRegs[FirstArgumentReg + i];
 	}
 
 	void setSyscallArg(int i, IntReg val) {

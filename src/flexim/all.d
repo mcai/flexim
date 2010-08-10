@@ -21,6 +21,8 @@
 
 module flexim.all;
 
+public import core.stdc.errno;
+
 public import std.algorithm;
 public import std.array;
 public import std.container;
