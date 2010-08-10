@@ -56,7 +56,7 @@ class DirEntry(StateT) {
 	}
 
 	void setSharer(MESICache node) {
-		assert(node !is null);
+		assert(node !is null);		
         if(!canFind(this.sharers, node)) {
 			this.monitor.invoke(this.x, this.y, CacheMonitoringEventType.DIR_ENTRY_SET_SHARER, node.name);
 			
@@ -83,9 +83,17 @@ class DirEntry(StateT) {
 	bool isSharer(MESICache node) {
 		return canFind(this.sharers, node);
 	}
+	
+	bool isShared() {
+		return this.sharers.length > 0;
+	}
+	
+	bool isOwned() {
+		return this.owner !is null;
+	}
 
 	bool isSharedOrOwned() {
-		return this.sharers.length > 0 || this.owner !is null;
+		return this.isShared || this.isOwned;
 	}
 
 	override string toString() {
@@ -106,7 +114,7 @@ class DirEntry(StateT) {
 		this.m_owner = value;
 	}
 
-	MESICache m_owner;
+	private MESICache m_owner;
 	MESICache[] sharers;
 
 	uint x;

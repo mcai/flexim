@@ -1213,11 +1213,8 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 				}
 
 				/* Set ccache as sharer, and check whether there is other cache sharing it. */
-				bool isShared = false;
 				dirEntry.setSharer(ccache);
-				if(dirEntry.sharers.length > 1) {
-					isShared = true;
-				}
+				bool isShared = dirEntry.isShared;
 				
 				/* if the block is not shared by other caches, set ccache as owner.
 				 * Otherwise, notify requester that the block is shared by setting the 'shared' return value to true. */
