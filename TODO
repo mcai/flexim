@@ -2,10 +2,6 @@ Plain TODOs
 	1. xml configuration using std.xml
 	3. program option parsing using std.getopt
 
-hints:
-	2. standardize the whole project, conforming to gnu/linux conventions as closely as possible
-	3. refactor existing OoO implementation, especially data structures and their walk code
-
 top priorities:
 	1. integration of nonblocking cache with OoO (icache, dcache, shared level two cache, itlb, dtlb)
 	2. integration of branch predictor with OoO
@@ -20,11 +16,8 @@ highest priorities:
 
 games:
 	1. play with the socket streaming capabilities in D
-	2. play with std.bitmanip
-
 
 1. ilp core + mlp core, shared l2 cache, thread spawning. cache bypassing & partitioning.
-
 
 hardware support of partitionable caches:
 
