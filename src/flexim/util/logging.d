@@ -91,9 +91,13 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 	void schedule(SimulatorEventType eventType, SimulatorEventContext context, ulong delay = 0) {
 		Simulator.singleInstance.eventQueue.schedule(eventType, context, delay);
 	}
+
+	void execute(SimulatorEventType eventType, SimulatorEventContext context) {
+		Simulator.singleInstance.eventQueue.execute(eventType, context);
+	}
 	
 	string message(string caption, string text) {
-		return format("[%d] \t%s", this.currentCycle, text);
+		return format("[%d] \t%s%s", this.currentCycle, caption.endsWith("info") ? "" : "[" ~ caption ~ "] ", text);
 	}
 
 	void infof(LogCategory, T...)(LogCategory category, T args) {
@@ -118,8 +122,9 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 		this.fatal(category, format(args));
 	}
 
-	void fatal(LogCategory category, string text) {		
-		this.schedule(SimulatorEventType.FATAL, new SimulatorEventContext(this.message(category ~ "|" ~ "fatal", text)), 0);
+	void fatal(LogCategory category, string text) {
+		stderr.writeln(this.message(category ~ "|" ~ "fatal", text));
+		this.execute(SimulatorEventType.FATAL, new SimulatorEventContext(this.message(category ~ "|" ~ "fatal", text)));
 	}
 
 	void panicf(LogCategory, T...)(LogCategory category, T args) {
@@ -128,8 +133,7 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 
 	void panic(LogCategory category, string text) {
 		stderr.writeln(this.message(category ~ "|" ~ "panic", text));
-		
-		this.schedule(SimulatorEventType.PANIC, new SimulatorEventContext(this.message(category ~ "|" ~ "panic", text)), 0);
+		this.execute(SimulatorEventType.PANIC, new SimulatorEventContext(this.message(category ~ "|" ~ "panic", text)));
 	}
 
 	void haltf(LogCategory, T...)(LogCategory category, T args) {		
@@ -138,8 +142,7 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 
 	void halt(LogCategory category, string text) {
 		stderr.writeln(this.message(category ~ "|" ~ "halt", text));
-		
-		this.schedule(SimulatorEventType.HALT, new SimulatorEventContext(this.message(category ~ "|" ~ "halt", text)), 0);
+		this.execute(SimulatorEventType.HALT, new SimulatorEventContext(this.message(category ~ "|" ~ "halt", text)));
 	}
 
 	bool[LogCategory] logSwitches;

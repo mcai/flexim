@@ -29,4 +29,5 @@ interface CurrentCycleProvider {
 
 interface SchedulerProvider(EventTypeT, EventContextT) {
 	void schedule(EventTypeT eventType, EventContextT context, ulong delay = 0);
+	void execute(EventTypeT eventType, EventContextT context);
 }

@@ -27,9 +27,8 @@ uint currentMessageID = 0;
 
 class Message {	
 	this(Request request) {
-		this.request = request;
-
 		this.id = currentMessageID++;
+		this.request = request;
 	}
 
 	override string toString() {
@@ -46,8 +45,6 @@ class Message {
 	CacheBlockState arg;
 }
 
-uint currentDeviceID = 0;
-
 abstract class Interconnect: SchedulerProvider!(SimulatorEventType, SimulatorEventContext) {
 	this(string name) {
 		this.name = name;
@@ -55,6 +52,10 @@ abstract class Interconnect: SchedulerProvider!(SimulatorEventType, SimulatorEve
 
 	void schedule(SimulatorEventType eventType, SimulatorEventContext context, ulong delay = 0) {
 		Simulator.singleInstance.eventQueue.schedule(eventType, context, delay);
+	}
+
+	void execute(SimulatorEventType eventType, SimulatorEventContext context) {
+		Simulator.singleInstance.eventQueue.execute(eventType, context);
 	}
 
 	override string toString() {
@@ -79,16 +80,14 @@ class P2PInterconnect : Interconnect {
 	}
 }
 
+uint currentNodeID = 0;
+
 abstract class Node {
 	alias ContextCallback3!(Interconnect, Message, Node) MessageReceivedHandler;
 	
 	this(string name, bool isPrivate) {
-		this(name, currentDeviceID++, isPrivate);
-	}
-
-	this(string name, uint id, bool isPrivate) {
+		this.id = currentNodeID++;
 		this.name = name;
-		this.id = id;
 		this.isPrivate = isPrivate;
 	}
 

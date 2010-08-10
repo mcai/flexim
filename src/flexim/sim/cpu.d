@@ -61,10 +61,10 @@ class CPUSimulator : Simulator {
 	this(string cwd, string[] args) {		
 		this.processor = new Processor(this);
 
-		for(int i = 0; i <= 0; i++) { //TODO: i.max be read from config
+		for(int i = 0; i <= 0; i++) {
 			Core core = new Core(format("%d", i));
 
-			for(int j = 0; j <= 1; j++) {
+			for(int j = 0; j <= 0; j++) {
 				Process process = new Process(cwd, args);
 
 				Thread thread = new OoOThread(format("%d", j), process);

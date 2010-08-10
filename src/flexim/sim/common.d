@@ -89,13 +89,11 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 			exit(0);
 		}
 
-		void fatalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-			stderr.writeln(context.name);
-			
+		void fatalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {			
 			if(context.callback !is null) {
 				context.callback.invoke();
 			}
-			this.simulator.dumpStats();
+			//this.simulator.dumpStats();
 			exit(1);
 		}
 
@@ -103,7 +101,7 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 			if(context.callback !is null) {
 				context.callback.invoke();
 			}
-			this.simulator.dumpStats();
+			//this.simulator.dumpStats();
 			exit(-1);
 		}
 
