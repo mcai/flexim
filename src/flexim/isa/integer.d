@@ -357,8 +357,8 @@ class Divu: StaticInst {
 		override void setupDeps() {
 			this.srcRegIdx ~= this[RS];
 			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= MiscIntRegNums.INTREG_LO;
-			this.destRegIdx ~= MiscIntRegNums.INTREG_HI;
+			this.destRegIdx ~= MiscIntRegNums.LO;
+			this.destRegIdx ~= MiscIntRegNums.HI;
 		}
 
 		override void execute(Thread thread) {
@@ -376,8 +376,8 @@ class Divu: StaticInst {
 				hi = cast(uint) (rs % rt);
 			}
 
-			thread.intRegs[MiscIntRegNums.INTREG_LO] = lo;
-			thread.intRegs[MiscIntRegNums.INTREG_HI] = hi;
+			thread.intRegs[MiscIntRegNums.LO] = lo;
+			thread.intRegs[MiscIntRegNums.HI] = hi;
 		}
 }
 
@@ -390,8 +390,8 @@ class Div: StaticInst {
 		override void setupDeps() {
 			this.srcRegIdx ~= this[RS];
 			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= MiscIntRegNums.INTREG_LO;
-			this.destRegIdx ~= MiscIntRegNums.INTREG_HI;
+			this.destRegIdx ~= MiscIntRegNums.LO;
+			this.destRegIdx ~= MiscIntRegNums.HI;
 		}
 
 		override void execute(Thread thread) {
@@ -409,8 +409,8 @@ class Div: StaticInst {
 				hi = cast(uint) (rs % rt);
 			}
 
-			thread.intRegs[MiscIntRegNums.INTREG_LO] = lo;
-			thread.intRegs[MiscIntRegNums.INTREG_HI] = hi;
+			thread.intRegs[MiscIntRegNums.LO] = lo;
+			thread.intRegs[MiscIntRegNums.HI] = hi;
 		}
 }
 
@@ -421,12 +421,12 @@ class Mflo: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= MiscIntRegNums.INTREG_LO;
+			this.srcRegIdx ~= MiscIntRegNums.LO;
 			this.destRegIdx ~= this[RD];
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.intRegs[MiscIntRegNums.INTREG_LO];
+			thread.intRegs[this[RD]] = thread.intRegs[MiscIntRegNums.LO];
 		}
 }
 
@@ -437,12 +437,12 @@ class Mfhi: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= MiscIntRegNums.INTREG_HI;
+			this.srcRegIdx ~= MiscIntRegNums.HI;
 			this.destRegIdx ~= this[RD];
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.intRegs[MiscIntRegNums.INTREG_HI];
+			thread.intRegs[this[RD]] = thread.intRegs[MiscIntRegNums.HI];
 		}
 }
 
@@ -454,11 +454,11 @@ class Mtlo: StaticInst {
 
 		override void setupDeps() {
 			this.srcRegIdx ~= this[RD];
-			this.destRegIdx ~= MiscIntRegNums.INTREG_LO;
+			this.destRegIdx ~= MiscIntRegNums.LO;
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[MiscIntRegNums.INTREG_LO] = thread.intRegs[this[RD]];
+			thread.intRegs[MiscIntRegNums.LO] = thread.intRegs[this[RD]];
 		}
 }
 
@@ -470,11 +470,11 @@ class Mthi: StaticInst {
 
 		override void setupDeps() {
 			this.srcRegIdx ~= this[RD];
-			this.destRegIdx ~= MiscIntRegNums.INTREG_HI;
+			this.destRegIdx ~= MiscIntRegNums.HI;
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[MiscIntRegNums.INTREG_HI] = thread.intRegs[this[RD]];
+			thread.intRegs[MiscIntRegNums.HI] = thread.intRegs[this[RD]];
 		}
 }
 
@@ -487,8 +487,8 @@ class Mult: StaticInst {
 		override void setupDeps() {
 			this.srcRegIdx ~= this[RS];
 			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= MiscIntRegNums.INTREG_LO;
-			this.destRegIdx ~= MiscIntRegNums.INTREG_HI;
+			this.destRegIdx ~= MiscIntRegNums.LO;
+			this.destRegIdx ~= MiscIntRegNums.HI;
 		}
 
 		override void execute(Thread thread) {
@@ -503,8 +503,8 @@ class Mult: StaticInst {
 			uint lo = cast(uint) bits64(val, 31, 0);
 			uint hi = cast(uint) bits64(val, 63, 32);
 
-			thread.intRegs[MiscIntRegNums.INTREG_LO] = lo;
-			thread.intRegs[MiscIntRegNums.INTREG_HI] = hi;
+			thread.intRegs[MiscIntRegNums.LO] = lo;
+			thread.intRegs[MiscIntRegNums.HI] = hi;
 		}
 }
 
@@ -517,8 +517,8 @@ class Multu: StaticInst {
 		override void setupDeps() {
 			this.srcRegIdx ~= this[RS];
 			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= MiscIntRegNums.INTREG_LO;
-			this.destRegIdx ~= MiscIntRegNums.INTREG_HI;
+			this.destRegIdx ~= MiscIntRegNums.LO;
+			this.destRegIdx ~= MiscIntRegNums.HI;
 		}
 
 		override void execute(Thread thread) {
@@ -533,7 +533,7 @@ class Multu: StaticInst {
 			uint lo = cast(uint) bits64(val, 31, 0);
 			uint hi = cast(uint) bits64(val, 63, 32);
 
-			thread.intRegs[MiscIntRegNums.INTREG_LO] = lo;
-			thread.intRegs[MiscIntRegNums.INTREG_HI] = hi;
+			thread.intRegs[MiscIntRegNums.LO] = lo;
+			thread.intRegs[MiscIntRegNums.HI] = hi;
 		}
 }

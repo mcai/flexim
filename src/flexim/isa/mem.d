@@ -70,11 +70,11 @@ class Lb: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -93,11 +93,11 @@ class Lbu: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -116,11 +116,11 @@ class Lh: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -139,11 +139,11 @@ class Lhu: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -162,11 +162,11 @@ class Lw: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -185,11 +185,11 @@ class Lwl: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 			this.memDestRegIdx ~= this[RT];
 		}
@@ -226,11 +226,11 @@ class Lwr: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 			this.memDestRegIdx ~= this[RT];
 		}
@@ -259,6 +259,88 @@ class Lwr: MemoryOp {
 		}
 }
 
+class Ll: MemoryOp {
+	public:
+	this(MachInst machInst) {
+		super("ll", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+	}
+
+	override void setupEaDeps() {
+		this.eaSrcRegIdx ~= this[RS];
+		this.eaDestRegIdx ~= MiscIntRegNums.EA;
+	}
+
+	override void setupMemDeps() {
+		this.memSrcRegIdx ~= MiscIntRegNums.EA;
+		this.memDestRegIdx ~= this[RT];
+	}
+
+	override void execute(Thread thread) {
+		uint rs = thread.intRegs[this[RS]];
+		Addr ea = rs + this.displacement;
+		
+		uint mem = 0;
+		
+		thread.mem.readWord(ea, &mem);
+		
+		thread.intRegs[this[RT]] = mem;
+	}
+}
+
+class Lwc1: MemoryOp {
+	public:
+		this(MachInst machInst) {
+			super("lwc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+		}
+	
+		override void setupEaDeps() {
+			this.eaSrcRegIdx ~= this[RS];
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+		}
+	
+		override void setupMemDeps() {
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
+		}
+	
+		override void execute(Thread thread) {
+			uint rs = thread.intRegs[this[RS]];
+			Addr ea = rs + this.displacement;
+			
+			uint mem = 0;
+			thread.mem.readWord(ea, &mem);
+			
+			thread.floatRegs[this[FT]] = mem;
+		}
+}
+
+class Ldc1: MemoryOp {
+	public:
+		this(MachInst machInst) {
+			super("ldc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+		}
+	
+		override void setupEaDeps() {
+			this.eaSrcRegIdx ~= this[RS];
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+		}
+	
+		override void setupMemDeps() {
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
+		}
+	
+		override void execute(Thread thread) {
+			uint rs = thread.intRegs[this[RS]];
+			Addr ea = rs + this.displacement;
+			
+			ulong mem = 0;
+			thread.mem.readDoubleWord(ea, &mem);
+			
+			thread.floatRegs[this[FT]] = mem;
+		}
+}
+
 class Sb: MemoryOp {
 	public:
 		this(MachInst machInst) {
@@ -267,11 +349,11 @@ class Sb: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 
@@ -289,11 +371,11 @@ class Sh: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 
@@ -311,11 +393,11 @@ class Sw: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 
@@ -333,11 +415,11 @@ class Swl: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 		
@@ -374,11 +456,11 @@ class Swr: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.INTREG_TMP;
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 		
@@ -403,5 +485,83 @@ class Swr: MemoryOp {
 			mem = thread.intRegs[this[RT]] << reg_shift | (mem & (mask(reg_shift)));
 
 			thread.mem.writeWord(ea, mem);
+		}
+}
+
+class Sc: MemoryOp {
+	public:
+		this(MachInst machInst) {
+			super("sc", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+		}
+	
+		override void setupEaDeps() {
+			this.eaSrcRegIdx ~= this[RS];
+			this.eaSrcRegIdx ~= this[RT];
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+		}
+	
+		override void setupMemDeps() {
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memDestRegIdx ~= this[RT];
+		}
+	
+		override void execute(Thread thread) {		
+			uint rs = thread.intRegs[this[RS]];
+			uint rt = thread.intRegs[this[RT]];
+			Addr ea = rs + this.displacement;
+			
+			thread.mem.writeWord(ea, rt);
+			
+			thread.intRegs[this[RT]] = 1;
+		}
+}
+
+class Swc1: MemoryOp {
+	public:
+		this(MachInst machInst) {
+			super("swc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+		}
+	
+		override void setupEaDeps() {
+			this.eaSrcRegIdx ~= this[RS];
+			this.eaSrcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+		}
+	
+		override void setupMemDeps() {
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+		}
+	
+		override void execute(Thread thread) {			
+			uint rs = thread.intRegs[this[RS]];
+			uint ft = thread.floatRegs.get(this[FT]);
+			Addr ea = rs + this.displacement;
+			
+			thread.mem.writeWord(ea, ft);
+		}
+}
+
+class Sdc1: MemoryOp {
+	public:
+		this(MachInst machInst) {
+			super("sdc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+		}
+	
+		override void setupEaDeps() {
+			this.eaSrcRegIdx ~= this[RS];
+			this.eaSrcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+		}
+	
+		override void setupMemDeps() {
+			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+		}
+	
+		override void execute(Thread thread) {			
+			uint rs = thread.intRegs[this[RS]];
+			ulong ft = bits64(thread.floatRegs.get(this[FT]), 63, 0);
+			Addr ea = rs + this.displacement;
+			
+			thread.mem.writeDoubleWord(ea, ft);
 		}
 }

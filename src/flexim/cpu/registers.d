@@ -26,7 +26,7 @@ import flexim.all;
 static const string mips_gpr_names[32] = ["zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9",
 		"k0", "k1", "gp", "sp", "s8", "ra"];
 
-//Constants Related to the number of registers
+// Constants Related to the number of registers
 const int NumIntArchRegs = 32;
 const int NumIntSpecialRegs = 9;
 const int NumFloatArchRegs = 32;
@@ -35,12 +35,18 @@ const int NumFloatSpecialRegs = 5;
 const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
 
+enum MiscIntRegNums: int {
+	LO = NumIntArchRegs,
+	HI,
+	EA
+};
+
 enum FPControlRegNums: int {
-	FLOATREG_FIR = NumFloatArchRegs,
-	FLOATREG_FCCR,
-	FLOATREG_FEXR,
-	FLOATREG_FENR,
-	FLOATREG_FCSR
+	FIR = NumFloatArchRegs,
+	FCCR,
+	FEXR,
+	FENR,
+	FCSR
 }
 
 enum FCSRBits: int {
@@ -58,13 +64,7 @@ enum FCSRFields: int {
 	Cause_Field = 11
 };
 
-enum MiscIntRegNums: int {
-	INTREG_LO = NumIntArchRegs,
-	INTREG_HI,
-	INTREG_TMP
-};
-
-//semantically meaningful register indices
+// Semantically meaningful register indices
 const int ZeroReg = 0;
 const int AssemblerReg = 1;
 const int SyscallSuccessReg = 7;
@@ -80,14 +80,15 @@ const int ReturnAddressReg = 31;
 
 const int SyscallPseudoReturnReg = 3;
 
-//These help enumerate all the registers for dependence tracking.
+// These help enumerate all the registers for dependence tracking.
 const int FP_Base_DepTag = NumIntRegs;
+const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
 
 alias ushort RegIndex;
 
 alias uint IntReg;
 
-//floating point register file entry type
+// floating point register file entry type
 alias uint FloatRegBits;
 alias float FloatReg;
 
@@ -194,17 +195,17 @@ class FloatRegisterFile : RegisterFile!(FloatReg) {
 		logging.infof(LogCategory.THREAD, "    Setting float reg %d to %f, %#x.", index, value, this.regs.i[index]);
 	}
 	
-	FloatRegBits opIndex(uint index) {
+	FloatRegBits get(uint index) {
 		assert(index < NumFloatRegs);
 		FloatRegBits value = this.regs.i[index];
 		logging.infof(LogCategory.THREAD, "    Reading float reg %d bits as %#x, %f.", index, value, this.regs.f[index]);
 		return value;
 	}
 	
-	void opIndexAssign(FloatRegBits value, uint index) {
+	void set(FloatRegBits value, uint index) {
 		assert(index < NumFloatRegs);
 		this.regs.i[index] = value;
-		logging.infof(LogCategory.THREAD, "    Setting float reg %d bits to %#x, %#f.", index, value, this.regs.i[index]);
+		logging.infof(LogCategory.THREAD, "    Setting float reg %d bits to %#x, %#f.", index, value, this.regs.f[index]);
 	}
 	
 	FloatRegs regs;

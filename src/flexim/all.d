@@ -52,6 +52,8 @@ public import flexim.drivers.simulations;
 public import flexim.isa.basic;
 public import flexim.isa.branch;
 public import flexim.isa.common;
+public import flexim.isa.control;
+public import flexim.isa.fp;
 public import flexim.isa.integer;
 public import flexim.isa.mem;
 public import flexim.isa.misc;
@@ -72,7 +74,7 @@ public import flexim.sim.common;
 public import flexim.sim.cpu;
 public import flexim.sim.memsys;
 
-public import flexim.util.bits;
+public import flexim.util.arithmetic;
 public import flexim.util.elf;
 public import flexim.util.events;
 public import flexim.util.faults;

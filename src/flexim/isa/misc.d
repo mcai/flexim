@@ -47,7 +47,7 @@ class FailUnimplemented: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			Fault fault = new UnimplFault(format("type: %s, machInst: 0x%08x, mnemonic: \"%s\"", typeof(this).stringof, this.machInst.data, this.mnemonic));
+			Fault fault = new UnimplFault(format("[%s] machInst: 0x%08x, mnemonic: \"%s\"", typeof(this).stringof, this.machInst.data, this.mnemonic));
 			fault.invoke(thread);
 		}
 }

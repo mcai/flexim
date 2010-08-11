@@ -23,10 +23,6 @@ module flexim.util.misc;
 
 import flexim.all;
 
-uint mod(uint x, uint y) {
-	return (x + y) % y;
-}
-
 const string PUBLIC = "public";
 const string PROTECTED = "protected";
 const string PRIVATE = "private";

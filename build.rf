@@ -15,6 +15,8 @@ src/flexim/drivers/simulations.d
 src/flexim/isa/basic.d
 src/flexim/isa/branch.d
 src/flexim/isa/common.d
+src/flexim/isa/control.d
+src/flexim/isa/fp.d
 src/flexim/isa/integer.d
 src/flexim/isa/mem.d
 src/flexim/isa/misc.d
@@ -31,7 +33,7 @@ src/flexim/mem/tm.d
 src/flexim/sim/common.d
 src/flexim/sim/cpu.d
 src/flexim/sim/memsys.d
-src/flexim/util/bits.d
+src/flexim/util/arithmetic.d
 src/flexim/util/elf.d
 src/flexim/util/events.d
 src/flexim/util/faults.d

@@ -67,7 +67,7 @@ class CPUSimulator : Simulator {
 			for(int j = 0; j <= 0; j++) {
 				Process process = new Process(cwd, args);
 
-				Thread thread = new OoOThread(format("%d", j), process);
+				Thread thread = new Thread(format("%d", j), process);
 				
 				core.addThread(thread);
 			}

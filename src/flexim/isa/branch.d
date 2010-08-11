@@ -245,6 +245,94 @@ class Bnez: Branch {
 		}
 }
 
+class Bc1f: Branch {
+	public:
+		this(MachInst machInst) {
+			super("bc1f", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+		}
+
+		override void execute(Thread thread) {
+			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 0;
+			
+			if(cond) {
+				this.branch(thread);
+			}
+		}
+}
+
+class Bc1t: Branch {
+	public:
+		this(MachInst machInst) {
+			super("bc1t", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+		}
+
+		override void execute(Thread thread) {
+			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 1;
+			
+			if(cond) {
+				this.branch(thread);
+			}
+		}
+}
+
+class Bc1fl: Branch {
+	public:
+		this(MachInst machInst) {
+			super("bc1fl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+		}
+
+		override void execute(Thread thread) {
+			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 0;
+			
+			if(cond) {
+				this.branch(thread);
+			}
+			else {
+				thread.npc = thread.nnpc;
+				thread.nnpc = thread.nnpc + 4;
+			}
+		}
+}
+
+class Bc1tl: Branch {
+	public:
+		this(MachInst machInst) {
+			super("bc1tl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+		}
+
+		override void execute(Thread thread) {
+			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 1;
+			
+			if(cond) {
+				this.branch(thread);
+			}
+			else {
+				thread.npc = thread.nnpc;
+				thread.nnpc = thread.nnpc + 4;
+			}
+		}
+}
+
 abstract class Jump: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {

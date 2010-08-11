@@ -280,6 +280,7 @@ SyscallReturn fstat64_impl(SyscallDesc desc, Thread thread) {
 }
 
 SyscallReturn invalidArg_impl(SyscallDesc desc, Thread thread) {
+	logging.warnf(LogCategory.SYSCALL, "syscall %s is ignored.", desc.name);
 	return -EINVAL;
 }
 

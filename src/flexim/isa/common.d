@@ -624,15 +624,15 @@ class MipsISA : ISA {
 									case 0x0:
 										switch(machInst[RS_LO]) {
 											case 0x0:
-												return new FailUnimplemented("Mfc1", machInst);
+												return new Mfc1(machInst);
 											case 0x2:
-												return new FailUnimplemented("Cfc1", machInst);
+												return new Cfc1(machInst);
 											case 0x3:
 												return new FailUnimplemented("Mfhc1", machInst);
 											case 0x4:
-												return new FailUnimplemented("Mtc1", machInst);
+												return new Mtc1(machInst);
 											case 0x6:
-												return new FailUnimplemented("Ctc1", machInst);
+												return new Ctc1(machInst);
 											case 0x7:
 												return new FailUnimplemented("Mthc1", machInst);
 											case 0x1:
@@ -649,18 +649,18 @@ class MipsISA : ISA {
 													case 0x0:
 														switch(machInst[TF]) {
 															case 0x0:
-																return new FailUnimplemented("Bc1f", machInst);
+																return new Bc1f(machInst);
 															case 0x1:
-																return new FailUnimplemented("Bc1t", machInst);
+																return new Bc1t(machInst);
 															default:
 																return new Unknown(machInst);
 														}
 													case 0x1:
 														switch(machInst[TF]) {
 															case 0x0:
-																return new FailUnimplemented("Bc1fl", machInst);
+																return new Bc1fl(machInst);
 															case 0x1:
-																return new FailUnimplemented("Bc1tl", machInst);
+																return new Bc1tl(machInst);
 															default:
 																return new Unknown(machInst);
 														}
@@ -814,21 +814,21 @@ class MipsISA : ISA {
 													case 0x0:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
-																return new FailUnimplemented("Add_d", machInst);
+																return new Add_d(machInst);
 															case 0x1:
-																return new FailUnimplemented("Sub_d", machInst);
+																return new Sub_d(machInst);
 															case 0x2:
-																return new FailUnimplemented("Mul_d", machInst);
+																return new Mul_d(machInst);
 															case 0x3:
-																return new FailUnimplemented("Div_d", machInst);
+																return new Div_d(machInst);
 															case 0x4:
-																return new FailUnimplemented("Sqrt_d", machInst);
+																return new Sqrt_d(machInst);
 															case 0x5:
-																return new FailUnimplemented("Abs_d", machInst);
+																return new Abs_d(machInst);
 															case 0x7:
-																return new FailUnimplemented("Neg_d", machInst);
+																return new Neg_d(machInst);
 															case 0x6:
-																return new FailUnimplemented("Mov_d", machInst);
+																return new Mov_d(machInst);
 															default:
 																return new Unknown(machInst);
 														}
@@ -889,42 +889,42 @@ class MipsISA : ISA {
 													case 0x6:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
-																return new FailUnimplemented("C_f_d", machInst);
+																return new C_f_d(machInst);
 															case 0x1:
-																return new FailUnimplemented("C_un_d", machInst);
+																return new C_un_d(machInst);
 															case 0x2:
-																return new FailUnimplemented("C_eq_d", machInst);
+																return new C_eq_d(machInst);
 															case 0x3:
-																return new FailUnimplemented("C_ueq_d", machInst);
+																return new C_ueq_d(machInst);
 															case 0x4:
-																return new FailUnimplemented("C_olt_d", machInst);
+																return new C_olt_d(machInst);
 															case 0x5:
-																return new FailUnimplemented("C_ult_d", machInst);
+																return new C_ult_d(machInst);
 															case 0x6:
-																return new FailUnimplemented("C_ole_d", machInst);
+																return new C_ole_d(machInst);
 															case 0x7:
-																return new FailUnimplemented("C_ule_d", machInst);
+																return new C_ule_d(machInst);
 															default:
 																return new Unknown(machInst);
 														}
 													case 0x7:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
-																return new FailUnimplemented("C_sf_d", machInst);
+																return new C_sf_d(machInst);
 															case 0x1:
-																return new FailUnimplemented("C_ngle_d", machInst);
+																return new C_ngle_d(machInst);
 															case 0x2:
-																return new FailUnimplemented("C_seq_d", machInst);
+																return new C_seq_d(machInst);
 															case 0x3:
-																return new FailUnimplemented("C_ngl_d", machInst);
+																return new C_ngl_d(machInst);
 															case 0x4:
-																return new FailUnimplemented("C_lt_d", machInst);
+																return new C_lt_d(machInst);
 															case 0x5:
-																return new FailUnimplemented("C_nge_d", machInst);
+																return new C_nge_d(machInst);
 															case 0x6:
-																return new FailUnimplemented("C_le_d", machInst);
+																return new C_le_d(machInst);
 															case 0x7:
-																return new FailUnimplemented("C_ngt_d", machInst);
+																return new C_ngt_d(machInst);
 															default:
 																return new Unknown(machInst);
 														}
@@ -940,9 +940,9 @@ class MipsISA : ISA {
 											case 0x4:
 												switch(machInst[FUNC]) {
 													case 0x20:
-														return new FailUnimplemented("Cvt_s_w", machInst);
+														return new Cvt_s_w(machInst);
 													case 0x21:
-														return new FailUnimplemented("Cvt_d_w", machInst);
+														return new Cvt_d_w(machInst);
 													case 0x26:
 														return new CP1Unimplemented("cvt_ps_w", machInst);
 													default:
@@ -951,9 +951,9 @@ class MipsISA : ISA {
 											case 0x5:
 												switch(machInst[FUNC_HI]) {
 													case 0x20:
-														return new FailUnimplemented("Cvt_s_l", machInst);
+														return new Cvt_s_l(machInst);
 													case 0x21:
-														return new FailUnimplemented("Cvt_d_l", machInst);
+														return new Cvt_d_l(machInst);
 													case 0x26:
 														return new CP1Unimplemented("cvt_ps_l", machInst);
 													default:
@@ -1862,13 +1862,13 @@ class MipsISA : ISA {
 			case 0x6:
 				switch(machInst[OPCODE_LO]) {
 					case 0x0: {
-						return new FailUnimplemented("Ll", machInst);
+						return new Ll(machInst);
 					}
 					case 0x1: {
-						return new FailUnimplemented("Lwc1", machInst);
+						return new Lwc1(machInst);
 					}
 					case 0x5:
-						return new FailUnimplemented("Ldc1", machInst);
+						return new Ldc1(machInst);
 					case 0x2:
 						return new CP2Unimplemented("lwc2", machInst);
 					case 0x6:
@@ -1881,11 +1881,11 @@ class MipsISA : ISA {
 			case 0x7:
 				switch(machInst[OPCODE_LO]) {
 					case 0x0:
-						return new FailUnimplemented("Sc", machInst);
+						return new Sc(machInst);
 					case 0x1:
-						return new FailUnimplemented("Swc1", machInst);
+						return new Swc1(machInst);
 					case 0x5:
-						return new FailUnimplemented("Sdc1", machInst);
+						return new Sdc1(machInst);
 					case 0x2:
 						return new CP2Unimplemented("swc2", machInst);
 					case 0x6:

@@ -37,8 +37,12 @@ Flexim - A modular and highly configurable multicore simulator written in D
     b) remove all the built files using the command:
       make clean
     Note: By default, the flexim binary is placed in the bin/ folder.
+ 
+ 3. Download and unpack cross-compiler-mipsel.tar.bz2 from http://github.com/mcai/flexim/downloads/.
+   Use it to compile MIPS32 LE programs to be simulated by Flexim.
+   See the subdirectory microbenchmarks/ of the distribution for sample use.
 
- 3. In the subdirectory build/, you can simulate a MIPS32 LE program using the command:
+ 4. In the subdirectory build/, you can simulate a MIPS32 LE program using the command:
     ./flexim <path-to-mipsel-executable> <args>
 
 == Contact Information ==
