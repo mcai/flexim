@@ -27,42 +27,19 @@ static const string mips_gpr_names[32] = ["zero", "at", "v0", "v1", "a0", "a1", 
 		"k0", "k1", "gp", "sp", "s8", "ra"];
 
 // Constants Related to the number of registers
-const int NumIntArchRegs = 32;
-const int NumIntSpecialRegs = 9;
-const int NumFloatArchRegs = 32;
-const int NumFloatSpecialRegs = 5;
+const int NumIntRegs = 32;
+const int NumFloatRegs = 32;
 
-const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
-const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
-
-enum MiscIntRegNums: int {
-	LO = NumIntArchRegs,
+enum MiscRegNums: int {
+	LO = 0,
 	HI,
-	EA
-};
-
-enum FPControlRegNums: int {
-	FIR = NumFloatArchRegs,
-	FCCR,
-	FEXR,
-	FENR,
+	EA,
 	FCSR
-}
-
-enum FCSRBits: int {
-	Inexact = 1,
-	Underflow,
-	Overflow,
-	DivideByZero,
-	Invalid,
-	Unimplemented
 };
 
-enum FCSRFields: int {
-	Flag_Field = 1,
-	Enable_Field = 6,
-	Cause_Field = 11
-};
+// These help enumerate all the registers for dependence tracking.
+const int FP_Base_DepTag = NumIntRegs;
+const int Misc_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
 
 // Semantically meaningful register indices
 const int ZeroReg = 0;
@@ -79,10 +56,6 @@ const int FramePointerReg = 30;
 const int ReturnAddressReg = 31;
 
 const int SyscallPseudoReturnReg = 3;
-
-// These help enumerate all the registers for dependence tracking.
-const int FP_Base_DepTag = NumIntRegs;
-const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
 
 interface RegisterFile(RegT) {	
 	void clear();
@@ -125,7 +98,7 @@ class IntRegisterFile : RegisterFile!(uint) {
 	override string toString() {
 		string buf;
 
-		foreach(i, reg; this.regs[0 .. NumIntArchRegs]) {
+		foreach(i, reg; this.regs[0 .. NumIntRegs]) {
 			if(i % 4 == 0) {
 				buf ~= "    ";
 			}
@@ -136,7 +109,7 @@ class IntRegisterFile : RegisterFile!(uint) {
 
 			buf ~= format("%s  = 0x%08x ", mips_gpr_names[i], reg);
 
-			if(i % 4 == 3 && i != (NumIntArchRegs - 1)) {
+			if(i % 4 == 3 && i != (NumIntRegs - 1)) {
 				buf ~= '\n';
 			}
 		}
@@ -145,6 +118,34 @@ class IntRegisterFile : RegisterFile!(uint) {
 	}
 
 	uint[NumIntRegs] regs;
+}
+
+class MiscRegisterFile: RegisterFile!(uint) {
+	this() {
+		this.clear();
+	}
+	
+	override void clear() {
+		this.lo = 0;
+		this.hi = 0;
+		this.ea = 0;
+		this.fcsr = 0;
+	}
+	
+	override void checkpoint() {
+		assert(0);
+		//TODO
+	}
+	
+	override void restore() {
+		assert(0);
+		//TODO
+	}
+	
+	uint lo;
+	uint hi;
+	uint ea;
+	uint fcsr;
 }
 
 class FloatRegisterFile : RegisterFile!(float) {
@@ -200,7 +201,7 @@ class FloatRegisterFile : RegisterFile!(float) {
 	}
 	
 	void setUint(uint value, uint index) {
-		assert(index < NumFloatRegs);
+		assert(index < NumFloatRegs, format("%d", index));
 		this.regs.i[index] = value;
 		logging.infof(LogCategory.REGISTER, "    Setting float reg %d bits to %#x.", index, value);
 	}
@@ -221,7 +222,7 @@ class FloatRegisterFile : RegisterFile!(float) {
 	override string toString() {
 		string buf;
 
-		foreach(i, reg; this.regs.f[0 .. NumFloatArchRegs]) {
+		foreach(i, reg; this.regs.f[0 .. NumFloatRegs]) {
 			if(i % 4 == 0) {
 				buf ~= "    ";
 			}
@@ -232,7 +233,7 @@ class FloatRegisterFile : RegisterFile!(float) {
 
 			buf ~= format("f%d  = 0x%08x ", i, reg);
 
-			if(i % 4 == 3 && i != (NumFloatArchRegs - 1)) {
+			if(i % 4 == 3 && i != (NumFloatRegs - 1)) {
 				buf ~= '\n';
 			}
 		}

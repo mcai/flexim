@@ -252,11 +252,11 @@ class Bc1f: Branch {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			uint fcsr = thread.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
 			if(cond) {
@@ -272,11 +272,11 @@ class Bc1t: Branch {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			uint fcsr = thread.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
 			if(cond) {
@@ -292,11 +292,11 @@ class Bc1fl: Branch {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			uint fcsr = thread.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
 			if(cond) {
@@ -316,11 +316,11 @@ class Bc1tl: Branch {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			uint fcsr = thread.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
 			if(cond) {

@@ -30,18 +30,35 @@ abstract class FloatOp: StaticInst {
 		}
 }
 
-alias FloatOp FloatConvertOp;
-
-class Add_d: FloatOp {
+abstract class FloatBinaryOp: FloatOp {
 	public:
-		this(MachInst machInst) {
-			super("add_d", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+			super(mnemonic, machInst, flags, fuType);
 		}
 
 		override void setupDeps() {
 			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
 			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
 			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+}
+
+abstract class FloatUnaryOp: FloatOp {
+	public:
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+			super(mnemonic, machInst, flags, fuType);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+}
+
+class Add_d: FloatBinaryOp {
+	public:
+		this(MachInst machInst) {
+			super("add_d", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
 		}
 
 		override void execute(Thread thread) {
@@ -54,16 +71,10 @@ class Add_d: FloatOp {
 		}
 }
 
-class Sub_d: FloatOp {
+class Sub_d: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
 			super("sub_d", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -76,16 +87,10 @@ class Sub_d: FloatOp {
 		}
 }
 
-class Mul_d: FloatOp {
+class Mul_d: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
 			super("mul_d", machInst, StaticInstFlag.FCOMP, FUType.FloatMULT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -98,16 +103,10 @@ class Mul_d: FloatOp {
 		}
 }
 
-class Div_d: FloatOp {
+class Div_d: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
 			super("div_d", machInst, StaticInstFlag.FCOMP, FUType.FloatDIV);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -120,15 +119,10 @@ class Div_d: FloatOp {
 		}
 }
 
-class Sqrt_d: FloatOp {
+class Sqrt_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("sqrt_d", machInst, StaticInstFlag.FCOMP, FUType.FloatSQRT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -140,15 +134,10 @@ class Sqrt_d: FloatOp {
 		}
 }
 
-class Abs_d: FloatOp {
+class Abs_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("abs_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -160,15 +149,10 @@ class Abs_d: FloatOp {
 		}
 }
 
-class Neg_d: FloatOp {
+class Neg_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("neg_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -180,15 +164,10 @@ class Neg_d: FloatOp {
 		}
 }
 
-class Mov_d: FloatOp {
+class Mov_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("mov_d", machInst, StaticInstFlag.NONE, FUType.NONE);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -199,16 +178,10 @@ class Mov_d: FloatOp {
 		}
 }
 
-class Add_s: FloatOp {
+class Add_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
 			super("add_s", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -221,16 +194,10 @@ class Add_s: FloatOp {
 		}
 }
 
-class Sub_s: FloatOp {
+class Sub_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
 			super("sub_s", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -243,16 +210,10 @@ class Sub_s: FloatOp {
 		}
 }
 
-class Mul_s: FloatOp {
+class Mul_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
 			super("mul_s", machInst, StaticInstFlag.FCOMP, FUType.FloatMULT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -265,16 +226,10 @@ class Mul_s: FloatOp {
 		}
 }
 
-class Div_s: FloatOp {
+class Div_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
 			super("div_s", machInst, StaticInstFlag.FCOMP, FUType.FloatDIV);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -287,15 +242,10 @@ class Div_s: FloatOp {
 		}
 }
 
-class Sqrt_s: FloatOp {
+class Sqrt_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("sqrt_s", machInst, StaticInstFlag.FCOMP, FUType.FloatSQRT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -307,15 +257,10 @@ class Sqrt_s: FloatOp {
 		}
 }
 
-class Abs_s: FloatOp {
+class Abs_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("abs_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -327,15 +272,10 @@ class Abs_s: FloatOp {
 		}
 }
 
-class Neg_s: FloatOp {
+class Neg_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("neg_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -347,15 +287,10 @@ class Neg_s: FloatOp {
 		}
 }
 
-class Mov_s: FloatOp {
+class Mov_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
 			super("mov_s", machInst, StaticInstFlag.NONE, FUType.NONE);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
 		}
 
 		override void execute(Thread thread) {
@@ -366,15 +301,22 @@ class Mov_s: FloatOp {
 		}
 }
 
-class Cvt_d_s: FloatConvertOp {
+abstract class FloatConvertOp: FloatOp {
 	public:
-		this(MachInst machInst) {
-			super("cvt_d_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+		this(string mnemonic, MachInst machInst) {
+			super(mnemonic, machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
 		}
 
 		override void setupDeps() {
 			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
 			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+}
+
+class Cvt_d_s: FloatConvertOp {
+	public:
+		this(MachInst machInst) {
+			super("cvt_d_s", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -388,12 +330,7 @@ class Cvt_d_s: FloatConvertOp {
 class Cvt_w_s: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_w_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_w_s", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -407,12 +344,7 @@ class Cvt_w_s: FloatConvertOp {
 class Cvt_l_s: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_l_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_l_s", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -426,12 +358,7 @@ class Cvt_l_s: FloatConvertOp {
 class Cvt_s_d: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_s_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_s_d", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -445,12 +372,7 @@ class Cvt_s_d: FloatConvertOp {
 class Cvt_w_d: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_w_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_w_d", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -464,12 +386,7 @@ class Cvt_w_d: FloatConvertOp {
 class Cvt_l_d: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_l_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_l_d", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -483,12 +400,7 @@ class Cvt_l_d: FloatConvertOp {
 class Cvt_s_w: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_s_w", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_s_w", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -502,12 +414,7 @@ class Cvt_s_w: FloatConvertOp {
 class Cvt_d_w: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_d_w", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_d_w", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -521,12 +428,7 @@ class Cvt_d_w: FloatConvertOp {
 class Cvt_s_l: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_s_l", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_s_l", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -540,12 +442,7 @@ class Cvt_s_l: FloatConvertOp {
 class Cvt_d_l: FloatConvertOp {
 	public:
 		this(MachInst machInst) {
-			super("cvt_d_l", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
-		}
-
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			super("cvt_d_l", machInst);
 		}
 
 		override void execute(Thread thread) {
@@ -565,8 +462,8 @@ abstract class FloatCompareOp: StaticInst {
 		override void setupDeps() {
 			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
 			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
+			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
 		}
 }
 
@@ -579,7 +476,7 @@ class C_cond_d(alias mnemonic): FloatCompareOp {
 		override void execute(Thread thread) {
 			double fs = thread.floatRegs.getDouble(this[FS]);
 			double ft = thread.floatRegs.getDouble(this[FT]);
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			uint fcsr = thread.miscRegs.fcsr;
 		
 			bool less;
 			bool equal;
@@ -603,7 +500,7 @@ class C_cond_d(alias mnemonic): FloatCompareOp {
 				clearFCC(fcsr, this[CC]);
 			}
 			
-			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);			
+			thread.miscRegs.fcsr = fcsr;			
 		}
 }
 
@@ -616,7 +513,7 @@ class C_cond_s(alias mnemonic): FloatCompareOp {
 		override void execute(Thread thread) {
 			float fs = thread.floatRegs.getFloat(this[FS]);
 			float ft = thread.floatRegs.getFloat(this[FT]);
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			uint fcsr = thread.miscRegs.fcsr;
 		
 			bool less;
 			bool equal;
@@ -640,7 +537,7 @@ class C_cond_s(alias mnemonic): FloatCompareOp {
 				clearFCC(fcsr, this[CC]);
 			}
 			
-			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);			
+			thread.miscRegs.fcsr = fcsr;
 		}
 }
 

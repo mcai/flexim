@@ -54,35 +54,19 @@ class Cfc1: CP1Control {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FIR;
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
 			this.destRegIdx ~= this[RT];
 		}
 
 		override void execute(Thread thread) {			
-			uint fir = thread.floatRegs.getUint(FPControlRegNums.FIR);
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			uint fcsr = thread.miscRegs.fcsr;
 			
 			uint rt = 0;
 			
-			switch(this[FS]) {
-				case 0:
-					rt = fir;
-				break;
-				case 25:
-					rt = (bits(fcsr, 31, 25) << 1) | bits(fcsr, 23, 23);
-				break;
-				case 26:
-					rt = (bits(fcsr, 17, 12) << 12) | (bits(fcsr, 6, 2) << 2);
-				break;
-				case 28:
-					rt = (bits(fcsr, 11, 7) << 7) | (bits(fcsr, 24, 24) << 2) | bits(fcsr, 1, 0);
-				break;
-				case 31:
-					rt = fcsr;
-				break;				
+			if(this[FS] == 31) {
+				rt = fcsr;
+				thread.intRegs[this[RT]] = rt;
 			}
-			thread.intRegs[this[RT]] = rt;
 		}
 }
 
@@ -111,31 +95,15 @@ class Ctc1: CP1Control {
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
 			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
 		}
 
-		override void execute(Thread thread) {			
-			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+		override void execute(Thread thread) {
 			uint rt = thread.intRegs[this[RT]];
 			
-			switch(this[FS]) {
-				case 25:
-					thread.floatRegs.setUint(FPControlRegNums.FCSR,
-						(bits(rt, 7, 1) << 25) | (bits(fcsr, 24, 24) << 24) | (bits(rt, 0, 0) << 23) | bits(fcsr, 22, 0));
-				break;
-				case 26:
-					thread.floatRegs.setUint(FPControlRegNums.FCSR,
-						(bits(fcsr, 31, 18) << 18) | (bits(rt, 17, 12) << 12) | (bits(fcsr, 11, 7) << 7) | (bits(rt, 6, 2) << 2) | bits(fcsr, 1, 0));					
-				break;
-				case 28:
-					thread.floatRegs.setUint(FPControlRegNums.FCSR,
-						(bits(fcsr, 31, 25) << 25) | (bits(rt, 2, 2) << 24) | (bits(fcsr, 23, 12) << 12) | (bits(rt, 11, 7) << 7) | (bits(fcsr, 6, 2) << 2) | bits(rt, 1, 0));					
-				break;
-				case 31:
-					thread.floatRegs.setUint(FPControlRegNums.FCSR, rt);
-				break;
+			if(this[FS]) {
+				thread.miscRegs.fcsr = rt;
 			}
 		}
 }

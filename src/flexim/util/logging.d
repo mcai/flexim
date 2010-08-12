@@ -56,6 +56,7 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 //		this.enable(LogCategory.EVENT_QUEUE);
 		this.enable(LogCategory.SIMULATOR);
 //		this.enable(LogCategory.PROCESSOR);
+		this.enable(LogCategory.REGISTER);
 //		this.enable(LogCategory.REQUEST);
 //		this.enable(LogCategory.CACHE);
 //		this.enable(LogCategory.MESI);

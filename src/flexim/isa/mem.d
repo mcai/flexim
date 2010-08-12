@@ -70,11 +70,11 @@ class Lb: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -93,11 +93,11 @@ class Lbu: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -116,11 +116,11 @@ class Lh: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -139,11 +139,11 @@ class Lhu: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -162,11 +162,11 @@ class Lw: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 
@@ -185,11 +185,11 @@ class Lwl: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 			this.memDestRegIdx ~= this[RT];
 		}
@@ -226,11 +226,11 @@ class Lwr: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 			this.memDestRegIdx ~= this[RT];
 		}
@@ -267,11 +267,11 @@ class Ll: MemoryOp {
 
 	override void setupEaDeps() {
 		this.eaSrcRegIdx ~= this[RS];
-		this.eaDestRegIdx ~= MiscIntRegNums.EA;
+		this.eaDestRegIdx ~= MiscRegNums.EA;
 	}
 
 	override void setupMemDeps() {
-		this.memSrcRegIdx ~= MiscIntRegNums.EA;
+		this.memSrcRegIdx ~= MiscRegNums.EA;
 		this.memDestRegIdx ~= this[RT];
 	}
 
@@ -290,18 +290,18 @@ class Lwc1: MemoryOp {
 	
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
 		}
 	
 		override void execute(Thread thread) {			
 			uint mem = 0;
 			thread.mem.readWord(this.ea(thread), &mem);			
-			thread.floatRegs.setDouble(mem, this[FT]);
+			thread.floatRegs.setUint(mem, this[FT]);
 		}
 }
 
@@ -313,18 +313,18 @@ class Ldc1: MemoryOp {
 	
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
 		}
 	
 		override void execute(Thread thread) {			
 			ulong mem = 0;
 			thread.mem.readDoubleWord(this.ea(thread), &mem);			
-			thread.floatRegs.setDouble(mem, this[FT]);
+			thread.floatRegs.setUlong(mem, this[FT]);
 		}
 }
 
@@ -336,11 +336,11 @@ class Sb: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 
@@ -358,11 +358,11 @@ class Sh: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 
@@ -380,11 +380,11 @@ class Sw: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 
@@ -402,11 +402,11 @@ class Swl: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 		
@@ -443,11 +443,11 @@ class Swr: MemoryOp {
 
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memSrcRegIdx ~= this[RT];
 		}
 		
@@ -484,11 +484,11 @@ class Sc: MemoryOp {
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
 			this.eaSrcRegIdx ~= this[RT];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 			this.memDestRegIdx ~= this[RT];
 		}
 	
@@ -508,11 +508,11 @@ class Swc1: MemoryOp {
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
 			this.eaSrcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 		}
 	
 		override void execute(Thread thread) {			
@@ -530,15 +530,15 @@ class Sdc1: MemoryOp {
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
 			this.eaSrcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.eaDestRegIdx ~= MiscIntRegNums.EA;
+			this.eaDestRegIdx ~= MiscRegNums.EA;
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= MiscIntRegNums.EA;
+			this.memSrcRegIdx ~= MiscRegNums.EA;
 		}
 	
 		override void execute(Thread thread) {		
-			ulong ft = bits64(thread.floatRegs.getUint(this[FT]), 63, 0);			
+			ulong ft = thread.floatRegs.getUlong(this[FT]);			
 			thread.mem.writeDoubleWord(this.ea(thread), ft);
 		}
 }

@@ -77,6 +77,7 @@ class Thread {
 		
 		this.intRegs = new IntRegisterFile();
 		this.floatRegs = new FloatRegisterFile();
+		this.miscRegs = new MiscRegisterFile();
 	}
 
 	void dumpConfigs(string indent) {
@@ -107,9 +108,9 @@ class Thread {
 		assert(staticInst !is null, format("failed to decode machine instructon 0x%08x", machInst.data));
 
 		DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
+		//logging.infof(LogCategory.DEBUG, "execute instruction: %s", uop);
 		uop.execute();
 
-		//logging.infof(LogCategory.DEBUG, "instruction executed: %s", uop);
 		//logging.infof(LogCategory.DEBUG, "  intRegs:\n %s", this.intRegs);
 		//logging.infof(LogCategory.DEBUG, "  floatRegs:\n %s", this.floatRegs);
 
@@ -162,6 +163,7 @@ class Thread {
 	
 	IntRegisterFile intRegs;
 	FloatRegisterFile floatRegs;
+	MiscRegisterFile miscRegs;
 
 	ulong totalInsts;
 
