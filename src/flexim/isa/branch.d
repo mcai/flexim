@@ -256,8 +256,8 @@ class Bc1f: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
-			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 0;
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
 			if(cond) {
 				this.branch(thread);
@@ -276,8 +276,8 @@ class Bc1t: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
-			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 1;
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
 			if(cond) {
 				this.branch(thread);
@@ -296,8 +296,8 @@ class Bc1fl: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
-			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 0;
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
 			if(cond) {
 				this.branch(thread);
@@ -320,8 +320,8 @@ class Bc1tl: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
-			bool cond = getCondCode(fcsr, this[BRANCH_CC]) == 1;
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
 			if(cond) {
 				this.branch(thread);

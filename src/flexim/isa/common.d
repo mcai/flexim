@@ -686,21 +686,21 @@ class MipsISA : ISA {
 													case 0x0:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
-																return new FailUnimplemented("Add_s", machInst);
+																return new Add_s(machInst);
 															case 0x1:
-																return new FailUnimplemented("Sub_s", machInst);
+																return new Sub_s(machInst);
 															case 0x2:
-																return new FailUnimplemented("Mul_s", machInst);
+																return new Mul_s(machInst);
 															case 0x3:
-																return new FailUnimplemented("Div_s", machInst);
+																return new Div_s(machInst);
 															case 0x4:
-																return new FailUnimplemented("Sqrt_s", machInst);
+																return new Sqrt_s(machInst);
 															case 0x5:
-																return new FailUnimplemented("Abs_s", machInst);
+																return new Abs_s(machInst);
 															case 0x7:
-																return new FailUnimplemented("Neg_s", machInst);
+																return new Neg_s(machInst);
 															case 0x6:
-																return new FailUnimplemented("Mov_s", machInst);
+																return new Mov_s(machInst);
 															default:
 																return new Unknown(machInst);
 														}
@@ -752,11 +752,11 @@ class MipsISA : ISA {
 													case 0x4:
 														switch(machInst[FUNC_LO]) {
 															case 0x1:
-																return new FailUnimplemented("Cvt_d_s", machInst);
+																return new Cvt_d_s(machInst);
 															case 0x4:
-																return new FailUnimplemented("Cvt_w_s", machInst);
+																return new Cvt_w_s(machInst);
 															case 0x5:
-																return new FailUnimplemented("Cvt_l_s", machInst);
+																return new Cvt_l_s(machInst);
 															case 0x6:
 																return new FailUnimplemented("Cvt_ps_s", machInst);
 															default:
@@ -878,11 +878,11 @@ class MipsISA : ISA {
 													case 0x4:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
-																return new FailUnimplemented("Cvt_s_d", machInst);
+																return new Cvt_s_d(machInst);
 															case 0x4:
-																return new FailUnimplemented("Cvt_w_d", machInst);
+																return new Cvt_w_d(machInst);
 															case 0x5:
-																return new FailUnimplemented("Cvt_l_d", machInst);
+																return new Cvt_l_d(machInst);
 															default:
 																return new CP1Unimplemented("unknown", machInst);
 														}

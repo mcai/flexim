@@ -51,19 +51,19 @@ class Thread {
 		this.process.load(this);
 	}
 
-	IntReg getSyscallArg(int i) {
+	uint getSyscallArg(int i) {
 		assert(i < 6);
 		return this.intRegs[FirstArgumentReg + i];
 	}
 
-	void setSyscallArg(int i, IntReg val) {
+	void setSyscallArg(int i, uint val) {
 		assert(i < 6);
 		this.intRegs[FirstArgumentReg + i] = val;
 	}
 
 	void setSyscallReturn(SyscallReturn return_value) {
 		this.intRegs[ReturnValueReg] = return_value;
-		this.intRegs[SyscallSuccessReg] = return_value == cast(IntReg) -EINVAL ? 1 : 0;
+		this.intRegs[SyscallSuccessReg] = return_value == cast(uint) -EINVAL ? 1 : 0;
 	}
 
 	void syscall(uint callnum) {
@@ -108,6 +108,10 @@ class Thread {
 
 		DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
 		uop.execute();
+
+		//logging.infof(LogCategory.DEBUG, "instruction executed: %s", uop);
+		//logging.infof(LogCategory.DEBUG, "  intRegs:\n %s", this.intRegs);
+		//logging.infof(LogCategory.DEBUG, "  floatRegs:\n %s", this.floatRegs);
 
 		if(uop.isControl) {
 			BpredUpdate dirUpdate = new BpredUpdate();

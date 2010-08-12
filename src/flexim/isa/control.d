@@ -42,7 +42,7 @@ class Mfc1: CP1Control {
 		}
 
 		override void execute(Thread thread) {			
-			uint fs = thread.floatRegs.get(this[FS]);
+			uint fs = thread.floatRegs.getUint(this[FS]);
 			thread.intRegs[this[RT]] = fs;
 		}
 }
@@ -60,8 +60,8 @@ class Cfc1: CP1Control {
 		}
 
 		override void execute(Thread thread) {			
-			uint fir = thread.floatRegs.get(FPControlRegNums.FIR);
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			uint fir = thread.floatRegs.getUint(FPControlRegNums.FIR);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
 			uint rt = 0;
 			
@@ -100,7 +100,7 @@ class Mtc1: CP1Control {
 
 		override void execute(Thread thread) {
 			uint rt = thread.intRegs[this[RT]];
-			thread.floatRegs.set(rt, this[FS]);
+			thread.floatRegs.setUint(rt, this[FS]);
 		}
 }
 
@@ -117,24 +117,24 @@ class Ctc1: CP1Control {
 		}
 
 		override void execute(Thread thread) {			
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			uint rt = thread.intRegs[this[RT]];
 			
 			switch(this[FS]) {
 				case 25:
-					thread.floatRegs.set(FPControlRegNums.FCSR,
+					thread.floatRegs.setUint(FPControlRegNums.FCSR,
 						(bits(rt, 7, 1) << 25) | (bits(fcsr, 24, 24) << 24) | (bits(rt, 0, 0) << 23) | bits(fcsr, 22, 0));
 				break;
 				case 26:
-					thread.floatRegs.set(FPControlRegNums.FCSR,
+					thread.floatRegs.setUint(FPControlRegNums.FCSR,
 						(bits(fcsr, 31, 18) << 18) | (bits(rt, 17, 12) << 12) | (bits(fcsr, 11, 7) << 7) | (bits(rt, 6, 2) << 2) | bits(fcsr, 1, 0));					
 				break;
 				case 28:
-					thread.floatRegs.set(FPControlRegNums.FCSR,
+					thread.floatRegs.setUint(FPControlRegNums.FCSR,
 						(bits(fcsr, 31, 25) << 25) | (bits(rt, 2, 2) << 24) | (bits(fcsr, 23, 12) << 12) | (bits(rt, 11, 7) << 7) | (bits(fcsr, 6, 2) << 2) | bits(rt, 1, 0));					
 				break;
 				case 31:
-					thread.floatRegs.set(FPControlRegNums.FCSR, rt);
+					thread.floatRegs.setUint(FPControlRegNums.FCSR, rt);
 				break;
 			}
 		}

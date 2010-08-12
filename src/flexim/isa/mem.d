@@ -275,14 +275,9 @@ class Ll: MemoryOp {
 		this.memDestRegIdx ~= this[RT];
 	}
 
-	override void execute(Thread thread) {
-		uint rs = thread.intRegs[this[RS]];
-		Addr ea = rs + this.displacement;
-		
-		uint mem = 0;
-		
-		thread.mem.readWord(ea, &mem);
-		
+	override void execute(Thread thread) {		
+		uint mem = 0;		
+		thread.mem.readWord(this.ea(thread), &mem);		
 		thread.intRegs[this[RT]] = mem;
 	}
 }
@@ -303,14 +298,10 @@ class Lwc1: MemoryOp {
 			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
 		}
 	
-		override void execute(Thread thread) {
-			uint rs = thread.intRegs[this[RS]];
-			Addr ea = rs + this.displacement;
-			
+		override void execute(Thread thread) {			
 			uint mem = 0;
-			thread.mem.readWord(ea, &mem);
-			
-			thread.floatRegs[this[FT]] = mem;
+			thread.mem.readWord(this.ea(thread), &mem);			
+			thread.floatRegs.setDouble(mem, this[FT]);
 		}
 }
 
@@ -330,14 +321,10 @@ class Ldc1: MemoryOp {
 			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
 		}
 	
-		override void execute(Thread thread) {
-			uint rs = thread.intRegs[this[RS]];
-			Addr ea = rs + this.displacement;
-			
+		override void execute(Thread thread) {			
 			ulong mem = 0;
-			thread.mem.readDoubleWord(ea, &mem);
-			
-			thread.floatRegs[this[FT]] = mem;
+			thread.mem.readDoubleWord(this.ea(thread), &mem);			
+			thread.floatRegs.setDouble(mem, this[FT]);
 		}
 }
 
@@ -505,13 +492,9 @@ class Sc: MemoryOp {
 			this.memDestRegIdx ~= this[RT];
 		}
 	
-		override void execute(Thread thread) {		
-			uint rs = thread.intRegs[this[RS]];
+		override void execute(Thread thread) {
 			uint rt = thread.intRegs[this[RT]];
-			Addr ea = rs + this.displacement;
-			
-			thread.mem.writeWord(ea, rt);
-			
+			thread.mem.writeWord(this.ea(thread), rt);
 			thread.intRegs[this[RT]] = 1;
 		}
 }
@@ -533,11 +516,8 @@ class Swc1: MemoryOp {
 		}
 	
 		override void execute(Thread thread) {			
-			uint rs = thread.intRegs[this[RS]];
-			uint ft = thread.floatRegs.get(this[FT]);
-			Addr ea = rs + this.displacement;
-			
-			thread.mem.writeWord(ea, ft);
+			uint ft = thread.floatRegs.getUint(this[FT]);			
+			thread.mem.writeWord(this.ea(thread), ft);
 		}
 }
 
@@ -557,11 +537,8 @@ class Sdc1: MemoryOp {
 			this.memSrcRegIdx ~= MiscIntRegNums.EA;
 		}
 	
-		override void execute(Thread thread) {			
-			uint rs = thread.intRegs[this[RS]];
-			ulong ft = bits64(thread.floatRegs.get(this[FT]), 63, 0);
-			Addr ea = rs + this.displacement;
-			
-			thread.mem.writeDoubleWord(ea, ft);
+		override void execute(Thread thread) {		
+			ulong ft = bits64(thread.floatRegs.getUint(this[FT]), 63, 0);			
+			thread.mem.writeDoubleWord(this.ea(thread), ft);
 		}
 }

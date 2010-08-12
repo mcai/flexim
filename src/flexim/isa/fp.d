@@ -31,7 +31,6 @@ abstract class FloatOp: StaticInst {
 }
 
 alias FloatOp FloatConvertOp;
-alias FloatOp FloatCompareOp;
 
 class Add_d: FloatOp {
 	public:
@@ -46,12 +45,12 @@ class Add_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs + ft;
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -68,12 +67,12 @@ class Sub_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs - ft;
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -90,12 +89,12 @@ class Mul_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs * ft;
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -112,12 +111,12 @@ class Div_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs / ft;
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -133,11 +132,11 @@ class Sqrt_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
 			
 			double fd = sqrt(fs);
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -153,11 +152,11 @@ class Abs_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
 			
 			double fd = fabs(fs);
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -173,11 +172,11 @@ class Neg_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
 			
 			double fd = -1 * fs;
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -193,10 +192,291 @@ class Mov_d: FloatOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
+			double fs = thread.floatRegs.getDouble(this[FS]);
 			double fd = fs;
 			
-			thread.floatRegs[this[FD]] = fd;
+			thread.floatRegs.setDouble(fd, this[FD]);
+		}
+}
+
+class Add_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("add_s", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			float ft = thread.floatRegs.getFloat(this[FT]);
+			
+			float fd = fs + ft;
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Sub_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("sub_s", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			float ft = thread.floatRegs.getFloat(this[FT]);
+			
+			float fd = fs - ft;
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Mul_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("mul_s", machInst, StaticInstFlag.FCOMP, FUType.FloatMULT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			float ft = thread.floatRegs.getFloat(this[FT]);
+			
+			float fd = fs * ft;
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Div_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("div_s", machInst, StaticInstFlag.FCOMP, FUType.FloatDIV);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			float ft = thread.floatRegs.getFloat(this[FT]);
+			
+			float fd = fs / ft;
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Sqrt_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("sqrt_s", machInst, StaticInstFlag.FCOMP, FUType.FloatSQRT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			
+			float fd = sqrt(fs);
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Abs_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("abs_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			
+			float fd = fabs(fs);
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Neg_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("neg_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			
+			float fd = -fs;
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Mov_s: FloatOp {
+	public:
+		this(MachInst machInst) {
+			super("mov_s", machInst, StaticInstFlag.NONE, FUType.NONE);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fd = fs;
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Cvt_d_s: FloatConvertOp {
+	public:
+		this(MachInst machInst) {
+			super("cvt_d_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			double fd = cast(double) fs;
+			
+			thread.floatRegs.setDouble(fd, this[FD]);
+		}
+}
+
+class Cvt_w_s: FloatConvertOp {
+	public:
+		this(MachInst machInst) {
+			super("cvt_w_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			uint fd = cast(uint) fs;
+			
+			thread.floatRegs.setUint(fd, this[FD]);
+		}
+}
+
+class Cvt_l_s: FloatConvertOp {
+	public:
+		this(MachInst machInst) {
+			super("cvt_l_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			float fs = thread.floatRegs.getFloat(this[FS]);
+			ulong fd = cast(ulong) fs;
+			
+			thread.floatRegs.setUlong(fd, this[FD]);
+		}
+}
+
+class Cvt_s_d: FloatConvertOp {
+	public:
+		this(MachInst machInst) {
+			super("cvt_s_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			float fd = cast(float) fs;
+			
+			thread.floatRegs.setFloat(fd, this[FD]);
+		}
+}
+
+class Cvt_w_d: FloatConvertOp {
+	public:
+		this(MachInst machInst) {
+			super("cvt_w_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			uint fd = cast(uint) fs;
+			
+			thread.floatRegs.setUint(fd, this[FD]);
+		}
+}
+
+class Cvt_l_d: FloatConvertOp {
+	public:
+		this(MachInst machInst) {
+			super("cvt_l_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+		}
+
+		override void execute(Thread thread) {
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			ulong fd = cast(ulong) fs;
+			
+			thread.floatRegs.setUlong(fd, this[FD]);
 		}
 }
 
@@ -212,10 +492,10 @@ class Cvt_s_w: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			uint fs = thread.floatRegs.get(this[FS]);
-			uint fd = wordToSingle(fs);
+			uint fs = thread.floatRegs.getUint(this[FS]);
+			float fd = cast(float) fs;
 			
-			thread.floatRegs.set(fd, this[FD]);
+			thread.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -231,10 +511,10 @@ class Cvt_d_w: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			uint fs = thread.floatRegs.get(this[FS]);
-			ulong fd = wordToDouble(fs);
+			uint fs = thread.floatRegs.getUint(this[FS]);
+			double fd = cast(double) fs;
 			
-			thread.floatRegs.set(cast(uint) fd, this[FD]);
+			thread.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -250,10 +530,10 @@ class Cvt_s_l: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			ulong fs = bits64(thread.floatRegs.get(this[FS]), 63, 0);
-			uint fd = longToSingle(fs);
+			ulong fs = thread.floatRegs.getUlong(this[FS]);
+			float fd = cast(float) fs;
 			
-			thread.floatRegs.set(fd, this[FD]);
+			thread.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -269,465 +549,357 @@ class Cvt_d_l: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			ulong fs = bits64(thread.floatRegs.get(this[FS]), 63, 0);
-			ulong fd = longToDouble(fs);
+			ulong fs = thread.floatRegs.getUlong(this[FS]);
+			double fd = cast(double) fs;
 			
-			thread.floatRegs.set(cast(uint) fd, this[FD]);			
+			thread.floatRegs.setDouble(fd, this[FD]);		
 		}
 }
 
-class C_f_d: FloatConvertOp {
+abstract class FloatCompareOp: StaticInst {
+	public:
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+			super(mnemonic, machInst, flags, fuType);
+		}
+
+		override void setupDeps() {
+			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
+			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
+		}
+
+		override void execute(Thread thread) {
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
+		
+			bool less;
+			bool equal;
+			
+			bool unordered = isnan(fs) || isnan(ft);
+			if(unordered) {
+				equal = false;
+				less = false;
+			}
+			else {
+				equal = fs == ft;
+				less = fs < ft;
+			}
+
+			uint cond = this[COND];
+			
+			if(((cond&0x4) && less)||((cond&0x2) && equal)||((cond&0x1) && unordered)) {
+				setFCC(fcsr, this[CC]);
+			}
+			else {
+				clearFCC(fcsr, this[CC]);
+			}
+			
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);			
+		}
+}
+
+class C_f_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_f_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
 			bool cond = false;
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);			
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);			
 		}
 }
 
-class C_un_d: FloatConvertOp {
+class C_un_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_un_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			bool cond = isNan(&fs, 64) || isNan(&ft, 64);
+			bool cond = isnan(fs) || isnan(ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_eq_d: FloatConvertOp {
+class C_eq_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_eq_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {		
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? false : (fs == ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? false : (fs == ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_ueq_d: FloatConvertOp {
+class C_ueq_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_ueq_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? true : (fs == ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? true : (fs == ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_olt_d: FloatConvertOp {
+class C_olt_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_olt_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? false : (fs < ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? false : (fs < ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_ult_d: FloatConvertOp {
+class C_ult_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_ult_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? true : (fs < ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? true : (fs < ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_ole_d: FloatConvertOp {
+class C_ole_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_ole_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? false : (fs <= ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? false : (fs <= ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_ule_d: FloatConvertOp {
+class C_ule_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_ule_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? true : (fs <= ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? true : (fs <= ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_sf_d: FloatConvertOp {
+class C_sf_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_sf_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
-			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
 			bool cond = false;
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_ngle_d: FloatConvertOp {
+class C_ngle_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_ngle_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
-			
-			bool cond = isNan(&fs, 64) || isNan(&ft, 64);
+			bool cond = isnan(fs) || isnan(ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_seq_d: FloatConvertOp {
+class C_seq_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_seq_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
-			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? false : (fs == ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? false : (fs == ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_ngl_d: FloatConvertOp {
+class C_ngl_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_ngl_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
-			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? true : (fs == ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? true : (fs == ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_lt_d: FloatConvertOp {
+class C_lt_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_lt_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
-			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? false : (fs < ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? false : (fs < ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_nge_d: FloatConvertOp {
+class C_nge_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_nge_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
-			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? true : (fs < ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? true : (fs < ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_le_d: FloatConvertOp {
+class C_le_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_le_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {	
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
-			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? false : (fs <= ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? false : (fs <= ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }
 
-class C_ngt_d: FloatConvertOp {
+class C_ngt_d: FloatCompareOp {
 	public:
 		this(MachInst machInst) {
 			super("C_ngt_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
 		}
 
-		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-			this.destRegIdx ~= FP_Base_DepTag + FPControlRegNums.FCSR;
-		}
-
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs[this[FS]];
-			double ft = thread.floatRegs[this[FT]];
-			uint fcsr = thread.floatRegs.get(FPControlRegNums.FCSR);
+			double fs = thread.floatRegs.getDouble(this[FS]);
+			double ft = thread.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.floatRegs.getUint(FPControlRegNums.FCSR);
 			
-			if(isQnan(&fs, 64) || isQnan(&ft, 64)) {
-				fcsr = genInvalidVector(fcsr);
-				return;
-			}
-			
-			bool cond = (isNan(&fs, 64) || isNan(&ft, 64)) ? true : (fs <= ft);
+			bool cond = (isnan(fs) || isnan(ft)) ? true : (fs <= ft);
 			
 			fcsr = genCCVector(fcsr, this[CC], cond);
 			
-			thread.floatRegs.set(fcsr, FPControlRegNums.FCSR);
+			thread.floatRegs.setUint(fcsr, FPControlRegNums.FCSR);
 		}
 }

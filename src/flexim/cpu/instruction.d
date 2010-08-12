@@ -171,6 +171,7 @@ const BitField SRLV = {"SRLV", 6, 6};
 const BitField SA = {"SA", 10, 6};
 
 // Floating Point Condition Codes
+const BitField COND = {"COND", 3, 0};
 const BitField CC = {"CC", 10, 8};
 const BitField BRANCH_CC = {"BRANCH_CC", 20, 18};
 

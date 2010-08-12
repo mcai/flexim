@@ -135,65 +135,37 @@ uint mod(uint x, uint y) {
 	return (x + y) % y;
 }
 
-ulong singleToDouble(double fp_val) {
-    double sdouble_val = fp_val;
-    ulong sdp_bits = *cast(ulong *)(&sdouble_val);
-    return sdp_bits;
-}
-
-ulong singleToWord(double fp_val) {
-    int sword_val = cast(int) fp_val;
-    ulong sword_bits = *cast(uint *) (&sword_val);
-    return sword_bits;
-}
-
-uint wordToSingle(double fp_val) {
-    float wfloat_val = fp_val;
-	uint wfloat_bits = *cast(uint *) (&wfloat_val);
-    return wfloat_bits;
-}
-
-ulong wordToDouble(double fp_val) {
-    double wdouble_val = fp_val;
-    ulong wdp_bits = *cast(ulong *) (&wdouble_val);
-    return wdp_bits;
-}
-
-uint longToSingle(double fp_val) {
-    float wfloat_val = fp_val;
-	uint wfloat_bits = *cast(uint *) (&wfloat_val);
-    return wfloat_bits;
-}
-
-ulong longToDouble(double fp_val) {
-    double wdouble_val = fp_val;
-    ulong wdp_bits = *cast(ulong *) (&wdouble_val);
-    return wdp_bits;
-}
-
-double roundFP(double val, int digits) {
-    double digit_offset = pow(10.0,digits);
-    val = val * digit_offset;
-    val = val + 0.5;
-    val = floor(val);
-    val = val / digit_offset;
-    return val;
-}
-
-double truncFP(double val)
+bool getFCC1(uint fcsr, int cc)
 {
-    int trunc_val = cast(int) val;
-    return cast(double) trunc_val;
+	if(cc == 0)
+		return cast(bool) (fcsr & 0x800000);
+	else
+		return cast(bool) (fcsr & (0x1000000 << cc));
 }
 
-bool getCondCode(uint fcsr, int cc_idx)
+bool getFCC(uint fcsr, int cc_idx)
 {
     int shift = (cc_idx == 0) ? 23 : cc_idx + 24;
     bool cc_val = (fcsr >> shift) & 0x00000001;
     return cc_val;
 }
 
-uint genCCVector(uint fcsr, int cc_num, uint cc_val)
+void setFCC(ref uint fcsr, int cc) {
+	if(cc == 0)
+		fcsr=(fcsr | 0x800000);
+	else 
+		fcsr=(fcsr | (0x1000000 << cc));
+}
+
+void clearFCC(ref uint fcsr, int cc) {
+	if(cc == 0)
+		fcsr=(fcsr & 0xFF7FFFFF); 
+	else
+		fcsr=(fcsr & (0xFEFFFFFF << cc));
+}
+
+uint
+genCCVector(uint fcsr, int cc_num, uint cc_val)
 {
     int cc_idx = (cc_num == 0) ? 23 : cc_num + 24;
 
@@ -202,65 +174,4 @@ uint genCCVector(uint fcsr, int cc_num, uint cc_val)
            bits(fcsr, cc_idx - 1, 0);
 
     return fcsr;
-}
-
-uint genInvalidVector(uint fcsr_bits)
-{
-    //Set FCSR invalid in "flag" field
-    int invalid_offset = FCSRBits.Invalid + FCSRFields.Flag_Field;
-    fcsr_bits = fcsr_bits | (1 << invalid_offset);
-
-    //Set FCSR invalid in "cause" flag
-    int cause_offset = FCSRBits.Invalid + FCSRFields.Cause_Field;
-    fcsr_bits = fcsr_bits | (1 << cause_offset);
-
-    return fcsr_bits;
-}
-
-bool isNan(void* val_ptr, int size)
-{
-    switch (size)
-    {
-      case 32:
-		uint val_bits = *cast(uint *) val_ptr;
-		return (bits(val_bits, 30, 23) == 0xFF);
-      case 64:
-		ulong val_bits = *cast(ulong *) val_ptr;
-    	return (bits64(val_bits, 62, 52) == 0x7FF);
-      default:
-		logging.panic(LogCategory.MISC, "Type unsupported. Size mismatch.");
-    	return false;
-    }
-}
-
-bool isQnan(void* val_ptr, int size)
-{
-    switch (size)
-    {
-      case 32:
-    	uint val_bits = *cast(uint *) val_ptr;
-    	return (bits(val_bits, 30, 22) == 0x1FE);
-      case 64:
-    	ulong val_bits = *cast(ulong *) val_ptr;
-    	return (bits64(val_bits, 62, 51) == 0xFFE);
-      default:
-		logging.panic(LogCategory.MISC, "Type unsupported. Size mismatch.");
-		return false;
-    }
-}
-
-bool isSnan(void* val_ptr, int size)
-{
-    switch (size)
-    {
-      case 32:
-    	uint val_bits = *cast(uint *) val_ptr;
-    	return (bits(val_bits, 30, 22) == 0x1FF);
-      case 64:
-    	ulong val_bits = *cast(ulong *) val_ptr;
-    	return (bits64(val_bits, 62, 51) == 0xFFF);
-      default:
-		logging.panic(LogCategory.MISC, "Type unsupported. Size mismatch.");
-		return false;
-    }
 }

@@ -84,29 +84,13 @@ const int SyscallPseudoReturnReg = 3;
 const int FP_Base_DepTag = NumIntRegs;
 const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
 
-alias ushort RegIndex;
-
-alias uint IntReg;
-
-// floating point register file entry type
-alias uint FloatRegBits;
-alias float FloatReg;
-
-union FloatRegs {
-	FloatReg f[NumFloatRegs];
-	FloatRegBits i[NumFloatRegs];
-}
-
-interface RegisterFile(RegT) {
-	RegT opIndex(uint index);
-	void opIndexAssign(RegT value, uint index);
-	
+interface RegisterFile(RegT) {	
 	void clear();
 	void checkpoint();
 	void restore();
 }
 
-class IntRegisterFile : RegisterFile!(IntReg) {
+class IntRegisterFile : RegisterFile!(uint) {
 	this() {
 		this.clear();
 	}
@@ -125,20 +109,20 @@ class IntRegisterFile : RegisterFile!(IntReg) {
 		//TODO
 	}
 	
-	override IntReg opIndex(uint index) {
+	uint opIndex(uint index) {
 		assert(index < NumIntRegs);
-		IntReg value = this.regs[index];
+		uint value = this.regs[index];
 		logging.infof(LogCategory.THREAD, "    Reading int reg %d as %#x.", index, value);
 		return value;
 	}
 	
-	override void opIndexAssign(IntReg value, uint index) {
+	void opIndexAssign(uint value, uint index) {
 		assert(index < NumIntRegs);
 		this.regs[index] = value;
 		logging.infof(LogCategory.THREAD, "    Setting int reg %d to %#x.", index, value);
 	}
 
-	string dump() {
+	override string toString() {
 		string buf;
 
 		foreach(i, reg; this.regs[0 .. NumIntArchRegs]) {
@@ -160,10 +144,10 @@ class IntRegisterFile : RegisterFile!(IntReg) {
 		return buf;
 	}
 
-	IntReg[NumIntRegs] regs;
+	uint[NumIntRegs] regs;
 }
 
-class FloatRegisterFile : RegisterFile!(FloatReg) {
+class FloatRegisterFile : RegisterFile!(float) {
 	this() {
 		this.clear();
 	}
@@ -182,31 +166,86 @@ class FloatRegisterFile : RegisterFile!(FloatReg) {
 		//TODO
 	}
 	
-	override FloatReg opIndex(uint index) {
+	float getFloat(uint index) {
 		assert(index < NumFloatRegs);
-		FloatReg value = this.regs.f[index];
-		logging.infof(LogCategory.THREAD, "    Reading float reg %d as %f, %#x.", index, value, this.regs.i[index]);
+		float value = this.regs.f[index];
+		logging.infof(LogCategory.REGISTER, "    Reading float reg %d as %f.", index, value);
 		return value;
 	}
 	
-	override void opIndexAssign(FloatReg value, uint index) {
+	void setFloat(float value, uint index) {
 		assert(index < NumFloatRegs);
 		this.regs.f[index] = value;
-		logging.infof(LogCategory.THREAD, "    Setting float reg %d to %f, %#x.", index, value, this.regs.i[index]);
+		logging.infof(LogCategory.REGISTER, "    Setting float reg %d to %f.", index, value);
 	}
 	
-	FloatRegBits get(uint index) {
+	double getDouble(uint index) {
 		assert(index < NumFloatRegs);
-		FloatRegBits value = this.regs.i[index];
-		logging.infof(LogCategory.THREAD, "    Reading float reg %d bits as %#x, %f.", index, value, this.regs.f[index]);
+		double value = this.regs.d[index/2];
+		logging.infof(LogCategory.REGISTER, "    Reading double reg %d as %f.", index, value);
 		return value;
 	}
 	
-	void set(FloatRegBits value, uint index) {
+	void setDouble(double value, uint index) {
 		assert(index < NumFloatRegs);
-		this.regs.i[index] = value;
-		logging.infof(LogCategory.THREAD, "    Setting float reg %d bits to %#x, %#f.", index, value, this.regs.f[index]);
+		this.regs.d[index/2] = value;
+		logging.infof(LogCategory.REGISTER, "    Setting double reg %d to %f.", index, value);
 	}
 	
-	FloatRegs regs;
+	uint getUint(uint index) {
+		assert(index < NumFloatRegs);
+		uint value = this.regs.i[index];
+		logging.infof(LogCategory.REGISTER, "    Reading float reg %d bits as %#x.", index, value);
+		return value;
+	}
+	
+	void setUint(uint value, uint index) {
+		assert(index < NumFloatRegs);
+		this.regs.i[index] = value;
+		logging.infof(LogCategory.REGISTER, "    Setting float reg %d bits to %#x.", index, value);
+	}
+	
+	ulong getUlong(uint index) {
+		assert(index < NumFloatRegs);
+		ulong value = this.regs.l[index/2];
+		logging.infof(LogCategory.REGISTER, "    Reading double reg %d bits as %#x.", index, value);
+		return value;
+	}
+	
+	void setUlong(ulong value, uint index) {
+		assert(index < NumFloatRegs);
+		this.regs.l[index/2] = value;
+		logging.infof(LogCategory.REGISTER, "    Setting double reg %d bits to %#x.", index, value);
+	}
+
+	override string toString() {
+		string buf;
+
+		foreach(i, reg; this.regs.f[0 .. NumFloatArchRegs]) {
+			if(i % 4 == 0) {
+				buf ~= "    ";
+			}
+
+			if(i > 0) {
+				buf ~= "  ";
+			}
+
+			buf ~= format("f%d  = 0x%08x ", i, reg);
+
+			if(i % 4 == 3 && i != (NumFloatArchRegs - 1)) {
+				buf ~= '\n';
+			}
+		}
+
+		return buf;
+	}
+	
+	union cop1_reg {
+		float f[NumFloatRegs];
+		int i[NumFloatRegs];
+		double d[NumFloatRegs / 2];
+		long l[NumFloatRegs / 2];
+	};
+	
+	cop1_reg regs;
 }
