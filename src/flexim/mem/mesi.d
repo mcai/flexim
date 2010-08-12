@@ -27,26 +27,11 @@ uint retry_lat(ICache)(ICache ccache) {
 	return ccache.hitLatency + uniform(0, ccache.hitLatency + 2);
 }
 
-class MESIState: CacheBlockState {
-	this(string name) {
-		super(name);
-	}
-
-	override string toString() {
-		return format("%s", this.name);
-	}
-
-	static this() {
-		MODIFIED = new MESIState("MODIFIED");
-		EXCLUSIVE = new MESIState("EXCLUSIVE");
-		SHARED = new MESIState("SHARED");
-		INVALID = new MESIState("INVALID");
-	}
-
-	static MESIState MODIFIED;
-	static MESIState EXCLUSIVE;
-	static MESIState SHARED;
-	static MESIState INVALID;
+enum MESIState: string {
+	MODIFIED = "MODIFIED",
+	EXCLUSIVE = "EXCLUSIVE",
+	SHARED = "SHARED",
+	INVALID = "INVALID"
 }
 
 enum MESIEventType: string {
@@ -398,8 +383,6 @@ class MESIMemory: MESICache {
 		logging.infof(LogCategory.MESI, "%s.handleUpperInterconnectMessage(%s, %s, %s)", this.name, interconnect, m, sender);
 
 		Message message = new Message(m.request);
-		message.hasData = true;
-
 		this.upperInterconnect.send(message, this, sender, 1);
 	}
 

@@ -411,7 +411,7 @@ class Cache(StateT) {
 	CacheMonitor monitor;
 }
 
-class CacheQueueEntry(StateT: CacheBlockState) {
+class CacheQueueEntry(StateT) {
 	alias CacheBlock!(StateT) CacheBlockT;
 
 	this(Interconnect src, Interconnect dest, Node sender, Request request) {
@@ -429,12 +429,4 @@ class CacheQueueEntry(StateT: CacheBlockState) {
 	Interconnect dest;
 	Node sender;
 	Request request;
-}
-
-class CacheBlockState {
-	this(string name) {
-		this.name = name;
-	}
-
-	string name;
 }

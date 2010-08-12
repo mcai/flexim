@@ -31,18 +31,8 @@ class Message {
 		this.request = request;
 	}
 
-	override string toString() {
-		return format("Message[ID: %d, request: %s, isShared: %s, hasData: %s]", this.id, this.request, this.isShared, this.hasData);
-	}
-
-	uint id;
-	
+	uint id;	
 	Request request;
-
-	bool isShared;
-	bool hasData;
-
-	CacheBlockState arg;
 }
 
 abstract class Interconnect: SchedulerProvider!(SimulatorEventType, SimulatorEventContext) {

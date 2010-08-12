@@ -507,12 +507,12 @@ class Swc1: MemoryOp {
 	
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaSrcRegIdx ~= FP_Base_DepTag + this[FT];
 			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
 		}
 	
 		override void setupMemDeps() {
 			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.memSrcRegIdx ~= FP_Base_DepTag + this[FT];
 		}
 	
 		override void execute(Thread thread) {			
@@ -529,12 +529,12 @@ class Sdc1: MemoryOp {
 	
 		override void setupEaDeps() {
 			this.eaSrcRegIdx ~= this[RS];
-			this.eaSrcRegIdx ~= FP_Base_DepTag + this[FT];
 			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
 		}
 	
 		override void setupMemDeps() {
 			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.memSrcRegIdx ~= FP_Base_DepTag + this[FT];
 		}
 	
 		override void execute(Thread thread) {		
