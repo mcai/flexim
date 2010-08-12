@@ -767,42 +767,42 @@ class MipsISA : ISA {
 													case 0x6:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
-																return new FailUnimplemented("C_f_s", machInst);
+																return new C_f_s(machInst);
 															case 0x1:
-																return new FailUnimplemented("C_un_s", machInst);
+																return new C_un_s(machInst);
 															case 0x2:
-																return new FailUnimplemented("C_eq_s", machInst);
+																return new C_eq_s(machInst);
 															case 0x3:
-																return new FailUnimplemented("C_ueq_s", machInst);
+																return new C_ueq_s(machInst);
 															case 0x4:
-																return new FailUnimplemented("C_olt_s", machInst);
+																return new C_olt_s(machInst);
 															case 0x5:
-																return new FailUnimplemented("C_ult_s", machInst);
+																return new C_ult_s(machInst);
 															case 0x6:
-																return new FailUnimplemented("C_ole_s", machInst);
+																return new C_ole_s(machInst);
 															case 0x7:
-																return new FailUnimplemented("C_ule_s", machInst);
+																return new C_ule_s(machInst);
 															default:
 																return new Unknown(machInst);
 														}
 													case 0x7:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
-																return new FailUnimplemented("C_sf_s", machInst);
+																return new C_sf_s(machInst);
 															case 0x1:
-																return new FailUnimplemented("C_ngle_s", machInst);
+																return new C_ngle_s(machInst);
 															case 0x2:
-																return new FailUnimplemented("C_seq_s", machInst);
+																return new C_seq_s(machInst);
 															case 0x3:
-																return new FailUnimplemented("C_ngl_s", machInst);
+																return new C_ngl_s(machInst);
 															case 0x4:
-																return new FailUnimplemented("C_lt_s", machInst);
+																return new C_lt_s(machInst);
 															case 0x5:
-																return new FailUnimplemented("C_nge_s", machInst);
+																return new C_nge_s(machInst);
 															case 0x6:
-																return new FailUnimplemented("C_le_s", machInst);
+																return new C_le_s(machInst);
 															case 0x7:
-																return new FailUnimplemented("C_ngt_s", machInst);
+																return new C_ngt_s(machInst);
 															default:
 																return new Unknown(machInst);
 														}
