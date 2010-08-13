@@ -98,15 +98,8 @@ class Thread {
 		this.pc = this.npc;
 		this.npc = this.nnpc;
 		this.nnpc += Addr.sizeof;
-
-		MachInst machInst;
-
-		this.mem.readWord(this.pc, &machInst.data);
-
-		StaticInst staticInst = this.isa.decode(machInst);
-
-		assert(staticInst !is null, format("failed to decode machine instructon 0x%08x", machInst.data));
-
+			
+		StaticInst staticInst = this.isa.decode(this.pc, this.mem);
 		DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
 		//logging.infof(LogCategory.DEBUG, "execute instruction: %s", uop);
 		uop.execute();

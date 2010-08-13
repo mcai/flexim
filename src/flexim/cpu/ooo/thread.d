@@ -285,15 +285,8 @@ class OoOThread: Thread {
 		}
 	}
 
-	DynamicInst fetchAndDecodeAt(Addr pc) {
-		MachInst machInst;
-
-		this.mem.readWord(pc, &machInst.data);
-
-		StaticInst staticInst = this.isa.decode(machInst);
-
-		assert(staticInst !is null, format("failed to decode machine instructon 0x%08x", machInst.data));
-
+	DynamicInst fetchAndDecodeAt(Addr pc) {		
+		StaticInst staticInst = this.isa.decode(pc, this.mem);
 		DynamicInst uop = new DynamicInst(this, pc, staticInst);
 
 		return uop;

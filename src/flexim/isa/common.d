@@ -109,7 +109,7 @@ class MipsISA : ISA {
 		
 	}
 	
-	override StaticInst decode(MachInst machInst) {
+	override StaticInst decodeMachInst(MachInst machInst) {
 		switch(machInst[OPCODE_HI]) {
 			case 0x0:
 				switch(machInst[OPCODE_LO]) {
