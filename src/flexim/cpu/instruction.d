@@ -218,7 +218,7 @@ const BitField CACHE_OP = {"CACHE_OP", 20, 16};
 string disassemble(MachInst machInst, Addr pc, Thread thread) {
 	string buf;
 
-	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.isa.decode(machInst).getName());
+	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.isa.decodeMachInst(machInst).getName());
 
 	if(machInst.data == 0x00000000) {
 		return buf;
@@ -320,8 +320,29 @@ enum FUType: uint {
 const uint MAX_IDEPS = 3;
 const uint MAX_ODEPS = 2;
 
-interface ISA {
-	StaticInst decode(MachInst machInst);
+abstract class ISA {	
+	StaticInst decode(Addr pc, Memory mem) {
+		if(pc in this.decodedInsts) {
+			return this.decodedInsts[pc];
+		}
+		else {
+			MachInst machInst;
+	
+			mem.readWord(pc, &machInst.data);
+	
+			StaticInst staticInst = this.decodeMachInst(machInst);
+	
+			assert(staticInst !is null, format("failed to decode machine instructon 0x%08x", machInst.data));
+				
+			this.decodedInsts[pc] = staticInst;
+				
+			return staticInst;
+		}
+	}
+	
+	abstract StaticInst decodeMachInst(MachInst machInst);
+	
+	StaticInst[Addr] decodedInsts;
 }
 
 abstract class StaticInst {
