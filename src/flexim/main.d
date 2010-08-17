@@ -25,7 +25,11 @@ import flexim.all;
 
 import std.file;
 
-void main(string[] args) {
+void main() {
+	testXMLConfig();
+}
+
+void main1(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
 	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.\n");
 

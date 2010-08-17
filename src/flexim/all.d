@@ -28,10 +28,10 @@ public import std.array;
 public import std.container;
 public import std.conv;
 public import std.math;
+public import std.random;
 public import std.stdio;
 public import std.string;
 public import std.typecons;
-public import std.random;
 
 public import flexim.cpu.bpred;
 public import flexim.cpu.core;
@@ -48,6 +48,9 @@ public import flexim.drivers.benchmarks;
 public import flexim.drivers.configs;
 public import flexim.drivers.parsers;
 public import flexim.drivers.simulations;
+
+public import flexim.io.logging;
+public import flexim.io.xml;
 
 public import flexim.isa.basic;
 public import flexim.isa.branch;
@@ -78,7 +81,6 @@ public import flexim.util.arithmetic;
 public import flexim.util.elf;
 public import flexim.util.events;
 public import flexim.util.faults;
-public import flexim.util.logging;
 public import flexim.util.misc;
 public import flexim.util.providers;
 public import flexim.util.queues;

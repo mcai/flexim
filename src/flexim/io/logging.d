@@ -1,5 +1,5 @@
 /*
- * flexim/util/logging.d
+ * flexim/io/logging.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.util.logging;
+module flexim.io.logging;
 
 import flexim.all;
 

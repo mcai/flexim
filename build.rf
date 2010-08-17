@@ -12,6 +12,8 @@ src/flexim/drivers/benchmarks.d
 src/flexim/drivers/configs.d
 src/flexim/drivers/parsers.d
 src/flexim/drivers/simulations.d
+src/flexim/io/logging.d
+src/flexim/io/xml.d
 src/flexim/isa/basic.d
 src/flexim/isa/branch.d
 src/flexim/isa/common.d
@@ -37,7 +39,6 @@ src/flexim/util/arithmetic.d
 src/flexim/util/elf.d
 src/flexim/util/events.d
 src/flexim/util/faults.d
-src/flexim/util/logging.d
 src/flexim/util/misc.d
 src/flexim/util/providers.d
 src/flexim/util/queues.d
