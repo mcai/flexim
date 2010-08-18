@@ -29,76 +29,6 @@ class XMLConfig {
 	this(string typeName) {
 		this.typeName = typeName;
 	}
-		
-	static void serialize(XMLConfig entry, Element rootElement) {
-		Element element = new Element(entry.typeName);
-
-		rootElement ~= element;
-		
-		serialize(entry, rootElement, element);
-	}
-		
-	static void serialize(XMLConfig entry, Element rootElement, Element element) {				
-		foreach(key, value; entry.attributes) {
-	        element.tag.attr[key] = value;
-		}
-		
-		foreach(child; entry.entries) {
-			serialize(child, element);
-		}
-	}
-		
-	static void serialize(XMLConfig config, string xmlFileName) {
-		Document doc = new Document(new Tag(config.typeName));
-
-		serialize(config, null, doc);
-	    
-	    string contentToWrite = "<?xml version=\"1.0\"?>\n" ~ join(doc.pretty(3),"\n");
-	    
-	    std.file.write(xmlFileName, contentToWrite);
-	}
-	
-	static void deserialize(XMLConfig rootEntry, ElementParser xml) {
-		XMLConfig entry = new XMLConfig(xml.tag.name);
-		
-		foreach(key, value; xml.tag.attr) {
-			entry.attributes[key] = value;
-		}
-
-	    xml.onStartTag[null] = (ElementParser xml) {
-	    	deserialize(entry, xml);
-	    };
-
-        xml.parse();
-        
-        rootEntry.entries ~= entry;
-	}
-	
-	static XMLConfig deserialize(string xmlFileName) {
-	    string s = cast(string) std.file.read(xmlFileName);
-	
-	    check(s);
-	
-		DocumentParser xml = new DocumentParser(s);
-	    
-		XMLConfig xmlConfig = new XMLConfig(xml.tag.name);
-		
-		foreach(key, value; xml.tag.attr) {
-			xmlConfig.attributes[key] = value;
-		}
-
-	    xml.onStartTag[null] = (ElementParser xml) {
-	    	deserialize(xmlConfig, xml);
-	    };
-
-	    xml.onEndTag[null] = (in Element xml) {
-	    	//deserialize(xmlConfig, xml);
-	    };
-		
-	    xml.parse();
-	    
-	    return xmlConfig;
-	}
 	
 	override string toString() {
 		return format("%s[attributes.length=%d, entries=[%s]]", 
@@ -112,8 +42,80 @@ class XMLConfig {
 	XMLConfig[] entries;
 }
 
+class XMLConfigFile: XMLConfig {
+	this(string typeName) {
+		super(typeName);
+	}
+}
+	
+void serialize(XMLConfig entry, Element rootElement) {
+	Element element = new Element(entry.typeName);
+
+	rootElement ~= element;
+	
+	serialize(entry, rootElement, element);
+}
+	
+void serialize(XMLConfig entry, Element rootElement, Element element) {				
+	foreach(key, value; entry.attributes) {
+        element.tag.attr[key] = value;
+	}
+	
+	foreach(child; entry.entries) {
+		serialize(child, element);
+	}
+}
+	
+void serialize(XMLConfigFile config, string xmlFileName) {
+	Document doc = new Document(new Tag(config.typeName));
+
+	serialize(config, null, doc);
+    
+    string contentToWrite = "<?xml version=\"1.0\"?>\n" ~ join(doc.pretty(3),"\n");
+    
+    std.file.write(xmlFileName, contentToWrite);
+}
+
+void deserialize(XMLConfig rootEntry, ElementParser xml) {
+	XMLConfig entry = new XMLConfig(xml.tag.name);
+	
+	foreach(key, value; xml.tag.attr) {
+		entry.attributes[key] = value;
+	}
+
+    xml.onStartTag[null] = (ElementParser xml) {
+    	deserialize(entry, xml);
+    };
+
+    xml.parse();
+    
+    rootEntry.entries ~= entry;
+}
+
+XMLConfigFile deserialize(string xmlFileName) {
+    string s = cast(string) std.file.read(xmlFileName);
+
+    check(s);
+
+	DocumentParser xml = new DocumentParser(s);
+    
+	XMLConfigFile xmlConfig = new XMLConfigFile(xml.tag.name);
+	
+	foreach(key, value; xml.tag.attr) {
+		xmlConfig.attributes[key] = value;
+	}
+
+    xml.onStartTag[null] = (ElementParser xml) {
+    	deserialize(xmlConfig, xml);
+    };
+	
+    xml.parse();
+    
+    return xmlConfig;
+}
+
 void testXMLConfig() {
-	XMLConfig config = new XMLConfig("configs");
+	XMLConfigFile config = new XMLConfigFile("configs");
 	config.attributes["configs_attr1_key"] = "configs_attr1_value";
 	
 	XMLConfig configEntry = new XMLConfig("config1");
@@ -128,11 +130,11 @@ void testXMLConfig() {
 	
 	writeln("config1: " ~ to!(string)(config));
 	
-	XMLConfig.serialize(config, xmlFileName);
+	serialize(config, xmlFileName);
 	
-	XMLConfig config2 = XMLConfig.deserialize(xmlFileName);
+	XMLConfigFile config2 = deserialize(xmlFileName);
 	
 	writeln("config2: " ~ to!(string)(config2));
 	
-	XMLConfig.serialize(config2, "config2.xml");
+	serialize(config2, "config2.xml");
 }

@@ -26,7 +26,8 @@ import flexim.all;
 import std.file;
 
 void main() {
-	testXMLConfig();
+	//testXMLConfig();
+	testExperiment();
 }
 
 void main1(string[] args) {

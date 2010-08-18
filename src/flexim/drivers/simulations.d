@@ -91,3 +91,18 @@ class Experiment: Reproducible {
 	string cwd;
 	Simulation[] simulations;
 }
+
+void testExperiment() {
+	Experiment experiment = new Experiment("testExp", "./");
+	
+	CPUConfig cpuConfig = CPUConfigIO.instance.loadXML("cpuConfig", CPUConfig.createDefault(2, 2));
+	CacheConfig cacheConfig = CacheConfigIO.instance.loadXML("cacheConfig", CacheConfig.createDefault(2, 2));
+	ContextConfig contextConfig = ContextConfigIO.instance.loadXML("contextConfig", ContextConfig.createDefault(2, 2));
+	
+	Simulation simulation = new Simulation("testSim", "./", cpuConfig, cacheConfig, contextConfig);
+	experiment.simulations ~= simulation;
+	
+	experiment.beforeRun();
+	experiment.run();
+	experiment.afterRun();
+}
