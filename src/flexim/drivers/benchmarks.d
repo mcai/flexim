@@ -57,7 +57,7 @@ class Benchmark {
 	string[] tags;
 }
 
-class BenchmarkSuite {
+class BenchmarkSuite {	
 	static class OldenCustom1 : BenchmarkSuite {
 		this() {
 			super(TITLE);
@@ -80,11 +80,11 @@ class BenchmarkSuite {
 			// Benchmark benchmarkEm3dPrepush = new Benchmark("em3d prepush",
 			// "em3d/prepush", "em3d", "2000 100 75 1");
 					
-			this.benchmarks ~= benchmarkMstOriginal;
-			this.benchmarks ~= benchmarkMstPrepush;
+			this.register(benchmarkMstOriginal);
+			this.register(benchmarkMstPrepush);
 
-			// this.benchmarks ~= benchmarkEm3dOriginal;
-			// this.benchmarks ~= benchmarkEm3dPrepush;
+			// this.register(benchmarkEm3dOriginal);
+			// this.register(benchmarkEm3dPrepush);
 		}
 		
 		static const string TITLE = "Olden_Custom1";
@@ -171,37 +171,37 @@ class BenchmarkSuite {
 					"482.sphinx3", "sphinx3_base.i386", "ctlfile . args.an4",
 					"");		
 		
-			this.benchmarks ~= benchmark400;
-			this.benchmarks ~= benchmark401;
-			this.benchmarks ~= benchmark403;
-			this.benchmarks ~= benchmark410;
-			this.benchmarks ~= benchmark429;
-			this.benchmarks ~= benchmark433;
-			this.benchmarks ~= benchmark434;
-			this.benchmarks ~= benchmark435;
-			this.benchmarks ~= benchmark444;
-			this.benchmarks ~= benchmark445;
-			this.benchmarks ~= benchmark447;
-			this.benchmarks ~= benchmark450;
-			this.benchmarks ~= benchmark453;
-			this.benchmarks ~= benchmark458;
-			this.benchmarks ~= benchmark456;
-			this.benchmarks ~= benchmark462;
-			this.benchmarks ~= benchmark464;
-			this.benchmarks ~= benchmark470;
-			this.benchmarks ~= benchmark471;
-			this.benchmarks ~= benchmark473;
-			this.benchmarks ~= benchmark481;
-			this.benchmarks ~= benchmark483;
-			this.benchmarks ~= benchmark998;
-			this.benchmarks ~= benchmark999;
-			this.benchmarks ~= benchmark416;
-			this.benchmarks ~= benchmark436;
-			this.benchmarks ~= benchmark437;
-			this.benchmarks ~= benchmark454;
-			this.benchmarks ~= benchmark459;
-			this.benchmarks ~= benchmark465;
-			this.benchmarks ~= benchmark482;
+			this.register(benchmark400);
+			this.register(benchmark401);
+			this.register(benchmark403);
+			this.register(benchmark410);
+			this.register(benchmark429);
+			this.register(benchmark433);
+			this.register(benchmark434);
+			this.register(benchmark435);
+			this.register(benchmark444);
+			this.register(benchmark445);
+			this.register(benchmark447);
+			this.register(benchmark450);
+			this.register(benchmark453);
+			this.register(benchmark458);
+			this.register(benchmark456);
+			this.register(benchmark462);
+			this.register(benchmark464);
+			this.register(benchmark470);
+			this.register(benchmark471);
+			this.register(benchmark473);
+			this.register(benchmark481);
+			this.register(benchmark483);
+			this.register(benchmark998);
+			this.register(benchmark999);
+			this.register(benchmark416);
+			this.register(benchmark436);
+			this.register(benchmark437);
+			this.register(benchmark454);
+			this.register(benchmark459);
+			this.register(benchmark465);
+			this.register(benchmark482);
 		}
 		
 		static const string TITLE = "CPU2006";
@@ -249,22 +249,22 @@ class BenchmarkSuite {
 					"-z -A -J -S 8000 -n 12 -f map_weights.dat", "ex5_c1.wav",
 					"ex5.asc");
 		
-			this.benchmarks ~= benchmarkAdpcmDec;
-			this.benchmarks ~= benchmarkAdpcmEnc;
-			this.benchmarks ~= benchmarkEpicDec;
-			this.benchmarks ~= benchmarkEpicEnc;
-			this.benchmarks ~= benchmarkG721Dec;
-			this.benchmarks ~= benchmarkG721Enc;
-			this.benchmarks ~= benchmarkGhostscript;
-			this.benchmarks ~= benchmarkGsmDec;
-			this.benchmarks ~= benchmarkGsmEnc;
-			this.benchmarks ~= benchmarkJpegDec;
-			this.benchmarks ~= benchmarkJpegEnc;
-			this.benchmarks ~= benchmarkMpegDec;
-			this.benchmarks ~= benchmarkMpegEnc;
-			this.benchmarks ~= benchmarkPegwitDec;
-			this.benchmarks ~= benchmarkPegwitEnc;
-			this.benchmarks ~= benchmarkRasta;
+			this.register(benchmarkAdpcmDec);
+			this.register(benchmarkAdpcmEnc);
+			this.register(benchmarkEpicDec);
+			this.register(benchmarkEpicEnc);
+			this.register(benchmarkG721Dec);
+			this.register(benchmarkG721Enc);
+			this.register(benchmarkGhostscript);
+			this.register(benchmarkGsmDec);
+			this.register(benchmarkGsmEnc);
+			this.register(benchmarkJpegDec);
+			this.register(benchmarkJpegEnc);
+			this.register(benchmarkMpegDec);
+			this.register(benchmarkMpegEnc);
+			this.register(benchmarkPegwitDec);
+			this.register(benchmarkPegwitEnc);
+			this.register(benchmarkRasta);
 		}
 		
 		static const string TITLE = "MediaBench";
@@ -302,17 +302,17 @@ class BenchmarkSuite {
 			Benchmark benchmarkBarnes = new Benchmark("barnes", "barnes",
 					"barnes.i386", "" ~ to!(string)(threads) ~ "", "input");
 		
-			this.benchmarks ~= benchmarkFft;
-			this.benchmarks ~= benchmarkLu;
-			this.benchmarks ~= benchmarkRadix;
-			this.benchmarks ~= benchmarkOcean;
-			this.benchmarks ~= benchmarkWaterNsquared;
-			this.benchmarks ~= benchmarkWaterSpatial;
-			this.benchmarks ~= benchmarkFmm;
-			this.benchmarks ~= benchmarkCholesky;
-			this.benchmarks ~= benchmarkRadiosity;
-			this.benchmarks ~= benchmarkRaytrace;
-			this.benchmarks ~= benchmarkBarnes;
+			this.register(benchmarkFft);
+			this.register(benchmarkLu);
+			this.register(benchmarkRadix);
+			this.register(benchmarkOcean);
+			this.register(benchmarkWaterNsquared);
+			this.register(benchmarkWaterSpatial);
+			this.register(benchmarkFmm);
+			this.register(benchmarkCholesky);
+			this.register(benchmarkRadiosity);
+			this.register(benchmarkRaytrace);
+			this.register(benchmarkBarnes);
 		}
 		
 		static const string TITLE = "Splash2";		
@@ -341,31 +341,40 @@ class BenchmarkSuite {
 					"10 20 64 8192 8192 1000 none output.txt " ~ to!(string)(threads) ~ "",
 					"");
 		
-			this.benchmarks ~= benchmarkBodytrack;
-			this.benchmarks ~= benchmarkSwaptions;
-			this.benchmarks ~= benchmarkFluidanimate;
-			this.benchmarks ~= benchmarkCanneal;
-			this.benchmarks ~= benchmarkDedup;
-			this.benchmarks ~= benchmarkStreamcluster;
+			this.register(benchmarkBodytrack);
+			this.register(benchmarkSwaptions);
+			this.register(benchmarkFluidanimate);
+			this.register(benchmarkCanneal);
+			this.register(benchmarkDedup);
+			this.register(benchmarkStreamcluster);
 		}
 		
 		static const string TITLE = "PARSEC";
 	}
 	
 	static this() {
-		presets ~= new OldenCustom1();
-		presets ~= new CPU2006();
-		presets ~= new MediaBench();
-		presets ~= new Splash2(2);
-		presets ~= new PARSEC(2);
+		presets[OldenCustom1.TITLE] = new OldenCustom1();
+		presets[CPU2006.TITLE] = new CPU2006();
+		presets[MediaBench.TITLE] = new MediaBench();
+		presets[Splash2.TITLE] = new Splash2(2);
+		presets[PARSEC.TITLE] = new PARSEC(2);
 	}
 	
 	this(string title) {
 		this.title = title;
 	}
 	
-	string title;
-	Benchmark[] benchmarks;
+	void register(Benchmark benchmark) {
+		assert(!(benchmark.title in this.benchmarks));
+		this.benchmarks[benchmark.title] = benchmark;
+	}
 	
-	static BenchmarkSuite[] presets;
+	Benchmark opIndex(string index) {
+		return this.benchmarks[index];
+	}
+	
+	string title;
+	Benchmark[string] benchmarks;
+	
+	static BenchmarkSuite[string] presets;
 }

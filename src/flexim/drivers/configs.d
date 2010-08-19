@@ -26,6 +26,10 @@ import flexim.all;
 import std.path;
 import std.process;
 
+const string CPU_CONFIG_XML = "cpu_config.xml";
+const string CACHE_CONFIG_XML = "cache_config.xml";
+const string CONTEXT_CONFIG_XML = "context_config.xml";
+
 abstract class Config(ConfigT) {
 }
 
@@ -43,7 +47,15 @@ class CPUConfig: Config!(CPUConfig) {
 			this.maxCycle, this.maxInsts, this.maxTime, this.numCores, this.numThreads);
 	}
 	
-	static CPUConfig createDefault(uint numCores = 2, uint numThreads = 2) {
+	static CPUConfig loadXML(string cwd, string fileName = CPU_CONFIG_XML) {
+		return CPUConfigXMLSerializer.instance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(CPUConfig cpuConfig, string cwd, string fileName = CPU_CONFIG_XML) {
+		CPUConfigXMLSerializer.instance.saveXML(cpuConfig, join(cwd, fileName));
+	}
+	
+	static CPUConfig createDefault(uint numCores = 2, uint numThreads = 1) {
 		return new CPUConfig(2000000, 2000000, 7200, numCores, numThreads);
 	}
 	
@@ -127,7 +139,15 @@ class CacheConfig: Config!(CacheConfig) {
 		return format("CacheConfig[caches.length=%d]", this.caches.length);
 	}
 	
-	static CacheConfig createDefault(uint numCores = 2, uint numThreads = 2) {
+	static CacheConfig loadXML(string cwd, string fileName = CACHE_CONFIG_XML) {
+		return CacheConfigXMLSerializer.instance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(CacheConfig cacheConfig, string cwd, string fileName = CACHE_CONFIG_XML) {
+		CacheConfigXMLSerializer.instance.saveXML(cacheConfig, join(cwd, fileName));
+	}
+	
+	static CacheConfig createDefault(uint numCores = 2, uint numThreads = 1) {
 		CacheConfig cacheConfig = new CacheConfig();
 		
 		CacheGeometry l2 = new CacheGeometry("l2", 1024, 4, 64, 4, 7, CacheReplacementPolicy.LRU);
@@ -241,11 +261,19 @@ class ContextConfig: Config!(ContextConfig) {
 		return format("ContextConfig[contexts.length=%d]", this.contexts.length);
 	}
 	
-	static ContextConfig createDefault(uint numCores = 2, uint numThreads = 2) {
+	static ContextConfig loadXML(string cwd, string fileName = CONTEXT_CONFIG_XML) {
+		return ContextConfigXMLSerializer.instance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(ContextConfig contextConfig, string cwd, string fileName = CONTEXT_CONFIG_XML) {
+		ContextConfigXMLSerializer.instance.saveXML(contextConfig, join(cwd, fileName));
+	}
+	
+	static ContextConfig createDefault(string binariesDir, string benchmarkSuiteName, string benchmarkName, uint numCores = 2, uint numThreads = 1) {
 		ContextConfig contextConfig = new ContextConfig();
 		
 		for(uint i = 0; i < numCores * numThreads; i++) {
-			Context context = new Context(i, "/home/itecgo/Flexim2/benchmarks/Olden", BenchmarkSuite.presets[0].benchmarks[0]);
+			Context context = new Context(i, binariesDir, BenchmarkSuite.presets[benchmarkSuiteName][benchmarkName]);
 			contextConfig.contexts ~= context;
 		}
 		

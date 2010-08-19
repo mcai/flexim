@@ -27,8 +27,9 @@ import std.file;
 import std.getopt;
 import std.path;
 
-void runExperiment(string title, string cwd) {
-	Experiment experiment = new Experiment(title, cwd);
+void runExperiment(string title, string cwd) {		
+	Experiment experiment = Experiment.createDefault(title, cwd,
+		"/home/itecgo/Flexim2/benchmarks/Olden", BenchmarkSuite.OldenCustom1.TITLE, "mst original");
 	experiment.beforeRun();
 	experiment.run();
 	experiment.afterRun();
