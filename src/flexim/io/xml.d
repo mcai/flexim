@@ -23,6 +23,7 @@ module flexim.io.xml;
 
 import flexim.all;
 
+import std.file;
 import std.xml;
 
 class XMLConfig {
@@ -114,7 +115,29 @@ XMLConfigFile deserialize(string xmlFileName) {
     return xmlConfig;
 }
 
-void testXMLConfig() {
+abstract class XMLSerializer(ObjectT) {
+	abstract XMLConfigFile save(ObjectT config);
+	abstract ObjectT load(XMLConfigFile xmlConfigFile);
+	
+	void saveXML(ObjectT config, string xmlFileName) {
+		logging.infof(LogCategory.XML, "%s.saveXML(%s, %s)", "XMLSerializer", config, xmlFileName);
+		XMLConfigFile xmlConfigFile = save(config);
+		serialize(xmlConfigFile, xmlFileName);
+	}
+	
+	ObjectT loadXML(string xmlFileName, ObjectT defaultValue = null) {
+		logging.infof(LogCategory.XML, "%s.loadXML(%s)", "XMLSerializer", xmlFileName);
+		if(exists(xmlFileName)) {
+			XMLConfigFile xmlConfigFile = deserialize(xmlFileName);
+			return load(xmlConfigFile);
+		}
+		else {
+			return defaultValue;
+		}
+	}
+}
+
+unittest {
 	XMLConfigFile config = new XMLConfigFile("configs");
 	config.attributes["configs_attr1_key"] = "configs_attr1_value";
 	

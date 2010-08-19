@@ -32,12 +32,9 @@ enum SimulatorEventType: string {
 	PANIC = "PANIC"
 }
 
-class SimulatorEventContext {
-	void dummyDel() {		
-	}
-	
+class SimulatorEventContext {	
 	this(string name) {
-		this(name, &this.dummyDel);
+		this(name, {});
 	}
 
 	this(string name, void delegate() del) {
@@ -52,8 +49,8 @@ class SimulatorEventContext {
 	override string toString() {
 		string str;
 		
-//		str ~= format("SimulatorEventContext[name: %s, callback: %s]", this.name, this.callback);
-		str ~= format("SimulatorEventContext[name: %s]", this.name);
+//		str ~= format("SimulatorEventContext[name=%s, callback=%s]", this.name, this.callback);
+		str ~= format("SimulatorEventContext[name=%s]", this.name);
 		
 		return str;
 	}
@@ -63,49 +60,53 @@ class SimulatorEventContext {
 }
 
 class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext) {
-	public:
-		this(Simulator simulator) {
-			super("SimulatorEventQueue");
-			
-			this.simulator = simulator;
+	this(Simulator simulator) {
+		super("SimulatorEventQueue");
+		
+		this.simulator = simulator;
+		
+		this.halted = false;
 
-			this.registerHandler(SimulatorEventType.GENERAL, &this.generalHandler);
-			this.registerHandler(SimulatorEventType.HALT, &this.haltHandler);
-			this.registerHandler(SimulatorEventType.FATAL, &this.fatalHandler);
-			this.registerHandler(SimulatorEventType.PANIC, &this.panicHandler);
+		this.registerHandler(SimulatorEventType.GENERAL, &this.generalHandler);
+		this.registerHandler(SimulatorEventType.HALT, &this.haltHandler);
+		this.registerHandler(SimulatorEventType.FATAL, &this.fatalHandler);
+		this.registerHandler(SimulatorEventType.PANIC, &this.panicHandler);
+	}
+
+	void generalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
+		if(context.callback !is null) {
+			context.callback.invoke();
 		}
+	}
 
-		void generalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-			if(context.callback !is null) {
-				context.callback.invoke();
-			}
+	void haltHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
+		if(context.callback !is null) {
+			context.callback.invoke();
 		}
+		this.simulator.dumpStats();
+		
+		this.halted = true;
+		//exit(0);
+	}
 
-		void haltHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-			if(context.callback !is null) {
-				context.callback.invoke();
-			}
-			this.simulator.dumpStats();
-			exit(0);
+	void fatalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {			
+		if(context.callback !is null) {
+			context.callback.invoke();
 		}
+		//this.simulator.dumpStats();
+		exit(1);
+	}
 
-		void fatalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {			
-			if(context.callback !is null) {
-				context.callback.invoke();
-			}
-			//this.simulator.dumpStats();
-			exit(1);
+	void panicHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
+		if(context.callback !is null) {
+			context.callback.invoke();
 		}
+		//this.simulator.dumpStats();
+		exit(-1);
+	}
 
-		void panicHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-			if(context.callback !is null) {
-				context.callback.invoke();
-			}
-			//this.simulator.dumpStats();
-			exit(-1);
-		}
-
-		Simulator simulator;
+	Simulator simulator;
+	bool halted;
 }
 
 abstract class Simulator {

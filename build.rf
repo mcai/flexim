@@ -10,7 +10,6 @@ src/flexim/cpu/registers.d
 src/flexim/cpu/thread.d
 src/flexim/drivers/benchmarks.d
 src/flexim/drivers/configs.d
-src/flexim/drivers/parsers.d
 src/flexim/drivers/simulations.d
 src/flexim/io/logging.d
 src/flexim/io/xml.d
@@ -28,9 +27,9 @@ src/flexim/main.d
 src/flexim/mem/cache.d
 src/flexim/mem/common.d
 src/flexim/mem/mem.d
+src/flexim/mem/memsys.d
 src/flexim/mem/mesi.d
 src/flexim/mem/mmu.d
-src/flexim/mem/predefined.d
 src/flexim/mem/tm.d
 src/flexim/sim/common.d
 src/flexim/sim/cpu.d

@@ -166,7 +166,7 @@ class Event(EventTypeT, EventContextT) {
 	override string toString() {
 		string str;
 		
-		str ~= format("Event[type: %s, context: %s, scheduled: %d, when: %d]", this.eventType, this.context, this.scheduled, this.when);
+		str ~= format("Event[type=%s, context=%s, scheduled=%d, when=%d]", this.eventType, this.context, this.scheduled, this.when);
 		
 		return str;
 	}
@@ -279,13 +279,15 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor, CurrentCycl
 		override string toString() {
 			string str;
 			
-			writeln("eventQueue: ");
+			str ~= "EventQueue[";
 			
 			foreach(i, event; this.eventArray) {
 				if(event !is null) {
-					writefln("    [%d] event: %s", i, to!(string)(event));
+					str ~= format("%d: %s ", i, to!(string)(event));
 				}
 			}
+			
+			str ~= "]";
 			
 			return str;
 		}

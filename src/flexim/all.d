@@ -46,7 +46,6 @@ public import flexim.cpu.ooo.thread;
 
 public import flexim.drivers.benchmarks;
 public import flexim.drivers.configs;
-public import flexim.drivers.parsers;
 public import flexim.drivers.simulations;
 
 public import flexim.io.logging;
@@ -66,8 +65,8 @@ public import flexim.linux.syscall;
 
 public import flexim.mem.cache;
 public import flexim.mem.common;
+public import flexim.mem.memsys;
 public import flexim.mem.mesi;
-public import flexim.mem.predefined;
 public import flexim.mem.tm;
 
 public import flexim.mem.mmu;

@@ -32,7 +32,7 @@ class FU {
 	}
 
 	override string toString() {
-		return format("%s [master: %s, fuType: %s, opLat: %d, issueLat: %d]", "FU", this.master.name, to!(string)(this.fuType), this.opLat, this.issueLat);
+		return format("%s[master=%s, fuType=%s, opLat=%d, issueLat=%d]", "FU", this.master.name, to!(string)(this.fuType), this.opLat, this.issueLat);
 	}
 
 	FUCategory master;
@@ -50,7 +50,7 @@ class FUCategory {
 	}
 
 	override string toString() {
-		return format("%s [name: %s, quantity: %d, busy: %d]", "FUCategory", this.name, this.quantity, this.busy);
+		return format("%s[name=%s, quantity=%d, busy=%d]", "FUCategory", this.name, this.quantity, this.busy);
 	}
 
 	string name;

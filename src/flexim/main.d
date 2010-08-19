@@ -24,20 +24,25 @@ module flexim.main;
 import flexim.all;
 
 import std.file;
+import std.getopt;
+import std.path;
 
-void main() {
-	//testXMLConfig();
-	testExperiment();
+void runExperiment(string title, string cwd) {
+	Experiment experiment = new Experiment(title, cwd);
+	experiment.beforeRun();
+	experiment.run();
+	experiment.afterRun();
 }
 
-void main1(string[] args) {
+void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
 	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.\n");
 
-	string[] programArgs = args[1 .. args.length];
-
-	Simulator simulator = new CPUSimulator(getcwd(), programArgs);
-	//Simulator simulator = new MESIMemorySystemSimulator();
+	string title = "testExp", cwd = "./";
 	
-	simulator.run();
+	getopt(args,
+		"title", &title,
+		"cwd", &cwd);
+	
+	runExperiment(title, cwd);
 }

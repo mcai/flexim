@@ -452,7 +452,8 @@ class MESIStack {
 
 	override string toString() {
 		return format(
-				"MESIStack[id: %d, ccache: %s, target: %s, except: %s, addr: 0x%x, set: %d, way: %d, tag: %d, srcSet: %d, srcWay: %d, srcTag: %d, dirLock: %s, state: %s, pending: %d, isErr: %s, isShared: %s, isRead: %s, isBlocking: %s, isWriteback: %s, isEviction: %s, isRetry: %s, retEvent: %s, retStack ID: %s]",
+				"MESIStack[id=%d, ccache=%s, target=%s, except=%s, addr=0x%x, set=%d, way=%d, tag=%d, srcSet=%d, srcWay=%d, srcTag=%d, " ~
+				"dirLock=%s, state=%s, pending=%d, isErr=%s, isShared=%s, isRead=%s, isBlocking=%s, isWriteback=%s, isEviction=%s, isRetry=%s, retEvent=%s, retStack ID=%s]",
 				this.id, this.ccache !is null ? this.ccache.name : "NULL", this.target !is null ? this.target.name : "NULL", this.except !is null ? this.except.name : "NULL", this.addr, this.set,
 				this.way, this.tag, this.srcSet, this.srcWay, this.srcTag, this.dirLock !is null ? to!(string)(this.dirLock) : "NULL", this.state !is null ? to!(string)(this.state) : "NULL",
 				this.pending, this.isErr, this.isShared, this.isRead, this.isBlocking, this.isWriteback, this.isEviction, this.isRetry, this.retEvent !is null ? to!(string)(this.retEvent) : "NULL",

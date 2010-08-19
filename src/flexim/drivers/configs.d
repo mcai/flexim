@@ -23,29 +23,10 @@ module flexim.drivers.configs;
 
 import flexim.all;
 
-import std.file;
+import std.path;
+import std.process;
 
 abstract class Config(ConfigT) {
-}
-
-abstract class ConfigIO(ConfigT) {
-	abstract XMLConfigFile save(ConfigT config);
-	abstract ConfigT load(XMLConfigFile xmlConfigFile);
-	
-	void saveXML(ConfigT config, string xmlFileName) {
-		XMLConfigFile xmlConfigFile = save(config);
-		serialize(xmlConfigFile, xmlFileName);
-	}
-	
-	ConfigT loadXML(string xmlFileName, ConfigT defaultValue = null) {
-		if(exists(xmlFileName)) {
-			XMLConfigFile xmlConfigFile = deserialize(xmlFileName);
-			return load(xmlConfigFile);
-		}
-		else {
-			return defaultValue;
-		}
-	}
 }
 
 class CPUConfig: Config!(CPUConfig) {
@@ -58,7 +39,8 @@ class CPUConfig: Config!(CPUConfig) {
 	}
 	
 	override string toString() {
-		return format("CPUConfig[]");
+		return format("CPUConfig[maxCycle=%d, maxInsts=%d, maxTime=%d, numCores=%d, numThreads=%d]",
+			this.maxCycle, this.maxInsts, this.maxTime, this.numCores, this.numThreads);
 	}
 	
 	static CPUConfig createDefault(uint numCores = 2, uint numThreads = 2) {
@@ -73,7 +55,7 @@ class CPUConfig: Config!(CPUConfig) {
 	uint numThreads;
 }
 
-class CPUConfigIO: ConfigIO!(CPUConfig) {
+class CPUConfigXMLSerializer: XMLSerializer!(CPUConfig) {
 	this() {
 	}
 	
@@ -100,10 +82,10 @@ class CPUConfigIO: ConfigIO!(CPUConfig) {
 	}
 	
 	static this() {
-		instance = new CPUConfigIO();
+		instance = new CPUConfigXMLSerializer();
 	}
 	
-	static CPUConfigIO instance;
+	static CPUConfigXMLSerializer instance;
 }
 
 enum CacheReplacementPolicy: string {
@@ -112,22 +94,19 @@ enum CacheReplacementPolicy: string {
 	Random = "Random"
 }
 
-class CacheGeometry {		
-	this(string name, uint sets, uint assoc, uint blockSize, uint hitLatency, uint misslatency) {
-		this(name, sets, assoc, blockSize, hitLatency, missLatency, CacheReplacementPolicy.LRU);
-	}
-	
-	this(string name, uint sets, uint assoc, uint blockSize, uint hitlateny, uint missLatency, CacheReplacementPolicy policy) {
+class CacheGeometry {	
+	this(string name, uint sets, uint assoc, uint blockSize, uint hitLatency, uint missLatency, CacheReplacementPolicy policy) {
 		this.name = name;
 		this.sets = sets;
 		this.assoc = assoc;
 		this.blockSize = blockSize;
 		this.hitLatency = hitLatency;
+		this.missLatency = missLatency;
 		this.policy = policy;
 	}
 	
 	override string toString() {
-		return format("Cache[name: %s, sets: %d, assoc: %d, blockSize: %d, hitLatency: %d, missLatency: %d, policy: %s]",
+		return format("Cache[name=%s, sets=%d, assoc=%d, blockSize=%d, hitLatency=%d, missLatency=%d, policy=%s]",
 			this.name, this.sets, this.assoc, this.blockSize, this.hitLatency, this.missLatency, this.policy);
 	}
 	
@@ -145,26 +124,37 @@ class CacheConfig: Config!(CacheConfig) {
 	}
 	
 	override string toString() {
-		return format("CacheConfig[caches.length: %d]", this.caches.length);
+		return format("CacheConfig[caches.length=%d]", this.caches.length);
 	}
 	
 	static CacheConfig createDefault(uint numCores = 2, uint numThreads = 2) {
 		CacheConfig cacheConfig = new CacheConfig();
 		
+		CacheGeometry l2 = new CacheGeometry("l2", 1024, 4, 64, 4, 7, CacheReplacementPolicy.LRU);
+		cacheConfig.caches[l2.name] = l2;
+		
+		for(uint i = 0; i < numCores * numThreads; i++) {
+			CacheGeometry l1D = new CacheGeometry("l1D" ~ "-" ~ to!(string)(i), 64, 4, 64, 1, 3, CacheReplacementPolicy.LRU);
+			cacheConfig.caches[l1D.name] = l1D;
+			
+			CacheGeometry l1I = new CacheGeometry("l1I" ~ "-" ~ to!(string)(i), 64, 4, 64, 1, 3, CacheReplacementPolicy.LRU);
+			cacheConfig.caches[l1I.name] = l1I;
+		}
+		
 		return cacheConfig;
 	}
 	
-	CacheGeometry[] caches;
+	CacheGeometry[string] caches;
 }
 
-class CacheConfigIO: ConfigIO!(CacheConfig) {	
+class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {	
 	this() {
 	}
 	
 	override XMLConfigFile save(CacheConfig cacheConfig) {
 		XMLConfigFile xmlConfigFile = new XMLConfigFile("CacheConfig");
 		
-		foreach(cache; cacheConfig.caches) {
+		foreach(cacheName, cache; cacheConfig.caches) {
 			XMLConfig xmlConfig = new XMLConfig("Cache");
 			xmlConfig.attributes["name"] = cache.name;
 			xmlConfig.attributes["sets"] = to!(string)(cache.sets);
@@ -193,17 +183,17 @@ class CacheConfigIO: ConfigIO!(CacheConfig) {
 			CacheReplacementPolicy policy = cast(CacheReplacementPolicy) (entry.attributes["policy"]);
 				
 			CacheGeometry cache = new CacheGeometry(name, sets, assoc, blockSize, hitLatency, missLatency, policy);
-			cacheConfig.caches ~= cache;
+			cacheConfig.caches[cache.name] = cache;
 		}
 		
 		return cacheConfig;
 	}
 	
 	static this() {
-		instance = new CacheConfigIO();
+		instance = new CacheConfigXMLSerializer();
 	}
 	
-	static CacheConfigIO instance;
+	static CacheConfigXMLSerializer instance;
 }
 
 class Context {
@@ -212,8 +202,7 @@ class Context {
 	}
 	
 	this(uint num, string binariesDir, Benchmark benchmark, string env) {
-		this(num, benchmark.exe, benchmark.args, binariesDir ~ "/" ~
-			benchmark.cwd, benchmark.stdin, benchmark.stdout, env);
+		this(num, benchmark.exe, benchmark.args, join(binariesDir, benchmark.cwd), benchmark.stdin, benchmark.stdout, env);
 	}
 	
 	this(uint num, string exe, string args) {
@@ -231,7 +220,7 @@ class Context {
 	}
 	
 	override string toString() {
-		return format("Context[num: %d, exe: %s, args: %s, cwd: %s, stdin: %s, stdout: %s, env: %s]",
+		return format("Context[num=%d, exe=%s, args=%s, cwd=%s, stdin=%s, stdout=%s, env=%s]",
 			this.num, this.exe, this.args, this.cwd, this.stdin, this.stdout, this.env);
 	}
 	
@@ -249,11 +238,16 @@ class ContextConfig: Config!(ContextConfig) {
 	}
 	
 	override string toString() {
-		return format("ContextConfig[contexts.length: %d]", this.contexts.length);
+		return format("ContextConfig[contexts.length=%d]", this.contexts.length);
 	}
 	
 	static ContextConfig createDefault(uint numCores = 2, uint numThreads = 2) {
 		ContextConfig contextConfig = new ContextConfig();
+		
+		for(uint i = 0; i < numCores * numThreads; i++) {
+			Context context = new Context(i, "/home/itecgo/Flexim2/benchmarks/Olden", BenchmarkSuite.presets[0].benchmarks[0]);
+			contextConfig.contexts ~= context;
+		}
 		
 		return contextConfig;
 	}
@@ -261,7 +255,7 @@ class ContextConfig: Config!(ContextConfig) {
 	Context[] contexts;
 }
 
-class ContextConfigIO: ConfigIO!(ContextConfig) {
+class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	this() {
 	}
 	
@@ -304,8 +298,8 @@ class ContextConfigIO: ConfigIO!(ContextConfig) {
 	}
 	
 	static this() {
-		instance = new ContextConfigIO();
+		instance = new ContextConfigXMLSerializer();
 	}
 	
-	static ContextConfigIO instance;
+	static ContextConfigXMLSerializer instance;
 }

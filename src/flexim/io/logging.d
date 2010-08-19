@@ -44,7 +44,8 @@ enum LogCategory: string {
 	MISC = "MISC",
 	OOO = "OOO",
 	TEST = "TEST",
-	DEBUG = "DEBUG"
+	DEBUG = "DEBUG",
+	XML = "XML"
 }
 
 class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, SimulatorEventContext) {
@@ -67,6 +68,7 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 //		this.enable(LogCategory.MISC);
 //		this.enable(LogCategory.OOO);
 		this.enable(LogCategory.TEST);
+		this.enable(LogCategory.XML);
 		
 		debug {
 			this.enable(LogCategory.DEBUG);

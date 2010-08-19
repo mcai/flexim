@@ -48,7 +48,7 @@ class FetchRecord {
 	}
 
 	override string toString() {
-		return format("FetchRecord [uop = %s]", uop);
+		return format("FetchRecord[uop=%s]", uop);
 	}
 
 	Addr pc;
@@ -95,15 +95,15 @@ class RUUStation {
 	override string toString() {
 		string str;
 		
-		str ~= format("RUUStation [uop = %s, inLsq: %s, eaComp: %s, ea: %d, seq: %d, status: %s, operandsReady: %s]",
+		str ~= format("RUUStation[uop=%s, inLsq=%s, eaComp=%s, ea=%d, seq=%d, status=%s, operandsReady=%s]",
 				this.uop, this.inLsq, this.eaComp, this.ea, this.seq, this.status, this.operandsReady);
 		
 		if(this.uop.isStore) {
-			str ~= format("\n     storeOpReady: %s, operandsReady: %s", this.storeOpReady, this.operandsReady);
+			str ~= format("\n     storeOpReady=%s, operandsReady=%s", this.storeOpReady, this.operandsReady);
 		}
 		
 		foreach(i, idep; this.ideps) {
-			str ~= format("\n     ideps[%d]: %s\n", i, to!(string)(idep));
+			str ~= format("\n     ideps[%d]=%s\n", i, to!(string)(idep));
 		}
 		
 		return str;
@@ -223,7 +223,7 @@ class EventQ: EventQueue!(EventQEventType, RUUStation) {
 		override string toString() {
 			string str;
 
-			str ~= format("%s [size: %d]\n", this.name, this.size);
+			str ~= format("%s[size=%d]\n", this.name, this.size);
 
 			foreach(i, entry; this) {
 				str ~= format("  %2d: %s\n", i, to!(string)(entry));

@@ -151,7 +151,7 @@ class DirLock {
 	override string toString() {
 		string str;
 
-		str ~= format("DirLock[locked: %s]", this.locked);
+		str ~= format("DirLock[locked=%s]", this.locked);
 
 		return str;
 	}
@@ -218,7 +218,7 @@ class CacheBlock(StateT) {
 	}
 
 	override string toString() {
-		return format("CacheBlock[set: %s, tag: %d, state: %s]", to!(string)(this.set), this.tag, to!(string)(this.state));
+		return format("CacheBlock[set=%s, tag=%d, state=%s]", to!(string)(this.set), this.tag, to!(string)(this.state));
 	}
 
 	CacheSetT set;
@@ -275,7 +275,7 @@ class CacheSet(StateT) {
 	}
 
 	string toString() {
-		return format("CacheSet[assoc: %d]", this.assoc);
+		return format("CacheSet[assoc=%d]", this.assoc);
 	}
 
 	uint assoc;
@@ -422,7 +422,7 @@ class CacheQueueEntry(StateT) {
 	}
 
 	override string toString() {
-		return format("CacheQueueEntry[src: %s, dest: %s, sender: %s, request: %s]", this.src, this.dest, this.sender, this.request);
+		return format("CacheQueueEntry[src=%s, dest=%s, sender=%s, request=%s]", this.src, this.dest, this.sender, this.request);
 	}
 
 	Interconnect src;

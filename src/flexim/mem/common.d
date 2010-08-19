@@ -133,7 +133,7 @@ class Request {
 	}
 
 	override string toString() {
-		return format("%s[ID: %d, pc: 0x%x, addr: 0x%x]", to!(string)(this.type), this.id, this.pc, this.addr);
+		return format("%s[ID=%d, pc=0x%x, addr=0x%x]", to!(string)(this.type), this.id, this.pc, this.addr);
 	}
 
 	uint id;
@@ -224,7 +224,7 @@ class Sequencer(RequestT, CacheT): Node {
 	}
 
 	override string toString() {
-		return format("%s[pendingReads.length: %d]", this.name, this.pendingReads.length);
+		return format("%s[pendingReads.length=%d]", this.name, this.pendingReads.length);
 	}
 
 	uint maxReadCapacity;

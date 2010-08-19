@@ -23,6 +23,10 @@ module flexim.drivers.simulations;
 
 import flexim.all;
 
+import std.file;
+import std.path;
+import std.process;
+
 interface Reproducible {
 	void beforeRun();
 	void run();
@@ -30,28 +34,35 @@ interface Reproducible {
 }
 
 class Simulation: Reproducible {
-	this(string title, string cwd, CPUConfig cpuConfig, CacheConfig cacheConfig, ContextConfig contextConfig) {
+	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
-		this.cpuConfig = cpuConfig;
-		this.cacheConfig = cacheConfig;
-		this.contextConfig = contextConfig;
 	}
 	
-	override void beforeRun() {
-		//TODO
+	override void beforeRun() {			
+		this.cpuConfig = CPUConfigXMLSerializer.instance.loadXML(join(this.cwd, "cpu_config.xml"), CPUConfig.createDefault(1, 1));
+		this.cacheConfig = CacheConfigXMLSerializer.instance.loadXML(join(this.cwd, "cache_config.xml"), CacheConfig.createDefault(1, 1));
+		this.contextConfig = ContextConfigXMLSerializer.instance.loadXML(join(this.cwd, "context_config.xml"), ContextConfig.createDefault(1, 1));
 	}
 	
-	override void run() {
-		//TODO
+	override void run() {		
+		Simulator simulator = new CPUSimulator(this);
+		simulator.run();
 	}
 	
 	override void afterRun() {
-		//TODO
+		CPUConfigXMLSerializer.instance.saveXML(this.cpuConfig, join(this.cwd, "cpu_config.xml"));
+		CacheConfigXMLSerializer.instance.saveXML(this.cacheConfig, join(this.cwd, "cache_config.xml"));
+		ContextConfigXMLSerializer.instance.saveXML(this.contextConfig, join(this.cwd, "context_config.xml"));
+	}
+	
+	override string toString() {
+		return format("Simulation[title=%s, cwd=%s]", this.title, this.cwd);
 	}
 	
 	string title;
 	string cwd;
+	
 	CPUConfig cpuConfig;
 	CacheConfig cacheConfig;
 	ContextConfig contextConfig;
@@ -69,7 +80,10 @@ class Experiment: Reproducible {
 		this.simulations = simulations;
 	}
 	
-	override void beforeRun() {
+	override void beforeRun() {		
+		Experiment experiment = ExperimentXMLSerializer.instance.loadXML(join(this.cwd, "experiment.xml"), Experiment.createDefault(1, 1));
+		this.simulations = experiment.simulations;
+		
 		foreach(simulation; this.simulations) {
 			simulation.beforeRun();
 		}
@@ -85,6 +99,21 @@ class Experiment: Reproducible {
 		foreach(simulation; this.simulations) {
 			simulation.afterRun();
 		}
+		
+		ExperimentXMLSerializer.instance.saveXML(this, join(this.cwd, "experiment.xml"));
+	}
+	
+	override string toString() {
+		return format("Experiment[title=%s, cwd=%s, simulations.length=%d]", this.title, this.cwd, this.simulations.length);
+	}
+	
+	static Experiment createDefault(uint numCores = 2, uint numThreads = 2) {
+		Experiment experiment = new Experiment("testExp", "./");
+		
+		Simulation simulation = new Simulation("testSim", "./");
+		experiment.simulations ~= simulation;
+		
+		return experiment;
 	}
 	
 	string title;
@@ -92,17 +121,47 @@ class Experiment: Reproducible {
 	Simulation[] simulations;
 }
 
-void testExperiment() {
-	Experiment experiment = new Experiment("testExp", "./");
+class ExperimentXMLSerializer: XMLSerializer!(Experiment) {
+	this() {
+	}
 	
-	CPUConfig cpuConfig = CPUConfigIO.instance.loadXML("cpuConfig", CPUConfig.createDefault(2, 2));
-	CacheConfig cacheConfig = CacheConfigIO.instance.loadXML("cacheConfig", CacheConfig.createDefault(2, 2));
-	ContextConfig contextConfig = ContextConfigIO.instance.loadXML("contextConfig", ContextConfig.createDefault(2, 2));
+	override XMLConfigFile save(Experiment experiment) {
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("Experiment");
+		
+		xmlConfigFile.attributes["title"] = experiment.title;
+		xmlConfigFile.attributes["cwd"] = experiment.cwd;
+			
+		foreach(simulation; experiment.simulations) {
+			XMLConfig xmlConfig = new XMLConfig("Simulation");
+			xmlConfig.attributes["title"] = simulation.title;
+			xmlConfig.attributes["cwd"] = simulation.cwd;
+			
+			xmlConfigFile.entries ~= xmlConfig;
+		}
+			
+		return xmlConfigFile;
+	}
 	
-	Simulation simulation = new Simulation("testSim", "./", cpuConfig, cacheConfig, contextConfig);
-	experiment.simulations ~= simulation;
+	override Experiment load(XMLConfigFile xmlConfigFile) {
+		string title = xmlConfigFile.attributes["title"];
+		string cwd = xmlConfigFile.attributes["cwd"];
+		
+		Experiment experiment = new Experiment(title, cwd);
+
+		foreach(entry; xmlConfigFile.entries) {
+			string simulationTitle = entry.attributes["title"];
+			string simulationCwd = entry.attributes["cwd"];
+			
+			Simulation simulation = new Simulation(simulationTitle, simulationCwd);
+			experiment.simulations ~= simulation;
+		}
+
+		return experiment;
+	}
 	
-	experiment.beforeRun();
-	experiment.run();
-	experiment.afterRun();
+	static this() {
+		instance = new ExperimentXMLSerializer();
+	}
+	
+	static ExperimentXMLSerializer instance;
 }
