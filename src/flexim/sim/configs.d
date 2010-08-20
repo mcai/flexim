@@ -1,5 +1,5 @@
 /*
- * flexim/drivers/configs.d
+ * flexim/sim/configs.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.drivers.configs;
+module flexim.sim.configs;
 
 import flexim.all;
 
@@ -55,7 +55,7 @@ class CPUConfig: Config!(CPUConfig) {
 		CPUConfigXMLSerializer.instance.saveXML(cpuConfig, join(cwd, fileName));
 	}
 	
-	static CPUConfig createDefault(uint numCores = 2, uint numThreads = 1) {
+	static CPUConfig createDefault(uint numCores, uint numThreads) {
 		return new CPUConfig(2000000, 2000000, 7200, numCores, numThreads);
 	}
 	
@@ -147,7 +147,7 @@ class CacheConfig: Config!(CacheConfig) {
 		CacheConfigXMLSerializer.instance.saveXML(cacheConfig, join(cwd, fileName));
 	}
 	
-	static CacheConfig createDefault(uint numCores = 2, uint numThreads = 1) {
+	static CacheConfig createDefault(uint numCores, uint numThreads) {
 		CacheConfig cacheConfig = new CacheConfig();
 		
 		CacheGeometry l2 = new CacheGeometry("l2", 1024, 4, 64, 4, 7, CacheReplacementPolicy.LRU);
@@ -269,11 +269,11 @@ class ContextConfig: Config!(ContextConfig) {
 		ContextConfigXMLSerializer.instance.saveXML(contextConfig, join(cwd, fileName));
 	}
 	
-	static ContextConfig createDefault(string binariesDir, string benchmarkSuiteName, string benchmarkName, uint numCores = 2, uint numThreads = 1) {
+	static ContextConfig createDefault(string binariesDir, Benchmark benchmark, uint numCores, uint numThreads) {
 		ContextConfig contextConfig = new ContextConfig();
 		
 		for(uint i = 0; i < numCores * numThreads; i++) {
-			Context context = new Context(i, binariesDir, BenchmarkSuite.presets[benchmarkSuiteName][benchmarkName]);
+			Context context = new Context(i, binariesDir, benchmark);
 			contextConfig.contexts ~= context;
 		}
 		

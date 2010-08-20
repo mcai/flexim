@@ -94,7 +94,7 @@ class ContextCallback1(Param1T) {
 		this.callback = callback;
 	}
 	
-	void invoke(Param11T m1) {
+	void invoke(Param1T m1) {
 		if(this.callback !is null) {
 			this.callback(m1);
 		}

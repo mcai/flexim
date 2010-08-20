@@ -1,7 +1,3 @@
-Plain TODOs
-	1. xml configuration using std.xml
-	3. program option parsing using std.getopt
-
 top priorities:
 	1. integration of nonblocking cache with OoO (icache, dcache, shared level two cache, itlb, dtlb)
 	2. integration of branch predictor with OoO
@@ -75,7 +71,11 @@ MLP-Aware DCP:
 
 5. goto step 2.
 
++idea: task-oriented experimentation
 
+		GeneralAnalysis
+		PipelineBehaviorAnalysis
+		CacheBehaviorAnalysis
 
 
 

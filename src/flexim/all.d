@@ -33,6 +33,8 @@ public import std.stdio;
 public import std.string;
 public import std.typecons;
 
+public import flexim.simulator;
+
 public import flexim.cpu.bpred;
 public import flexim.cpu.core;
 public import flexim.cpu.fu;
@@ -43,10 +45,6 @@ public import flexim.cpu.thread;
 
 public import flexim.cpu.ooo.common;
 public import flexim.cpu.ooo.thread;
-
-public import flexim.drivers.benchmarks;
-public import flexim.drivers.configs;
-public import flexim.drivers.simulations;
 
 public import flexim.io.logging;
 public import flexim.io.xml;
@@ -72,9 +70,10 @@ public import flexim.mem.tm;
 public import flexim.mem.mmu;
 public import flexim.mem.mem;
 
-public import flexim.sim.common;
-public import flexim.sim.cpu;
-public import flexim.sim.memsys;
+public import flexim.sim.analysis;
+public import flexim.sim.benchmarks;
+public import flexim.sim.configs;
+public import flexim.sim.simulations;
 
 public import flexim.util.arithmetic;
 public import flexim.util.elf;

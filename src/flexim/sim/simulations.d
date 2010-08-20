@@ -1,5 +1,5 @@
 /*
- * flexim/drivers/simulations.d
+ * flexim/sim/simulations.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.drivers.simulations;
+module flexim.sim.simulations;
 
 import flexim.all;
 
@@ -93,6 +93,12 @@ class Experiment: Reproducible {
 		this.simulations = simulations;
 	}
 	
+	void execute() {
+		this.beforeRun();
+		this.run();
+		this.afterRun();
+	}
+	
 	override void beforeRun() {		
 		foreach(simulation; this.simulations) {
 			simulation.beforeRun();
@@ -123,16 +129,16 @@ class Experiment: Reproducible {
 		ExperimentXMLSerializer.instance.saveXML(experiment, join(cwd, fileName));
 	}
 	
-	static Experiment createDefault(string title, string cwd, string binariesDir, string benchmarkSuiteName, string benchmarkName) {
+	static Experiment createDefault(string title, string cwd, string binariesDir, Benchmark benchmark, uint numCores, uint numThreads) {
 		Experiment experiment = new Experiment(title, cwd);
 		
 		Simulation simulation = new Simulation("testSim", "./");
 		experiment.simulations ~= simulation;
 		
-		CPUConfig cpuConfig = CPUConfig.createDefault(2, 1);
-		CacheConfig cacheConfig = CacheConfig.createDefault(2, 1);
+		CPUConfig cpuConfig = CPUConfig.createDefault(numCores, numThreads);
+		CacheConfig cacheConfig = CacheConfig.createDefault(numCores, numThreads);
 		
-		ContextConfig contextConfig = ContextConfig.createDefault(binariesDir, benchmarkSuiteName, benchmarkName, 2, 1);
+		ContextConfig contextConfig = ContextConfig.createDefault(binariesDir, benchmark, numCores, numThreads);
 		
 		simulation.cpuConfig = cpuConfig;
 		simulation.cacheConfig = cacheConfig;

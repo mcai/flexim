@@ -1,5 +1,5 @@
 /*
- * flexim/drivers/benchmarks.d
+ * flexim/sim/benchmarks.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.drivers.benchmarks;
+module flexim.sim.benchmarks;
 
 import flexim.all;
 
@@ -48,6 +48,11 @@ class Benchmark {
 		this.stdout = stdout;
 	}
 	
+	override string toString() {
+		return format("Benchmark[title=%s, cwd=%s, exe=%s, args=%s, stdin=%s, stdout=%s, tags.length=%d]",
+			this.title, this.cwd, this.exe, this.args, this.stdin, this.stdout, this.tags.length);
+	}
+	
 	string title;
 	string cwd;
 	string exe;
@@ -62,22 +67,22 @@ class BenchmarkSuite {
 		this() {
 			super(TITLE);
 
-			// Benchmark benchmarkMstOriginal = new Benchmark("mst original",
+			// Benchmark benchmarkMstOriginal = new Benchmark("mst_original",
 			// "mst/original", "mst", "400 1");
-			// Benchmark benchmarkMstPrepush = new Benchmark("mst prepush",
+			// Benchmark benchmarkMstPrepush = new Benchmark("mst_prepush",
 			// "mst/prepush", "mst", "400 1");
-//			 Benchmark benchmarkMstOriginal = new Benchmark("mst original",
+//			 Benchmark benchmarkMstOriginal = new Benchmark("mst_original",
 //			 "mst/original", "mst", "1024 1");
-//			 Benchmark benchmarkMstPrepush = new Benchmark("mst prepush",
+//			 Benchmark benchmarkMstPrepush = new Benchmark("mst_prepush",
 //			 "mst/prepush", "mst", "1024 1");
-			Benchmark benchmarkMstOriginal = new Benchmark("mst original",
+			Benchmark benchmarkMstOriginal = new Benchmark("mst_original",
 					"mst/original", "mst", "10 1");
-			Benchmark benchmarkMstPrepush = new Benchmark("mst prepush",
+			Benchmark benchmarkMstPrepush = new Benchmark("mst_prepush",
 					"mst/prepush", "mst", "10 1");
 
-			// Benchmark benchmarkEm3dOriginal = new Benchmark("em3d original",
+			// Benchmark benchmarkEm3dOriginal = new Benchmark("em3d_original",
 			// "em3d/original", "em3d", "2000 100 75 1");
-			// Benchmark benchmarkEm3dPrepush = new Benchmark("em3d prepush",
+			// Benchmark benchmarkEm3dPrepush = new Benchmark("em3d_prepush",
 			// "em3d/prepush", "em3d", "2000 100 75 1");
 					
 			this.register(benchmarkMstOriginal);
@@ -371,6 +376,10 @@ class BenchmarkSuite {
 	
 	Benchmark opIndex(string index) {
 		return this.benchmarks[index];
+	}
+	
+	override string toString() {
+		return format("BenchmarkSuite[title=%s, benchmarks.length=%d]", this.title, this.benchmarks.length);
 	}
 	
 	string title;

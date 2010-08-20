@@ -27,23 +27,34 @@ import std.file;
 import std.getopt;
 import std.path;
 
-void runExperiment(string title, string cwd) {		
-	Experiment experiment = Experiment.createDefault(title, cwd,
-		"/home/itecgo/Flexim2/benchmarks/Olden", BenchmarkSuite.OldenCustom1.TITLE, "mst original");
-	experiment.beforeRun();
-	experiment.run();
-	experiment.afterRun();
+void performAnalysis(string title, string cwd, string binariesDir, string benchmarkSuiteName, string benchmarkName, uint numCores, uint numThreads, AnalysisType analysisType) {
+	Benchmark benchmark = BenchmarkSuite.presets[benchmarkSuiteName][benchmarkName];
+	performAnalysis(title, cwd, binariesDir, benchmark, numCores, numThreads, analysisType);
+}
+
+void performAnalysis(string title, string cwd, string binariesDir, Benchmark benchmark, uint numCores, uint numThreads, AnalysisType analysisType) {
+	logging.infof(LogCategory.SIMULATOR, "peformAnalysis(title=%s, cwd=%s, binariesDir=%s, benchmark=%s, numCores=%d, numThreads=%d, analysisType=%s)",
+		title, cwd, binariesDir, benchmark, numCores, numThreads, analysisType);
+	Experiment experiment = Experiment.createDefault(title, cwd, binariesDir, benchmark, numCores, numThreads);
+	experiment.execute();
 }
 
 void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
-	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.\n");
+	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.");
+	logging.info(LogCategory.SIMULATOR, "");
 
-	string title = "testExp", cwd = "./";
+	string title = "testExp";
+	string cwd = "./";
+	string binariesDir = "/home/itecgo/Flexim2/benchmarks/Olden";
+	string benchmarkSuiteName = BenchmarkSuite.OldenCustom1.TITLE;
+	string benchmarkName = "mst_original";
+	uint numCores = 1;
+	uint numThreads = 2;
 	
-	getopt(args,
-		"title", &title,
-		"cwd", &cwd);
+	getopt(args, "title", &title, "cwd", &cwd, "binariesDir", &binariesDir,
+		"benchmarkSuiteName", &benchmarkSuiteName, "benchmarkName", &benchmarkName,
+		"numCores", &numCores, "numThreads", &numThreads);
 	
-	runExperiment(title, cwd);
+	performAnalysis(title, cwd, binariesDir, benchmarkSuiteName, benchmarkName, numCores, numThreads, AnalysisType.GENERAL);
 }
