@@ -32,7 +32,7 @@ src/flexim/sim/analysis.d
 src/flexim/sim/benchmarks.d
 src/flexim/sim/configs.d
 src/flexim/sim/simulations.d
-src/flexim/simulator.d
+src/flexim/sim/simulator.d
 src/flexim/util/arithmetic.d
 src/flexim/util/elf.d
 src/flexim/util/events.d
