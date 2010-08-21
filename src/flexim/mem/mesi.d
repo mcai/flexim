@@ -427,8 +427,6 @@ class MESIMemory: MESICache {
 	}
 }
 
-ulong mesi_stack_id = 0;
-
 class MESIStack {
 	this(ulong id, MESICache ccache, uint addr, Invokable callback) {
 		this.id = id;

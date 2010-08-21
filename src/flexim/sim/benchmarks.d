@@ -60,12 +60,88 @@ class Benchmark {
 	string stdin;
 	string stdout;
 	string[] tags;
+	
+	BenchmarkSuite suite;
 }
 
-class BenchmarkSuite {	
+class BenchmarkSuite {
+	static class WCETBench: BenchmarkSuite {
+		this() {
+			super(TITLE, "Microbenchmarks/external/wcet_bench");
+			
+			Benchmark benchmark_adpcm = new Benchmark("adpcm", "./", "adpcm", "");
+			Benchmark benchmark_bs = new Benchmark("bs", "./", "bs", "");
+			Benchmark benchmark_bsort100 = new Benchmark("bsort100", "./", "bsort100", "");
+			Benchmark benchmark_cnt = new Benchmark("cnt", "./", "cnt", "");
+			Benchmark benchmark_compress = new Benchmark("compress", "./", "compress", "");
+			Benchmark benchmark_cover = new Benchmark("cover", "./", "cover", "");
+			Benchmark benchmark_crc = new Benchmark("crc", "./", "crc", "");
+			Benchmark benchmark_duff = new Benchmark("duff", "./", "duff", "");
+			Benchmark benchmark_edn = new Benchmark("edn", "./", "edn", "");
+			Benchmark benchmark_expint = new Benchmark("expint", "./", "expint", "");
+			Benchmark benchmark_fac = new Benchmark("fac", "./", "fac", "");
+			Benchmark benchmark_fdct = new Benchmark("fdct", "./", "fdct", "");
+			Benchmark benchmark_fft1 = new Benchmark("fft1", "./", "fft1", "");
+			Benchmark benchmark_fibcall = new Benchmark("fibcall", "./", "fibcall", "");
+			Benchmark benchmark_fir = new Benchmark("fir", "./", "fir", "");
+			Benchmark benchmark_insertsort = new Benchmark("insertsort", "./", "insertsort", "");
+			Benchmark benchmark_janne_complex = new Benchmark("janne_complex", "./", "janne_complex", "");
+			Benchmark benchmark_jfdctint = new Benchmark("jfdctint", "./", "jfdctint", "");
+			Benchmark benchmark_lcdnum = new Benchmark("lcdnum", "./", "lcdnum", "");
+			Benchmark benchmark_lms = new Benchmark("lms", "./", "lms", "");
+			Benchmark benchmark_loop3 = new Benchmark("loop3", "./", "loop3", "");
+			Benchmark benchmark_ludcmp = new Benchmark("ludcmp", "./", "ludcmp", "");
+			Benchmark benchmark_matmult = new Benchmark("matmult", "./", "matmult", "");
+			Benchmark benchmark_minmax = new Benchmark("minmax", "./", "minmax", "");
+			Benchmark benchmark_minver = new Benchmark("minver", "./", "minver", "");
+			Benchmark benchmark_ns = new Benchmark("ns", "./", "ns", "");
+			Benchmark benchmark_nsichneu = new Benchmark("nsichneu", "./", "nsichneu", "");
+			Benchmark benchmark_qsort_exam = new Benchmark("qsort-exam", "./", "qsort-exam", "");
+			Benchmark benchmark_qurt = new Benchmark("qurt", "./", "qurt", "");
+			Benchmark benchmark_select = new Benchmark("select", "./", "select", "");
+			Benchmark benchmark_sqrt = new Benchmark("sqrt", "./", "sqrt", "");
+			Benchmark benchmark_statemate = new Benchmark("statemate", "./", "statemate", "");
+			
+			this.register(benchmark_adpcm);
+			this.register(benchmark_bs);
+			this.register(benchmark_bsort100);
+			this.register(benchmark_cnt);
+			this.register(benchmark_compress);
+			this.register(benchmark_cover);
+			this.register(benchmark_crc);
+			this.register(benchmark_duff);
+			this.register(benchmark_edn);
+			this.register(benchmark_expint);
+			this.register(benchmark_fac);
+			this.register(benchmark_fdct);
+			this.register(benchmark_fft1);
+			this.register(benchmark_fibcall);
+			this.register(benchmark_fir);
+			this.register(benchmark_insertsort);
+			this.register(benchmark_janne_complex);
+			this.register(benchmark_jfdctint);
+			this.register(benchmark_lcdnum);
+			this.register(benchmark_lms);
+			this.register(benchmark_loop3);
+			this.register(benchmark_ludcmp);
+			this.register(benchmark_matmult);
+			this.register(benchmark_minmax);
+			this.register(benchmark_minver);
+			this.register(benchmark_ns);
+			this.register(benchmark_nsichneu);
+			this.register(benchmark_qsort_exam);
+			this.register(benchmark_qurt);
+			this.register(benchmark_select);
+			this.register(benchmark_sqrt);
+			this.register(benchmark_statemate);
+		}
+		
+		static const string TITLE = "WCETBench";
+	}
+	
 	static class OldenCustom1 : BenchmarkSuite {
 		this() {
-			super(TITLE);
+			super(TITLE, "Olden");
 
 			// Benchmark benchmarkMstOriginal = new Benchmark("mst_original",
 			// "mst/original", "mst", "400 1");
@@ -77,18 +153,20 @@ class BenchmarkSuite {
 //			 "mst/prepush", "mst", "1024 1");
 			Benchmark benchmarkMstOriginal = new Benchmark("mst_original",
 					"mst/original", "mst", "10 1");
-			Benchmark benchmarkMstPrepush = new Benchmark("mst_prepush",
-					"mst/prepush", "mst", "10 1");
+			//Benchmark benchmarkMstPrepush = new Benchmark("mst_prepush",
+			//		"mst/prepush", "mst", "10 1");
 
-			// Benchmark benchmarkEm3dOriginal = new Benchmark("em3d_original",
-			// "em3d/original", "em3d", "2000 100 75 1");
+			//Benchmark benchmarkEm3dOriginal = new Benchmark("em3d_original",
+			//"em3d/original", "em3d", "2000 100 75 1");
+			Benchmark benchmarkEm3dOriginal = new Benchmark("em3d_original",
+			"em3d/original", "em3d", "200 100 75 1");
 			// Benchmark benchmarkEm3dPrepush = new Benchmark("em3d_prepush",
 			// "em3d/prepush", "em3d", "2000 100 75 1");
 					
-			this.register(benchmarkMstOriginal);
-			this.register(benchmarkMstPrepush);
+			//this.register(benchmarkMstOriginal);
+			//this.register(benchmarkMstPrepush);
 
-			// this.register(benchmarkEm3dOriginal);
+			 this.register(benchmarkEm3dOriginal);
 			// this.register(benchmarkEm3dPrepush);
 		}
 		
@@ -97,7 +175,7 @@ class BenchmarkSuite {
 	
 	static class CPU2006: BenchmarkSuite {
 		this() {
-			super(TITLE);
+			super(TITLE, "CPU2006");
 
 			Benchmark benchmark400 = new Benchmark("400.perlbench",
 					"400.perlbench", "perlbench_base.i386",
@@ -214,7 +292,7 @@ class BenchmarkSuite {
 	
 	static class MediaBench: BenchmarkSuite {
 		this() {
-			super(TITLE);
+			super(TITLE, "MediaBench");
 
 			Benchmark benchmarkAdpcmDec = new Benchmark("adpcm-dec",
 					"adpcm-dec", "rawdaudio", "", "clinton.adpcm", "out.pcm");
@@ -277,7 +355,7 @@ class BenchmarkSuite {
 	
 	static class Splash2: BenchmarkSuite {
 		this(int threads) {
-			super(TITLE);
+			super(TITLE, "Splash2");
 
 			Benchmark benchmarkFft = new Benchmark("fft", "fft", "fft.i386",
 					"-m18 -p" ~ to!(string)(threads) ~ " -n65536 -l4", "");
@@ -325,7 +403,7 @@ class BenchmarkSuite {
 	
 	static class PARSEC: BenchmarkSuite {
 		this(int threads) {
-			super(TITLE);
+			super(TITLE, "PARSEC");
 
 			Benchmark benchmarkBodytrack = new Benchmark("bodytrack",
 					"bodytrack", "bodytrack", "sequenceB_2 4 2 2000 5 0 "
@@ -358,6 +436,7 @@ class BenchmarkSuite {
 	}
 	
 	static this() {
+		presets[WCETBench.TITLE] = new WCETBench();
 		presets[OldenCustom1.TITLE] = new OldenCustom1();
 		presets[CPU2006.TITLE] = new CPU2006();
 		presets[MediaBench.TITLE] = new MediaBench();
@@ -365,12 +444,14 @@ class BenchmarkSuite {
 		presets[PARSEC.TITLE] = new PARSEC(2);
 	}
 	
-	this(string title) {
+	this(string title, string cwd) {
 		this.title = title;
+		this.cwd = cwd;
 	}
 	
 	void register(Benchmark benchmark) {
 		assert(!(benchmark.title in this.benchmarks));
+		benchmark.suite = this;
 		this.benchmarks[benchmark.title] = benchmark;
 	}
 	
@@ -379,10 +460,11 @@ class BenchmarkSuite {
 	}
 	
 	override string toString() {
-		return format("BenchmarkSuite[title=%s, benchmarks.length=%d]", this.title, this.benchmarks.length);
+		return format("BenchmarkSuite[title=%s, cwd=%s, benchmarks.length=%d]", this.title, this.cwd, this.benchmarks.length);
 	}
 	
 	string title;
+	string cwd;
 	Benchmark[string] benchmarks;
 	
 	static BenchmarkSuite[string] presets;

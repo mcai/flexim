@@ -31,8 +31,8 @@ enum FetchStatus: string {
 }
 
 class OoOThread: Thread {
-	this(string name, Process process) {
-		super(name, process);
+	this(uint num, string name, Process process) {
+		super(num, name, process);
 
 		this.fetchWidth = 4;
 		this.decodeWidth = 4;

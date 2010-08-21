@@ -26,7 +26,7 @@ import flexim.all;
 const uint STORE_ADDR_INDEX = 0;
 const uint STORE_OP_INDEX = 1;
 
-ulong inst_seq = 0;
+ulong currentInstructionSequenceID = 0;
 
 class Link(LinkT, EntryT) {
 	this(string name, EntryT entry) {
@@ -71,7 +71,7 @@ class RUUStation {
 		this.eaComp = false;
 		this.ea = 0;
 
-		this.seq = ++inst_seq;
+		this.seq = ++currentInstructionSequenceID;
 
 		this.status = RUUStationStatus.FETCHED;
 	}

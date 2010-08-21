@@ -46,15 +46,20 @@ void main(string[] args) {
 
 	string title = "testExp";
 	string cwd = "./";
-	string binariesDir = "/home/itecgo/Flexim2/benchmarks/Olden";
+	
+	string binariesDir = "../tests/benchmarks";
+	
 	string benchmarkSuiteName = BenchmarkSuite.OldenCustom1.TITLE;
-	string benchmarkName = "mst_original";
+	
 	uint numCores = 1;
 	uint numThreads = 2;
 	
-	getopt(args, "title", &title, "cwd", &cwd, "binariesDir", &binariesDir,
-		"benchmarkSuiteName", &benchmarkSuiteName, "benchmarkName", &benchmarkName,
+	getopt(args, "title", &title, "cwd", &cwd, "binariesDir", &binariesDir, "benchmarkSuiteName", &benchmarkSuiteName,
 		"numCores", &numCores, "numThreads", &numThreads);
 	
-	performAnalysis(title, cwd, binariesDir, benchmarkSuiteName, benchmarkName, numCores, numThreads, AnalysisType.GENERAL);
+	BenchmarkSuite benchmarkSuite = BenchmarkSuite.presets[benchmarkSuiteName];
+	
+	foreach(benchmarkName, benchmark; benchmarkSuite.benchmarks) {
+		performAnalysis(title, cwd, binariesDir, benchmark, numCores, numThreads, AnalysisType.GENERAL);
+	}
 }

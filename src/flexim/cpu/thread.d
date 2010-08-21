@@ -23,8 +23,6 @@ module flexim.cpu.thread;
 
 import flexim.all;
 
-uint current_thread_id = 0;
-
 enum ThreadStatus {
 	Active,
 	Suspended,
@@ -32,8 +30,8 @@ enum ThreadStatus {
 }
 
 class Thread {
-	this(string name, Process process) {
-		this.id = current_thread_id++;
+	this(uint num, string name, Process process) {
+		this.num = num;
 		
 		this.name = name;
 		this.process = process;
@@ -120,22 +118,22 @@ class Thread {
 		}
 	}
 	
-	uint id;
+	uint num;
 
 	Sequencer!(CPURequest, MESICache) seqI() {
-		return this.core.processor.simulator.memorySystem.seqIs[this.id];
+		return this.core.processor.simulator.memorySystem.seqIs[this.num];
 	}
 	
 	MESICache l1I() {
-		return this.core.processor.simulator.memorySystem.l1Is[this.id];
+		return this.core.processor.simulator.memorySystem.l1Is[this.num];
 	}
 
 	Sequencer!(CPURequest, MESICache) seqD() {
-		return this.core.processor.simulator.memorySystem.seqDs[this.id];
+		return this.core.processor.simulator.memorySystem.seqDs[this.num];
 	}
 	
 	MESICache l1D() {
-		return this.core.processor.simulator.memorySystem.l1Ds[this.id];
+		return this.core.processor.simulator.memorySystem.l1Ds[this.num];
 	}
 
 	string name;

@@ -476,8 +476,6 @@ class DynamicInst {
 			return disassemble(this.staticInst.machInst, this.pc, this.thread);
 		}
 		
-		static uint[string] icounts;
-		
 		Addr pc;
 		
 		StaticInst staticInst;

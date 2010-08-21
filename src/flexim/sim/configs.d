@@ -222,7 +222,7 @@ class Context {
 	}
 	
 	this(uint num, string binariesDir, Benchmark benchmark, string env) {
-		this(num, benchmark.exe, benchmark.args, join(binariesDir, benchmark.cwd), benchmark.stdin, benchmark.stdout, env);
+		this(num, benchmark.exe, benchmark.args, join(binariesDir, benchmark.suite.cwd, benchmark.cwd), benchmark.stdin, benchmark.stdout, env);
 	}
 	
 	this(uint num, string exe, string args) {
