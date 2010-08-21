@@ -340,45 +340,17 @@ class OoOThread: Thread {
 	}
 
 	override void run() {
-		this.dump();
-	
 		this.commit();
-	
-		this.dump();
 	
 		this.writeback();
 	
-		this.dump();
-	
 		this.refreshLsq();
-	
-		this.dump();
 	
 		this.issue();
 	
-		this.dump();
-	
 		this.dispatch();
 	
-		this.dump();
-	
 		this.fetch();
-	}
-	
-	void dump() {
-		//		writefln("[%d] %s.size: %d, %s.size: %d, %s.size: %d, %s.size: %d, %s.size: %d", Simulator.singleInstance.currentCycle, 
-		//				this.fetchq.name, this.fetchq.size, 
-		//				this.readyq.name, this.readyq.size,
-		//				this.ruu.name, this.ruu.size,
-		//				this.lsq.name, this.lsq.size, 
-		//				this.eventq.name, this.eventq.size);
-		//		if(this.lsq.full) {
-		//			writeln(this.fetchq);
-		//			writeln(this.readyq);
-		//			writeln(this.ruu);
-		//			writeln(this.lsq);
-		//			writeln(this.eventq);
-		//		}
 	}
 	
 	void setFetchNpcFromNpc() {

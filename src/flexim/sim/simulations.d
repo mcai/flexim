@@ -45,7 +45,7 @@ class Simulation: Reproducible {
 		assert(this.cpuConfig !is null && this.cacheConfig !is null && this.contextConfig !is null);
 	}
 	
-	override void run() {		
+	override void run() {
 		Simulator simulator = new CPUSimulator(this);
 		simulator.run();
 	}
@@ -122,11 +122,11 @@ class Experiment: Reproducible {
 	}
 	
 	static Experiment loadXML(string cwd, string fileName = EXPERIMENT_CONFIG_XML) {
-		return ExperimentXMLSerializer.instance.loadXML(join(cwd, fileName));
+		return ExperimentXMLSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
 	static void saveXML(Experiment experiment, string cwd, string fileName = EXPERIMENT_CONFIG_XML) {
-		ExperimentXMLSerializer.instance.saveXML(experiment, join(cwd, fileName));
+		ExperimentXMLSerializer.singleInstance.saveXML(experiment, join(cwd, fileName));
 	}
 	
 	static Experiment createDefault(string title, string cwd, string binariesDir, Benchmark benchmark, uint numCores, uint numThreads) {
@@ -191,8 +191,8 @@ class ExperimentXMLSerializer: XMLSerializer!(Experiment) {
 	}
 	
 	static this() {
-		instance = new ExperimentXMLSerializer();
+		singleInstance = new ExperimentXMLSerializer();
 	}
 	
-	static ExperimentXMLSerializer instance;
+	static ExperimentXMLSerializer singleInstance;
 }

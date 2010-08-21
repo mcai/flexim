@@ -320,7 +320,7 @@ enum FUType: uint {
 const uint MAX_IDEPS = 3;
 const uint MAX_ODEPS = 2;
 
-abstract class ISA {	
+abstract class ISA {
 	StaticInst decode(Addr pc, Memory mem) {
 		if(pc in this.decodedInsts) {
 			return this.decodedInsts[pc];

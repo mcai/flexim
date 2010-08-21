@@ -71,7 +71,6 @@ class Cfc1: CP1Control {
 }
 
 class Mtc1: CP1Control {
-
 	public:
 		this(MachInst machInst) {
 			super("mtc1", machInst, StaticInstFlag.NONE, FUType.NONE);

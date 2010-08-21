@@ -1,5 +1,5 @@
 /*
- * flexim/sim/simulator.d
+ * flexim/simulator.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.sim.simulator;
+module flexim.simulator;
 
 import flexim.all;
 
@@ -106,7 +106,7 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 		//this.simulator.dumpStats();
 		exit(-1);
 	}
-
+	
 	Simulator simulator;
 	bool halted;
 }

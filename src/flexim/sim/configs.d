@@ -48,11 +48,11 @@ class CPUConfig: Config!(CPUConfig) {
 	}
 	
 	static CPUConfig loadXML(string cwd, string fileName = CPU_CONFIG_XML) {
-		return CPUConfigXMLSerializer.instance.loadXML(join(cwd, fileName));
+		return CPUConfigXMLSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
 	static void saveXML(CPUConfig cpuConfig, string cwd, string fileName = CPU_CONFIG_XML) {
-		CPUConfigXMLSerializer.instance.saveXML(cpuConfig, join(cwd, fileName));
+		CPUConfigXMLSerializer.singleInstance.saveXML(cpuConfig, join(cwd, fileName));
 	}
 	
 	static CPUConfig createDefault(uint numCores, uint numThreads) {
@@ -94,10 +94,10 @@ class CPUConfigXMLSerializer: XMLSerializer!(CPUConfig) {
 	}
 	
 	static this() {
-		instance = new CPUConfigXMLSerializer();
+		singleInstance = new CPUConfigXMLSerializer();
 	}
 	
-	static CPUConfigXMLSerializer instance;
+	static CPUConfigXMLSerializer singleInstance;
 }
 
 enum CacheReplacementPolicy: string {
@@ -140,11 +140,11 @@ class CacheConfig: Config!(CacheConfig) {
 	}
 	
 	static CacheConfig loadXML(string cwd, string fileName = CACHE_CONFIG_XML) {
-		return CacheConfigXMLSerializer.instance.loadXML(join(cwd, fileName));
+		return CacheConfigXMLSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
 	static void saveXML(CacheConfig cacheConfig, string cwd, string fileName = CACHE_CONFIG_XML) {
-		CacheConfigXMLSerializer.instance.saveXML(cacheConfig, join(cwd, fileName));
+		CacheConfigXMLSerializer.singleInstance.saveXML(cacheConfig, join(cwd, fileName));
 	}
 	
 	static CacheConfig createDefault(uint numCores, uint numThreads) {
@@ -210,10 +210,10 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	}
 	
 	static this() {
-		instance = new CacheConfigXMLSerializer();
+		singleInstance = new CacheConfigXMLSerializer();
 	}
 	
-	static CacheConfigXMLSerializer instance;
+	static CacheConfigXMLSerializer singleInstance;
 }
 
 class Context {
@@ -262,11 +262,11 @@ class ContextConfig: Config!(ContextConfig) {
 	}
 	
 	static ContextConfig loadXML(string cwd, string fileName = CONTEXT_CONFIG_XML) {
-		return ContextConfigXMLSerializer.instance.loadXML(join(cwd, fileName));
+		return ContextConfigXMLSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
 	static void saveXML(ContextConfig contextConfig, string cwd, string fileName = CONTEXT_CONFIG_XML) {
-		ContextConfigXMLSerializer.instance.saveXML(contextConfig, join(cwd, fileName));
+		ContextConfigXMLSerializer.singleInstance.saveXML(contextConfig, join(cwd, fileName));
 	}
 	
 	static ContextConfig createDefault(string binariesDir, Benchmark benchmark, uint numCores, uint numThreads) {
@@ -326,8 +326,8 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	}
 	
 	static this() {
-		instance = new ContextConfigXMLSerializer();
+		singleInstance = new ContextConfigXMLSerializer();
 	}
 	
-	static ContextConfigXMLSerializer instance;
+	static ContextConfigXMLSerializer singleInstance;
 }

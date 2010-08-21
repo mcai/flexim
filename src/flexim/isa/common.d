@@ -23,87 +23,6 @@ module flexim.isa.common;
 
 import flexim.all;
 
-abstract class FieldDecoder {
-	this(Decoder decoder, BitField field) {
-		this.decoder = decoder;
-		this.field = field;
-	}
-	
-	bool decodeNext() {
-		this.decoder.fieldValues[this.field] = this.decoder.machInst[this.field];		
-		return this._decodeNext();
-	}
-	
-	abstract bool _decodeNext();
-	
-	Decoder decoder;
-	
-	BitField field;
-	BitField nextField;
-	
-	StaticInst leaf;
-}
-
-class OPCODE_HI_FieldDecoder : FieldDecoder {
-	this(Decoder decoder) {
-		super(decoder, OPCODE_HI);
-	}
-	
-	override bool _decodeNext() {
-		switch(this.decoder.machInst[this.field]) {
-			case 0x0:
-			case 0x1:
-			case 0x2:
-			case 0x3:
-			case 0x4:
-			case 0x5:
-			case 0x6:
-			case 0x7:
-				this.nextField = OPCODE_LO;
-				return false;
-			default:
-				assert(0);
-		}
-	}
-}
-
-class OPCODE_LO_FieldDecoder : FieldDecoder {
-	this(Decoder decoder) {
-		super(decoder, OPCODE_LO);
-	}
-	
-	override bool _decodeNext() {
-		switch(this.decoder.machInst[this.field]) {
-			case 0x0:
-			case 0x1:
-			case 0x2:
-			case 0x3:
-			case 0x4:
-			case 0x5:
-			case 0x6:
-			case 0x7:
-				this.nextField = OPCODE_LO;
-				return false;
-			default:
-				assert(0);
-		}
-	}
-}
-
-class Decoder {
-	this(MachInst machInst) {
-		this.machInst = machInst;
-	}
-	
-	StaticInst decode() {
-		return null;
-	}
-	
-	MachInst machInst;
-	uint[BitField] fieldValues;
-	FieldDecoder[BitField] fieldDecoders;
-}
-
 class MipsISA : ISA {
 	this() {
 		
@@ -1226,9 +1145,8 @@ class MipsISA : ISA {
 						switch(machInst[FUNC_HI]) {
 							case 0x0:
 								switch(machInst[FUNC_LO]) {
-									case 0x2: {
+									case 0x2:
 										return new FailUnimplemented("Mul", machInst);
-									}
 									case 0x0:
 										return new FailUnimplemented("Madd", machInst);
 									case 0x1:
@@ -1489,9 +1407,8 @@ class MipsISA : ISA {
 												}
 											case 0x3:
 												switch(machInst[OP_LO]) {
-													case 0x3: {
+													case 0x3:
 														return new FailUnimplemented("Bitrev", machInst);
-													}
 													case 0x4:
 														return new FailUnimplemented("Preceu_ph_qbl", machInst);
 													case 0x5:
@@ -1861,12 +1778,10 @@ class MipsISA : ISA {
 				}
 			case 0x6:
 				switch(machInst[OPCODE_LO]) {
-					case 0x0: {
+					case 0x0:
 						return new Ll(machInst);
-					}
-					case 0x1: {
+					case 0x1:
 						return new Lwc1(machInst);
-					}
 					case 0x5:
 						return new Ldc1(machInst);
 					case 0x2:

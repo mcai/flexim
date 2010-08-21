@@ -526,19 +526,19 @@ class ELF32Binary {
 			return "";
 		}
 		
-		static string[] sectionTypes = ["SHT_NULL", "SHT_PROGBITS", "SHT_SYMTAB", "SHT_STRTAB", "SHT_RELA", "SHT_HASH", "SHT_DYNAMIC", "SHT_NOTE", "SHT_NOBITS", "SHT_REL", "SHT_SHLIB", "SHT_DYNSYM"];
+		static const string[] sectionTypes = ["SHT_NULL", "SHT_PROGBITS", "SHT_SYMTAB", "SHT_STRTAB", "SHT_RELA", "SHT_HASH", "SHT_DYNAMIC", "SHT_NOTE", "SHT_NOBITS", "SHT_REL", "SHT_SHLIB", "SHT_DYNSYM"];
 
-		static string[] segmentTypes = ["PT_NULL", "PT_LOAD", "PT_DYNAMIC", "PT_INTERP", "PT_NOTE", "PT_SHLIB", "PT_PHDR"];
+		static const string[] segmentTypes = ["PT_NULL", "PT_LOAD", "PT_DYNAMIC", "PT_INTERP", "PT_NOTE", "PT_SHLIB", "PT_PHDR"];
 
-		static string[] objectTypes = ["ET_NONE", "ET_REL (Relocatable)", "ET_EXEC (Executable)", "ET_DYN (Dynamic)", "ET_CORE"];
+		static const string[] objectTypes = ["ET_NONE", "ET_REL (Relocatable)", "ET_EXEC (Executable)", "ET_DYN (Dynamic)", "ET_CORE"];
 
-		static string[] classStrings = ["ELFCLASSNONE", "ELFCLASS32", "ELFCLASS64"];
+		static const string[] classStrings = ["ELFCLASSNONE", "ELFCLASS32", "ELFCLASS64"];
 
-		static string[] dataStrings = ["ELFDATANONE (Invalid)", "2's complement, little endian", "ELFDATA2MSB"];
+		static const string[] dataStrings = ["ELFDATANONE (Invalid)", "2's complement, little endian", "ELFDATA2MSB"];
 
-		static string[] versionStrings = ["0", "1 (current)"];
+		static const string[] versionStrings = ["0", "1 (current)"];
 
-		static string[] machineStrings = ["EM_NONE", "EM_M32", "EM_SPARC", "EM_386 (Intel 80386)", "EM_68K", "EM_88K", "EM_486", "EM_860", "EM_MIPS"];
+		static const string[] machineStrings = ["EM_NONE", "EM_M32", "EM_SPARC", "EM_386 (Intel 80386)", "EM_68K", "EM_88K", "EM_486", "EM_860", "EM_MIPS"];
 		
 		char* shstr;
 
