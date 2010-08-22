@@ -27,8 +27,8 @@ import std.file;
 import std.getopt;
 import std.path;
 
-void performAnalysis(string title, string cwd, string binariesDir, string benchmarkSuiteName, string benchmarkName, uint numCores, uint numThreads, AnalysisType analysisType) {
-	Benchmark benchmark = BenchmarkSuite.presets[benchmarkSuiteName][benchmarkName];
+void performAnalysis(string title, string cwd, string binariesDir, string benchmarkSuiteName, string benchmarkTitle, uint numCores, uint numThreads, AnalysisType analysisType) {
+	Benchmark benchmark = BenchmarkSuite.presets[benchmarkSuiteName][benchmarkTitle];
 	performAnalysis(title, cwd, binariesDir, benchmark, numCores, numThreads, analysisType);
 }
 
@@ -56,10 +56,14 @@ void main(string[] args) {
 	
 	getopt(args, "title", &title, "cwd", &cwd, "binariesDir", &binariesDir, "benchmarkSuiteName", &benchmarkSuiteName,
 		"numCores", &numCores, "numThreads", &numThreads);
+		
+	foreach(benchmarkSuiteName, benchmarkSuite; BenchmarkSuite.presets) {
+		BenchmarkSuite.saveXML(benchmarkSuite, "../configs/benchmarks", benchmarkSuite.title ~ ".xml");
+	}
 	
 	BenchmarkSuite benchmarkSuite = BenchmarkSuite.presets[benchmarkSuiteName];
 	
-	foreach(benchmarkName, benchmark; benchmarkSuite.benchmarks) {
+	foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
 		performAnalysis(title, cwd, binariesDir, benchmark, numCores, numThreads, AnalysisType.GENERAL);
 	}
 }

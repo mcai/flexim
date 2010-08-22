@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<BenchmarkSuite title="Splash2" cwd="Splash2">
+   <Benchmark title="fft" cwd="fft" stdin="" args="-m18 -p2 -n65536 -l4" exe="fft.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="radix" cwd="radix" stdin="" args="-p2 -r4096 -n262144 -m524288" exe="radix.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="lu" cwd="lu" stdin="" args="-p2 -n2048 -b16" exe="lu.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="barnes" cwd="barnes" stdin="input" args="2" exe="barnes.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="ocean" cwd="ocean" stdin="" args="-n258 -p2 -e1e-07 -r20000 -t28800" exe="ocean.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="water-spatial" cwd="water-spatial" stdin="input" args="2" exe="water-spatial.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="fmm" cwd="fmm" stdin="input" args="2" exe="fmm.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="cholesky" cwd="cholesky" stdin="tk14.O" args="-p2" exe="cholesky.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="radiosity" cwd="radiosity" stdin="" args="-batch -room -p2" exe="radiosity.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="water-nsquared" cwd="water-nsquared" stdin="input" args="2" exe="water-nsquared.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="raytrace" cwd="raytrace" stdin="" args="-p2 balls4.env" exe="raytrace.i386" stdout="">
+   </Benchmark>
+</BenchmarkSuite>

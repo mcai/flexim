@@ -24,7 +24,6 @@ module flexim.sim.configs;
 import flexim.all;
 
 import std.path;
-import std.process;
 
 const string CPU_CONFIG_XML = "cpu_config.xml";
 const string CACHE_CONFIG_XML = "cache_config.xml";

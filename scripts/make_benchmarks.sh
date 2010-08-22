@@ -1,4 +1,4 @@
-ROOT_DIR=`pwd`
+ROOT_DIR=`pwd`/../tests/benchmarks
 
 action=-B
 #action=clean

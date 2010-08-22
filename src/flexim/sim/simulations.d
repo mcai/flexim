@@ -23,9 +23,7 @@ module flexim.sim.simulations;
 
 import flexim.all;
 
-import std.file;
 import std.path;
-import std.process;
 
 const string EXPERIMENT_CONFIG_XML =  "experiment_config.xml";
 

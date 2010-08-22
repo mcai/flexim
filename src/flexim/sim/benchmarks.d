@@ -23,6 +23,8 @@ module flexim.sim.benchmarks;
 
 import flexim.all;
 
+import std.path;
+
 class Benchmark {
 	this(string title, string cwd, string exe, string args) {
 		this.title = title;
@@ -49,8 +51,8 @@ class Benchmark {
 	}
 	
 	override string toString() {
-		return format("Benchmark[title=%s, cwd=%s, exe=%s, args=%s, stdin=%s, stdout=%s, tags.length=%d]",
-			this.title, this.cwd, this.exe, this.args, this.stdin, this.stdout, this.tags.length);
+		return format("Benchmark[title=%s, cwd=%s, exe=%s, args=%s, stdin=%s, stdout=%s]",
+			this.title, this.cwd, this.exe, this.args, this.stdin, this.stdout);
 	}
 	
 	string title;
@@ -59,9 +61,61 @@ class Benchmark {
 	string args;
 	string stdin;
 	string stdout;
-	string[] tags;
 	
 	BenchmarkSuite suite;
+}
+
+class BenchmarkSuiteXMLSerializer: XMLSerializer!(BenchmarkSuite) {
+	this() {
+	}
+	
+	override XMLConfigFile save(BenchmarkSuite benchmarkSuite) {
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("BenchmarkSuite");
+		
+		xmlConfigFile.attributes["title"] = benchmarkSuite.title;
+		xmlConfigFile.attributes["cwd"] = benchmarkSuite.cwd;
+		
+		foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
+			XMLConfig xmlConfig = new XMLConfig("Benchmark");
+			xmlConfig.attributes["title"] = benchmark.title;
+			xmlConfig.attributes["cwd"] = benchmark.cwd;
+			xmlConfig.attributes["exe"] = benchmark.exe;
+			xmlConfig.attributes["args"] = benchmark.args;
+			xmlConfig.attributes["stdin"] = benchmark.stdin;
+			xmlConfig.attributes["stdout"] = benchmark.stdout;
+			
+			xmlConfigFile.entries ~= xmlConfig;
+		}
+			
+		return xmlConfigFile;
+	}
+	
+	override BenchmarkSuite load(XMLConfigFile xmlConfigFile) {
+		string bs_title = xmlConfigFile.attributes["title"];
+		string bs_cwd = xmlConfigFile.attributes["cwd"];
+		
+		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(bs_title, bs_cwd);
+		
+		foreach(entry; xmlConfigFile.entries) {
+			string title = entry.attributes["title"];
+			string cwd = entry.attributes["cwd"];
+			string exe = entry.attributes["exe"];
+			string args = entry.attributes["args"];
+			string stdin = entry.attributes["stdin"];
+			string stdout = entry.attributes["stdout"];
+			
+			Benchmark benchmark = new Benchmark(title, cwd, exe, args, stdin, stdout);
+			benchmarkSuite.benchmarks[benchmark.title] = benchmark;
+		}
+		
+		return benchmarkSuite;
+	}
+	
+	static this() {
+		singleInstance = new BenchmarkSuiteXMLSerializer();
+	}
+	
+	static BenchmarkSuiteXMLSerializer singleInstance;
 }
 
 class BenchmarkSuite {
@@ -171,6 +225,19 @@ class BenchmarkSuite {
 		}
 		
 		static const string TITLE = "Olden_Custom1";
+	}
+	
+	static class CPU2006Custom1: BenchmarkSuite {
+		this() {
+			super(TITLE, "CPU2006");
+			
+			Benchmark benchmark462Original = new Benchmark("462.libquantum_original",
+					"462.libquantum/original", "462.libquantum", "15 8", "");
+			
+			this.register(benchmark462Original);
+		}
+		
+		static const string TITLE = "CPU2006_Custom1";
 	}
 	
 	static class CPU2006: BenchmarkSuite {
@@ -438,6 +505,7 @@ class BenchmarkSuite {
 	static this() {
 		presets[WCETBench.TITLE] = new WCETBench();
 		presets[OldenCustom1.TITLE] = new OldenCustom1();
+		presets[CPU2006Custom1.TITLE] = new CPU2006Custom1();
 		presets[CPU2006.TITLE] = new CPU2006();
 		presets[MediaBench.TITLE] = new MediaBench();
 		presets[Splash2.TITLE] = new Splash2(2);
@@ -461,6 +529,14 @@ class BenchmarkSuite {
 	
 	override string toString() {
 		return format("BenchmarkSuite[title=%s, cwd=%s, benchmarks.length=%d]", this.title, this.cwd, this.benchmarks.length);
+	}
+	
+	static BenchmarkSuite loadXML(string cwd, string fileName) {
+		return BenchmarkSuiteXMLSerializer.singleInstance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(BenchmarkSuite benchmarkSuite, string cwd, string fileName) {
+		BenchmarkSuiteXMLSerializer.singleInstance.saveXML(benchmarkSuite, join(cwd, fileName));
 	}
 	
 	string title;

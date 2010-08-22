@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<BenchmarkSuite title="CPU2006_Custom1" cwd="CPU2006">
+   <Benchmark title="462.libquantum_original" cwd="462.libquantum/original" stdin="" args="15 8" exe="462.libquantum" stdout="">
+   </Benchmark>
+</BenchmarkSuite>

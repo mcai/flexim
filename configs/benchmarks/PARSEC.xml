@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<BenchmarkSuite title="PARSEC" cwd="PARSEC">
+   <Benchmark title="swaptions" cwd="swaptions" stdin="" args="-ns 32 -sm 10000 -nt 2" exe="swaptions" stdout="">
+   </Benchmark>
+   <Benchmark title="bodytrack" cwd="bodytrack" stdin="" args="sequenceB_2 4 2 2000 5 0 2" exe="bodytrack" stdout="">
+   </Benchmark>
+   <Benchmark title="canneal" cwd="canneal" stdin="" args="2 15000 2000 200000.nets" exe="canneal" stdout="">
+   </Benchmark>
+   <Benchmark title="dedup" cwd="dedup" stdin="" args="-c -p -f -t 2 -i media.dat -o output.dat.ddp" exe="dedup" stdout="">
+   </Benchmark>
+   <Benchmark title="streamcluster" cwd="streamcluster" stdin="" args="10 20 64 8192 8192 1000 none output.txt 2" exe="streamcluster" stdout="">
+   </Benchmark>
+   <Benchmark title="fluidanimate" cwd="fluidanimate" stdin="" args="2 5 in_100K.fluid out.fluid" exe="fluidanimate" stdout="">
+   </Benchmark>
+</BenchmarkSuite>

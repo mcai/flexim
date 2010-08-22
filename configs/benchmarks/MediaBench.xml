@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<BenchmarkSuite title="MediaBench" cwd="MediaBench">
+   <Benchmark title="adpcm-dec" cwd="adpcm-dec" stdin="clinton.adpcm" args="" exe="rawdaudio" stdout="out.pcm">
+   </Benchmark>
+   <Benchmark title="adpcm-enc" cwd="adpcm-enc" stdin="clinton.pcm" args="" exe="rawcaudio" stdout="out.adpcm">
+   </Benchmark>
+   <Benchmark title="g721-dec" cwd="g721-dec" stdin="" args="-4 -l -f clinton.g721" exe="decode" stdout="">
+   </Benchmark>
+   <Benchmark title="g721-enc" cwd="g721-enc" stdin="" args="-4 -l -f clinton.pcm" exe="encode" stdout="">
+   </Benchmark>
+   <Benchmark title="jpeg-dec" cwd="jpeg-dec" stdin="" args="-dct int -ppm -outfile testout.ppm testimg.jpg" exe="djpeg" stdout="">
+   </Benchmark>
+   <Benchmark title="jpeg-enc" cwd="jpeg-enc" stdin="" args="-dct int -progressive -opt -outfile testout.jpg testimg.ppm" exe="cjpeg" stdout="">
+   </Benchmark>
+   <Benchmark title="pegwit-dec" cwd="pegwit-dec" stdin="my.sec" args="-d pegwit.enc pegwit.dec" exe="pegwit" stdout="">
+   </Benchmark>
+   <Benchmark title="pegwit-enc" cwd="pegwit-enc" stdin="encryption_junk" args="-e my.pub pgptest.plain pegwit.enc" exe="pegwit" stdout="">
+   </Benchmark>
+   <Benchmark title="rasta" cwd="rasta" stdin="ex5_c1.wav" args="-z -A -J -S 8000 -n 12 -f map_weights.dat" exe="rasta" stdout="ex5.asc">
+   </Benchmark>
+   <Benchmark title="epic-dec" cwd="epic-dec" stdin="" args="test_image.E" exe="unepic" stdout="">
+   </Benchmark>
+   <Benchmark title="epic-enc" cwd="epic-enc" stdin="" args="test_image.pgm -b 25" exe="epic" stdout="">
+   </Benchmark>
+   <Benchmark title="ghostscript" cwd="ghostscript" stdin="" args="-sDEVICE=ppm -sOutputFile=test.ppm -dNOPAUSE -q -- tiger.ps" exe="gs" stdout="">
+   </Benchmark>
+   <Benchmark title="gsm-dec" cwd="gsm-dec" stdin="" args="-fpl clinton.pcm.gsm" exe="untoast" stdout="">
+   </Benchmark>
+   <Benchmark title="gsm-enc" cwd="gsm-enc" stdin="" args="-fpl clinton.pcm" exe="toast" stdout="">
+   </Benchmark>
+   <Benchmark title="mpeg-dec" cwd="mpeg-dec" stdin="" args="-b mei16v2.m2v -r -f -o0 rec%d" exe="mpeg2decode" stdout="">
+   </Benchmark>
+   <Benchmark title="mpeg-enc" cwd="mpeg-enc" stdin="" args="options.par out.m2v" exe="mpeg2encode" stdout="">
+   </Benchmark>
+</BenchmarkSuite>

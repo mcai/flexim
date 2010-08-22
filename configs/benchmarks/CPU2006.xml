@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<BenchmarkSuite title="CPU2006" cwd="CPU2006">
+   <Benchmark title="999.specrand" cwd="999.specrand" stdin="" args="1255432124 234923" exe="specrand_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="416.gamess" cwd="416.gamess" stdin="triazolium.config" args="" exe="gamess_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="481.wrf" cwd="481.wrf" stdin="" args="" exe="wrf_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="410.bwaves" cwd="410.bwaves" stdin="" args="" exe="bwaves_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="458.sjeng" cwd="458.sjeng" stdin="" args="ref.txt" exe="sjeng_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="434.zeusmp" cwd="434.zeusmp" stdin="" args="" exe="zeusmp_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="459.GemsFDTD" cwd="459.GemsFDTD" stdin="" args="" exe="GemsFDTD_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="470.lbm" cwd="470.lbm" stdin="" args="3000 reference.dat 0 0 100_100_130_ldc.of" exe="lbm_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="403.gcc" cwd="403.gcc" stdin="" args="166.i -o 166.s" exe="gcc_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="998.specrand" cwd="998.specrand" stdin="" args="1255432124 234923" exe="specrand_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="444.namd" cwd="444.namd" stdin="" args="--input namd.input --iterations 38 --output namd.out" exe="namd_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="454.calculix" cwd="454.calculix" stdin="" args="-i hyperviscoplastic" exe="calculix_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="464.h264ref" cwd="464.h264ref" stdin="" args="-d sss_encoder_main.cfg" exe="h264ref_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="400.perlbench" cwd="400.perlbench" stdin="" args="checkspam.pl 2500 5 25 11 150 1 1 1 1" exe="perlbench_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="437.leslie3d" cwd="437.leslie3d" stdin="leslie3d.in" args="" exe="leslie3d_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="445.gobmk" cwd="445.gobmk" stdin="trevord.tst" args="--quiet --mode gtp" exe="gobmk_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="436.cactusADM" cwd="436.cactusADM" stdin="" args="benchADM.par" exe="cactusADM_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="435.gromacs" cwd="435.gromacs" stdin="" args="-silent -deffnm gromacs -nice 0" exe="gromacs_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="465.tonto" cwd="465.tonto" stdin="" args="" exe="tonto_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="482.sphinx3" cwd="482.sphinx3" stdin="" args="ctlfile . args.an4" exe="sphinx3_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="450.soplex" cwd="450.soplex" stdin="" args="-m3500 ref.mps" exe="soplex_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="462.libquantum" cwd="462.libquantum" stdin="" args="1397 8" exe="libquantum_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="447.dealII" cwd="447.dealII" stdin="" args="23" exe="dealII_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="401.bzip2" cwd="401.bzip2" stdin="" args="input.source 280" exe="bzip2_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="473.astar" cwd="473.astar" stdin="" args="rivers.cfg" exe="astar_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="429.mcf" cwd="429.mcf" stdin="" args="inp.in" exe="mcf_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="456.hmmer" cwd="456.hmmer" stdin="" args="--fixed 0 --mean 500 --num 500000 --sd 350 --seed 0 retro.hmm" exe="hmmer_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="471.omnetpp" cwd="471.omnetpp" stdin="" args="omnetpp.ini" exe="omnetpp_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="433.milc" cwd="433.milc" stdin="su3imp.in" args="" exe="milc_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="453.povray" cwd="453.povray" stdin="" args="SPEC-benchmark-ref.ini" exe="povray_base.i386" stdout="">
+   </Benchmark>
+   <Benchmark title="483.xalancbmk" cwd="483.xalancbmk" stdin="" args="-v t5.xml xalanc.xsl" exe="xalancbmk_base.i386" stdout="">
+   </Benchmark>
+</BenchmarkSuite>
