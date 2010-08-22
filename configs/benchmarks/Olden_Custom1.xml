@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <BenchmarkSuite title="Olden_Custom1" cwd="Olden">
-   <Benchmark title="em3d_original" cwd="em3d/original" stdin="" args="200 100 75 1" exe="em3d" stdout="">
+   <Benchmark title="em3d_original" cwd="em3d/original" stdin="" exe="em3d" argsLiteral="200 100 75 1" stdout="">
    </Benchmark>
 </BenchmarkSuite>

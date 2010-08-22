@@ -78,6 +78,6 @@ public import flexim.util.arithmetic;
 public import flexim.util.elf;
 public import flexim.util.events;
 public import flexim.util.faults;
-public import flexim.util.misc;
+public import flexim.util.mixins;
 public import flexim.util.providers;
 public import flexim.util.queues;

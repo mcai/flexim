@@ -1,67 +1,67 @@
 <?xml version="1.0"?>
 <BenchmarkSuite title="WCETBench" cwd="Microbenchmarks/external/wcet_bench">
-   <Benchmark title="fir" cwd="./" stdin="" args="" exe="fir" stdout="">
+   <Benchmark title="fir" cwd="./" stdin="" exe="fir" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="crc" cwd="./" stdin="" args="" exe="crc" stdout="">
+   <Benchmark title="crc" cwd="./" stdin="" exe="crc" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="ludcmp" cwd="./" stdin="" args="" exe="ludcmp" stdout="">
+   <Benchmark title="ludcmp" cwd="./" stdin="" exe="ludcmp" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="qsort-exam" cwd="./" stdin="" args="" exe="qsort-exam" stdout="">
+   <Benchmark title="qsort-exam" cwd="./" stdin="" exe="qsort-exam" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="cnt" cwd="./" stdin="" args="" exe="cnt" stdout="">
+   <Benchmark title="cnt" cwd="./" stdin="" exe="cnt" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="insertsort" cwd="./" stdin="" args="" exe="insertsort" stdout="">
+   <Benchmark title="insertsort" cwd="./" stdin="" exe="insertsort" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="matmult" cwd="./" stdin="" args="" exe="matmult" stdout="">
+   <Benchmark title="matmult" cwd="./" stdin="" exe="matmult" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="minmax" cwd="./" stdin="" args="" exe="minmax" stdout="">
+   <Benchmark title="minmax" cwd="./" stdin="" exe="minmax" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="edn" cwd="./" stdin="" args="" exe="edn" stdout="">
+   <Benchmark title="edn" cwd="./" stdin="" exe="edn" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="fft1" cwd="./" stdin="" args="" exe="fft1" stdout="">
+   <Benchmark title="fft1" cwd="./" stdin="" exe="fft1" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="nsichneu" cwd="./" stdin="" args="" exe="nsichneu" stdout="">
+   <Benchmark title="nsichneu" cwd="./" stdin="" exe="nsichneu" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="bs" cwd="./" stdin="" args="" exe="bs" stdout="">
+   <Benchmark title="bs" cwd="./" stdin="" exe="bs" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="adpcm" cwd="./" stdin="" args="" exe="adpcm" stdout="">
+   <Benchmark title="adpcm" cwd="./" stdin="" exe="adpcm" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="lcdnum" cwd="./" stdin="" args="" exe="lcdnum" stdout="">
+   <Benchmark title="lcdnum" cwd="./" stdin="" exe="lcdnum" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="minver" cwd="./" stdin="" args="" exe="minver" stdout="">
+   <Benchmark title="minver" cwd="./" stdin="" exe="minver" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="qurt" cwd="./" stdin="" args="" exe="qurt" stdout="">
+   <Benchmark title="qurt" cwd="./" stdin="" exe="qurt" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="fdct" cwd="./" stdin="" args="" exe="fdct" stdout="">
+   <Benchmark title="fdct" cwd="./" stdin="" exe="fdct" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="statemate" cwd="./" stdin="" args="" exe="statemate" stdout="">
+   <Benchmark title="statemate" cwd="./" stdin="" exe="statemate" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="cover" cwd="./" stdin="" args="" exe="cover" stdout="">
+   <Benchmark title="cover" cwd="./" stdin="" exe="cover" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="duff" cwd="./" stdin="" args="" exe="duff" stdout="">
+   <Benchmark title="duff" cwd="./" stdin="" exe="duff" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="select" cwd="./" stdin="" args="" exe="select" stdout="">
+   <Benchmark title="select" cwd="./" stdin="" exe="select" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="fac" cwd="./" stdin="" args="" exe="fac" stdout="">
+   <Benchmark title="fac" cwd="./" stdin="" exe="fac" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="ns" cwd="./" stdin="" args="" exe="ns" stdout="">
+   <Benchmark title="ns" cwd="./" stdin="" exe="ns" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="expint" cwd="./" stdin="" args="" exe="expint" stdout="">
+   <Benchmark title="expint" cwd="./" stdin="" exe="expint" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="janne_complex" cwd="./" stdin="" args="" exe="janne_complex" stdout="">
+   <Benchmark title="janne_complex" cwd="./" stdin="" exe="janne_complex" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="compress" cwd="./" stdin="" args="" exe="compress" stdout="">
+   <Benchmark title="compress" cwd="./" stdin="" exe="compress" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="jfdctint" cwd="./" stdin="" args="" exe="jfdctint" stdout="">
+   <Benchmark title="jfdctint" cwd="./" stdin="" exe="jfdctint" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="loop3" cwd="./" stdin="" args="" exe="loop3" stdout="">
+   <Benchmark title="loop3" cwd="./" stdin="" exe="loop3" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="sqrt" cwd="./" stdin="" args="" exe="sqrt" stdout="">
+   <Benchmark title="sqrt" cwd="./" stdin="" exe="sqrt" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="bsort100" cwd="./" stdin="" args="" exe="bsort100" stdout="">
+   <Benchmark title="bsort100" cwd="./" stdin="" exe="bsort100" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="lms" cwd="./" stdin="" args="" exe="lms" stdout="">
+   <Benchmark title="lms" cwd="./" stdin="" exe="lms" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="fibcall" cwd="./" stdin="" args="" exe="fibcall" stdout="">
+   <Benchmark title="fibcall" cwd="./" stdin="" exe="fibcall" argsLiteral="" stdout="">
    </Benchmark>
 </BenchmarkSuite>

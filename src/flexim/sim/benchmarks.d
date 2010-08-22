@@ -24,43 +24,36 @@ module flexim.sim.benchmarks;
 import flexim.all;
 
 import std.path;
+import std.regexp;
 
 class Benchmark {
-	this(string title, string cwd, string exe, string args) {
+	this(string title, string cwd, string exe, string argsLiteral, string stdin = null, string stdout = null, uint numThreads = 1) {
 		this.title = title;
 		this.cwd = cwd;
 		this.exe = exe;
-		this.args = args;
-	}
-	
-	this(string title, string cwd, string exe, string args, string stdin) {
-		this.title = title;
-		this.cwd = cwd;
-		this.exe = exe;
-		this.args = args;
-		this.stdin = stdin;
-	}
-	
-	this(string title, string cwd, string exe, string args, string stdin, string stdout) {
-		this.title = title;
-		this.cwd = cwd;
-		this.exe = exe;
-		this.args = args;
+		this.argsLiteral = argsLiteral;
 		this.stdin = stdin;
 		this.stdout = stdout;
+		this.numThreads = numThreads;
 	}
 	
 	override string toString() {
-		return format("Benchmark[title=%s, cwd=%s, exe=%s, args=%s, stdin=%s, stdout=%s]",
-			this.title, this.cwd, this.exe, this.args, this.stdin, this.stdout);
+		return format("Benchmark[title=%s, cwd=%s, exe=%s, argsLiteral=%s, stdin=%s, stdout=%s, numThreads=%d]",
+			this.title, this.cwd, this.exe, this.argsLiteral, this.stdin, this.stdout, this.numThreads);
 	}
 	
 	string title;
 	string cwd;
 	string exe;
-	string args;
+	string argsLiteral;
 	string stdin;
 	string stdout;
+	
+	string args() {
+		return sub(this.argsLiteral, r"\$\{nthreads\}", format("%d", this.numThreads), "g");
+	}
+	
+	uint numThreads;
 	
 	BenchmarkSuite suite;
 }
@@ -80,7 +73,7 @@ class BenchmarkSuiteXMLSerializer: XMLSerializer!(BenchmarkSuite) {
 			xmlConfig.attributes["title"] = benchmark.title;
 			xmlConfig.attributes["cwd"] = benchmark.cwd;
 			xmlConfig.attributes["exe"] = benchmark.exe;
-			xmlConfig.attributes["args"] = benchmark.args;
+			xmlConfig.attributes["argsLiteral"] = benchmark.argsLiteral;
 			xmlConfig.attributes["stdin"] = benchmark.stdin;
 			xmlConfig.attributes["stdout"] = benchmark.stdout;
 			
@@ -100,11 +93,11 @@ class BenchmarkSuiteXMLSerializer: XMLSerializer!(BenchmarkSuite) {
 			string title = entry.attributes["title"];
 			string cwd = entry.attributes["cwd"];
 			string exe = entry.attributes["exe"];
-			string args = entry.attributes["args"];
+			string argsLiteral = entry.attributes["argsLiteral"];
 			string stdin = entry.attributes["stdin"];
 			string stdout = entry.attributes["stdout"];
 			
-			Benchmark benchmark = new Benchmark(title, cwd, exe, args, stdin, stdout);
+			Benchmark benchmark = new Benchmark(title, cwd, exe, argsLiteral, stdin, stdout);
 			benchmarkSuite.benchmarks[benchmark.title] = benchmark;
 		}
 		
@@ -421,36 +414,32 @@ class BenchmarkSuite {
 	}
 	
 	static class Splash2: BenchmarkSuite {
-		this(int threads) {
+		this() {
 			super(TITLE, "Splash2");
 
 			Benchmark benchmarkFft = new Benchmark("fft", "fft", "fft.i386",
-					"-m18 -p" ~ to!(string)(threads) ~ " -n65536 -l4", "");
-			Benchmark benchmarkLu = new Benchmark("lu", "lu", "lu.i386", "-p"
-					~ to!(string)(threads) ~ " -n2048 -b16", "");
+					"-m18 -p${nthreads} -n65536 -l4", "");
+			Benchmark benchmarkLu = new Benchmark("lu", "lu", "lu.i386", "-p${nthreads} -n2048 -b16", "");
 			Benchmark benchmarkRadix = new Benchmark("radix", "radix",
-					"radix.i386", "-p" ~ to!(string)(threads) ~ " -r4096 -n262144 -m524288",
+					"radix.i386", "-p${nthreads} -r4096 -n262144 -m524288",
 					"");
 			Benchmark benchmarkOcean = new Benchmark("ocean", "ocean",
-					"ocean.i386", "-n258 -p" ~ to!(string)(threads)
-							~ " -e1e-07 -r20000 -t28800", "");
+					"ocean.i386", "-n258 -p${nthreads} -e1e-07 -r20000 -t28800", "");
 			Benchmark benchmarkWaterNsquared = new Benchmark("water-nsquared",
-					"water-nsquared", "water-nsquared.i386", "" ~ to!(string)(threads) ~ "",
+					"water-nsquared", "water-nsquared.i386", "${nthreads}",
 					"input");
 			Benchmark benchmarkWaterSpatial = new Benchmark("water-spatial",
-					"water-spatial", "water-spatial.i386", "" ~ to!(string)(threads) ~ "",
+					"water-spatial", "water-spatial.i386", "${nthreads}",
 					"input");
-			Benchmark benchmarkFmm = new Benchmark("fmm", "fmm", "fmm.i386", ""
-					~ to!(string)(threads) ~ "", "input");
+			Benchmark benchmarkFmm = new Benchmark("fmm", "fmm", "fmm.i386", "${nthreads}", "input");
 			Benchmark benchmarkCholesky = new Benchmark("cholesky", "cholesky",
-					"cholesky.i386", "-p" ~ to!(string)(threads) ~ "", "tk14.O");
+					"cholesky.i386", "-p${nthreads}", "tk14.O");
 			Benchmark benchmarkRadiosity = new Benchmark("radiosity",
-					"radiosity", "radiosity.i386", "-batch -room -p" ~ to!(string)(threads)
-							~ "", "");
+					"radiosity", "radiosity.i386", "-batch -room -p${nthreads}", "");
 			Benchmark benchmarkRaytrace = new Benchmark("raytrace", "raytrace",
-					"raytrace.i386", "-p" ~ to!(string)(threads) ~ " balls4.env", "");
+					"raytrace.i386", "-p${nthreads} balls4.env", "");
 			Benchmark benchmarkBarnes = new Benchmark("barnes", "barnes",
-					"barnes.i386", "" ~ to!(string)(threads) ~ "", "input");
+					"barnes.i386", "${nthreads}", "input");
 		
 			this.register(benchmarkFft);
 			this.register(benchmarkLu);
@@ -469,26 +458,22 @@ class BenchmarkSuite {
 	}
 	
 	static class PARSEC: BenchmarkSuite {
-		this(int threads) {
+		this() {
 			super(TITLE, "PARSEC");
 
 			Benchmark benchmarkBodytrack = new Benchmark("bodytrack",
-					"bodytrack", "bodytrack", "sequenceB_2 4 2 2000 5 0 "
-							~ to!(string)(threads) ~ "", "");
+					"bodytrack", "bodytrack", "sequenceB_2 4 2 2000 5 0 ${nthreads}", "");
 			Benchmark benchmarkSwaptions = new Benchmark("swaptions",
-					"swaptions", "swaptions", "-ns 32 -sm 10000 -nt " ~ to!(string)(threads)
-							~ "", "");
+					"swaptions", "swaptions", "-ns 32 -sm 10000 -nt ${nthreads}", "");
 			Benchmark benchmarkFluidanimate = new Benchmark("fluidanimate",
-					"fluidanimate", "fluidanimate", "" ~ to!(string)(threads)
-							~ " 5 in_100K.fluid out.fluid", "");
+					"fluidanimate", "fluidanimate", "${nthreads} 5 in_100K.fluid out.fluid", "");
 			Benchmark benchmarkCanneal = new Benchmark("canneal", "canneal",
-					"canneal", "" ~ to!(string)(threads) ~ " 15000 2000 200000.nets", "");
+					"canneal", "${nthreads} 15000 2000 200000.nets", "");
 			Benchmark benchmarkDedup = new Benchmark("dedup", "dedup", "dedup",
-					"-c -p -f -t " ~ to!(string)(threads)
-							~ " -i media.dat -o output.dat.ddp", "");
+					"-c -p -f -t ${nthreads} -i media.dat -o output.dat.ddp", "");
 			Benchmark benchmarkStreamcluster = new Benchmark("streamcluster",
 					"streamcluster", "streamcluster",
-					"10 20 64 8192 8192 1000 none output.txt " ~ to!(string)(threads) ~ "",
+					"10 20 64 8192 8192 1000 none output.txt ${nthreads}",
 					"");
 		
 			this.register(benchmarkBodytrack);
@@ -508,8 +493,8 @@ class BenchmarkSuite {
 		presets[CPU2006Custom1.TITLE] = new CPU2006Custom1();
 		presets[CPU2006.TITLE] = new CPU2006();
 		presets[MediaBench.TITLE] = new MediaBench();
-		presets[Splash2.TITLE] = new Splash2(2);
-		presets[PARSEC.TITLE] = new PARSEC(2);
+		presets[Splash2.TITLE] = new Splash2();
+		presets[PARSEC.TITLE] = new PARSEC();
 	}
 	
 	this(string title, string cwd) {
@@ -541,6 +526,7 @@ class BenchmarkSuite {
 	
 	string title;
 	string cwd;
+	
 	Benchmark[string] benchmarks;
 	
 	static BenchmarkSuite[string] presets;

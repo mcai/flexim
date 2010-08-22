@@ -23,47 +23,76 @@ module flexim.sim.analysis;
 
 import flexim.all;
 
+abstract class Stats(ValueT) {	
+	this() {
+		this.init();
+	}
+
+	protected abstract void init();
+
+	protected abstract void init(string index);
+
+	ref ValueT opIndex(string index) {
+		assert(index in this.entries, index);
+		return this.entries[index];
+	}
+
+	void opIndexAssign(ValueT value, string index) {
+		assert(index in this.entries, index);
+		this.entries[index] = value;
+	}
+
+	ValueT[string] entries;
+}
+
 enum AnalysisType: string {
 	GENERAL = "GENERAL",
 	PIPELINE = "PIPELINE",
 	CACHE = "CACHE"
 }
 
-interface Analysis(ResultT) {
+abstract class BenchmarkAnalysis(ResultT) {
 	alias ContextCallback1!(ResultT) CallbackT;
 	
-	void execute(CallbackT callback);
+	this(Benchmark benchmark, CallbackT callback) {
+		this.benchmark = benchmark;
+		this.callback = callback;
+	}
 	
-	AnalysisType type();
+	void complete() {
+		if(this.callback !is null) {
+			this.callback.invoke(this.result);
+		}
+	}
+	
+	abstract AnalysisType type();
+	
+	Benchmark benchmark;
+	CallbackT callback;
+	ResultT result;
 }
 
 class GeneralAnalysisResult {
 	
 }
 
-class GeneralAnalysis: Analysis!(GeneralAnalysisResult) {
-	this(Benchmark benchmark) {
-		this.benchmark = benchmark;
-	}
-	
-	override void execute(CallbackT callback) {
-		callback.invoke(new GeneralAnalysisResult());
+class GeneralAnalysis: BenchmarkAnalysis!(GeneralAnalysisResult) {
+	this(Benchmark benchmark, CallbackT callback) {
+		super(benchmark, callback);
 	}
 	
 	override AnalysisType type() {
 		return AnalysisType.GENERAL;
 	}
-	
-	Benchmark benchmark;
 }
 
 class PipelineAnalysisResult {
 	
 }
 
-class PipelineAnalysis: Analysis!(PipelineAnalysisResult) {
-	override void execute(CallbackT callback) {
-		callback.invoke(new PipelineAnalysisResult());
+class PipelineAnalysis: BenchmarkAnalysis!(PipelineAnalysisResult) {
+	this(Benchmark benchmark, CallbackT callback) {
+		super(benchmark, callback);
 	}
 	
 	override AnalysisType type() {
@@ -75,26 +104,12 @@ class CacheAnalysisResult {
 	
 }
 
-class CacheAnalysis: Analysis!(CacheAnalysisResult) {
-	override void execute(CallbackT callback) {
-		callback.invoke(new CacheAnalysisResult());
+class CacheAnalysis: BenchmarkAnalysis!(CacheAnalysisResult) {
+	this(Benchmark benchmark, CallbackT callback) {
+		super(benchmark, callback);
 	}
 	
 	override AnalysisType type() {
 		return AnalysisType.CACHE;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

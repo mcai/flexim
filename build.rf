@@ -31,12 +31,12 @@ src/flexim/mem/tm.d
 src/flexim/sim/analysis.d
 src/flexim/sim/benchmarks.d
 src/flexim/sim/configs.d
-src/flexim/sim/simulations.d
+src/flexim/sim/experiments.d
 src/flexim/sim/simulator.d
 src/flexim/util/arithmetic.d
 src/flexim/util/elf.d
 src/flexim/util/events.d
 src/flexim/util/faults.d
-src/flexim/util/misc.d
+src/flexim/util/mixins.d
 src/flexim/util/providers.d
 src/flexim/util/queues.d

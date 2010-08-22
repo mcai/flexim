@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <BenchmarkSuite title="PARSEC" cwd="PARSEC">
-   <Benchmark title="swaptions" cwd="swaptions" stdin="" args="-ns 32 -sm 10000 -nt 2" exe="swaptions" stdout="">
+   <Benchmark title="swaptions" cwd="swaptions" stdin="" exe="swaptions" argsLiteral="-ns 32 -sm 10000 -nt ${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="bodytrack" cwd="bodytrack" stdin="" args="sequenceB_2 4 2 2000 5 0 2" exe="bodytrack" stdout="">
+   <Benchmark title="bodytrack" cwd="bodytrack" stdin="" exe="bodytrack" argsLiteral="sequenceB_2 4 2 2000 5 0 ${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="canneal" cwd="canneal" stdin="" args="2 15000 2000 200000.nets" exe="canneal" stdout="">
+   <Benchmark title="canneal" cwd="canneal" stdin="" exe="canneal" argsLiteral="${nthreads} 15000 2000 200000.nets" stdout="">
    </Benchmark>
-   <Benchmark title="dedup" cwd="dedup" stdin="" args="-c -p -f -t 2 -i media.dat -o output.dat.ddp" exe="dedup" stdout="">
+   <Benchmark title="dedup" cwd="dedup" stdin="" exe="dedup" argsLiteral="-c -p -f -t ${nthreads} -i media.dat -o output.dat.ddp" stdout="">
    </Benchmark>
-   <Benchmark title="streamcluster" cwd="streamcluster" stdin="" args="10 20 64 8192 8192 1000 none output.txt 2" exe="streamcluster" stdout="">
+   <Benchmark title="streamcluster" cwd="streamcluster" stdin="" exe="streamcluster" argsLiteral="10 20 64 8192 8192 1000 none output.txt ${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="fluidanimate" cwd="fluidanimate" stdin="" args="2 5 in_100K.fluid out.fluid" exe="fluidanimate" stdout="">
+   <Benchmark title="fluidanimate" cwd="fluidanimate" stdin="" exe="fluidanimate" argsLiteral="${nthreads} 5 in_100K.fluid out.fluid" stdout="">
    </Benchmark>
 </BenchmarkSuite>
