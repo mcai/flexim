@@ -38,9 +38,9 @@ void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
 	
-	string experimentName = "Olden_Custom1-em3d_original-1x2";
+	string experimentName = "WCETBench-fir-1x1";
 	
-	getopt(args, "experimentName", &experimentName);
+	getopt(args, "experiment", &experimentName);
 	
 	performAnalysis(experimentName);
 }
