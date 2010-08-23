@@ -2,6 +2,8 @@
 <Experiment title="testExp" cwd="./">
    <Simulation title="testSim" cwd="./">
       <CPUConfig maxCycle="2000000" maxInsts="2000000" maxTime="7200" numCores="1" numThreads="1">
+         <Context num="0" binariesDir="../tests/benchmarks" benchmarkSuiteName="WCETBench" benchmarkName="fir">
+         </Context>
       </CPUConfig>
       <CacheConfig>
          <Cache name="l1I-0" sets="64" assoc="4" blockSize="64" hitLatency="1" missLatency="3" policy="LRU">
@@ -11,9 +13,5 @@
          <Cache name="l2" sets="1024" assoc="4" blockSize="64" hitLatency="4" missLatency="7" policy="LRU">
          </Cache>
       </CacheConfig>
-      <ContextConfig>
-         <Context num="0" binariesDir="../tests/benchmarks" benchmarkSuiteName="WCETBench" benchmarkName="fir">
-         </Context>
-      </ContextConfig>
    </Simulation>
 </Experiment>

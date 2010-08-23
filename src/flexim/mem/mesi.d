@@ -83,36 +83,6 @@ enum MESIEventType: string {
 	INVALIDATE_FINISH = "INVALIDATE_FINISH"
 }
 
-class MESICacheStats: Stats!(ulong) {
-	protected override void init() {
-		this.init("accesses");
-		this.init("hits");
-		this.init("evictions");
-		this.init("reads");
-		this.init("blockingReads");
-		this.init("nonblockingReads");
-		this.init("readHits");
-		this.init("writes");
-		this.init("blockingWrites");
-		this.init("nonblockingWrites");
-		this.init("writeHits");
-
-		this.init("readRetries");
-		this.init("writeRetries");
-
-		this.init("noRetryAccesses");
-		this.init("noRetryHits");
-		this.init("noRetryReads");
-		this.init("noRetryReadHits");
-		this.init("noRetryWrites");
-		this.init("noRetryWriteHits");
-	}
-
-	protected override void init(string index) {
-		this.entries[index] = 0;
-	}
-}
-
 class MESICache: Node {
 	alias MESIState StateT;
 
@@ -142,7 +112,7 @@ class MESICache: Node {
 		this.lowestPrivate = lowestPrivate;
 		this.llc = llc;
 
-		this.stats = new MESICacheStats();
+		this.stats = new CacheStats();
 
 		this.upperInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleUpperInterconnectMessage);
 		this.lowerInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleLowerInterconnectMessage);
@@ -166,34 +136,34 @@ class MESICache: Node {
 
 		str ~= format(indent ~ "[%s] -----\n", this.name);
 		
-		appendStatStr(str, indent, "Accesses", this.stats["accesses"]);
-		appendStatStr(str, indent, "Hits", this.stats["hits"]);
-		appendStatStr(str, indent, "Misses", this.stats["accesses"] - this.stats["hits"]);
-		appendStatStr(str, indent, "HitRatio", this.stats["accesses"] != 0 ? cast(double)(this.stats["hits"]) / cast(double)(this.stats["accesses"]) : 0.0);
-		appendStatStr(str, indent, "Evictions", this.stats["evictions"]);
-		appendStatStr(str, indent, "Retries", this.stats["readRetries"] + this.stats["writeRetries"]);
-		appendStatStr(str, indent, "ReadRetries", this.stats["readRetries"]);
-		appendStatStr(str, indent, "WriteRetries", this.stats["writeRetries"]);
-		appendStatStr(str, indent, "NoRetryAccesses", this.stats["noRetryAccesses"]);
-		appendStatStr(str, indent, "NoRetryHits", this.stats["noRetryHits"]);
-		appendStatStr(str, indent, "NoRetryMisses", this.stats["noRetryAccesses"] - this.stats["noRetryHits"]);
-		appendStatStr(str, indent, "NoRetryHitRatio", this.stats["noRetryAccesses"] != 0 ? cast(double)(this.stats["noRetryHits"]) / cast(double)(this.stats["noRetryAccesses"]) : 0.0);
-		appendStatStr(str, indent, "NoRetryReads", this.stats["noRetryReads"]);
-		appendStatStr(str, indent, "NoRetryReadHits", this.stats["noRetryReadHits"]);
-		appendStatStr(str, indent, "NoRetyrReadMisses", this.stats["noRetryReads"] - this.stats["noRetryReadHits"]);
-		appendStatStr(str, indent, "NoRetryWrites", this.stats["noRetryWrites"]);
-		appendStatStr(str, indent, "NoRetryWriteHits", this.stats["noRetryWriteHits"]);
-		appendStatStr(str, indent, "NoRetryWriteMisses", this.stats["noRetryWrites"] - this.stats["noRetryWriteHits"]);
-		appendStatStr(str, indent, "Reads", this.stats["reads"]);
-		appendStatStr(str, indent, "BlockingReads", this.stats["blockingReads"]);
-		appendStatStr(str, indent, "NonblockingReads", this.stats["nonblockingReads"]);
-		appendStatStr(str, indent, "ReadHits", this.stats["readHits"]);
-		appendStatStr(str, indent, "ReadMisses", this.stats["reads"] - this.stats["readHits"]);
-		appendStatStr(str, indent, "Writes", this.stats["writes"]);
-		appendStatStr(str, indent, "BlockingWrites", this.stats["blockingWrites"]);
-		appendStatStr(str, indent, "NonblockingWrites", this.stats["nonblockingWrites"]);
-		appendStatStr(str, indent, "WriteHits", this.stats["writeHits"]);
-		appendStatStr(str, indent, "WriteMisses", this.stats["writes"] - this.stats["writeHits"]);
+		appendStatStr(str, indent, "Accesses", this.stats.accesses);
+		appendStatStr(str, indent, "Hits", this.stats.hits);
+		appendStatStr(str, indent, "Misses", this.stats.accesses - this.stats.hits);
+		appendStatStr(str, indent, "HitRatio", this.stats.accesses != 0 ? cast(double)(this.stats.hits) / cast(double)(this.stats.accesses) : 0.0);
+		appendStatStr(str, indent, "Evictions", this.stats.evictions);
+		appendStatStr(str, indent, "Retries", this.stats.readRetries + this.stats.writeRetries);
+		appendStatStr(str, indent, "ReadRetries", this.stats.readRetries);
+		appendStatStr(str, indent, "WriteRetries", this.stats.writeRetries);
+		appendStatStr(str, indent, "NoRetryAccesses", this.stats.noRetryAccesses);
+		appendStatStr(str, indent, "NoRetryHits", this.stats.noRetryHits);
+		appendStatStr(str, indent, "NoRetryMisses", this.stats.noRetryAccesses - this.stats.noRetryHits);
+		appendStatStr(str, indent, "NoRetryHitRatio", this.stats.noRetryAccesses != 0 ? cast(double)(this.stats.noRetryHits) / cast(double)(this.stats.noRetryAccesses) : 0.0);
+		appendStatStr(str, indent, "NoRetryReads", this.stats.noRetryReads);
+		appendStatStr(str, indent, "NoRetryReadHits", this.stats.noRetryReadHits);
+		appendStatStr(str, indent, "NoRetyrReadMisses", this.stats.noRetryReads - this.stats.noRetryReadHits);
+		appendStatStr(str, indent, "NoRetryWrites", this.stats.noRetryWrites);
+		appendStatStr(str, indent, "NoRetryWriteHits", this.stats.noRetryWriteHits);
+		appendStatStr(str, indent, "NoRetryWriteMisses", this.stats.noRetryWrites - this.stats.noRetryWriteHits);
+		appendStatStr(str, indent, "Reads", this.stats.reads);
+		appendStatStr(str, indent, "BlockingReads", this.stats.blockingReads);
+		appendStatStr(str, indent, "NonblockingReads", this.stats.nonblockingReads);
+		appendStatStr(str, indent, "ReadHits", this.stats.readHits);
+		appendStatStr(str, indent, "ReadMisses", this.stats.reads - this.stats.readHits);
+		appendStatStr(str, indent, "Writes", this.stats.writes);
+		appendStatStr(str, indent, "BlockingWrites", this.stats.blockingWrites);
+		appendStatStr(str, indent, "NonblockingWrites", this.stats.nonblockingWrites);
+		appendStatStr(str, indent, "WriteHits", this.stats.writeHits);
+		appendStatStr(str, indent, "WriteMisses", this.stats.writes - this.stats.writeHits);
 
 		logging.info(LogCategory.CONFIG, str);
 	}
@@ -342,11 +312,11 @@ class MESICache: Node {
 		this.m_cacheHierarchy = value;
 	}
 	
-	MESICacheStats stats() {
+	CacheStats stats() {
 		return this.m_stats;
 	}
 	
-	void stats(MESICacheStats value) {
+	void stats(CacheStats value) {
 		this.m_stats = value;
 	}
 
@@ -364,7 +334,7 @@ class MESICache: Node {
 
 	CacheQueueEntryT[][Addr] pendingRequests;
 	
-	private MESICacheStats m_stats;	
+	private CacheStats m_stats;	
 }
 
 class MESIMemory: MESICache {
@@ -563,39 +533,39 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 			
 			/* Stats */
-			ccache.stats["accesses"]++;
+			ccache.stats.accesses++;
 			if(hit) {
-				ccache.stats["hits"]++;
+				ccache.stats.hits++;
 			}
 			if(stack.isRead) {
-				ccache.stats["reads"]++;
-				stack.isBlocking ? ccache.stats["blockingReads"]++ : ccache.stats["nonblockingReads"]++;
+				ccache.stats.reads++;
+				stack.isBlocking ? ccache.stats.blockingReads++ : ccache.stats.nonblockingReads++;
 				if(hit) {
-					ccache.stats["readHits"]++;
+					ccache.stats.readHits++;
 				}
 			}
 			else {
-				ccache.stats["writes"]++;
-				stack.isBlocking ? ccache.stats["blockingWrites"]++ : ccache.stats["nonblockingWrites"]++;
+				ccache.stats.writes++;
+				stack.isBlocking ? ccache.stats.blockingWrites++ : ccache.stats.nonblockingWrites++;
 				if(hit) {
-					ccache.stats["writeHits"]++;
+					ccache.stats.writeHits++;
 				}
 			}
 			if(!stack.isRetry) {
-				ccache.stats["noRetryAccesses"]++;
+				ccache.stats.noRetryAccesses++;
 				if(hit) {
-					ccache.stats["noRetryHits"]++;					
+					ccache.stats.noRetryHits++;					
 				}
 				if(stack.isRead) {
-					ccache.stats["noRetryReads"]++;
+					ccache.stats.noRetryReads++;
 					if(hit) {
-						ccache.stats["noRetryReadHits"]++;
+						ccache.stats.noRetryReadHits++;
 					}
 				}
 				else {
-					ccache.stats["noRetryWrites"]++;
+					ccache.stats.noRetryWrites++;
 					if(hit) {
-						ccache.stats["noRetryWriteHits"]++;
+						ccache.stats.noRetryWriteHits++;
 					}
 				}
 			}
@@ -672,7 +642,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Eviction */
 			if(stack.isEviction) {
-				ccache.stats["evictions"]++;
+				ccache.stats.evictions++;
 				ccache.cache.getBlock(stack.set, stack.way, dumbTag, stack.state);
 				assert(stack.state == MESIState.INVALID);
 			}
@@ -714,7 +684,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error locking */
 			if(stack.isErr) {
-				ccache.stats["readRetries"]++;
+				ccache.stats.readRetries++;
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
@@ -744,7 +714,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error on read request. Unlock block and retry load. */
 			if(stack.isErr) {
-				ccache.stats["readRetries"]++;
+				ccache.stats.readRetries++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
@@ -802,7 +772,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error locking */
 			if(stack.isErr) {
-				ccache.stats["writeRetries"]++;
+				ccache.stats.writeRetries++;
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
@@ -832,7 +802,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error in write request, unlock block and retry store. */
 			if(stack.isErr) {
-				ccache.stats["writeRetries"]++;
+				ccache.stats.writeRetries++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);

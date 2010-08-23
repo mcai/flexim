@@ -27,10 +27,10 @@ import std.file;
 import std.getopt;
 import std.path;
 
-void performAnalysis(string experimentName) {	
+void runExperiment(string experimentName) {	
 	logging.infof(LogCategory.SIMULATOR, "peformAnalysis(experimentName=%s)", experimentName);	
-	Experiment experiment = Experiment.loadXML("../configs/experiments", experimentName ~ ".xml");	
-	experiment.execute();
+	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".xml");	
+	experimentConfig.execute();
 }
 
 void main(string[] args) {
@@ -42,5 +42,5 @@ void main(string[] args) {
 	
 	getopt(args, "experiment", &experimentName);
 	
-	performAnalysis(experimentName);
+	runExperiment(experimentName);
 }
