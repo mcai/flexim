@@ -22,9 +22,10 @@ Flexim - A modular and highly configurable multicore simulator written in D
    * Developed from scratch in the object-oriented system programming language D 2.0.
      Great efforts are made to advocate software engineering practices in the simulator construction.
      
-   * A powerful infrastructure that provides eventing and logging, etc.
+   * A powerful infrastructure that provides common functionalities such as eventing and logging.
    
    * Pervasive use of XML based I/O for architectural, workload and experiment configs and stats.
+   
    * Support for Syscall emulation simulation (i.e., application only, no need to boot an OS).
    
    * It provides a correct execution of several state-of-the-art benchmark suites,
