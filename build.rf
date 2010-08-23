@@ -29,9 +29,8 @@ src/flexim/mem/mesi.d
 src/flexim/mem/mmu.d
 src/flexim/mem/tm.d
 src/flexim/sim/analysis.d
-src/flexim/sim/benchmarks.d
-src/flexim/sim/configs.d
-src/flexim/sim/experiments.d
+src/flexim/sim/benchmark.d
+src/flexim/sim/experiment.d
 src/flexim/sim/simulator.d
 src/flexim/util/arithmetic.d
 src/flexim/util/elf.d

@@ -23,10 +23,10 @@ module flexim.sim.simulator;
 
 import flexim.all;
 
+import std.c.stdlib;
+
 import std.path;
 import std.perf;
-
-import std.c.stdlib;
 
 enum SimulatorEventType: string {
 	GENERAL = "GENERAL",

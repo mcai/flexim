@@ -27,10 +27,9 @@ import std.file;
 import std.getopt;
 import std.path;
 
-void performAnalysis(string title, string cwd, string binariesDir, Benchmark benchmark, uint numCores, uint numThreads, AnalysisType analysisType) {
-	logging.infof(LogCategory.SIMULATOR, "peformAnalysis(title=%s, cwd=%s, binariesDir=%s, benchmark=%s, numCores=%d, numThreads=%d, analysisType=%s)",
-		title, cwd, binariesDir, benchmark, numCores, numThreads, analysisType);
-	Experiment experiment = Experiment.createDefault(title, cwd, binariesDir, benchmark, numCores, numThreads);
+void performAnalysis(string experimentName) {	
+	logging.infof(LogCategory.SIMULATOR, "peformAnalysis(experimentName=%s)", experimentName);	
+	Experiment experiment = Experiment.loadXML("../configs/experiments", experimentName ~ ".xml");	
 	experiment.execute();
 }
 
@@ -38,23 +37,10 @@ void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
 	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
-
-	string title = "testExp";
-	string cwd = "./";
 	
-	string binariesDir = "../tests/benchmarks";
+	string experimentName = "Olden_Custom1-em3d_original-1x2";
 	
-	string benchmarkSuiteName = "Olden_Custom1";
+	getopt(args, "experimentName", &experimentName);
 	
-	uint numCores = 1;
-	uint numThreads = 2;
-	
-	getopt(args, "title", &title, "cwd", &cwd, "binariesDir", &binariesDir, "benchmarkSuiteName", &benchmarkSuiteName,
-		"numCores", &numCores, "numThreads", &numThreads);
-
-	BenchmarkSuite benchmarkSuite = BenchmarkSuite.loadXML("../configs/benchmarks", benchmarkSuiteName ~ ".xml");
-	
-	foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
-		performAnalysis(title, cwd, binariesDir, benchmark, numCores, numThreads, AnalysisType.GENERAL);
-	}
+	performAnalysis(experimentName);
 }

@@ -1,5 +1,5 @@
 /*
- * flexim/sim/benchmarks.d
+ * flexim/sim/benchmark.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.sim.benchmarks;
+module flexim.sim.benchmark;
 
 import flexim.all;
 
@@ -58,7 +58,45 @@ class Benchmark {
 	BenchmarkSuite suite;
 }
 
-class BenchmarkSuiteXMLSerializer: XMLSerializer!(BenchmarkSuite) {
+class BenchmarkSuite {	
+	this(string title, string cwd) {
+		this.title = title;
+		this.cwd = cwd;
+	}
+	
+	void register(Benchmark benchmark) {
+		assert(!(benchmark.title in this.benchmarks));
+		benchmark.suite = this;
+		this.benchmarks[benchmark.title] = benchmark;
+	}
+	
+	Benchmark opIndex(string index) {
+		return this.benchmarks[index];
+	}
+	
+	override string toString() {
+		return format("BenchmarkSuite[title=%s, cwd=%s, benchmarks.length=%d]", this.title, this.cwd, this.benchmarks.length);
+	}
+	
+	static BenchmarkSuite loadXML(string cwd, string fileName) {
+		return BenchmarkSuiteXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(BenchmarkSuite benchmarkSuite) {
+		saveXML(benchmarkSuite, "../configs/benchmarks", benchmarkSuite.title ~ ".xml");
+	}
+	
+	static void saveXML(BenchmarkSuite benchmarkSuite, string cwd, string fileName) {
+		BenchmarkSuiteXMLFileSerializer.singleInstance.saveXML(benchmarkSuite, join(cwd, fileName));
+	}
+	
+	string title;
+	string cwd;
+	
+	Benchmark[string] benchmarks;
+}
+
+class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite) {
 	this() {
 	}
 	
@@ -105,46 +143,8 @@ class BenchmarkSuiteXMLSerializer: XMLSerializer!(BenchmarkSuite) {
 	}
 	
 	static this() {
-		singleInstance = new BenchmarkSuiteXMLSerializer();
+		singleInstance = new BenchmarkSuiteXMLFileSerializer();
 	}
 	
-	static BenchmarkSuiteXMLSerializer singleInstance;
-}
-
-class BenchmarkSuite {	
-	this(string title, string cwd) {
-		this.title = title;
-		this.cwd = cwd;
-	}
-	
-	void register(Benchmark benchmark) {
-		assert(!(benchmark.title in this.benchmarks));
-		benchmark.suite = this;
-		this.benchmarks[benchmark.title] = benchmark;
-	}
-	
-	Benchmark opIndex(string index) {
-		return this.benchmarks[index];
-	}
-	
-	override string toString() {
-		return format("BenchmarkSuite[title=%s, cwd=%s, benchmarks.length=%d]", this.title, this.cwd, this.benchmarks.length);
-	}
-	
-	static BenchmarkSuite loadXML(string cwd, string fileName) {
-		return BenchmarkSuiteXMLSerializer.singleInstance.loadXML(join(cwd, fileName));
-	}
-	
-	static void saveXML(BenchmarkSuite benchmarkSuite) {
-		saveXML(benchmarkSuite, "../configs/benchmarks", benchmarkSuite.title ~ ".xml");
-	}
-	
-	static void saveXML(BenchmarkSuite benchmarkSuite, string cwd, string fileName) {
-		BenchmarkSuiteXMLSerializer.singleInstance.saveXML(benchmarkSuite, join(cwd, fileName));
-	}
-	
-	string title;
-	string cwd;
-	
-	Benchmark[string] benchmarks;
+	static BenchmarkSuiteXMLFileSerializer singleInstance;
 }

@@ -115,18 +115,18 @@ XMLConfigFile deserialize(string xmlFileName) {
     return xmlConfig;
 }
 
-abstract class XMLSerializer(ObjectT) {
+abstract class XMLFileSerializer(ObjectT) {
 	abstract XMLConfigFile save(ObjectT config);
 	abstract ObjectT load(XMLConfigFile xmlConfigFile);
 	
 	void saveXML(ObjectT config, string xmlFileName) {
-		logging.infof(LogCategory.XML, "%s.saveXML(%s, %s)", "XMLSerializer", config, xmlFileName);
+		logging.infof(LogCategory.XML, "%s.saveXML(%s, %s)", "XMLFileSerializer", config, xmlFileName);
 		XMLConfigFile xmlConfigFile = save(config);
 		serialize(xmlConfigFile, xmlFileName);
 	}
 	
 	ObjectT loadXML(string xmlFileName, ObjectT defaultValue = null) {
-		logging.infof(LogCategory.XML, "%s.loadXML(%s)", "XMLSerializer", xmlFileName);
+		logging.infof(LogCategory.XML, "%s.loadXML(%s)", "XMLFileSerializer", xmlFileName);
 		if(exists(xmlFileName)) {
 			XMLConfigFile xmlConfigFile = deserialize(xmlFileName);
 			return load(xmlConfigFile);
@@ -135,4 +135,9 @@ abstract class XMLSerializer(ObjectT) {
 			return defaultValue;
 		}
 	}
+}
+
+abstract class XMLSerializer(ObjectT) {
+	abstract XMLConfig save(ObjectT config);
+	abstract ObjectT load(XMLConfig xmlConfig);
 }

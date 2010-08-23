@@ -23,12 +23,12 @@ module flexim.linux.syscall;
 
 import flexim.all;
 
+import core.stdc.errno;
+
 import std.c.stdlib;
 import std.c.linux.linux;
 
-alias SyscallReturn function(SyscallDesc, Thread) SyscallAction;
-
-alias uint SyscallReturn;
+alias uint function(SyscallDesc, Thread) SyscallAction;
 
 const uint MAXBUFSIZE = 1024;
 
@@ -66,13 +66,13 @@ struct utsname {
 };
 
 /* 1 */
-SyscallReturn exit_impl(SyscallDesc desc, Thread thread) {
+uint exit_impl(SyscallDesc desc, Thread thread) {
 	logging.haltf(LogCategory.SYSCALL, "target called exit(%d)", thread.getSyscallArg(0) & 0xff);
 	return 1;
 }
 
 /* 3 */
-SyscallReturn read_impl(SyscallDesc desc, Thread thread) {
+uint read_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
 	Addr buf_addr = thread.getSyscallArg(1);
 	size_t count = thread.getSyscallArg(2);
@@ -88,7 +88,7 @@ SyscallReturn read_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 4 */
-SyscallReturn write_impl(SyscallDesc desc, Thread thread) {
+uint write_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
 	Addr buf_addr = thread.getSyscallArg(1);
 	size_t count = thread.getSyscallArg(2);
@@ -102,7 +102,7 @@ SyscallReturn write_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 5 */
-SyscallReturn open_impl(SyscallDesc desc, Thread thread) {
+uint open_impl(SyscallDesc desc, Thread thread) {
 	char path[MAXBUFSIZE];
 
 	uint addr = thread.getSyscallArg(0);
@@ -133,14 +133,14 @@ SyscallReturn open_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 6 */
-SyscallReturn close_impl(SyscallDesc desc, Thread thread) {
+uint close_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
 	int ret = close(fd);
 	return ret;
 }
 
 /* 19 */
-SyscallReturn lseek_impl(SyscallDesc desc, Thread thread) {
+uint lseek_impl(SyscallDesc desc, Thread thread) {
 	int fildes = thread.getSyscallArg(0);
 	off_t offset = thread.getSyscallArg(1);
 	int whence = thread.getSyscallArg(2);
@@ -150,12 +150,12 @@ SyscallReturn lseek_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 20 */
-SyscallReturn getpid_impl(SyscallDesc desc, Thread thread) {
+uint getpid_impl(SyscallDesc desc, Thread thread) {
 	return thread.process.pid;
 }
 
 /* 24 */
-SyscallReturn getuid_impl(SyscallDesc desc, Thread thread) {
+uint getuid_impl(SyscallDesc desc, Thread thread) {
 	return thread.process.uid;
 }
 
@@ -168,7 +168,7 @@ struct tms {
 };
 
 /* 43 */
-SyscallReturn times_impl(SyscallDesc desc, Thread thread) {
+uint times_impl(SyscallDesc desc, Thread thread) {
 	assert(0);
 	//tms buf;
 	//clock_t ret = times(&buf);
@@ -180,7 +180,7 @@ SyscallReturn times_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 45 */
-SyscallReturn brk_impl(SyscallDesc desc, Thread thread) {
+uint brk_impl(SyscallDesc desc, Thread thread) {
 	int retval;
 
 	uint oldbrk, newbrk;
@@ -207,28 +207,28 @@ SyscallReturn brk_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 47 */
-SyscallReturn getgid_impl(SyscallDesc desc, Thread thread) {
+uint getgid_impl(SyscallDesc desc, Thread thread) {
 	return thread.process.gid;
 }
 
 /* 49 */
-SyscallReturn geteuid_impl(SyscallDesc desc, Thread thread) {
+uint geteuid_impl(SyscallDesc desc, Thread thread) {
 	return thread.process.euid;
 }
 
 /* 50 */
-SyscallReturn getegid_impl(SyscallDesc desc, Thread thread) {
+uint getegid_impl(SyscallDesc desc, Thread thread) {
 	return thread.process.egid;
 }
 
 /* 90 */
-SyscallReturn mmap_impl(SyscallDesc desc, Thread thread) {
+uint mmap_impl(SyscallDesc desc, Thread thread) {
 	assert(0); //TODO
 	return -EINVAL;
 }
 
 /* 108 */
-SyscallReturn fstat_impl(SyscallDesc desc, Thread thread) {
+uint fstat_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
 	Addr buf_addr = thread.getSyscallArg(1);
 	stat_t* buf = cast(stat_t*)(malloc(stat_t.sizeof));
@@ -241,14 +241,14 @@ SyscallReturn fstat_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 122 */
-SyscallReturn uname_impl(SyscallDesc desc, Thread thread) {
+uint uname_impl(SyscallDesc desc, Thread thread) {
 	utsname un = {"Linux", "sim", "2.6", "Tue Apr 5 12:21:57 UTC 2005", "mips"};
 	thread.mem.writeBlock(thread.getSyscallArg(0), un.sizeof, cast(ubyte*) &un);
 	return 0;
 }
 
 /* 140 */
-SyscallReturn _llseek_impl(SyscallDesc desc, Thread thread) {
+uint _llseek_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
 	uint offset_high = thread.getSyscallArg(1);
 	uint offset_low = thread.getSyscallArg(2);
@@ -274,12 +274,12 @@ SyscallReturn _llseek_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 197 */
-SyscallReturn fstat64_impl(SyscallDesc desc, Thread thread) {
+uint fstat64_impl(SyscallDesc desc, Thread thread) {
 	assert(0); //TODO
 	return -EINVAL;
 }
 
-SyscallReturn invalidArg_impl(SyscallDesc desc, Thread thread) {
+uint invalidArg_impl(SyscallDesc desc, Thread thread) {
 	logging.warnf(LogCategory.SYSCALL, "syscall %s is ignored.", desc.name);
 	return -EINVAL;
 }
@@ -567,7 +567,7 @@ class SyscallDesc {
 				logging.fatalf(LogCategory.SYSCALL, "syscall %s has not been implemented yet.", this.name);
 			}
 
-			SyscallReturn retval = this.action(this, thread);
+			uint retval = this.action(this, thread);
 			thread.setSyscallReturn(retval);
 		}
 		

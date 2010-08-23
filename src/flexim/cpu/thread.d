@@ -23,6 +23,8 @@ module flexim.cpu.thread;
 
 import flexim.all;
 
+import core.stdc.errno;
+
 enum ThreadStatus {
 	Active,
 	Suspended,
@@ -59,7 +61,7 @@ class Thread {
 		this.intRegs[FirstArgumentReg + i] = val;
 	}
 
-	void setSyscallReturn(SyscallReturn return_value) {
+	void setSyscallReturn(uint return_value) {
 		this.intRegs[ReturnValueReg] = return_value;
 		this.intRegs[SyscallSuccessReg] = return_value == cast(uint) -EINVAL ? 1 : 0;
 	}

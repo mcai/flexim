@@ -21,8 +21,6 @@
 
 module flexim.all;
 
-public import core.stdc.errno;
-
 public import std.algorithm;
 public import std.array;
 public import std.container;
@@ -69,9 +67,8 @@ public import flexim.mem.mmu;
 public import flexim.mem.mem;
 
 public import flexim.sim.analysis;
-public import flexim.sim.benchmarks;
-public import flexim.sim.configs;
-public import flexim.sim.simulations;
+public import flexim.sim.benchmark;
+public import flexim.sim.experiment;
 public import flexim.sim.simulator;
 
 public import flexim.util.arithmetic;
