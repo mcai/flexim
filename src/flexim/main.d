@@ -27,11 +27,6 @@ import std.file;
 import std.getopt;
 import std.path;
 
-void performAnalysis(string title, string cwd, string binariesDir, string benchmarkSuiteName, string benchmarkTitle, uint numCores, uint numThreads, AnalysisType analysisType) {
-	Benchmark benchmark = BenchmarkSuite.presets[benchmarkSuiteName][benchmarkTitle];
-	performAnalysis(title, cwd, binariesDir, benchmark, numCores, numThreads, analysisType);
-}
-
 void performAnalysis(string title, string cwd, string binariesDir, Benchmark benchmark, uint numCores, uint numThreads, AnalysisType analysisType) {
 	logging.infof(LogCategory.SIMULATOR, "peformAnalysis(title=%s, cwd=%s, binariesDir=%s, benchmark=%s, numCores=%d, numThreads=%d, analysisType=%s)",
 		title, cwd, binariesDir, benchmark, numCores, numThreads, analysisType);
@@ -49,19 +44,15 @@ void main(string[] args) {
 	
 	string binariesDir = "../tests/benchmarks";
 	
-	string benchmarkSuiteName = BenchmarkSuite.OldenCustom1.TITLE;
+	string benchmarkSuiteName = "Olden_Custom1";
 	
 	uint numCores = 1;
 	uint numThreads = 2;
 	
 	getopt(args, "title", &title, "cwd", &cwd, "binariesDir", &binariesDir, "benchmarkSuiteName", &benchmarkSuiteName,
 		"numCores", &numCores, "numThreads", &numThreads);
-		
-	foreach(benchmarkSuiteName, benchmarkSuite; BenchmarkSuite.presets) {
-		BenchmarkSuite.saveXML(benchmarkSuite, "../configs/benchmarks", benchmarkSuite.title ~ ".xml");
-	}
-	
-	BenchmarkSuite benchmarkSuite = BenchmarkSuite.presets[benchmarkSuiteName];
+
+	BenchmarkSuite benchmarkSuite = BenchmarkSuite.loadXML("../configs/benchmarks", benchmarkSuiteName ~ ".xml");
 	
 	foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
 		performAnalysis(title, cwd, binariesDir, benchmark, numCores, numThreads, AnalysisType.GENERAL);

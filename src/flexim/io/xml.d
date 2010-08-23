@@ -136,28 +136,3 @@ abstract class XMLSerializer(ObjectT) {
 		}
 	}
 }
-
-unittest {
-	XMLConfigFile config = new XMLConfigFile("configs");
-	config.attributes["configs_attr1_key"] = "configs_attr1_value";
-	
-	XMLConfig configEntry = new XMLConfig("config1");
-	configEntry.attributes["config1_attr1_key"] = "config1_attr1_value";
-	config.entries ~= configEntry;
-	
-	XMLConfig configEntry2 = new XMLConfig("config1_subconfig1");
-	configEntry2.attributes["config1_subconfig1_attr1_key"] = "config1_subconfig1_attr1_value";
-	configEntry.entries ~= configEntry2;
-	
-	string xmlFileName = "config.xml";
-	
-	writeln("config1: " ~ to!(string)(config));
-	
-	serialize(config, xmlFileName);
-	
-	XMLConfigFile config2 = deserialize(xmlFileName);
-	
-	writeln("config2: " ~ to!(string)(config2));
-	
-	serialize(config2, "config2.xml");
-}
