@@ -8,17 +8,30 @@ Flexim - A modular and highly configurable multicore simulator written in D
    This program is free software, licensed under the GPL3.
    Please, read the license file "COPYING" for further information.
 
-== Description ==
+== About ==
    Flexim is a modular and highly configurable architectural simulator for evaluating
-   emerging multicore processors. Based on the past experience and guided by a few
-   key software engineering concepts, it is developed from scratch in the object-oriented
-   D system programing language to obtain good maintainability, reusability and modularity
-   of the simulator code, and advocates further extensions via plugins. Its main components
-   include a classic five-stage out-of-order issue processor core, multi-level coherent
-   memory hierarchy with directory-based MESI coherence, and various supporting modules.
+   emerging multicore processors. It can run statically compiled MIPS32 LE programs.
 
-== Status ==
-   This program is currently in its ALPHA quality. Please keep an eye on its rapid development.
+== Key Features ==
+   Architectural:
+   * Simulation of a classic five-stage superscalar pipeline with out-of-order execution.
+   
+   * Multi-level memory hierarchy with the directory-based MESI cache coherence protocol.
+   
+   Non-architectural:
+   * Developed from scratch in the object-oriented system programming language D 2.0.
+     Great efforts are made to advocate software engineering practices in the simulator construction.
+     
+   * A powerful infrastructure that provides eventing and logging, etc.
+   
+   * Pervasive use of XML based I/O for architectural, workload and experiment configs and stats.
+   * Support for Syscall emulation simulation (i.e., application only, no need to boot an OS).
+   
+   * It provides a correct execution of several state-of-the-art benchmark suites,
+     e.g., wcet_bench, Olden and CPU2006.
+     
+   * Easy to begin with and easy to use. No scripting.
+     Only required are a statically compiled simulator executable and a few XML files.
 
 == System Requirements ==
  1. Make sure that you have a Ubuntu 10.04 linux machine.
