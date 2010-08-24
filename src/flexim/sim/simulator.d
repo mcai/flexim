@@ -171,17 +171,24 @@ class WriteCPURequest: CPURequest {
 }
 
 class CPUMemorySystem: MemorySystem!(CPURequest) {
-	this(SimulationConfig simulationConfig) {
-		super(simulationConfig.processorConfig.numCores * simulationConfig.processorConfig.numThreads);
-		
-		this.simulationConfig = simulationConfig;
+	this(Simulation simulation) {
+		super(simulation.config.processorConfig.numCores * simulation.config.processorConfig.numThreads);		
+		this.simulation = simulation;
 		this.createMemoryHierarchy();
 	}
 	
 	CacheT createCache(CacheConfig cacheGeometry, bool isPrivate, bool lowestPrivate, bool llc) {
-		return new CacheT(this, cacheGeometry.name, isPrivate, cacheGeometry.blockSize,
+		CacheT cache = new CacheT(this, cacheGeometry.name, isPrivate, cacheGeometry.blockSize,
 			cacheGeometry.assoc, cacheGeometry.sets,
 			cacheGeometry.hitLatency, cacheGeometry.missLatency, lowestPrivate, llc);
+		
+		this.simulation.stat.memorySystemStat.cacheStats[cache.name] = cache.stat;
+		
+		return cache;
+	}
+	
+	SimulationConfig simulationConfig() {
+		return this.simulation.config;
 	}
 
 	override void createMemoryHierarchy() {
@@ -260,13 +267,15 @@ class CPUMemorySystem: MemorySystem!(CPURequest) {
 		}
 	}
 	
-	SimulationConfig simulationConfig;
+	Simulation simulation;
 }
 
 class CPUSimulator : Simulator {	
-	this(SimulationConfig simulationConfig) {
-		this.simulationConfig = simulationConfig;
+	this(Simulation simulation) {
+		this.simulation = simulation;
 		this.processor = new Processor(this);
+		
+		SimulationConfig simulationConfig = simulation.config;
 		
 		for(uint i = 0; i < simulationConfig.processorConfig.numCores; i++) {
 			Core core = new Core(format("%d", i));
@@ -276,7 +285,7 @@ class CPUSimulator : Simulator {
 				
 				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 
-				Thread thread = new OoOThread(i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
+				Thread thread = new OoOThread(simulation, i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
 				
 				core.addThread(thread);
 			}
@@ -284,7 +293,7 @@ class CPUSimulator : Simulator {
 			this.processor.addCore(core);
 		}
 
-		this.memorySystem = new CPUMemorySystem(simulationConfig);
+		this.memorySystem = new CPUMemorySystem(simulation);
 
 		this.addEventProcessor(this.memorySystem.eventQueue);
 	}
@@ -337,10 +346,16 @@ class CPUSimulator : Simulator {
 		this.dumpStats();
 	}
 	
-	long duration;
+	long duration() {
+		return this.simulation.stat.duration;
+	}
+	
+	void duration(long value) {
+		this.simulation.stat.duration = value;
+	}
 
 	Processor processor;
 	CPUMemorySystem memorySystem;
 	
-	SimulationConfig simulationConfig;
+	Simulation simulation;
 }

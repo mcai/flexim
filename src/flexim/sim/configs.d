@@ -295,28 +295,10 @@ class MemorySystemConfigXMLSerializer: XMLSerializer!(MemorySystemConfig) {
 	static MemorySystemConfigXMLSerializer singleInstance;
 }
 
-interface Reproducible {
-	void beforeRun();
-	void run();
-	void afterRun();
-}
-
-class SimulationConfig: Reproducible {
+class SimulationConfig {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
-	}
-	
-	override void beforeRun() {
-		assert(this.processorConfig !is null && this.memorySystemConfig !is null);
-	}
-	
-	override void run() {
-		Simulator simulator = new CPUSimulator(this);
-		simulator.run();
-	}
-	
-	override void afterRun() {
 	}
 	
 	override string toString() {
@@ -367,7 +349,7 @@ class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig) {
 	static SimulationConfigXMLSerializer singleInstance;
 }
 
-class ExperimentConfig: Reproducible {
+class ExperimentConfig {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
@@ -377,30 +359,6 @@ class ExperimentConfig: Reproducible {
 		this.title = title;
 		this.cwd = cwd;
 		this.simulationConfigs = simulationConfigs;
-	}
-	
-	void execute() {
-		this.beforeRun();
-		this.run();
-		this.afterRun();
-	}
-	
-	override void beforeRun() {		
-		foreach(simulationConfig; this.simulationConfigs) {
-			simulationConfig.beforeRun();
-		}
-	}
-	
-	override void run() {
-		foreach(simulationConfig; this.simulationConfigs) {
-			simulationConfig.run();
-		}
-	}
-	
-	override void afterRun() {
-		foreach(simulationConfig; this.simulationConfigs) {
-			simulationConfig.afterRun();
-		}
 	}
 	
 	override string toString() {

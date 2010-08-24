@@ -28,9 +28,11 @@ import std.getopt;
 import std.path;
 
 void runExperiment(string experimentName) {	
-	logging.infof(LogCategory.SIMULATOR, "runExperiment(experimentName=%s)", experimentName);	
+	logging.infof(LogCategory.SIMULATOR, "runExperiment(experimentName=%s)", experimentName);
+	
 	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".xml");	
-	experimentConfig.execute();
+	Experiment experiment = new Experiment(experimentConfig);	
+	experiment.execute();
 }
 
 void main(string[] args) {

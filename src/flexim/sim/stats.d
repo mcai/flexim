@@ -75,10 +75,10 @@ class ProcessorStat: Stat {
 	}
 	
 	override string toString() {
-		return format("ProcessorStat[threads.length=%d]", this.threads.length);
+		return format("ProcessorStat[threadStats.length=%d]", this.threadStats.length);
 	}
 	
-	ThreadStat[] threads;
+	ThreadStat[] threadStats;
 }
 
 class ProcessorStatXMLSerializer: XMLSerializer!(ProcessorStat) {	
@@ -88,8 +88,8 @@ class ProcessorStatXMLSerializer: XMLSerializer!(ProcessorStat) {
 	override XMLConfig save(ProcessorStat processorStat) {
 		XMLConfig xmlConfig = new XMLConfig("ProcessorStat");
 		
-		foreach(threadName, thread; processorStat.threads) {
-			xmlConfig.entries ~= ThreadStatXMLSerializer.singleInstance.save(thread);
+		foreach(threadName, threadStat; processorStat.threadStats) {
+			xmlConfig.entries ~= ThreadStatXMLSerializer.singleInstance.save(threadStat);
 		}
 		
 		return xmlConfig;
@@ -100,7 +100,7 @@ class ProcessorStatXMLSerializer: XMLSerializer!(ProcessorStat) {
 		
 		foreach(entry; xmlConfig.entries) {
 			ThreadStat threadStat = ThreadStatXMLSerializer.singleInstance.load(entry);
-			processorStat.threads ~= threadStat;
+			processorStat.threadStats ~= threadStat;
 		}
 		
 		return processorStat;
@@ -243,10 +243,10 @@ class MemorySystemStat: Stat {
 	}
 	
 	override string toString() {
-		return format("MemorySystemStat[caches.length=%d]", this.caches.length);
+		return format("MemorySystemStat[cacheStats.length=%d]", this.cacheStats.length);
 	}
 	
-	CacheStat[string] caches;
+	CacheStat[string] cacheStats;
 }
 
 class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {	
@@ -256,8 +256,8 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 	override XMLConfig save(MemorySystemStat memorySystemStat) {
 		XMLConfig xmlConfig = new XMLConfig("MemorySystemStat");
 		
-		foreach(cacheName, cache; memorySystemStat.caches) {
-			xmlConfig.entries ~= CacheStatXMLSerializer.singleInstance.save(cache);
+		foreach(cacheName, cacheStat; memorySystemStat.cacheStats) {
+			xmlConfig.entries ~= CacheStatXMLSerializer.singleInstance.save(cacheStat);
 		}
 		
 		return xmlConfig;
@@ -268,7 +268,7 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 		
 		foreach(entry; xmlConfig.entries) {
 			CacheStat cacheStat = CacheStatXMLSerializer.singleInstance.load(entry);
-			memorySystemStat.caches[cacheStat.name] = cacheStat;
+			memorySystemStat.cacheStats[cacheStat.name] = cacheStat;
 		}
 		
 		return memorySystemStat;
@@ -281,31 +281,20 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 	static MemorySystemStatXMLSerializer singleInstance;
 }
 
-interface Renderer {
-	void beforeRender();
-	void render();
-	void afterRender();
-}
-
-class SimulationStat: Renderer {
+class SimulationStat {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
-	}
-	
-	override void beforeRender() {
-		assert(this.processorStat !is null && this.memorySystemStat !is null);
-	}
-	
-	override void render() {
-	}
-	
-	override void afterRender() {
+		
+		this.processorStat = new ProcessorStat();
+		this.memorySystemStat = new MemorySystemStat();
 	}
 	
 	override string toString() {
 		return format("SimulationStat[title=%s, cwd=%s]", this.title, this.cwd);
 	}
+	
+	long duration;
 	
 	string title;
 	string cwd;
@@ -322,6 +311,7 @@ class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
 		XMLConfig xmlConfig = new XMLConfig("SimulationStat");
 		xmlConfig.attributes["title"] = simulationStat.title;
 		xmlConfig.attributes["cwd"] = simulationStat.cwd;
+		xmlConfig.attributes["duration"] = to!(string)(simulationStat.duration);
 		
 		xmlConfig.entries ~= ProcessorStatXMLSerializer.singleInstance.save(simulationStat.processorStat);
 		xmlConfig.entries ~= MemorySystemStatXMLSerializer.singleInstance.save(simulationStat.memorySystemStat);
@@ -332,8 +322,10 @@ class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
 	override SimulationStat load(XMLConfig xmlConfig) {
 		string title = xmlConfig.attributes["title"];
 		string cwd = xmlConfig.attributes["cwd"];
+		long duration = to!(long)(xmlConfig.attributes["duration"]);
 		
-		SimulationStat simulationStat = new SimulationStat(title, cwd);
+		SimulationStat simulationStat = new SimulationStat(title, cwd);		
+		simulationStat.duration = duration;
 
 		ProcessorStat processorStat = ProcessorStatXMLSerializer.singleInstance.load(xmlConfig.entries[0]);
 		MemorySystemStat memorySystemStat = MemorySystemStatXMLSerializer.singleInstance.load(xmlConfig.entries[1]);
@@ -351,7 +343,7 @@ class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
 	static SimulationStatXMLSerializer singleInstance;
 }
 
-class ExperimentStat: Renderer {
+class ExperimentStat {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
@@ -361,30 +353,6 @@ class ExperimentStat: Renderer {
 		this.title = title;
 		this.cwd = cwd;
 		this.simulationStats = simulationStats;
-	}
-	
-	void execute() {
-		this.beforeRender();
-		this.render();
-		this.afterRender();
-	}
-	
-	override void beforeRender() {
-		foreach(simulationStat; this.simulationStats) {
-			simulationStat.beforeRender();
-		}
-	}
-	
-	override void render() {
-		foreach(simulationStat; this.simulationStats) {
-			simulationStat.render();
-		}
-	}
-	
-	override void afterRender() {
-		foreach(simulationStat; this.simulationStats) {
-			simulationStat.afterRender();
-		}
 	}
 	
 	override string toString() {

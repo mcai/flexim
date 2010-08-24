@@ -31,8 +31,12 @@ enum FetchStatus: string {
 }
 
 class OoOThread: Thread {
-	this(uint num, string name, Process process) {
+	this(Simulation simulation, uint num, string name, Process process) {
 		super(num, name, process);
+		
+		this.stat = new ThreadStat(this.num);
+		
+		simulation.stat.processorStat.threadStats ~= this.stat;
 
 		this.fetchWidth = 4;
 		this.decodeWidth = 4;

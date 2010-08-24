@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<Experiment title="testExp" cwd="./">
-   <Simulation title="testSim" cwd="./">
+<Experiment title="WCETBench-fir-1x1" cwd="../configs/experiments">
+   <Simulation title="WCETBench-fir-1x1" cwd="../configs/experiments">
       <ProcessorConfig maxCycle="2000000" maxInsts="2000000" maxTime="7200" numCores="1" numThreads="1">
          <Context num="0" binariesDir="../tests/benchmarks" benchmarkSuiteName="WCETBench" benchmarkName="fir">
          </Context>

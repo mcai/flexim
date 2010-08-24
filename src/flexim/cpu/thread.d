@@ -36,7 +36,10 @@ class Thread {
 		this.num = num;
 		
 		this.name = name;
+		
 		this.process = process;
+		
+		this.stat = new ThreadStat(this.num);
 
 		this.mem = new Memory();
 		
@@ -158,9 +161,13 @@ class Thread {
 	FloatRegisterFile floatRegs;
 	MiscRegisterFile miscRegs;
 
-	ulong totalInsts;
-
 	Bpred bpred;
 
 	uint stackRecoverIdx;
+	
+	ref ulong totalInsts() {
+		return this.stat.totalInsts;
+	}
+	
+	ThreadStat stat;
 }
