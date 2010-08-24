@@ -77,7 +77,12 @@ MLP-Aware DCP:
 		PipelineBehaviorAnalysis
 		CacheBehaviorAnalysis
 
-
+selected software engineering practices:
+	Use good source control system: Git
+	Integrated unit testing
+	Design patterns
+	Low to Medium Fan-out
+	High Fan-In
 
 
 

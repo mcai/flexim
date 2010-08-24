@@ -23,6 +23,12 @@ module flexim.mem.cache;
 
 import flexim.all;
 
+enum CacheReplacementPolicy: string {
+	LRU = "LRU",
+	FIFO = "FIFO",
+	Random = "Random"
+}
+
 enum CacheMonitoringEventType: string {
 	CACHE_SET_BLOCK = "CACHE_SET_BLOCK",
 	DIR_ENTRY_SET_SHARER = "DIR_ENTRY_SET_SHARER",

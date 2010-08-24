@@ -112,7 +112,7 @@ class MESICache: Node {
 		this.lowestPrivate = lowestPrivate;
 		this.llc = llc;
 
-		this.stats = new CacheStats();
+		this.stat = new CacheStat(this.name);
 
 		this.upperInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleUpperInterconnectMessage);
 		this.lowerInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleLowerInterconnectMessage);
@@ -136,34 +136,34 @@ class MESICache: Node {
 
 		str ~= format(indent ~ "[%s] -----\n", this.name);
 		
-		appendStatStr(str, indent, "Accesses", this.stats.accesses);
-		appendStatStr(str, indent, "Hits", this.stats.hits);
-		appendStatStr(str, indent, "Misses", this.stats.accesses - this.stats.hits);
-		appendStatStr(str, indent, "HitRatio", this.stats.accesses != 0 ? cast(double)(this.stats.hits) / cast(double)(this.stats.accesses) : 0.0);
-		appendStatStr(str, indent, "Evictions", this.stats.evictions);
-		appendStatStr(str, indent, "Retries", this.stats.readRetries + this.stats.writeRetries);
-		appendStatStr(str, indent, "ReadRetries", this.stats.readRetries);
-		appendStatStr(str, indent, "WriteRetries", this.stats.writeRetries);
-		appendStatStr(str, indent, "NoRetryAccesses", this.stats.noRetryAccesses);
-		appendStatStr(str, indent, "NoRetryHits", this.stats.noRetryHits);
-		appendStatStr(str, indent, "NoRetryMisses", this.stats.noRetryAccesses - this.stats.noRetryHits);
-		appendStatStr(str, indent, "NoRetryHitRatio", this.stats.noRetryAccesses != 0 ? cast(double)(this.stats.noRetryHits) / cast(double)(this.stats.noRetryAccesses) : 0.0);
-		appendStatStr(str, indent, "NoRetryReads", this.stats.noRetryReads);
-		appendStatStr(str, indent, "NoRetryReadHits", this.stats.noRetryReadHits);
-		appendStatStr(str, indent, "NoRetyrReadMisses", this.stats.noRetryReads - this.stats.noRetryReadHits);
-		appendStatStr(str, indent, "NoRetryWrites", this.stats.noRetryWrites);
-		appendStatStr(str, indent, "NoRetryWriteHits", this.stats.noRetryWriteHits);
-		appendStatStr(str, indent, "NoRetryWriteMisses", this.stats.noRetryWrites - this.stats.noRetryWriteHits);
-		appendStatStr(str, indent, "Reads", this.stats.reads);
-		appendStatStr(str, indent, "BlockingReads", this.stats.blockingReads);
-		appendStatStr(str, indent, "NonblockingReads", this.stats.nonblockingReads);
-		appendStatStr(str, indent, "ReadHits", this.stats.readHits);
-		appendStatStr(str, indent, "ReadMisses", this.stats.reads - this.stats.readHits);
-		appendStatStr(str, indent, "Writes", this.stats.writes);
-		appendStatStr(str, indent, "BlockingWrites", this.stats.blockingWrites);
-		appendStatStr(str, indent, "NonblockingWrites", this.stats.nonblockingWrites);
-		appendStatStr(str, indent, "WriteHits", this.stats.writeHits);
-		appendStatStr(str, indent, "WriteMisses", this.stats.writes - this.stats.writeHits);
+		appendStatStr(str, indent, "Accesses", this.stat.accesses);
+		appendStatStr(str, indent, "Hits", this.stat.hits);
+		appendStatStr(str, indent, "Misses", this.stat.accesses - this.stat.hits);
+		appendStatStr(str, indent, "HitRatio", this.stat.accesses != 0 ? cast(double)(this.stat.hits) / cast(double)(this.stat.accesses) : 0.0);
+		appendStatStr(str, indent, "Evictions", this.stat.evictions);
+		appendStatStr(str, indent, "Retries", this.stat.readRetries + this.stat.writeRetries);
+		appendStatStr(str, indent, "ReadRetries", this.stat.readRetries);
+		appendStatStr(str, indent, "WriteRetries", this.stat.writeRetries);
+		appendStatStr(str, indent, "NoRetryAccesses", this.stat.noRetryAccesses);
+		appendStatStr(str, indent, "NoRetryHits", this.stat.noRetryHits);
+		appendStatStr(str, indent, "NoRetryMisses", this.stat.noRetryAccesses - this.stat.noRetryHits);
+		appendStatStr(str, indent, "NoRetryHitRatio", this.stat.noRetryAccesses != 0 ? cast(double)(this.stat.noRetryHits) / cast(double)(this.stat.noRetryAccesses) : 0.0);
+		appendStatStr(str, indent, "NoRetryReads", this.stat.noRetryReads);
+		appendStatStr(str, indent, "NoRetryReadHits", this.stat.noRetryReadHits);
+		appendStatStr(str, indent, "NoRetyrReadMisses", this.stat.noRetryReads - this.stat.noRetryReadHits);
+		appendStatStr(str, indent, "NoRetryWrites", this.stat.noRetryWrites);
+		appendStatStr(str, indent, "NoRetryWriteHits", this.stat.noRetryWriteHits);
+		appendStatStr(str, indent, "NoRetryWriteMisses", this.stat.noRetryWrites - this.stat.noRetryWriteHits);
+		appendStatStr(str, indent, "Reads", this.stat.reads);
+		appendStatStr(str, indent, "BlockingReads", this.stat.blockingReads);
+		appendStatStr(str, indent, "NonblockingReads", this.stat.nonblockingReads);
+		appendStatStr(str, indent, "ReadHits", this.stat.readHits);
+		appendStatStr(str, indent, "ReadMisses", this.stat.reads - this.stat.readHits);
+		appendStatStr(str, indent, "Writes", this.stat.writes);
+		appendStatStr(str, indent, "BlockingWrites", this.stat.blockingWrites);
+		appendStatStr(str, indent, "NonblockingWrites", this.stat.nonblockingWrites);
+		appendStatStr(str, indent, "WriteHits", this.stat.writeHits);
+		appendStatStr(str, indent, "WriteMisses", this.stat.writes - this.stat.writeHits);
 
 		logging.info(LogCategory.CONFIG, str);
 	}
@@ -312,12 +312,12 @@ class MESICache: Node {
 		this.m_cacheHierarchy = value;
 	}
 	
-	CacheStats stats() {
-		return this.m_stats;
+	CacheStat stat() {
+		return this.m_stat;
 	}
 	
-	void stats(CacheStats value) {
-		this.m_stats = value;
+	void stat(CacheStat value) {
+		this.m_stat = value;
 	}
 
 	CacheT cache;
@@ -334,7 +334,7 @@ class MESICache: Node {
 
 	CacheQueueEntryT[][Addr] pendingRequests;
 	
-	private CacheStats m_stats;	
+	private CacheStat m_stat;	
 }
 
 class MESIMemory: MESICache {
@@ -533,39 +533,39 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 			
 			/* Stats */
-			ccache.stats.accesses++;
+			ccache.stat.accesses++;
 			if(hit) {
-				ccache.stats.hits++;
+				ccache.stat.hits++;
 			}
 			if(stack.isRead) {
-				ccache.stats.reads++;
-				stack.isBlocking ? ccache.stats.blockingReads++ : ccache.stats.nonblockingReads++;
+				ccache.stat.reads++;
+				stack.isBlocking ? ccache.stat.blockingReads++ : ccache.stat.nonblockingReads++;
 				if(hit) {
-					ccache.stats.readHits++;
+					ccache.stat.readHits++;
 				}
 			}
 			else {
-				ccache.stats.writes++;
-				stack.isBlocking ? ccache.stats.blockingWrites++ : ccache.stats.nonblockingWrites++;
+				ccache.stat.writes++;
+				stack.isBlocking ? ccache.stat.blockingWrites++ : ccache.stat.nonblockingWrites++;
 				if(hit) {
-					ccache.stats.writeHits++;
+					ccache.stat.writeHits++;
 				}
 			}
 			if(!stack.isRetry) {
-				ccache.stats.noRetryAccesses++;
+				ccache.stat.noRetryAccesses++;
 				if(hit) {
-					ccache.stats.noRetryHits++;					
+					ccache.stat.noRetryHits++;					
 				}
 				if(stack.isRead) {
-					ccache.stats.noRetryReads++;
+					ccache.stat.noRetryReads++;
 					if(hit) {
-						ccache.stats.noRetryReadHits++;
+						ccache.stat.noRetryReadHits++;
 					}
 				}
 				else {
-					ccache.stats.noRetryWrites++;
+					ccache.stat.noRetryWrites++;
 					if(hit) {
-						ccache.stats.noRetryWriteHits++;
+						ccache.stat.noRetryWriteHits++;
 					}
 				}
 			}
@@ -642,7 +642,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Eviction */
 			if(stack.isEviction) {
-				ccache.stats.evictions++;
+				ccache.stat.evictions++;
 				ccache.cache.getBlock(stack.set, stack.way, dumbTag, stack.state);
 				assert(stack.state == MESIState.INVALID);
 			}
@@ -684,7 +684,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error locking */
 			if(stack.isErr) {
-				ccache.stats.readRetries++;
+				ccache.stat.readRetries++;
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
@@ -714,7 +714,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error on read request. Unlock block and retry load. */
 			if(stack.isErr) {
-				ccache.stats.readRetries++;
+				ccache.stat.readRetries++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
@@ -772,7 +772,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error locking */
 			if(stack.isErr) {
-				ccache.stats.writeRetries++;
+				ccache.stat.writeRetries++;
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
@@ -802,7 +802,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Error in write request, unlock block and retry store. */
 			if(stack.isErr) {
-				ccache.stats.writeRetries++;
+				ccache.stat.writeRetries++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
 				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);

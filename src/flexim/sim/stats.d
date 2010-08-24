@@ -23,17 +23,106 @@ module flexim.sim.stats;
 
 import flexim.all;
 
-abstract class Stats {
+import std.path;
+
+abstract class Stat {
 }
 
-class CPUStats: Stats {
-	
-}
-
-class CacheStats: Stats {
-	this() {
-		
+class ThreadStat {
+	this(uint num) {
+		this.num = num;
 	}
+	
+	override string toString() {
+		return format("ThreadStat[num=%d]", this.num);
+	}
+	
+	uint num;
+	ulong totalInsts;
+}
+
+class ThreadStatXMLSerializer: XMLSerializer!(ThreadStat) {
+	this() {
+	}
+	
+	override XMLConfig save(ThreadStat threadStat) {
+		XMLConfig xmlConfig = new XMLConfig("ThreadStat");
+		
+		xmlConfig.attributes["totalInsts"] = to!(string)(threadStat.totalInsts);
+			
+		return xmlConfig;
+	}
+	
+	override ThreadStat load(XMLConfig xmlConfig) {
+		uint num = to!(uint)(xmlConfig.attributes["num"]);
+		ulong totalInsts = to!(ulong)(xmlConfig.attributes["totalInsts"]);
+			
+		ThreadStat threadStat = new ThreadStat(num);
+		threadStat.totalInsts = totalInsts;
+
+		return threadStat;
+	}
+	
+	static this() {
+		singleInstance = new ThreadStatXMLSerializer();
+	}
+	
+	static ThreadStatXMLSerializer singleInstance;
+}
+
+class ProcessorStat: Stat {
+	this() {
+	}
+	
+	override string toString() {
+		return format("ProcessorStat[threads.length=%d]", this.threads.length);
+	}
+	
+	ThreadStat[] threads;
+}
+
+class ProcessorStatXMLSerializer: XMLSerializer!(ProcessorStat) {	
+	this() {
+	}
+	
+	override XMLConfig save(ProcessorStat processorStat) {
+		XMLConfig xmlConfig = new XMLConfig("ProcessorStat");
+		
+		foreach(threadName, thread; processorStat.threads) {
+			xmlConfig.entries ~= ThreadStatXMLSerializer.singleInstance.save(thread);
+		}
+		
+		return xmlConfig;
+	}
+	
+	override ProcessorStat load(XMLConfig xmlConfig) {
+		ProcessorStat processorStat = new ProcessorStat();
+		
+		foreach(entry; xmlConfig.entries) {
+			ThreadStat threadStat = ThreadStatXMLSerializer.singleInstance.load(entry);
+			processorStat.threads ~= threadStat;
+		}
+		
+		return processorStat;
+	}
+	
+	static this() {
+		singleInstance = new ProcessorStatXMLSerializer();
+	}
+	
+	static ProcessorStatXMLSerializer singleInstance;
+}
+
+class CacheStat: Stat {
+	this(string name) {
+		this.name = name;
+	}
+	
+	override string toString() {
+		return format("CacheStat[name=%s]", this.name);
+	}
+	
+	string name;
 	
 	ulong accesses;
 	ulong hits;
@@ -58,39 +147,41 @@ class CacheStats: Stats {
 	ulong noRetryWriteHits;
 }
 
-class CacheStatsXMLSerializer: XMLSerializer!(CacheStats) {
+class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
 	this() {
 	}
 	
-	override XMLConfig save(CacheStats cacheStats) {
-		XMLConfig xmlConfig = new XMLConfig("CacheStats");
+	override XMLConfig save(CacheStat cacheStat) {
+		XMLConfig xmlConfig = new XMLConfig("CacheStat");
+
+		xmlConfig.attributes["name"] = cacheStat.name;
+		xmlConfig.attributes["accesses"] = to!(string)(cacheStat.accesses);
+		xmlConfig.attributes["hits"] = to!(string)(cacheStat.hits);
+		xmlConfig.attributes["evictions"] = to!(string)(cacheStat.evictions);
+		xmlConfig.attributes["reads"] = to!(string)(cacheStat.reads);
+		xmlConfig.attributes["blockingReads"] = to!(string)(cacheStat.blockingReads);
+		xmlConfig.attributes["nonblockingReads"] = to!(string)(cacheStat.nonblockingReads);
+		xmlConfig.attributes["readHits"] = to!(string)(cacheStat.readHits);
+		xmlConfig.attributes["writes"] = to!(string)(cacheStat.writes);
+		xmlConfig.attributes["blockingWrites"] = to!(string)(cacheStat.blockingWrites);
+		xmlConfig.attributes["nonblockingWrites"] = to!(string)(cacheStat.nonblockingWrites);
+		xmlConfig.attributes["writeHits"] = to!(string)(cacheStat.writeHits);
 		
-		xmlConfig.attributes["accesses"] = to!(string)(cacheStats.accesses);
-		xmlConfig.attributes["hits"] = to!(string)(cacheStats.hits);
-		xmlConfig.attributes["evictions"] = to!(string)(cacheStats.evictions);
-		xmlConfig.attributes["reads"] = to!(string)(cacheStats.reads);
-		xmlConfig.attributes["blockingReads"] = to!(string)(cacheStats.blockingReads);
-		xmlConfig.attributes["nonblockingReads"] = to!(string)(cacheStats.nonblockingReads);
-		xmlConfig.attributes["readHits"] = to!(string)(cacheStats.readHits);
-		xmlConfig.attributes["writes"] = to!(string)(cacheStats.writes);
-		xmlConfig.attributes["blockingWrites"] = to!(string)(cacheStats.blockingWrites);
-		xmlConfig.attributes["nonblockingWrites"] = to!(string)(cacheStats.nonblockingWrites);
-		xmlConfig.attributes["writeHits"] = to!(string)(cacheStats.writeHits);
+		xmlConfig.attributes["readRetries"] = to!(string)(cacheStat.readRetries);
+		xmlConfig.attributes["writeRetries"] = to!(string)(cacheStat.writeRetries);
 		
-		xmlConfig.attributes["readRetries"] = to!(string)(cacheStats.readRetries);
-		xmlConfig.attributes["writeRetries"] = to!(string)(cacheStats.writeRetries);
-		
-		xmlConfig.attributes["noRetryAccesses"] = to!(string)(cacheStats.noRetryAccesses);
-		xmlConfig.attributes["noRetryHits"] = to!(string)(cacheStats.noRetryHits);
-		xmlConfig.attributes["noRetryReads"] = to!(string)(cacheStats.noRetryReads);
-		xmlConfig.attributes["noRetryReadHits"] = to!(string)(cacheStats.noRetryReadHits);
-		xmlConfig.attributes["noRetryWrites"] = to!(string)(cacheStats.noRetryWrites);
-		xmlConfig.attributes["noRetryWriteHits"] = to!(string)(cacheStats.noRetryWriteHits);
+		xmlConfig.attributes["noRetryAccesses"] = to!(string)(cacheStat.noRetryAccesses);
+		xmlConfig.attributes["noRetryHits"] = to!(string)(cacheStat.noRetryHits);
+		xmlConfig.attributes["noRetryReads"] = to!(string)(cacheStat.noRetryReads);
+		xmlConfig.attributes["noRetryReadHits"] = to!(string)(cacheStat.noRetryReadHits);
+		xmlConfig.attributes["noRetryWrites"] = to!(string)(cacheStat.noRetryWrites);
+		xmlConfig.attributes["noRetryWriteHits"] = to!(string)(cacheStat.noRetryWriteHits);
 			
 		return xmlConfig;
 	}
 	
-	override CacheStats load(XMLConfig xmlConfig) {
+	override CacheStat load(XMLConfig xmlConfig) {
+		string name = xmlConfig.attributes["name"];
 		ulong accesses = to!(ulong)(xmlConfig.attributes["accesses"]);
 		ulong hits = to!(ulong)(xmlConfig.attributes["hits"]);
 		ulong evictions = to!(ulong)(xmlConfig.attributes["evictions"]);
@@ -113,35 +204,240 @@ class CacheStatsXMLSerializer: XMLSerializer!(CacheStats) {
 		ulong noRetryWrites = to!(ulong)(xmlConfig.attributes["noRetryWrites"]);
 		ulong noRetryWriteHits = to!(ulong)(xmlConfig.attributes["noRetryWriteHits"]);
 			
-		CacheStats cacheStats = new CacheStats();
-		cacheStats.accesses = accesses;
-		cacheStats.hits = hits;
-		cacheStats.evictions = evictions;
-		cacheStats.reads = reads;
-		cacheStats.blockingReads = blockingReads;
-		cacheStats.nonblockingReads = nonblockingReads;
-		cacheStats.readHits = readHits;
-		cacheStats.writes = writes;
-		cacheStats.blockingWrites = blockingWrites;
-		cacheStats.nonblockingWrites = nonblockingWrites;
-		cacheStats.writeHits = writeHits;
+		CacheStat cacheStat = new CacheStat(name);
 		
-		cacheStats.readRetries = readRetries;
-		cacheStats.writeRetries = writeRetries;
+		cacheStat.accesses = accesses;
+		cacheStat.hits = hits;
+		cacheStat.evictions = evictions;
+		cacheStat.reads = reads;
+		cacheStat.blockingReads = blockingReads;
+		cacheStat.nonblockingReads = nonblockingReads;
+		cacheStat.readHits = readHits;
+		cacheStat.writes = writes;
+		cacheStat.blockingWrites = blockingWrites;
+		cacheStat.nonblockingWrites = nonblockingWrites;
+		cacheStat.writeHits = writeHits;
 		
-		cacheStats.noRetryAccesses = noRetryAccesses;
-		cacheStats.noRetryHits = noRetryHits;
-		cacheStats.noRetryReads = noRetryReads;
-		cacheStats.noRetryReadHits = noRetryReadHits;
-		cacheStats.noRetryWrites = noRetryWrites;
-		cacheStats.noRetryWriteHits = noRetryWriteHits;
+		cacheStat.readRetries = readRetries;
+		cacheStat.writeRetries = writeRetries;
+		
+		cacheStat.noRetryAccesses = noRetryAccesses;
+		cacheStat.noRetryHits = noRetryHits;
+		cacheStat.noRetryReads = noRetryReads;
+		cacheStat.noRetryReadHits = noRetryReadHits;
+		cacheStat.noRetryWrites = noRetryWrites;
+		cacheStat.noRetryWriteHits = noRetryWriteHits;
 
-		return cacheStats;
+		return cacheStat;
 	}
 	
 	static this() {
-		singleInstance = new CacheStatsXMLSerializer();
+		singleInstance = new CacheStatXMLSerializer();
 	}
 	
-	static CacheStatsXMLSerializer singleInstance;
+	static CacheStatXMLSerializer singleInstance;
+}
+
+class MemorySystemStat: Stat {
+	this() {
+	}
+	
+	override string toString() {
+		return format("MemorySystemStat[caches.length=%d]", this.caches.length);
+	}
+	
+	CacheStat[string] caches;
+}
+
+class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {	
+	this() {
+	}
+	
+	override XMLConfig save(MemorySystemStat memorySystemStat) {
+		XMLConfig xmlConfig = new XMLConfig("MemorySystemStat");
+		
+		foreach(cacheName, cache; memorySystemStat.caches) {
+			xmlConfig.entries ~= CacheStatXMLSerializer.singleInstance.save(cache);
+		}
+		
+		return xmlConfig;
+	}
+	
+	override MemorySystemStat load(XMLConfig xmlConfig) {
+		MemorySystemStat memorySystemStat = new MemorySystemStat();
+		
+		foreach(entry; xmlConfig.entries) {
+			CacheStat cacheStat = CacheStatXMLSerializer.singleInstance.load(entry);
+			memorySystemStat.caches[cacheStat.name] = cacheStat;
+		}
+		
+		return memorySystemStat;
+	}
+	
+	static this() {
+		singleInstance = new MemorySystemStatXMLSerializer();
+	}
+	
+	static MemorySystemStatXMLSerializer singleInstance;
+}
+
+interface Renderer {
+	void beforeRender();
+	void render();
+	void afterRender();
+}
+
+class SimulationStat: Renderer {
+	this(string title, string cwd) {
+		this.title = title;
+		this.cwd = cwd;
+	}
+	
+	override void beforeRender() {
+		assert(this.processorStat !is null && this.memorySystemStat !is null);
+	}
+	
+	override void render() {
+	}
+	
+	override void afterRender() {
+	}
+	
+	override string toString() {
+		return format("SimulationStat[title=%s, cwd=%s]", this.title, this.cwd);
+	}
+	
+	string title;
+	string cwd;
+	
+	ProcessorStat processorStat;
+	MemorySystemStat memorySystemStat;
+}
+
+class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
+	this() {
+	}
+	
+	override XMLConfig save(SimulationStat simulationStat) {
+		XMLConfig xmlConfig = new XMLConfig("SimulationStat");
+		xmlConfig.attributes["title"] = simulationStat.title;
+		xmlConfig.attributes["cwd"] = simulationStat.cwd;
+		
+		xmlConfig.entries ~= ProcessorStatXMLSerializer.singleInstance.save(simulationStat.processorStat);
+		xmlConfig.entries ~= MemorySystemStatXMLSerializer.singleInstance.save(simulationStat.memorySystemStat);
+		
+		return xmlConfig;
+	}
+	
+	override SimulationStat load(XMLConfig xmlConfig) {
+		string title = xmlConfig.attributes["title"];
+		string cwd = xmlConfig.attributes["cwd"];
+		
+		SimulationStat simulationStat = new SimulationStat(title, cwd);
+
+		ProcessorStat processorStat = ProcessorStatXMLSerializer.singleInstance.load(xmlConfig.entries[0]);
+		MemorySystemStat memorySystemStat = MemorySystemStatXMLSerializer.singleInstance.load(xmlConfig.entries[1]);
+		
+		simulationStat.processorStat = processorStat;
+		simulationStat.memorySystemStat = memorySystemStat;
+		
+		return simulationStat;
+	}
+	
+	static this() {
+		singleInstance = new SimulationStatXMLSerializer();
+	}
+	
+	static SimulationStatXMLSerializer singleInstance;
+}
+
+class ExperimentStat: Renderer {
+	this(string title, string cwd) {
+		this.title = title;
+		this.cwd = cwd;
+	}
+	
+	this(string title, string cwd, SimulationStat[] simulationStats) {
+		this.title = title;
+		this.cwd = cwd;
+		this.simulationStats = simulationStats;
+	}
+	
+	void execute() {
+		this.beforeRender();
+		this.render();
+		this.afterRender();
+	}
+	
+	override void beforeRender() {
+		foreach(simulationStat; this.simulationStats) {
+			simulationStat.beforeRender();
+		}
+	}
+	
+	override void render() {
+		foreach(simulationStat; this.simulationStats) {
+			simulationStat.render();
+		}
+	}
+	
+	override void afterRender() {
+		foreach(simulationStat; this.simulationStats) {
+			simulationStat.afterRender();
+		}
+	}
+	
+	override string toString() {
+		return format("ExperimentStat[title=%s, cwd=%s, simulationConfigs.length=%d]", this.title, this.cwd, this.simulationStats.length);
+	}
+	
+	static ExperimentStat loadXML(string cwd, string fileName) {
+		return ExperimentStatXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(ExperimentStat experimentStat, string cwd, string fileName) {
+		ExperimentStatXMLFileSerializer.singleInstance.saveXML(experimentStat, join(cwd, fileName));
+	}
+	
+	string title;
+	string cwd;
+	
+	SimulationStat[] simulationStats;
+}
+
+class ExperimentStatXMLFileSerializer: XMLFileSerializer!(ExperimentStat) {
+	this() {
+	}
+	
+	override XMLConfigFile save(ExperimentStat experimentStat) {
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("ExperimentStat");
+		
+		xmlConfigFile.attributes["title"] = experimentStat.title;
+		xmlConfigFile.attributes["cwd"] = experimentStat.cwd;
+			
+		foreach(simulationStat; experimentStat.simulationStats) {
+			xmlConfigFile.entries ~= SimulationStatXMLSerializer.singleInstance.save(simulationStat);
+		}
+			
+		return xmlConfigFile;
+	}
+	
+	override ExperimentStat load(XMLConfigFile xmlConfigFile) {
+		string title = xmlConfigFile.attributes["title"];
+		string cwd = xmlConfigFile.attributes["cwd"];
+		
+		ExperimentStat experimentStat = new ExperimentStat(title, cwd);
+
+		foreach(entry; xmlConfigFile.entries) {
+			experimentStat.simulationStats ~= SimulationStatXMLSerializer.singleInstance.load(entry);
+		}
+
+		return experimentStat;
+	}
+	
+	static this() {
+		singleInstance = new ExperimentStatXMLFileSerializer();
+	}
+	
+	static ExperimentStatXMLFileSerializer singleInstance;
 }

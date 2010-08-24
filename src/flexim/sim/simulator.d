@@ -172,20 +172,20 @@ class WriteCPURequest: CPURequest {
 
 class CPUMemorySystem: MemorySystem!(CPURequest) {
 	this(SimulationConfig simulationConfig) {
-		super(simulationConfig.cpuConfig.numCores * simulationConfig.cpuConfig.numThreads);
+		super(simulationConfig.processorConfig.numCores * simulationConfig.processorConfig.numThreads);
 		
 		this.simulationConfig = simulationConfig;
 		this.createMemoryHierarchy();
 	}
 	
-	CacheT createCache(CacheGeometry cacheGeometry, bool isPrivate, bool lowestPrivate, bool llc) {
+	CacheT createCache(CacheConfig cacheGeometry, bool isPrivate, bool lowestPrivate, bool llc) {
 		return new CacheT(this, cacheGeometry.name, isPrivate, cacheGeometry.blockSize,
 			cacheGeometry.assoc, cacheGeometry.sets,
 			cacheGeometry.hitLatency, cacheGeometry.missLatency, lowestPrivate, llc);
 	}
 
 	override void createMemoryHierarchy() {
-		this.l2 = this.createCache(this.simulationConfig.cacheConfig.caches["l2"], false, false, true);
+		this.l2 = this.createCache(this.simulationConfig.memorySystemConfig.caches["l2"], false, false, true);
 		this.caches ~= this.l2;
 
 		//		this.mem = new MESIMemory(this, "mem", 400, 300);
@@ -216,10 +216,10 @@ class CPUMemorySystem: MemorySystem!(CPURequest) {
 		l2.next = this.mem;
 
 		for(uint i = 0; i < this.endNodeCount; i++) {
-			CacheT l1I = this.createCache(this.simulationConfig.cacheConfig.caches["l1I" ~ "-" ~ to!(string)(i)], true, true, false);
+			CacheT l1I = this.createCache(this.simulationConfig.memorySystemConfig.caches["l1I" ~ "-" ~ to!(string)(i)], true, true, false);
 			SequencerT seqI = new SequencerT("seqI" ~ "-" ~ to!(string)(i), l1I);
 
-			CacheT l1D = this.createCache(this.simulationConfig.cacheConfig.caches["l1D" ~ "-" ~ to!(string)(i)], true, true, false);
+			CacheT l1D = this.createCache(this.simulationConfig.memorySystemConfig.caches["l1D" ~ "-" ~ to!(string)(i)], true, true, false);
 			SequencerT seqD = new SequencerT("seqD" ~ "-" ~ to!(string)(i), l1D);
 
 			this.seqIs[i] = seqI;
@@ -265,17 +265,18 @@ class CPUMemorySystem: MemorySystem!(CPURequest) {
 
 class CPUSimulator : Simulator {	
 	this(SimulationConfig simulationConfig) {
+		this.simulationConfig = simulationConfig;
 		this.processor = new Processor(this);
 		
-		for(uint i = 0; i < simulationConfig.cpuConfig.numCores; i++) {
+		for(uint i = 0; i < simulationConfig.processorConfig.numCores; i++) {
 			Core core = new Core(format("%d", i));
 				
-			for(uint j = 0; j < simulationConfig.cpuConfig.numThreads; j++) {
-				Context context = simulationConfig.cpuConfig.contexts[i * simulationConfig.cpuConfig.numThreads + j];
+			for(uint j = 0; j < simulationConfig.processorConfig.numThreads; j++) {
+				ContextConfig context = simulationConfig.processorConfig.contexts[i * simulationConfig.processorConfig.numThreads + j];
 				
 				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 
-				Thread thread = new OoOThread(i * simulationConfig.cpuConfig.numThreads + j, format("%d", j), process);
+				Thread thread = new OoOThread(i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
 				
 				core.addThread(thread);
 			}
@@ -340,4 +341,6 @@ class CPUSimulator : Simulator {
 
 	Processor processor;
 	CPUMemorySystem memorySystem;
+	
+	SimulationConfig simulationConfig;
 }
