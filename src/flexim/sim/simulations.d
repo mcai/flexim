@@ -101,7 +101,7 @@ class Experiment: Reproducible {
 			simulation.afterRun();
 		}
 		
-		ExperimentStat.saveXML(this.stat, this.cwd, this.title ~ ".stats.xml");
+		ExperimentStat.saveXML(this.stat, this.cwd, this.title ~ ".stat.xml");
 	}
 	
 	override string toString() {

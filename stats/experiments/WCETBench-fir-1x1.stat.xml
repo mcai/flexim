@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ExperimentStat title="WCETBench-fir-1x1" cwd="../configs/experiments">
-   <SimulationStat title="WCETBench-fir-1x1" cwd="../configs/experiments" duration="2414">
+<ExperimentStat title="WCETBench-fir-1x1" cwd="../stats/experiments">
+   <SimulationStat title="WCETBench-fir-1x1" cwd="../stats/experiments" duration="2487">
       <ProcessorStat>
          <ThreadStat totalInsts="2679">
          </ThreadStat>
@@ -8,7 +8,7 @@
       <MemorySystemStat>
          <CacheStat hits="3" noRetryWrites="14" noRetryAccesses="76" writeHits="3" evictions="0" nonblockingReads="62" reads="62" blockingReads="0" name="l2" writeRetries="0" noRetryWriteHits="3" writes="14" readHits="0" nonblockingWrites="14" blockingWrites="0" noRetryReads="62" noRetryHits="3" readRetries="0" accesses="76" noRetryReadHits="0">
          </CacheStat>
-         <CacheStat hits="779" noRetryWrites="89" noRetryAccesses="459" writeHits="410" evictions="0" nonblockingReads="383" reads="383" blockingReads="0" name="l1D-0" writeRetries="332" noRetryWriteHits="78" writes="421" readHits="369" nonblockingWrites="421" blockingWrites="0" noRetryReads="370" noRetryHits="434" readRetries="13" accesses="804" noRetryReadHits="356">
+         <CacheStat hits="767" noRetryWrites="89" noRetryAccesses="459" writeHits="394" evictions="0" nonblockingReads="387" reads="387" blockingReads="0" name="l1D-0" writeRetries="316" noRetryWriteHits="78" writes="405" readHits="373" nonblockingWrites="405" blockingWrites="0" noRetryReads="370" noRetryHits="434" readRetries="17" accesses="792" noRetryReadHits="356">
          </CacheStat>
          <CacheStat hits="67" noRetryWrites="0" noRetryAccesses="115" writeHits="0" evictions="0" nonblockingReads="115" reads="115" blockingReads="0" name="l1I-0" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="67" nonblockingWrites="0" blockingWrites="0" noRetryReads="115" noRetryHits="67" readRetries="0" accesses="115" noRetryReadHits="67">
          </CacheStat>

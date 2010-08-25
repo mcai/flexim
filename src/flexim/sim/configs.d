@@ -84,7 +84,7 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	}
 	
 	override XMLConfig save(ContextConfig contextConfig) {
-		XMLConfig xmlConfig = new XMLConfig("Context");
+		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
 		xmlConfig.attributes["num"] = to!(string)(contextConfig.num);
 		xmlConfig.attributes["binariesDir"] = contextConfig.binariesDir;
 		xmlConfig.attributes["benchmarkSuiteName"] = contextConfig.benchmarkSuiteName;
@@ -218,7 +218,7 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	}
 	
 	override XMLConfig save(CacheConfig cacheConfig) {
-		XMLConfig xmlConfig = new XMLConfig("Cache");
+		XMLConfig xmlConfig = new XMLConfig("CacheConfig");
 		
 		xmlConfig.attributes["name"] = cacheConfig.name;
 		xmlConfig.attributes["sets"] = to!(string)(cacheConfig.sets);

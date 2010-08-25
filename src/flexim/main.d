@@ -30,8 +30,8 @@ import std.path;
 void runExperiment(string experimentName) {	
 	logging.infof(LogCategory.SIMULATOR, "runExperiment(experimentName=%s)", experimentName);
 	
-	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".xml");	
-	Experiment experiment = new Experiment(experimentConfig);	
+	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".config.xml");
+	Experiment experiment = new Experiment(experimentConfig);
 	experiment.execute();
 }
 
