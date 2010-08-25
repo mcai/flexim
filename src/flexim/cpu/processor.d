@@ -53,20 +53,6 @@ class Processor {
 				this.cores.remove(core.name);
 			}
 		}
-		
-		void dumpConfigs(string indent) {
-			logging.info(LogCategory.CONFIG, indent ~ "[Processor]");
-			foreach(core; this.cores) {
-				core.dumpConfigs(indent ~ "  ");
-			}
-		}
-		
-		void dumpStats(string indent) {
-			logging.info(LogCategory.STAT, indent ~ "[Processor]");
-			foreach(core; this.cores) {
-				core.dumpStats(indent ~ "  ");
-			}
-		}
 
 		void run() {			
 			foreach(core; this.cores) {

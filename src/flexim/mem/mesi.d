@@ -23,7 +23,7 @@ module flexim.mem.mesi;
 
 import flexim.all;
 
-uint retry_lat(ICache)(ICache ccache) {
+uint retry_lat(MESICache ccache) {
 	return ccache.hitLatency + uniform(0, ccache.hitLatency + 2);
 }
 
@@ -98,13 +98,13 @@ class MESICache: Node {
 	alias CacheHierarchy!(typeof(this), StateT) CacheHierarchyT;
 
 	this(CacheHierarchyT cacheHierarchy, string name, bool isPrivate, uint blockSize, uint assoc, uint numSets, uint hitLatency, uint missLatency, bool lowestPrivate, bool llc) {
-		super(name, isPrivate);
+		super(name);
+		
+		this.isPrivate = isPrivate;
 
 		this.cacheHierarchy = cacheHierarchy;
 
 		this.cache = new CacheT(blockSize, assoc, numSets, MESIState.INVALID);
-		
-		this.cache.monitor.callbacks ~= new CacheMonitoringCallback(&this.monitor);
 
 		this.hitLatency = hitLatency;
 		this.missLatency = missLatency;
@@ -116,56 +116,6 @@ class MESICache: Node {
 
 		this.upperInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleUpperInterconnectMessage);
 		this.lowerInterconnectMessageReceived ~= new MessageReceivedHandler(&this.handleLowerInterconnectMessage);
-	}
-	
-	void monitor(uint set, uint way, CacheMonitoringEventType eventType, string msg) {
-		logging.infof(LogCategory.DEBUG, "  %s %s (set=%d, way=%s) %s", this.name, eventType, set, way != -1 ? format("%d", way) : "N/A", msg);
-	}
-
-	void dumpConfigs(string indent) {
-		logging.infof(LogCategory.CONFIG, indent ~ "[%s] number of sets: %d, block size: %d, assoc: %d, hit latency: %d, miss latency: %d", this.name, this.cache.numSets, this.cache.blockSize,
-				this.cache.assoc, this.hitLatency, this.missLatency);
-	}
-	
-	void appendStatStr(T)(ref string str, string indent, string key, T value) {
-		str ~= format(indent ~ "  " ~ "%s: %s\n", key, to!(string)(value));
-	}
-
-	void dumpStats(string indent) {
-		string str;
-
-		str ~= format(indent ~ "[%s] -----\n", this.name);
-		
-		appendStatStr(str, indent, "Accesses", this.stat.accesses);
-		appendStatStr(str, indent, "Hits", this.stat.hits);
-		appendStatStr(str, indent, "Misses", this.stat.accesses - this.stat.hits);
-		appendStatStr(str, indent, "HitRatio", this.stat.accesses != 0 ? cast(double)(this.stat.hits) / cast(double)(this.stat.accesses) : 0.0);
-		appendStatStr(str, indent, "Evictions", this.stat.evictions);
-		appendStatStr(str, indent, "Retries", this.stat.readRetries + this.stat.writeRetries);
-		appendStatStr(str, indent, "ReadRetries", this.stat.readRetries);
-		appendStatStr(str, indent, "WriteRetries", this.stat.writeRetries);
-		appendStatStr(str, indent, "NoRetryAccesses", this.stat.noRetryAccesses);
-		appendStatStr(str, indent, "NoRetryHits", this.stat.noRetryHits);
-		appendStatStr(str, indent, "NoRetryMisses", this.stat.noRetryAccesses - this.stat.noRetryHits);
-		appendStatStr(str, indent, "NoRetryHitRatio", this.stat.noRetryAccesses != 0 ? cast(double)(this.stat.noRetryHits) / cast(double)(this.stat.noRetryAccesses) : 0.0);
-		appendStatStr(str, indent, "NoRetryReads", this.stat.noRetryReads);
-		appendStatStr(str, indent, "NoRetryReadHits", this.stat.noRetryReadHits);
-		appendStatStr(str, indent, "NoRetyrReadMisses", this.stat.noRetryReads - this.stat.noRetryReadHits);
-		appendStatStr(str, indent, "NoRetryWrites", this.stat.noRetryWrites);
-		appendStatStr(str, indent, "NoRetryWriteHits", this.stat.noRetryWriteHits);
-		appendStatStr(str, indent, "NoRetryWriteMisses", this.stat.noRetryWrites - this.stat.noRetryWriteHits);
-		appendStatStr(str, indent, "Reads", this.stat.reads);
-		appendStatStr(str, indent, "BlockingReads", this.stat.blockingReads);
-		appendStatStr(str, indent, "NonblockingReads", this.stat.nonblockingReads);
-		appendStatStr(str, indent, "ReadHits", this.stat.readHits);
-		appendStatStr(str, indent, "ReadMisses", this.stat.reads - this.stat.readHits);
-		appendStatStr(str, indent, "Writes", this.stat.writes);
-		appendStatStr(str, indent, "BlockingWrites", this.stat.blockingWrites);
-		appendStatStr(str, indent, "NonblockingWrites", this.stat.nonblockingWrites);
-		appendStatStr(str, indent, "WriteHits", this.stat.writeHits);
-		appendStatStr(str, indent, "WriteMisses", this.stat.writes - this.stat.writeHits);
-
-		logging.info(LogCategory.CONFIG, str);
 	}
 
 	CacheQueueEntryT findMatchingRequest(Request request) {
@@ -279,62 +229,24 @@ class MESICache: Node {
 	bool isMem() {
 		return false;
 	}
-
-	uint hitLatency() {
-		return this.m_hitLatency;
-	}
-
-	void hitLatency(uint value) {
-		this.m_hitLatency = value;
-	}
-
-	uint missLatency() {
-		return this.m_missLatency;
-	}
-
-	void missLatency(uint value) {
-		this.m_missLatency = value;
-	}
-
-	MESICache next() {
-		return this.m_next;
-	}
-
-	void next(MESICache value) {
-		this.m_next = value;
-	}
-
-	CacheHierarchyT cacheHierarchy() {
-		return this.m_cacheHierarchy;
-	}
-
-	void cacheHierarchy(CacheHierarchyT value) {
-		this.m_cacheHierarchy = value;
-	}
 	
-	CacheStat stat() {
-		return this.m_stat;
-	}
-	
-	void stat(CacheStat value) {
-		this.m_stat = value;
-	}
+	CacheStat stat;
 
 	CacheT cache;
 
-	uint m_hitLatency;
-	uint m_missLatency;
+	uint hitLatency;
+	uint missLatency;
 
 	bool lowestPrivate;
 	bool llc;
 
-	private MESICache m_next;
+	MESICache next;
 
-	CacheHierarchyT m_cacheHierarchy;
+	CacheHierarchyT cacheHierarchy;
 
 	CacheQueueEntryT[][Addr] pendingRequests;
-	
-	private CacheStat m_stat;	
+
+	bool isPrivate;
 }
 
 class MESIMemory: MESICache {
@@ -354,13 +266,6 @@ class MESIMemory: MESICache {
 
 		Message message = new Message(m.request);
 		this.upperInterconnect.send(message, this, sender, 1);
-	}
-
-	uint readLatency;
-	uint writeLatency;
-
-	uint logBlockSize() {
-		return this.cache.logBlockSize;
 	}
 
 	override bool findBlock(uint addr, ref uint set, ref uint way, ref uint tag, ref StateT state) {
@@ -392,9 +297,16 @@ class MESIMemory: MESICache {
 		return true;
 	}
 
+	uint logBlockSize() {
+		return this.cache.logBlockSize;
+	}
+
 	MESICache next() {
 		return null;
 	}
+
+	uint readLatency;
+	uint writeLatency;
 }
 
 class MESIStack {
@@ -455,68 +367,62 @@ class MESIStack {
 	MESIStack retStack;
 }
 
-
 class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 	public:
 		this() {
 			super("MESIEventQueue");
 
-			this.registerHandler(MESIEventType.FIND_AND_LOCK, &this.FIND_AND_LOCK);
-			this.registerHandler(MESIEventType.FIND_AND_LOCK_FINISH, &this.FIND_AND_LOCK_FINISH);
+			this.registerHandler(MESIEventType.FIND_AND_LOCK, &this.find_and_lock);
+			this.registerHandler(MESIEventType.FIND_AND_LOCK_FINISH, &this.find_and_lock_finish);
 
-			this.registerHandler(MESIEventType.LOAD, &this.LOAD);
-			this.registerHandler(MESIEventType.LOAD_ACTION, &this.LOAD_ACTION);
-			this.registerHandler(MESIEventType.LOAD_MISS, &this.LOAD_MISS);
-			this.registerHandler(MESIEventType.LOAD_FINISH, &this.LOAD_FINISH);
+			this.registerHandler(MESIEventType.LOAD, &this.load);
+			this.registerHandler(MESIEventType.LOAD_ACTION, &this.load_action);
+			this.registerHandler(MESIEventType.LOAD_MISS, &this.load_miss);
+			this.registerHandler(MESIEventType.LOAD_FINISH, &this.load_finish);
 
-			this.registerHandler(MESIEventType.STORE, &this.STORE);
-			this.registerHandler(MESIEventType.STORE_ACTION, &this.STORE_ACTION);
-			this.registerHandler(MESIEventType.STORE_FINISH, &this.STORE_FINISH);
+			this.registerHandler(MESIEventType.STORE, &this.store);
+			this.registerHandler(MESIEventType.STORE_ACTION, &this.store_action);
+			this.registerHandler(MESIEventType.STORE_FINISH, &this.store_finish);
 
-			this.registerHandler(MESIEventType.EVICT, &this.EVICT);
-			this.registerHandler(MESIEventType.EVICT_ACTION, &this.EVICT_ACTION);
-			this.registerHandler(MESIEventType.EVICT_RECEIVE, &this.EVICT_RECEIVE);
-			this.registerHandler(MESIEventType.EVICT_WRITEBACK, &this.EVICT_WRITEBACK);
-			this.registerHandler(MESIEventType.EVICT_WRITEBACK_EXCLUSIVE, &this.EVICT_WRITEBACK_EXCLUSIVE);
-			this.registerHandler(MESIEventType.EVICT_WRITEBACK_FINISH, &this.EVICT_WRITEBACK_FINISH);
-			this.registerHandler(MESIEventType.EVICT_PROCESS, &this.EVICT_PROCESS);
-			this.registerHandler(MESIEventType.EVICT_REPLY, &this.EVICT_REPLY);
-			this.registerHandler(MESIEventType.EVICT_REPLY_RECEIVE, &this.EVICT_REPLY_RECEIVE);
-			this.registerHandler(MESIEventType.EVICT_FINISH, &this.EVICT_FINISH);
+			this.registerHandler(MESIEventType.EVICT, &this.evict);
+			this.registerHandler(MESIEventType.EVICT_ACTION, &this.evict_action);
+			this.registerHandler(MESIEventType.EVICT_RECEIVE, &this.evict_receive);
+			this.registerHandler(MESIEventType.EVICT_WRITEBACK, &this.evict_writeback);
+			this.registerHandler(MESIEventType.EVICT_WRITEBACK_EXCLUSIVE, &this.evict_writeback_exclusive);
+			this.registerHandler(MESIEventType.EVICT_WRITEBACK_FINISH, &this.evict_writeback_finish);
+			this.registerHandler(MESIEventType.EVICT_PROCESS, &this.evict_process);
+			this.registerHandler(MESIEventType.EVICT_REPLY, &this.evict_reply);
+			this.registerHandler(MESIEventType.EVICT_REPLY_RECEIVE, &this.evict_reply_receive);
+			this.registerHandler(MESIEventType.EVICT_FINISH, &this.evict_finish);
 
-			this.registerHandler(MESIEventType.READ_REQUEST, &this.READ_REQUEST);
-			this.registerHandler(MESIEventType.READ_REQUEST_RECEIVE, &this.READ_REQUEST_RECEIVE);
-			this.registerHandler(MESIEventType.READ_REQUEST_ACTION, &this.READ_REQUEST_ACTION);
-			this.registerHandler(MESIEventType.READ_REQUEST_UPDOWN, &this.READ_REQUEST_UPDOWN);
-			this.registerHandler(MESIEventType.READ_REQUEST_UPDOWN_MISS, &this.READ_REQUEST_UPDOWN_MISS);
-			this.registerHandler(MESIEventType.READ_REQUEST_UPDOWN_FINISH, &this.READ_REQUEST_UPDOWN_FINISH);
-			this.registerHandler(MESIEventType.READ_REQUEST_DOWNUP, &this.READ_REQUEST_DOWNUP);
-			this.registerHandler(MESIEventType.READ_REQUEST_DOWNUP_FINISH, &this.READ_REQUEST_DOWNUP_FINISH);
-			this.registerHandler(MESIEventType.READ_REQUEST_REPLY, &this.READ_REQUEST_REPLY);
-			this.registerHandler(MESIEventType.READ_REQUEST_FINISH, &this.READ_REQUEST_FINISH);
+			this.registerHandler(MESIEventType.READ_REQUEST, &this.read_request);
+			this.registerHandler(MESIEventType.READ_REQUEST_RECEIVE, &this.read_request_receive);
+			this.registerHandler(MESIEventType.READ_REQUEST_ACTION, &this.read_request_action);
+			this.registerHandler(MESIEventType.READ_REQUEST_UPDOWN, &this.read_request_updown);
+			this.registerHandler(MESIEventType.READ_REQUEST_UPDOWN_MISS, &this.read_request_updown_miss);
+			this.registerHandler(MESIEventType.READ_REQUEST_UPDOWN_FINISH, &this.read_request_updown_finish);
+			this.registerHandler(MESIEventType.READ_REQUEST_DOWNUP, &this.read_request_downup);
+			this.registerHandler(MESIEventType.READ_REQUEST_DOWNUP_FINISH, &this.read_request_downup_finish);
+			this.registerHandler(MESIEventType.READ_REQUEST_REPLY, &this.read_request_reply);
+			this.registerHandler(MESIEventType.READ_REQUEST_FINISH, &this.read_request_finish);
 
-			this.registerHandler(MESIEventType.WRITE_REQUEST, &this.WRITE_REQUEST);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_RECEIVE, &this.WRITE_REQUEST_RECEIVE);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_ACTION, &this.WRITE_REQUEST_ACTION);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_EXCLUSIVE, &this.WRITE_REQUEST_EXCLUSIVE);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_UPDOWN, &this.WRITE_REQUEST_UPDOWN);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_UPDOWN_FINISH, &this.WRITE_REQUEST_UPDOWN_FINISH);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_DOWNUP, &this.WRITE_REQUEST_DOWNUP);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_REPLY, &this.WRITE_REQUEST_REPLY);
-			this.registerHandler(MESIEventType.WRITE_REQUEST_FINISH, &this.WRITE_REQUEST_FINISH);
+			this.registerHandler(MESIEventType.WRITE_REQUEST, &this.write_request);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_RECEIVE, &this.write_request_receive);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_ACTION, &this.write_request_action);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_EXCLUSIVE, &this.write_request_exclusive);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_UPDOWN, &this.write_request_updown);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_UPDOWN_FINISH, &this.write_request_updown_finish);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_DOWNUP, &this.write_request_downup);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_REPLY, &this.write_request_reply);
+			this.registerHandler(MESIEventType.WRITE_REQUEST_FINISH, &this.write_request_finish);
 
-			this.registerHandler(MESIEventType.INVALIDATE, &this.INVALIDATE);
-			this.registerHandler(MESIEventType.INVALIDATE_FINISH, &this.INVALIDATE_FINISH);
+			this.registerHandler(MESIEventType.INVALIDATE, &this.invalidate);
+			this.registerHandler(MESIEventType.INVALIDATE_FINISH, &this.invalidate_finish);
 		}
 
-		void FIND_AND_LOCK(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.FIND_AND_LOCK(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void find_and_lock(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s find and lock (blocking=%s)",
-					stack.id, stack.addr, ccache.name, stack.isBlocking);
 
 			/* Default return values */
 			ret.isErr = false;
@@ -527,10 +433,6 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 
 			/* Look for block. */
 			bool hit = ccache.findBlock(stack.addr, stack.set, stack.way, stack.tag, stack.state);
-			if(hit) {
-				logging.infof(LogCategory.DEBUG, "  0x%x %s hit: set=%d, way=%d, state=%s",
-						stack.tag, ccache.name, stack.set, stack.way, stack.state);
-			}
 			
 			/* Stats */
 			ccache.stat.accesses++;
@@ -583,15 +485,11 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 				assert(stack.state != MESIState.INVALID || !ccache.getDir().isSharedOrOwned(stack.set, stack.way), 
 						format("stack.state=%s, ccache.getDirEntry(set=%d, way=%d)=%s", 
 								stack.state, stack.set, stack.way, ccache.getDirEntry(stack.set, stack.way)));
-				logging.infof(LogCategory.DEBUG, "  0x%x %s miss -> lru: set=%d, way=%d, state=%s",
-						stack.tag, ccache.name, stack.set, stack.way, stack.state);
 			}
 
 			/* Lock entry */
 			stack.dirLock = ccache.getDirLock(stack.set);
 			if(!stack.dirLock.lock(stack.id)) {
-				logging.infof(LogCategory.DEBUG, "  0x%x %s block already locked: set=%d, way=%d, lockerStackId=%d",
-						stack.tag, ccache.name, stack.set, stack.way, stack.dirLock.lockerStackId);
 				ret.isErr = true;
 				stack.ret();
 				return;
@@ -618,14 +516,9 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void FIND_AND_LOCK_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.FIND_AND_LOCK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void find_and_lock_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s find and lock finish (err=%s)",
-					stack.id, stack.tag, ccache.name, stack.isErr);
 
 			uint dumbTag = 0;
 
@@ -658,13 +551,9 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			stack.ret();
 		}
 
-		void LOAD(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.LOAD(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void load(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load", stack.id, stack.addr, ccache.name);
 
 			/* Call find and lock */
 			MESIStack newStack = new MESIStack(stack.id, ccache, stack.addr, this, MESIEventType.LOAD_ACTION, stack);
@@ -674,19 +563,14 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.FIND_AND_LOCK, newStack, 0);
 		}
 
-		void LOAD_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.LOAD_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void load_action(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-				
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load action", stack.id, stack.tag, ccache.name);
 
 			/* Error locking */
 			if(stack.isErr) {
 				ccache.stat.readRetries++;
 				uint retryLat = retry_lat(ccache);
-				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.LOAD, stack, retryLat);
 				return;
@@ -704,20 +588,15 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void LOAD_MISS(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.LOAD_MISS(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void load_miss(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load miss", stack.id, stack.tag, ccache.name);
 
 			/* Error on read request. Unlock block and retry load. */
 			if(stack.isErr) {
 				ccache.stat.readRetries++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
-				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.LOAD, stack, retryLat);
 				return;
@@ -730,13 +609,9 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.LOAD_FINISH, stack, 0);
 		}
 
-		void LOAD_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.LOAD_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void load_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s load finish", stack.id, stack.tag, ccache.name);
 
 			/* Update LRU, unlock, and return. */
 			if(!ccache.isMem) {
@@ -746,13 +621,9 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			stack.ret();
 		}
 
-		void STORE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.STORE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void store(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s store", stack.id, stack.addr, ccache.name);
 
 			/* Call find and lock */
 			MESIStack newStack = new MESIStack(stack.id, ccache, stack.addr, this, MESIEventType.STORE_ACTION, stack);
@@ -762,19 +633,14 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.FIND_AND_LOCK, newStack, 0);
 		}
 
-		void STORE_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.STORE_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void store_action(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s store action", stack.id, stack.tag, ccache.name);
 
 			/* Error locking */
 			if(stack.isErr) {
 				ccache.stat.writeRetries++;
 				uint retryLat = retry_lat(ccache);
-				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.STORE, stack, retryLat);
 				return;
@@ -792,20 +658,15 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void STORE_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.STORE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void store_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s store finish", stack.id, stack.tag, ccache.name);
 
 			/* Error in write request, unlock block and retry store. */
 			if(stack.isErr) {
 				ccache.stat.writeRetries++;
 				stack.dirLock.unlock();
 				uint retryLat = retry_lat(ccache);
-				logging.infof(LogCategory.DEBUG, "  lock error, retrying in %d cycles", retryLat);
 				stack.isRetry = true;
 				this.schedule(MESIEventType.STORE, stack, retryLat);
 				return;
@@ -820,9 +681,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			stack.ret();
 		}
 
-		void EVICT(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
@@ -833,8 +692,6 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			/* Get block info */
 			ccache.getBlock(stack.set, stack.way, stack.tag, stack.state);
 			assert(stack.state != MESIState.INVALID || !ccache.getDir().isSharedOrOwned(stack.set, stack.way));
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict (set=%d, way=%d, state=%s)",
-					stack.id, stack.tag, ccache.name, stack.set, stack.way, stack.state);
 
 			/* Save some data */
 			stack.srcSet = stack.set;
@@ -850,13 +707,9 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.INVALIDATE, newStack, 0);
 		}
 
-		void EVICT_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_action(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict action", stack.id, stack.tag, ccache.name);
 
 			/* status = I */
 			if(stack.state == MESIState.INVALID) {
@@ -873,14 +726,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void EVICT_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_receive(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict receive", stack.id, stack.tag, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.srcTag, this, MESIEventType.EVICT_WRITEBACK, stack);
@@ -890,14 +739,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.FIND_AND_LOCK, newStack, 0);
 		}
 
-		void EVICT_WRITEBACK(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_WRITEBACK(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_writeback(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict writeback", stack.id, stack.tag, target.name);
 
 			/* Error locking block */
 			if(stack.isErr) {
@@ -920,14 +765,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void EVICT_WRITEBACK_EXCLUSIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_WRITEBACK_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_writeback_exclusive(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict writeback exclusive", stack.id, stack.tag, target.name);
 
 			/* Status = S/I */
 			assert(stack.state != MESIState.INVALID, to!(string)(stack));
@@ -942,14 +783,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void EVICT_WRITEBACK_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_WRITEBACK_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_writeback_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict writeback finish", stack.id, stack.tag, target.name);
 
 			/* Error in write request */
 			if(stack.isErr) {
@@ -967,14 +804,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.EVICT_PROCESS, stack, 0);
 		}
 
-		void EVICT_PROCESS(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_PROCESS(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_process(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict process", stack.id, stack.tag, target.name);
 
 			/* Remove sharer, owner, and unlock */
 			DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
@@ -987,25 +820,17 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.EVICT_REPLY, stack, 0);
 		}
 
-		void EVICT_REPLY(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_reply(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict reply", stack.id, stack.tag, target.name);
 
 			this.schedule(MESIEventType.EVICT_REPLY_RECEIVE, stack, 2);
 		}
 
-		void EVICT_REPLY_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_REPLY_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_reply_receive(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict reply receive", stack.id, stack.tag, ccache.name);
 
 			/* Invalidate block if there was no error. */
 			if(!stack.isErr) {
@@ -1015,25 +840,17 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.EVICT_FINISH, stack, 0);
 		}
 
-		void EVICT_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.EVICT_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void evict_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s evict finish", stack.id, stack.tag, ccache.name);
 
 			stack.ret();
 		}
 
-		void READ_REQUEST(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request", stack.id, stack.addr, ccache.name);
 
 			/* Default return values*/
 			ret.isShared = false;
@@ -1044,14 +861,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.READ_REQUEST_RECEIVE, stack, 8);
 		}
 
-		void READ_REQUEST_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_receive(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request receive", stack.id, stack.addr, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.addr, this, MESIEventType.READ_REQUEST_ACTION, stack);
@@ -1061,14 +874,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.FIND_AND_LOCK, newStack, 0);
 		}
 
-		void READ_REQUEST_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_action(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request action", stack.id, stack.tag, target.name);
 
 			/* Check block locking error. */
 			if(stack.isErr) {
@@ -1080,14 +889,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(ccache.next == target ? MESIEventType.READ_REQUEST_UPDOWN : MESIEventType.READ_REQUEST_DOWNUP, stack, 0);
 		}
 
-		void READ_REQUEST_UPDOWN(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_updown(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request updown", stack.id, stack.tag, target.name);
 
 			stack.pending = 1;
 
@@ -1118,14 +923,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void READ_REQUEST_UPDOWN_MISS(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_UPDOWN_MISS(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_updown_miss(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request updown miss", stack.id, stack.tag, target.name);
 
 			/* Check error */
 			if(stack.isErr) {
@@ -1142,9 +943,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.READ_REQUEST_UPDOWN_FINISH, stack, 0);
 		}
 
-		void READ_REQUEST_UPDOWN_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_updown_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
@@ -1155,7 +954,6 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(stack.pending > 0) {
 				return;
 			}
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request updown finish", stack.id, stack.tag, target.name);
 			
 			if(!target.isMem) {
 				/* Set owner to null for the directory entry if not owned by ccache. */
@@ -1184,14 +982,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.READ_REQUEST_REPLY, stack, 0);
 		}
 
-		void READ_REQUEST_DOWNUP(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_downup(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request downup", stack.id, stack.tag, target.name);
 
 			/* Check: status must not be invalid.
 			 * By default, only one pending request. */
@@ -1210,9 +1004,7 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.READ_REQUEST_DOWNUP_FINISH, stack, 0);
 		}
 
-		void READ_REQUEST_DOWNUP_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_DOWNUP_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_downup_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
@@ -1223,7 +1015,6 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			if(stack.pending > 0) {
 				return;
 			}
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request downup finish", stack.id, stack.tag, target.name);
 
 			/* Set owner of the block to null. */
 			DirEntry!(MESIState) dirEntry = target.getDirEntry(stack.set, stack.way);
@@ -1236,38 +1027,26 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.READ_REQUEST_REPLY, stack, 0);
 		}
 
-		void READ_REQUEST_REPLY(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_reply(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request reply", stack.id, stack.tag, target.name);
 
 			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.READ_REQUEST_FINISH, stack, 2);
 		}
 
-		void READ_REQUEST_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.READ_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void read_request_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s read request finish", stack.id, stack.tag, ccache.name);
 
 			stack.ret();
 		}
 
-		void WRITE_REQUEST(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request", stack.id, stack.addr, ccache.name);
 
 			/* Default return values */
 			ret.isErr = false;
@@ -1277,14 +1056,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.WRITE_REQUEST_RECEIVE, stack, 2);
 		}
 
-		void WRITE_REQUEST_RECEIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_RECEIVE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_receive(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request receive", stack.id, stack.addr, target.name);
 
 			/* Find and lock */
 			MESIStack newStack = new MESIStack(stack.id, target, stack.addr, this, MESIEventType.WRITE_REQUEST_ACTION, stack);
@@ -1294,14 +1069,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.FIND_AND_LOCK, newStack, 0);
 		}
 
-		void WRITE_REQUEST_ACTION(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_ACTION(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_action(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request action", stack.id, stack.tag, target.name);
 
 			/* Check lock error. */
 			if(stack.isErr) {
@@ -1318,26 +1089,18 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.INVALIDATE, newStack, 0);
 		}
 
-		void WRITE_REQUEST_EXCLUSIVE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_EXCLUSIVE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_exclusive(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%s %s write request exclusive", stack.id, stack.tag, target.name);
 
 			this.schedule(ccache.next == target ? MESIEventType.WRITE_REQUEST_UPDOWN : MESIEventType.WRITE_REQUEST_DOWNUP, stack, 0);
 		}
 
-		void WRITE_REQUEST_UPDOWN(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_UPDOWN(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_updown(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request updown", stack.id, stack.tag, target.name);
 
 			/* status = M/E */
 			if(stack.state == MESIState.MODIFIED || stack.state == MESIState.EXCLUSIVE) {
@@ -1351,14 +1114,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			}
 		}
 
-		void WRITE_REQUEST_UPDOWN_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_UPDOWN_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_updown_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request updown finish", stack.id, stack.tag, target.name);
 
 			/* Error in write request to next cache level */
 			if(stack.isErr) {
@@ -1388,14 +1147,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.WRITE_REQUEST_REPLY, stack, 0);
 		}
 
-		void WRITE_REQUEST_DOWNUP(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_DOWNUP(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_downup(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request downup", stack.id, stack.tag, target.name);
 			
 			/* Set status to I, unlock */
 			assert(stack.state != MESIState.INVALID);
@@ -1405,42 +1160,30 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.WRITE_REQUEST_REPLY, stack, 0);
 		}
 
-		void WRITE_REQUEST_REPLY(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_REPLY(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_reply(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request reply", stack.id, stack.tag, target.name);
 
 			assert(ccache.next == target || target.next == ccache);
 			this.schedule(MESIEventType.WRITE_REQUEST_FINISH, stack, 2);
 		}
 
-		void WRITE_REQUEST_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.WRITE_REQUEST_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void write_request_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s write request finish", stack.id, stack.tag, ccache.name);
 
 			stack.ret();
 		}
 
-		void INVALIDATE(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.INVALIDATE(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void invalidate(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
 
 			/* Get block info */
 			ccache.getBlock(stack.set, stack.way, stack.tag, stack.state);
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s invalidate (set=%d, way=%d, state=%s)",
-					stack.id, stack.tag, ccache.name, stack.set, stack.way, stack.state);
 			stack.pending = 1;
 
 			/* Send write request to all upper level sharers but ccache */
@@ -1472,14 +1215,10 @@ class MESIEventQueue: EventQueue!(MESIEventType, MESIStack) {
 			this.schedule(MESIEventType.INVALIDATE_FINISH, stack, 0);
 		}
 
-		void INVALIDATE_FINISH(MESIEventType eventType, MESIStack stack, ulong when) {
-			logging.infof(LogCategory.MESI, "%s.INVALIDATE_FINISH(%s, %s, %d)", this.name, eventType, stack, when);
-
+		void invalidate_finish(MESIEventType eventType, MESIStack stack, ulong when) {
 			MESIStack ret = stack.retStack;
 			MESICache ccache = stack.ccache;
 			MESICache target = stack.target;
-			
-			logging.infof(LogCategory.DEBUG, "%d 0x%x %s invalidate finish", stack.id, stack.tag, ccache.name);
 
 			/* Ignore while pending */
 			assert(stack.pending > 0);

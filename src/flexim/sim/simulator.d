@@ -95,7 +95,6 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 		if(context.callback !is null) {
 			context.callback.invoke();
 		}
-		//this.simulator.dumpStats();
 		exit(1);
 	}
 
@@ -103,7 +102,6 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 		if(context.callback !is null) {
 			context.callback.invoke();
 		}
-		//this.simulator.dumpStats();
 		exit(-1);
 	}
 	
@@ -120,10 +118,6 @@ abstract class Simulator {
 		
 		Simulator.singleInstance = this;
 	}
-
-	abstract void dumpConfigs();
-
-	abstract void dumpStats();
 
 	abstract void run();
 
@@ -298,34 +292,7 @@ class CPUSimulator : Simulator {
 		this.addEventProcessor(this.memorySystem.eventQueue);
 	}
 
-	void dumpConfigs() {
-		logging.info(LogCategory.CONFIG, "");
-		logging.info(LogCategory.CONFIG, "Simulation Configurations");
-		logging.info(LogCategory.CONFIG, "----------------------------------------------------------");
-		logging.info(LogCategory.CONFIG, "");
-		logging.info(LogCategory.CONFIG, "[Simulator]");
-		this.processor.dumpConfigs("  ");
-		this.memorySystem.l2.dumpConfigs("  ");
-		this.memorySystem.mem.dumpConfigs("  ");
-
-		logging.info(LogCategory.CONFIG, "");
-	}
-
-	void dumpStats() {
-		logging.info(LogCategory.CONFIG, "");
-		logging.info(LogCategory.STAT, "Simulation Statistics");
-		logging.info(LogCategory.STAT, "----------------------------------------------------------");
-		logging.info(LogCategory.CONFIG, "");
-		logging.infof(LogCategory.STAT, "[Simulator] total time: %d ms", duration);
-		logging.infof(LogCategory.STAT, "[Simulator] total cycles: %d", this.currentCycle);
-		this.processor.dumpStats("  ");
-		this.memorySystem.l2.dumpStats("  ");
-		this.memorySystem.mem.dumpStats("  ");
-	}
-
-	void run() {
-		this.dumpConfigs();
-		
+	void run() {		
 		PerformanceCounter counter = new PerformanceCounter();
 		counter.start();
 
@@ -342,8 +309,6 @@ class CPUSimulator : Simulator {
 		counter.stop();
 		
 		this.duration = counter.milliseconds();
-		
-		this.dumpStats();
 	}
 	
 	long duration() {

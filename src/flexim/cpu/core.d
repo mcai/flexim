@@ -33,20 +33,6 @@ class Core {
 		this.threads ~= thread;
 	}
 
-	void dumpConfigs(string indent) {
-		logging.infof(LogCategory.CONFIG, indent ~ "[Core %s]", this.name);
-		foreach(thread; this.threads) {
-			thread.dumpConfigs(indent ~ "  ");
-		}
-	}
-
-	void dumpStats(string indent) {
-		logging.infof(LogCategory.STAT, indent ~ "[Core %s]", this.name);
-		foreach(thread; this.threads) {
-			thread.dumpStats(indent ~ "  ");
-		}
-	}
-
 	void run() {
 		foreach(thread; this.threads) {
 			thread.run();

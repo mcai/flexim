@@ -54,25 +54,23 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 	}
 	
 	this() {		
-//		this.enable(LogCategory.EVENT_QUEUE);
-		this.enable(LogCategory.SIMULATOR);
-//		this.enable(LogCategory.PROCESSOR);
-//		this.enable(LogCategory.REGISTER);
-//		this.enable(LogCategory.REQUEST);
-//		this.enable(LogCategory.CACHE);
-//		this.enable(LogCategory.MESI);
-//		this.enable(LogCategory.MEMORY);
-//		this.enable(LogCategory.NET);
-		this.enable(LogCategory.CONFIG);
-		this.enable(LogCategory.STAT);
-//		this.enable(LogCategory.MISC);
-//		this.enable(LogCategory.OOO);
-		this.enable(LogCategory.TEST);
-		this.enable(LogCategory.XML);
+			this.enable(LogCategory.SIMULATOR);
 		
-		debug {
+	//		this.enable(LogCategory.EVENT_QUEUE);
+	//		this.enable(LogCategory.PROCESSOR);
+	//		this.enable(LogCategory.REGISTER);
+	//		this.enable(LogCategory.REQUEST);
+	//		this.enable(LogCategory.CACHE);
+	//		this.enable(LogCategory.MESI);
+	//		this.enable(LogCategory.MEMORY);
+	//		this.enable(LogCategory.NET);
+			this.enable(LogCategory.CONFIG);
+			this.enable(LogCategory.STAT);
+	//		this.enable(LogCategory.MISC);
+	//		this.enable(LogCategory.OOO);
+			this.enable(LogCategory.TEST);
+			this.enable(LogCategory.XML);
 			this.enable(LogCategory.DEBUG);
-		}
 	}
 	
 	void enable(LogCategory category) {
@@ -104,12 +102,16 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 	}
 
 	void infof(LogCategory, T...)(LogCategory category, T args) {
-		this.info(category, format(args));
+		debug {
+			this.info(category, format(args));
+		}
 	}
 
 	void info(LogCategory category, string text) {
-		if(this.enabled(category)) {
-			stdout.writeln(this.message(category ~ "|" ~ "info", text));
+		debug {
+			if(this.enabled(category)) {
+				stdout.writeln(this.message(category ~ "|" ~ "info", text));
+			}
 		}
 	}
 

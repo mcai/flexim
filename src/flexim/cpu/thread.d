@@ -83,20 +83,6 @@ class Thread {
 		this.miscRegs = new MiscRegisterFile();
 	}
 
-	void dumpConfigs(string indent) {
-		logging.infof(LogCategory.CONFIG, indent ~ "[Thread %s]", this.name);
-
-		this.l1I.dumpConfigs(indent ~ "  ");
-		this.l1D.dumpConfigs(indent ~ "  ");
-	}
-
-	void dumpStats(string indent) {
-		logging.infof(LogCategory.STAT, indent ~ "[Thread %s] total instructions: %d", this.name, this.totalInsts);
-
-		this.l1I.dumpStats(indent ~ "  ");
-		this.l1D.dumpStats(indent ~ "  ");
-	}
-
 	void run() {
 		this.pc = this.npc;
 		this.npc = this.nnpc;

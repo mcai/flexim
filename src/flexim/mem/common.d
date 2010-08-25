@@ -75,10 +75,9 @@ uint currentNodeID = 0;
 abstract class Node {
 	alias ContextCallback3!(Interconnect, Message, Node) MessageReceivedHandler;
 	
-	this(string name, bool isPrivate) {
+	this(string name) {
 		this.id = currentNodeID++;
 		this.name = name;
-		this.isPrivate = isPrivate;
 	}
 
 	override string toString() {
@@ -101,8 +100,6 @@ abstract class Node {
 
 	string name;
 	uint id;
-
-	bool isPrivate;
 
 	MessageReceivedHandler[] upperInterconnectMessageReceived;
 	MessageReceivedHandler[] lowerInterconnectMessageReceived;
@@ -145,7 +142,7 @@ class Request {
 
 class Sequencer(RequestT, CacheT): Node {
 	this(string name, CacheT l1Cache) {
-		super(name, true);
+		super(name);
 
 		this.l1Cache = l1Cache;
 
