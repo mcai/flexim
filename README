@@ -12,6 +12,9 @@ Flexim - A modular and highly configurable multicore simulator written in D
    Flexim is a modular and highly configurable architectural simulator for evaluating
    emerging multicore processors. It can run statically compiled MIPS32 LE programs.
 
+== Web Site ==   
+   Please obtain the latest Flexim code from http://github.com/mcai/flexim.
+
 == Key Features ==
    Architectural:
    * Simulation of a classic five-stage superscalar pipeline with out-of-order execution.
@@ -24,11 +27,11 @@ Flexim - A modular and highly configurable multicore simulator written in D
      
    * A powerful infrastructure that provides common functionalities such as eventing and logging.
    
-   * Pervasive use of XML based I/O for architectural, workload and experiment configs and stats.
+   * Pervasive use of XML-based I/O for architectural, workload and experiment configs and stats.
    
-   * Support for Syscall emulation simulation (i.e., application only, no need to boot an OS).
+   * Support for Syscall-emulation mode simulation (i.e., application only, no need to boot an OS).
    
-   * It provides a correct execution of several state-of-the-art benchmark suites,
+   * correct execution of several state-of-the-art benchmark suites,
      e.g., wcet_bench, Olden and CPU2006.
      
    * Easy to begin with and easy to use. No scripting.
