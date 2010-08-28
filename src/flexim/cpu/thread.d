@@ -111,19 +111,19 @@ class Thread {
 	
 	uint num;
 
-	Sequencer!(CPURequest, MESICache) seqI() {
+	Sequencer seqI() {
 		return this.core.processor.simulator.memorySystem.seqIs[this.num];
 	}
 	
-	MESICache l1I() {
+	CoherentCache l1I() {
 		return this.core.processor.simulator.memorySystem.l1Is[this.num];
 	}
 
-	Sequencer!(CPURequest, MESICache) seqD() {
+	Sequencer seqD() {
 		return this.core.processor.simulator.memorySystem.seqDs[this.num];
 	}
 	
-	MESICache l1D() {
+	CoherentCache l1D() {
 		return this.core.processor.simulator.memorySystem.l1Ds[this.num];
 	}
 

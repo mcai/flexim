@@ -35,12 +35,10 @@ public import flexim.cpu.bpred;
 public import flexim.cpu.core;
 public import flexim.cpu.fu;
 public import flexim.cpu.instruction;
+public import flexim.cpu.ooo;
 public import flexim.cpu.processor;
 public import flexim.cpu.registers;
 public import flexim.cpu.thread;
-
-public import flexim.cpu.ooo.common;
-public import flexim.cpu.ooo.thread;
 
 public import flexim.io.logging;
 public import flexim.io.xml;
@@ -57,14 +55,9 @@ public import flexim.isa.misc;
 public import flexim.linux.process;
 public import flexim.linux.syscall;
 
-public import flexim.mem.cache;
-public import flexim.mem.common;
-public import flexim.mem.memsys;
-public import flexim.mem.mesi;
-public import flexim.mem.tm;
-
-public import flexim.mem.mmu;
-public import flexim.mem.mem;
+public import flexim.mem.functional;
+public import flexim.mem.timing;
+public import flexim.mem.transactional;
 
 public import flexim.sim.benchmark;
 public import flexim.sim.configs;

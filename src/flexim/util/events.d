@@ -87,6 +87,12 @@ class Callback4(Param1T, Param2T, Param3T, Param4T) : Callback {
 	}
 }
 
+class Callback5(Param1T, Param2T, Param3T, Param4T, Param5T) : Callback {
+	this(Param1T m1, Param2T m2, Param3T m3, Param4T m4, Param5T m5, void delegate(Param1T, Param2T, Param3T, Param4T, Param5T) del) {		
+		super(new Invoker({del(m1, m2, m3, m4, m5);}));
+	}
+}
+
 class ContextCallback1(Param1T) {
 	alias void delegate(Param1T m1) CallbackT;
 	

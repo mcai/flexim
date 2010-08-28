@@ -31,7 +31,7 @@ Flexim - A modular and highly configurable multicore simulator written in D
    
    * Support for Syscall-emulation mode simulation (i.e., application only, no need to boot an OS).
    
-   * correct execution of several state-of-the-art benchmark suites,
+   * Correct execution of several state-of-the-art benchmark suites,
      e.g., wcet_bench, Olden and CPU2006.
      
    * Easy to begin with and easy to use. No scripting.
@@ -60,7 +60,7 @@ Flexim - A modular and highly configurable multicore simulator written in D
    See the subdirectory microbenchmarks/ of the distribution for sample use.
 
  4. In the subdirectory build/, you can simulate a MIPS32 LE program using the command:
-    ./flexim <path-to-mipsel-executable> <args>
+    ./flexim <path-to-mipsel-executable> <args> //TODO!!!!!!!!!!!!!
 
 == Contact Information ==
   If you have any questions, please feel free to contact:
