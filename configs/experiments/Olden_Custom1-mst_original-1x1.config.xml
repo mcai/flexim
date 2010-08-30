@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<ExperimentConfig title="Olden_Custom1-em3d_original-1x1" cwd="../stats/experiments">
-   <SimulationConfig title="Olden_Custom1-em3d_original-1x1" cwd="../stats/experiments">
+<ExperimentConfig title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments">
+   <SimulationConfig title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments">
       <ProcessorConfig maxCycle="2000000" maxInsts="2000000" maxTime="7200" numCores="1" numThreads="1">
-         <ContextConfig num="0" binariesDir="../tests/benchmarks" benchmarkSuiteName="Olden_Custom1" benchmarkName="em3d_original">
+         <ContextConfig num="0" binariesDir="../tests/benchmarks" benchmarkSuiteName="Olden_Custom1" benchmarkName="mst_original">
          </ContextConfig>
       </ProcessorConfig>
       <MemorySystemConfig>

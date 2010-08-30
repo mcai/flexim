@@ -37,29 +37,14 @@ enum SimulatorEventType: string {
 
 class SimulatorEventContext {	
 	this(string name) {
-		this(name, {});
-	}
-
-	this(string name, void delegate() del) {
-		this(name, new Callback0(del));
-	}
-
-	this(string name, Invokable callback) {
 		this.name = name;
-		this.callback = callback;
 	}
 	
-	override string toString() {
-		string str;
-		
-//		str ~= format("SimulatorEventContext[name=%s, callback=%s]", this.name, this.callback);
-		str ~= format("SimulatorEventContext[name=%s]", this.name);
-		
-		return str;
+	override string toString() {		
+		return format("SimulatorEventContext[name=%s]", this.name);
 	}
 
 	string name;
-	Invokable callback;
 }
 
 class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext) {
@@ -77,31 +62,18 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 	}
 
 	void generalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-		if(context.callback !is null) {
-			context.callback.invoke();
-		}
 	}
 
 	void haltHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-		if(context.callback !is null) {
-			context.callback.invoke();
-		}
-		
 		this.halted = true;
 		//exit(0);
 	}
 
-	void fatalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {			
-		if(context.callback !is null) {
-			context.callback.invoke();
-		}
+	void fatalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
 		exit(1);
 	}
 
 	void panicHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-		if(context.callback !is null) {
-			context.callback.invoke();
-		}
 		exit(-1);
 	}
 	
@@ -112,8 +84,8 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 abstract class Simulator {
 	this() {
 		this.currentCycle = 0;
+		
 		this.eventQueue = new SimulatorEventQueue(this);
-
 		this.addEventProcessor(this.eventQueue);
 		
 		Simulator.singleInstance = this;
@@ -126,6 +98,7 @@ abstract class Simulator {
 	}
 	
 	SimulatorEventQueue eventQueue;
+	
 	EventProcessor[] eventProcessors;
 	ulong currentCycle;
 
@@ -158,7 +131,7 @@ class CPUSimulator : Simulator {
 		this.memorySystem = new MemorySystem(simulation);
 	}
 
-	void run() {		
+	override void run() {		
 		PerformanceCounter counter = new PerformanceCounter();
 		counter.start();
 
@@ -193,40 +166,35 @@ class CPUSimulator : Simulator {
 
 class MemorySystem {
 	this(Simulation simulation) {	
-		this.simulation = simulation;
-		
-		this.endNodeCount = simulation.config.processorConfig.numCores * simulation.config.processorConfig.numThreads;	
-		
+		this.simulation = simulation;		
+		this.endNodeCount = simulation.config.processorConfig.numCores * simulation.config.processorConfig.numThreads;
 		this.createMemoryHierarchy();
 	}
 	
-	CoherentCache createCache(CacheConfig cacheGeometry, uint level) {
-		CoherentCache cache = new CoherentCache(cacheGeometry.name, this, cacheGeometry.blockSize,
-			cacheGeometry.assoc, cacheGeometry.sets, cacheGeometry.hitLatency, cacheGeometry.missLatency, level);
-		
+	CoherentCache createCache(string cacheName) {
+		CacheConfig cacheConfig = this.simulationConfig.memorySystemConfig.caches[cacheName];
+		CoherentCache cache = new CoherentCache(this, cacheConfig);
 		this.simulation.stat.memorySystemStat.cacheStats[cache.name] = cache.stat;
-		
 		return cache;
 	}
 
 	void createMemoryHierarchy() {
-		this.l2 = this.createCache(this.simulationConfig.memorySystemConfig.caches["l2"], 1);
-		
-		this.mem = new PhysicalMemory(this);
+		this.mem = new MemoryController(this);
+				
+		this.l2 = this.createCache("l2");
+		this.l2.next = this.mem;
 
 		this.seqIs = new Sequencer[this.endNodeCount];
 		this.l1Is = new CoherentCache[this.endNodeCount];
 
 		this.seqDs = new Sequencer[this.endNodeCount];
 		this.l1Ds = new CoherentCache[this.endNodeCount];
-		
-		l2.next = null;
 
 		for(uint i = 0; i < this.endNodeCount; i++) {
-			CoherentCache l1I = this.createCache(this.simulationConfig.memorySystemConfig.caches["l1I" ~ "-" ~ to!(string)(i)], 0);
+			CoherentCache l1I = this.createCache("l1I" ~ "-" ~ to!(string)(i));
 			Sequencer seqI = new Sequencer("seqI" ~ "-" ~ to!(string)(i), l1I);
 
-			CoherentCache l1D = this.createCache(this.simulationConfig.memorySystemConfig.caches["l1D" ~ "-" ~ to!(string)(i)], 0);
+			CoherentCache l1D = this.createCache("l1D" ~ "-" ~ to!(string)(i));
 			Sequencer seqD = new Sequencer("seqD" ~ "-" ~ to!(string)(i), l1D);
 
 			this.seqIs[i] = seqI;
@@ -235,8 +203,8 @@ class MemorySystem {
 			this.seqDs[i] = seqD;
 			this.l1Ds[i] = l1D;
 			
-			l1I.next = l2;
-			l1D.next = l2;
+			l1I.next = this.l2;
+			l1D.next = this.l2;
 		}
 		
 		this.mmu = new MMU();
@@ -251,14 +219,26 @@ class MemorySystem {
 	Sequencer[] seqIs;
 	Sequencer[] seqDs;
 
-	CoherentCache[] l1Is;
-	CoherentCache[] l1Ds;
+	CoherentCacheNode[] l1Is;
+	CoherentCacheNode[] l1Ds;
 
-	CoherentCache l2;
+	CoherentCacheNode l2;
 	
-	PhysicalMemory mem;
+	MemoryController mem;
 	
 	MMU mmu;
 	
 	Simulation simulation;
+}
+
+ulong currentCycle() {
+	return Simulator.singleInstance !is null ? Simulator.singleInstance.currentCycle : 0;
+}
+
+void scheduleEvent(SimulatorEventType eventType, SimulatorEventContext context, ulong delay = 0) {
+	Simulator.singleInstance.eventQueue.schedule(eventType, context, delay);
+}
+
+void executeEvent(SimulatorEventType eventType, SimulatorEventContext context) {
+	Simulator.singleInstance.eventQueue.execute(eventType, context);
 }

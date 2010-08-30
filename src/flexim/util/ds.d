@@ -1,5 +1,5 @@
 /*
- * flexim/util/providers.d
+ * flexim/util/ds.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,15 +19,22 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.util.providers;
+module flexim.util.ds;
 
 import flexim.all;
 
-interface CurrentCycleProvider {
-	ulong currentCycle();
-}
+class List(EntryT) {
+	this() {
+	}
+	
+	void add(EntryT entry) {
+		this.pendingEntries ~= entry;
+	}
+	
+	void remove(EntryT entry) {
+		uint indexToRemove = this.pendingEntries.indexOf(entry);
+		this.pendingEntries = this.pendingEntries.remove(indexToRemove);
+	}
 
-interface SchedulerProvider(EventTypeT, EventContextT) {
-	void schedule(EventTypeT eventType, EventContextT context, ulong delay = 0);
-	void execute(EventTypeT eventType, EventContextT context);
+	EntryT[] pendingEntries;
 }

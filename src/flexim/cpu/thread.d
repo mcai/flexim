@@ -86,7 +86,7 @@ class Thread {
 	void run() {
 		this.pc = this.npc;
 		this.npc = this.nnpc;
-		this.nnpc += Addr.sizeof;
+		this.nnpc += uint.sizeof;
 			
 		StaticInst staticInst = this.isa.decode(this.pc, this.mem);
 		DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
@@ -99,13 +99,13 @@ class Thread {
 		if(uop.isControl) {
 			BpredUpdate dirUpdate = new BpredUpdate();
 
-			Addr predPc = this.bpred.lookup(this.pc, 0, uop, dirUpdate, this.stackRecoverIdx);
+			uint predPc = this.bpred.lookup(this.pc, 0, uop, dirUpdate, this.stackRecoverIdx);
 
 			if(predPc < 2) {
-				predPc = this.pc + Addr.sizeof;
+				predPc = this.pc + uint.sizeof;
 			}
 
-			this.bpred.update(this.pc, this.npc, this.npc != (this.pc + Addr.sizeof), predPc != (this.pc + Addr.sizeof), predPc == this.npc, uop, dirUpdate);
+			this.bpred.update(this.pc, this.npc, this.npc != (this.pc + uint.sizeof), predPc != (this.pc + uint.sizeof), predPc == this.npc, uop, dirUpdate);
 		}
 	}
 	
@@ -115,7 +115,7 @@ class Thread {
 		return this.core.processor.simulator.memorySystem.seqIs[this.num];
 	}
 	
-	CoherentCache l1I() {
+	CoherentCacheNode l1I() {
 		return this.core.processor.simulator.memorySystem.l1Is[this.num];
 	}
 
@@ -123,7 +123,7 @@ class Thread {
 		return this.core.processor.simulator.memorySystem.seqDs[this.num];
 	}
 	
-	CoherentCache l1D() {
+	CoherentCacheNode l1D() {
 		return this.core.processor.simulator.memorySystem.l1Ds[this.num];
 	}
 
@@ -135,9 +135,9 @@ class Thread {
 
 	ThreadStatus status;
 
-	Addr pc;
-	Addr npc;
-	Addr nnpc;
+	uint pc;
+	uint npc;
+	uint nnpc;
 
 	Core core;
 	
@@ -150,10 +150,6 @@ class Thread {
 	Bpred bpred;
 
 	uint stackRecoverIdx;
-	
-	ref ulong totalInsts() {
-		return this.stat.totalInsts;
-	}
 	
 	ThreadStat stat;
 }

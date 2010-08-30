@@ -74,7 +74,7 @@ uint exit_impl(SyscallDesc desc, Thread thread) {
 /* 3 */
 uint read_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
-	Addr buf_addr = thread.getSyscallArg(1);
+	uint buf_addr = thread.getSyscallArg(1);
 	size_t count = thread.getSyscallArg(2);
 	
 	void* buf = malloc(count);
@@ -90,7 +90,7 @@ uint read_impl(SyscallDesc desc, Thread thread) {
 /* 4 */
 uint write_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
-	Addr buf_addr = thread.getSyscallArg(1);
+	uint buf_addr = thread.getSyscallArg(1);
 	size_t count = thread.getSyscallArg(2);
 
 	void* buf = malloc(count);
@@ -172,11 +172,10 @@ uint times_impl(SyscallDesc desc, Thread thread) {
 	assert(0);
 	//tms buf;
 	//clock_t ret = times(&buf);
-	//Addr buf_addr = thread.getSyscallArg(0);
+	//uint buf_addr = thread.getSyscallArg(0);
 	//thread.mem.writeBlock(buf_addr, tms.sizeof, cast(ubyte*) buf);
 	//return ret != cast(clock_t)-1;
-	//return 0;
-	return -EINVAL;
+	//return -EINVAL;
 }
 
 /* 45 */
@@ -224,13 +223,13 @@ uint getegid_impl(SyscallDesc desc, Thread thread) {
 /* 90 */
 uint mmap_impl(SyscallDesc desc, Thread thread) {
 	assert(0); //TODO
-	return -EINVAL;
+	//return -EINVAL;
 }
 
 /* 108 */
 uint fstat_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
-	Addr buf_addr = thread.getSyscallArg(1);
+	uint buf_addr = thread.getSyscallArg(1);
 	stat_t* buf = cast(stat_t*)(malloc(stat_t.sizeof));
 	int ret = fstat(fd, buf);
 	if(ret >= 0) {
@@ -252,7 +251,7 @@ uint _llseek_impl(SyscallDesc desc, Thread thread) {
 	int fd = thread.getSyscallArg(0);
 	uint offset_high = thread.getSyscallArg(1);
 	uint offset_low = thread.getSyscallArg(2);
-	Addr result_addr = thread.getSyscallArg(3);
+	uint result_addr = thread.getSyscallArg(3);
 	int whence = thread.getSyscallArg(4);
 	
 	int ret;
@@ -276,7 +275,7 @@ uint _llseek_impl(SyscallDesc desc, Thread thread) {
 /* 197 */
 uint fstat64_impl(SyscallDesc desc, Thread thread) {
 	assert(0); //TODO
-	return -EINVAL;
+	//return -EINVAL;
 }
 
 uint invalidArg_impl(SyscallDesc desc, Thread thread) {

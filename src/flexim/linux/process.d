@@ -143,7 +143,7 @@ class Process {
 
 			/*write argv to stack*/
 			foreach(i, arg; this.argv) {
-				thread.mem.writeWord(argAddr + i * Addr.sizeof, stack_ptr);
+				thread.mem.writeWord(argAddr + i * uint.sizeof, stack_ptr);
 				thread.mem.writeString(stack_ptr, arg);
 				/*0 already at the end of the string as done by initialization*/
 				stack_ptr += strlen(arg) + 1;
@@ -153,7 +153,7 @@ class Process {
 
 			/*write env to stack*/
 			foreach(i, e; this.env) {
-				thread.mem.writeWord(envAddr + i * Addr.sizeof, stack_ptr);
+				thread.mem.writeWord(envAddr + i * uint.sizeof, stack_ptr);
 				thread.mem.writeString(stack_ptr, e);
 				stack_ptr += strlen(e) + 1;
 			}
@@ -166,7 +166,7 @@ class Process {
 			}
 
 			/* initialize brk point to 4k byte boundary */
-			Addr abrk = data_base + data_size + MEM_PAGESIZE;
+			uint abrk = data_base + data_size + MEM_PAGESIZE;
 			abrk -= abrk % MEM_PAGESIZE;
 
 			this.brk = abrk;
@@ -174,7 +174,7 @@ class Process {
 			this.mmap_brk = MMAP_BASE;
 
 			thread.npc = this.prog_entry;
-			thread.nnpc = thread.npc + Addr.sizeof;
+			thread.nnpc = thread.npc + uint.sizeof;
 		}
 
 		bool load(Thread thread) {
@@ -210,11 +210,11 @@ class Process {
 
 		mixin Property!(char*, "prog_fname");
 
-		mixin Property!(Addr, "brk");
+		mixin Property!(uint, "brk");
 
-		mixin Property!(Addr, "mmap_brk");
+		mixin Property!(uint, "mmap_brk");
 
-		mixin Property!(Addr, "prog_entry");
+		mixin Property!(uint, "prog_entry");
 
 		// Id of the owner of the process
 		mixin Property!(uint, "uid");
@@ -230,7 +230,7 @@ class Process {
 
 		mixin Property!(uint, "ppid");
 
-		mixin Property!(Addr, "argvp");
+		mixin Property!(uint, "argvp");
 
 		// file descriptor remapping support
 		static const int MAX_FD = 256; // max legal fd value

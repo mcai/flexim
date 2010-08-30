@@ -48,7 +48,7 @@ enum LogCategory: string {
 	XML = "XML"
 }
 
-class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, SimulatorEventContext) {
+class Logger {
 	static this() {
 		singleInstance = new Logger();
 	}
@@ -61,16 +61,16 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 	//		this.enable(LogCategory.REGISTER);
 	//		this.enable(LogCategory.REQUEST);
 	//		this.enable(LogCategory.CACHE);
-	//		this.enable(LogCategory.MESI);
+			this.enable(LogCategory.MESI);
 	//		this.enable(LogCategory.MEMORY);
 	//		this.enable(LogCategory.NET);
 			this.enable(LogCategory.CONFIG);
 			this.enable(LogCategory.STAT);
 	//		this.enable(LogCategory.MISC);
 	//		this.enable(LogCategory.OOO);
-			this.enable(LogCategory.TEST);
-			this.enable(LogCategory.XML);
-			this.enable(LogCategory.DEBUG);
+	//		this.enable(LogCategory.TEST);
+	//		this.enable(LogCategory.XML);
+	//		this.enable(LogCategory.DEBUG);
 	}
 	
 	void enable(LogCategory category) {
@@ -85,20 +85,8 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 		return category in this.logSwitches && this.logSwitches[category];
 	}
 	
-	ulong currentCycle() {
-		return Simulator.singleInstance !is null ? Simulator.singleInstance.currentCycle : 0;
-	}
-
-	void schedule(SimulatorEventType eventType, SimulatorEventContext context, ulong delay = 0) {
-		Simulator.singleInstance.eventQueue.schedule(eventType, context, delay);
-	}
-
-	void execute(SimulatorEventType eventType, SimulatorEventContext context) {
-		Simulator.singleInstance.eventQueue.execute(eventType, context);
-	}
-	
 	string message(string caption, string text) {
-		return format("[%d] \t%s%s", this.currentCycle, caption.endsWith("info") ? "" : "[" ~ caption ~ "] ", text);
+		return format("[%d] \t%s%s", currentCycle, caption.endsWith("info") ? "" : "[" ~ caption ~ "] ", text);
 	}
 
 	void infof(LogCategory, T...)(LogCategory category, T args) {
@@ -129,7 +117,7 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 
 	void fatal(LogCategory category, string text) {
 		stderr.writeln(this.message(category ~ "|" ~ "fatal", text));
-		this.execute(SimulatorEventType.FATAL, new SimulatorEventContext(this.message(category ~ "|" ~ "fatal", text)));
+		executeEvent(SimulatorEventType.FATAL, new SimulatorEventContext(this.message(category ~ "|" ~ "fatal", text)));
 	}
 
 	void panicf(LogCategory, T...)(LogCategory category, T args) {
@@ -138,7 +126,7 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 
 	void panic(LogCategory category, string text) {
 		stderr.writeln(this.message(category ~ "|" ~ "panic", text));
-		this.execute(SimulatorEventType.PANIC, new SimulatorEventContext(this.message(category ~ "|" ~ "panic", text)));
+		executeEvent(SimulatorEventType.PANIC, new SimulatorEventContext(this.message(category ~ "|" ~ "panic", text)));
 	}
 
 	void haltf(LogCategory, T...)(LogCategory category, T args) {		
@@ -147,7 +135,7 @@ class Logger: CurrentCycleProvider, SchedulerProvider!(SimulatorEventType, Simul
 
 	void halt(LogCategory category, string text) {
 		stderr.writeln(this.message(category ~ "|" ~ "halt", text));
-		this.execute(SimulatorEventType.HALT, new SimulatorEventContext(this.message(category ~ "|" ~ "halt", text)));
+		executeEvent(SimulatorEventType.HALT, new SimulatorEventContext(this.message(category ~ "|" ~ "halt", text)));
 	}
 
 	bool[LogCategory] logSwitches;

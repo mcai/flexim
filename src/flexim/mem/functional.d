@@ -64,21 +64,21 @@ class MemoryPage {
 
 class SegmentationFaultException: Exception {
 	public:
-		this(Addr addr) {
+		this(uint addr) {
 			super(format("SegmentationFaultException @ 0x%x", addr));
 			this.addr = addr;
 		}
 
-		Addr addr() {
+		uint addr() {
 			return this.m_addr;
 		}
 
-		void addr(Addr value) {
+		void addr(uint value) {
 			this.m_addr = value;
 		}
 
 	private:
-		Addr m_addr;
+		uint m_addr;
 }
 
 class Memory {
@@ -566,7 +566,7 @@ class CAM(T, K, V) {
 	T next;
 }
 
-class MMUPage: CAM!(MMUPage, Addr, Addr) {
+class MMUPage: CAM!(MMUPage, uint, uint) {
 	alias tag vtladdr;
 	alias content phaddr;
 	
@@ -579,15 +579,15 @@ class MMU {
 	this() {
 	}
 
-	uint page(Addr vtladdr) {
+	uint page(uint vtladdr) {
 		return vtladdr >> MEM_LOGPAGESIZE;
 	}
 
-	uint tag(Addr vtladdr) {
+	uint tag(uint vtladdr) {
 		return vtladdr & ~MEM_PAGEMASK;
 	}
 
-	uint offset(Addr vtladdr) {
+	uint offset(uint vtladdr) {
 		return vtladdr & MEM_PAGEMASK;
 	}
 
@@ -603,7 +603,7 @@ class MMU {
 		this.pages[index] = value;
 	}
 
-	MMUPageT getPage(Addr vtladdr) {
+	MMUPageT getPage(uint vtladdr) {
 		int idx = this.page(vtladdr);
 		uint tag = this.tag(vtladdr);
 
@@ -633,12 +633,12 @@ class MMU {
 		return page;
 	}
 
-	Addr translate(Addr vtladdr) {
+	uint translate(uint vtladdr) {
 		MMUPageT page = this.getPage(vtladdr);
 		return page.phaddr | this.offset(vtladdr);
 	}
 	
-	Dir getDir(Addr phaddr) {
+	Dir getDir(uint phaddr) {
 		int idx = this.page(phaddr);
 		if(idx >= this.pageCount) {
 			return null;

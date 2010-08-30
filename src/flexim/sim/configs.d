@@ -189,9 +189,10 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 }
 
 class CacheConfig: Config!(CacheConfig) {
-	this(string name, uint sets, uint assoc, uint blockSize, uint hitLatency, uint missLatency, CacheReplacementPolicy policy) {
+	this(string name, uint level, uint numSets, uint assoc, uint blockSize, uint hitLatency, uint missLatency, CacheReplacementPolicy policy) {
 		this.name = name;
-		this.sets = sets;
+		this.level = level;
+		this.numSets = numSets;
 		this.assoc = assoc;
 		this.blockSize = blockSize;
 		this.hitLatency = hitLatency;
@@ -200,12 +201,13 @@ class CacheConfig: Config!(CacheConfig) {
 	}
 	
 	override string toString() {
-		return format("CacheConfig[name=%s, sets=%d, assoc=%d, blockSize=%d, hitLatency=%d, missLatency=%d, policy=%s]",
-			this.name, this.sets, this.assoc, this.blockSize, this.hitLatency, this.missLatency, this.policy);
+		return format("CacheConfig[name=%s, level=%d, numSets=%d, assoc=%d, blockSize=%d, hitLatency=%d, missLatency=%d, policy=%s]",
+			this.name, this.level, this.numSets, this.assoc, this.blockSize, this.hitLatency, this.missLatency, this.policy);
 	}
 	
 	string name;
-	uint sets;
+	uint level;
+	uint numSets;
 	uint assoc;
 	uint blockSize;
 	uint hitLatency;
@@ -221,7 +223,8 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 		XMLConfig xmlConfig = new XMLConfig("CacheConfig");
 		
 		xmlConfig.attributes["name"] = cacheConfig.name;
-		xmlConfig.attributes["sets"] = to!(string)(cacheConfig.sets);
+		xmlConfig.attributes["level"] = to!(string)(cacheConfig.level);
+		xmlConfig.attributes["numSets"] = to!(string)(cacheConfig.numSets);
 		xmlConfig.attributes["assoc"] = to!(string)(cacheConfig.assoc);
 		xmlConfig.attributes["blockSize"] = to!(string)(cacheConfig.blockSize);
 		xmlConfig.attributes["hitLatency"] = to!(string)(cacheConfig.hitLatency);
@@ -233,14 +236,15 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	
 	override CacheConfig load(XMLConfig xmlConfig) {
 		string name = xmlConfig.attributes["name"];
-		uint sets = to!(uint)(xmlConfig.attributes["sets"]);
+		uint level = to!(uint)(xmlConfig.attributes["level"]);
+		uint numSets = to!(uint)(xmlConfig.attributes["numSets"]);
 		uint assoc = to!(uint)(xmlConfig.attributes["assoc"]);
 		uint blockSize = to!(uint)(xmlConfig.attributes["blockSize"]);
 		uint hitLatency = to!(uint)(xmlConfig.attributes["hitLatency"]);
 		uint missLatency = to!(uint)(xmlConfig.attributes["missLatency"]);
 		CacheReplacementPolicy policy = cast(CacheReplacementPolicy) (xmlConfig.attributes["policy"]);
 			
-		CacheConfig cacheConfig = new CacheConfig(name, sets, assoc, blockSize, hitLatency, missLatency, policy);
+		CacheConfig cacheConfig = new CacheConfig(name, level, numSets, assoc, blockSize, hitLatency, missLatency, policy);
 		
 		return cacheConfig;
 	}

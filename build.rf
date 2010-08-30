@@ -20,7 +20,9 @@ src/flexim/isa/misc.d
 src/flexim/linux/process.d
 src/flexim/linux/syscall.d
 src/flexim/main.d
+src/flexim/mem/cache.d
 src/flexim/mem/functional.d
+src/flexim/mem/sequencer.d
 src/flexim/mem/timing.d
 src/flexim/mem/transactional.d
 src/flexim/sim/benchmark.d
@@ -29,9 +31,9 @@ src/flexim/sim/simulations.d
 src/flexim/sim/simulator.d
 src/flexim/sim/stats.d
 src/flexim/util/arithmetic.d
+src/flexim/util/ds.d
 src/flexim/util/elf.d
 src/flexim/util/events.d
 src/flexim/util/faults.d
 src/flexim/util/mixins.d
-src/flexim/util/providers.d
 src/flexim/util/queues.d

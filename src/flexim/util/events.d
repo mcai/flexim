@@ -165,10 +165,6 @@ class Event(EventTypeT, EventContextT) {
 		this.when = when;
 	}
 	
-	long opCmp(Event otherEvent) {
-		return otherEvent.when - this.when;
-	}
-	
 	override string toString() {
 		string str;
 		
@@ -187,20 +183,32 @@ interface EventProcessor {
 	void processEvents();
 }
 
-const uint event_queue_size = 10000; 
+class DelegateEventQueue: EventProcessor {
+	this() {
+	}
+			
+	void processEvents() {
+		if(currentCycle in this.events) {
+			foreach(event; this.events[currentCycle]) {
+				event();
+			}
+			this.events.remove(currentCycle);
+		}
+	}
+	
+	void schedule(void delegate() event, ulong delay = 0) {
+		this.events[currentCycle + delay] ~= event;
+	}
+	
+	void delegate()[][ulong] events;
+}
 
-class EventQueue(EventTypeT: string, EventContextT): EventProcessor, CurrentCycleProvider, SchedulerProvider!(EventTypeT, EventContextT) {
+class EventQueue(EventTypeT: string, EventContextT): EventProcessor {
 	alias void delegate(EventTypeT, EventContextT, ulong) EventHandler;
 
 	public:
 		this(string name) {
 			this.name = name;
-	        this.eventArray = new Event!(EventTypeT, EventContextT)[event_queue_size];
-			this.events = BinaryHeap!(Event!(EventTypeT, EventContextT)[])(this.eventArray, 0);
-		}
-		
-		ulong currentCycle() {
-			return Simulator.singleInstance.currentCycle;
 		}
 
 		void registerHandler(EventTypeT eventType, EventHandler eventHandler) {
@@ -209,118 +217,40 @@ class EventQueue(EventTypeT: string, EventContextT): EventProcessor, CurrentCycl
 
 		void schedule(EventTypeT eventType, EventContextT context, ulong delay = 0) {
 			assert(delay >= 0);
-			ulong when = this.currentCycle + delay;
-			ulong scheduled = this.currentCycle;
-
-			this.schedule(new Event!(EventTypeT, EventContextT)(eventType, context, scheduled, when));
+			this.schedule(new Event!(EventTypeT, EventContextT)(eventType, context, currentCycle, currentCycle + delay));
 		}
 
 		void schedule(Event!(EventTypeT, EventContextT) event) {
-			assert(this.events.length < event_queue_size, to!(string)(this));
-			
-			this.events.insert(event);
-
-			logging.infof(LogCategory.EVENT_QUEUE, "  %s.schedule(%s)", this.name, to!(string)(event));
+			this.events[event.when] ~= event;
 		}
 
 		void execute(EventTypeT eventType, EventContextT context) {
-			this.execute(new Event!(EventTypeT, EventContextT)(eventType, context, this.currentCycle, this.currentCycle));
+			this.execute(new Event!(EventTypeT, EventContextT)(eventType, context, currentCycle, currentCycle));
 		}
 
 		void execute(Event!(EventTypeT, EventContextT) event) {
 			assert(event.eventType in this.eventHandlers);
-			
-			logging.infof(LogCategory.EVENT_QUEUE, "  %s.execute(%s)", this.name, to!(string)(event));
-
 			foreach(eventHandler; this.eventHandlers[event.eventType]) {
 				eventHandler(event.eventType, event.context, event.when);
 			}
 		}
 
 		void processEvents() {
-			while(true) {
-				if(this.events.empty) {
-					break;
+			if(currentCycle in this.events) {
+				foreach(event; this.events[currentCycle]) {
+					this.execute(event);
 				}
-
-				/* extract event from heap */
-				Event!(EventTypeT, EventContextT) event = this.events.front;
-
-				/* must we process it? */
-				assert(event.when >= this.currentCycle);
-				if(event.when != this.currentCycle) {
-					break;
-				}
-
-				/* ok, process it */
-				this.pop();
-
-				this.execute(event);
+				this.events.remove(currentCycle);
 			}
-		}
-
-		void clear() {
-			while(true) {
-				if(this.events.empty) {
-					break;
-				}
-
-				/* extract event from heap */
-				Event!(EventTypeT, EventContextT) event = this.pop();
-				this.execute(event);
-			}
-		}
-
-		Event!(EventTypeT, EventContextT) pop() {
-			assert(!this.events.empty);
-			Event!(EventTypeT, EventContextT) event = this.events.front;
-			this.events.removeFront();
-			return event;
-		}
-
-		int size() {
-			return this.events.length;
 		}
 		
 		override string toString() {
-			string str;
-			
-			str ~= "EventQueue[";
-			
-			foreach(i, event; this.eventArray) {
-				if(event !is null) {
-					str ~= format("%d: %s ", i, to!(string)(event));
-				}
-			}
-			
-			str ~= "]";
-			
-			return str;
+			return format("%s[events.length=%d]", this.name, this.events.length);
 		}
 		
 		string name;
 
 	private:
-		EventHandler[][EventTypeT] eventHandlers;
-
-		Event!(EventTypeT, EventContextT)[] eventArray;
-		BinaryHeap!(Event!(EventTypeT, EventContextT)[]) events;
+		EventHandler[][EventTypeT] eventHandlers;		
+		Event!(EventTypeT, EventContextT)[][ulong] events;
 }
-
-class EventCallbackInvoker(EventTypeT, ContextT, alias EventQueueT = EventQueue!(EventTypeT, ContextT)) : Invokable {
-	this(EventTypeT retEvent, ContextT retStack, EventQueueT eventQueue) {
-		this.retEvent = retEvent;
-		this.retStack = retStack;
-		this.eventQueue = eventQueue;
-	}
-	
-	void invoke() {
-		this.eventQueue.schedule(this.retEvent, this.retStack, 0);
-	}
-	
-	EventTypeT retEvent;
-	ContextT retStack;
-	EventQueueT eventQueue;	
-}
-
-alias void delegate() EventCallback;

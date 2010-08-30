@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<ExperimentStat title="WCETBench-fir-1x1" cwd="../stats/experiments">
-   <SimulationStat title="WCETBench-fir-1x1" cwd="../stats/experiments" duration="470">
+<ExperimentStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments">
+   <SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments" duration="1004532">
       <ProcessorStat>
-         <ThreadStat totalInsts="2679">
+         <ThreadStat totalInsts="2316067">
          </ThreadStat>
       </ProcessorStat>
       <MemorySystemStat>

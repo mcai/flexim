@@ -28,9 +28,9 @@ class BpredBtbEntry {
 
 	}
 
-	Addr addr;
+	uint addr;
 	DynamicInst uop;
-	Addr target;
+	uint target;
 	BpredBtbEntry prev, next;
 }
 
@@ -48,11 +48,11 @@ class BimodBpredDir {
 		}
 	}
 
-	uint hash(Addr baddr) {
+	uint hash(uint baddr) {
 		return (baddr >> 19) ^ (baddr >> MD_BR_SHIFT) & (this.size - 1);
 	}
 
-	ubyte* lookup(Addr baddr) {
+	ubyte* lookup(uint baddr) {
 		return &this.table[this.hash(baddr)];
 	}
 
@@ -77,7 +77,7 @@ class TwoLevelBpredDir {
 		}
 	}
 
-	ubyte* lookup(Addr baddr) {
+	ubyte* lookup(uint baddr) {
 		uint l1Index = (baddr >> MD_BR_SHIFT) & (this.l1Size - 1);
 		uint l2Index = this.shiftRegs[l1Index];
 
@@ -179,11 +179,11 @@ class BpredUpdate {
 }
 
 interface Bpred {
-	Addr lookup(Addr baddr, Addr btarget, DynamicInst uop, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx);
+	uint lookup(uint baddr, uint btarget, DynamicInst uop, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx);
 
-	void recover(Addr baddr, uint stackRecoverIdx);
+	void recover(uint baddr, uint stackRecoverIdx);
 	
-	void update(Addr baddr, Addr btarget, bool taken, bool predTaken, bool correct, DynamicInst uop, ref BpredUpdate dirUpdate);	
+	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst uop, ref BpredUpdate dirUpdate);	
 }
 
 class CombinedBpred : Bpred {
@@ -201,7 +201,7 @@ class CombinedBpred : Bpred {
 	}
 
 	// btarget is for static predictors such taken or not taken, so here it is not used at all
-	Addr lookup(Addr baddr, Addr btarget, DynamicInst uop, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) {		
+	uint lookup(uint baddr, uint btarget, DynamicInst uop, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) {		
 		if(!uop.isControl) {
 			return 0;
 		}
@@ -240,14 +240,14 @@ class CombinedBpred : Bpred {
 		}
 		
 		if(uop.isReturn && this.retStack.size > 0) {
-			Addr target = this.retStack[this.retStack.tos].target;
+			uint target = this.retStack[this.retStack.tos].target;
 			this.retStack.tos = (this.retStack.tos + this.retStack.size - 1) % this.retStack.size;
 			dirUpdate.ras = true;
 		}
 		
 		if(uop.isCall && this.retStack.size > 0) {
 			this.retStack.tos = (this.retStack.tos + 1) % this.retStack.size;
-			this.retStack[this.retStack.tos].target = baddr + Addr.sizeof;
+			this.retStack[this.retStack.tos].target = baddr + uint.sizeof;
 		}
 		
 		uint index = (baddr >> MD_BR_SHIFT) & (this.btb.sets - 1);
@@ -283,11 +283,11 @@ class CombinedBpred : Bpred {
 		}
 	}
 
-	void recover(Addr baddr, uint stackRecoverIdx) {
+	void recover(uint baddr, uint stackRecoverIdx) {
 		this.retStack.tos = stackRecoverIdx;
 	}
 
-	void update(Addr baddr, Addr btarget, bool taken, bool predTaken, bool correct, DynamicInst uop, ref BpredUpdate dirUpdate) {
+	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst uop, ref BpredUpdate dirUpdate) {
 		BpredBtbEntry btbEntry = null;
 		
 		if(!uop.isControl) {

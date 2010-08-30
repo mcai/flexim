@@ -23,8 +23,6 @@ module flexim.cpu.instruction;
 
 import flexim.all;
 
-alias uint Addr;
-
 union MachInst {
 	uint data;
 
@@ -215,7 +213,7 @@ const BitField MT_H = {"MT_H", 4, 4};
 //Cache Ops
 const BitField CACHE_OP = {"CACHE_OP", 20, 16};
 
-string disassemble(MachInst machInst, Addr pc, Thread thread) {
+string disassemble(MachInst machInst, uint pc, Thread thread) {
 	string buf;
 
 	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.isa.decodeMachInst(machInst).getName());
@@ -321,7 +319,7 @@ const uint MAX_IDEPS = 3;
 const uint MAX_ODEPS = 2;
 
 abstract class ISA {
-	StaticInst decode(Addr pc, Memory mem) {
+	StaticInst decode(uint pc, Memory mem) {
 		if(pc in this.decodedInsts) {
 			return this.decodedInsts[pc];
 		}
@@ -342,7 +340,7 @@ abstract class ISA {
 	
 	abstract StaticInst decodeMachInst(MachInst machInst);
 	
-	StaticInst[Addr] decodedInsts;
+	StaticInst[uint] decodedInsts;
 }
 
 abstract class StaticInst {
@@ -412,7 +410,7 @@ abstract class StaticInst {
 
 class DynamicInst {
 	public:		
-		this(Thread thread, Addr pc, StaticInst staticInst) {
+		this(Thread thread, uint pc, StaticInst staticInst) {
 			this.thread = thread;
 			this.pc = pc;
 			this.staticInst = staticInst;
@@ -476,7 +474,7 @@ class DynamicInst {
 			return disassemble(this.staticInst.machInst, this.pc, this.thread);
 		}
 		
-		Addr pc;
+		uint pc;
 		
 		StaticInst staticInst;
 		

@@ -35,8 +35,8 @@ class MemoryOp: StaticInst {
 			return this.m_displacement;
 		}
 
-		Addr ea(Thread thread) {
-			Addr ea = thread.intRegs[this[RS]] + this.displacement;
+		uint ea(Thread thread) {
+			uint ea = thread.intRegs[this[RS]] + this.displacement;
 			return ea;
 		}
 
@@ -194,16 +194,16 @@ class Lwl: MemoryOp {
 			this.memDestRegIdx ~= this[RT];
 		}
 		
-		override Addr ea(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
-			Addr ea = addr & ~3;			
+		override uint ea(Thread thread) {
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint ea = addr & ~3;			
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
 
-			Addr ea = addr & ~3;
+			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
 
 			uint mem = 0;
@@ -235,16 +235,16 @@ class Lwr: MemoryOp {
 			this.memDestRegIdx ~= this[RT];
 		}
 		
-		override Addr ea(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
-			Addr ea = addr & ~3;
+		override uint ea(Thread thread) {
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint ea = addr & ~3;
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
 
-			Addr ea = addr & ~3;
+			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
 
 			uint mem = 0;
@@ -410,16 +410,16 @@ class Swl: MemoryOp {
 			this.memSrcRegIdx ~= this[RT];
 		}
 		
-		override Addr ea(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
-			Addr ea = addr & ~3;
+		override uint ea(Thread thread) {
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint ea = addr & ~3;
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
 
-			Addr ea = addr & ~3;
+			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
 
 			uint mem = 0;
@@ -451,16 +451,16 @@ class Swr: MemoryOp {
 			this.memSrcRegIdx ~= this[RT];
 		}
 		
-		override Addr ea(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
-			Addr ea = addr & ~3;
+		override uint ea(Thread thread) {
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint ea = addr & ~3;
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			Addr addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.intRegs[this[RS]] + this.displacement;
 
-			Addr ea = addr & ~3;
+			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
 
 			uint mem = 0;

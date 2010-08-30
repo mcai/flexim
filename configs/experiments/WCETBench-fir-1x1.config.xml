@@ -6,11 +6,11 @@
          </ContextConfig>
       </ProcessorConfig>
       <MemorySystemConfig>
-         <CacheConfig name="l1I-0" sets="64" assoc="4" blockSize="64" hitLatency="1" missLatency="3" policy="LRU">
+         <CacheConfig name="l1I-0" level="0" numSets="64" assoc="4" blockSize="64" hitLatency="1" missLatency="3" policy="LRU">
          </CacheConfig>
-         <CacheConfig name="l1D-0" sets="64" assoc="4" blockSize="64" hitLatency="1" missLatency="3" policy="LRU">
+         <CacheConfig name="l1D-0" level="0" numSets="64" assoc="4" blockSize="64" hitLatency="1" missLatency="3" policy="LRU">
          </CacheConfig>
-         <CacheConfig name="l2" sets="1024" assoc="4" blockSize="64" hitLatency="4" missLatency="7" policy="LRU">
+         <CacheConfig name="l2" level="1" numSets="1024" assoc="4" blockSize="64" hitLatency="4" missLatency="7" policy="LRU">
          </CacheConfig>
       </MemorySystemConfig>
    </SimulationConfig>

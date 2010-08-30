@@ -60,7 +60,7 @@ class Transaction {
 		//TODO
 	}
 	
-	bool checkForReadConflict(Addr addr) {
+	bool checkForReadConflict(uint addr) {
 		//TODO
 		return false;
 	}
@@ -76,7 +76,7 @@ class Transaction {
 	uint nestingLevel;
 	bool running;
 	
-	Addr pc;
-	Addr lastLoad;
+	uint pc;
+	uint lastLoad;
 	
 }

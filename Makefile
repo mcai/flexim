@@ -2,8 +2,9 @@ EXECUTABLE = flexim
 SRC = build.rf
 
 DC = dmd
+# DCFLAGS = -w -wi
 # DCFLAGS = -release -O
-DCFLAGS = -debug -gc
+DCFLAGS = -debug -gc -w -wi
 TARGET = build/$(EXECUTABLE)
 
 all: $(TARGET)

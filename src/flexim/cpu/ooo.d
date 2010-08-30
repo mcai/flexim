@@ -42,7 +42,7 @@ class Link(LinkT, EntryT) {
 }
 
 class FetchRecord {
-	this(Addr pc, DynamicInst uop) {
+	this(uint pc, DynamicInst uop) {
 		this.pc = pc;
 		this.uop = uop;
 	}
@@ -51,7 +51,7 @@ class FetchRecord {
 		return format("FetchRecord[uop=%s]", uop);
 	}
 
-	Addr pc;
+	uint pc;
 	DynamicInst uop;
 }
 
@@ -63,7 +63,7 @@ enum RUUStationStatus : string {
 }
 
 class RUUStation {
-	this(Addr pc, DynamicInst uop) {
+	this(uint pc, DynamicInst uop) {
 		this.pc = pc;
 		this.uop = uop;
 
@@ -109,11 +109,11 @@ class RUUStation {
 		return str;
 	}
 
-	Addr pc;
+	uint pc;
 	DynamicInst uop;
 	bool inLsq;
 	bool eaComp;
-	Addr ea;
+	uint ea;
 
 	ulong seq;
 
@@ -287,7 +287,7 @@ class OoOThread: Thread {
 
 			this.ruu.popFront();
 
-			this.totalInsts++;
+			this.stat.totalInsts++;
 
 			logging.infof(LogCategory.DEBUG, "t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
 		}
@@ -342,7 +342,7 @@ class OoOThread: Thread {
 	}
 
 	void refreshLsq() {
-		Addr[] stdUnknowns;
+		uint[] stdUnknowns;
 
 		foreach(rs; this.lsq) {
 			if(rs.uop.isStore) {
@@ -387,7 +387,7 @@ class OoOThread: Thread {
 			RUUStation rs = this.readyq.front;
 
 			if(rs.inLsq && rs.uop.isStore) {
-				Addr ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
+				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 
 				WriteCPURequest writeReq = new WriteCPURequest(rs.uop, rs.pc, ea, rs, this.mmu.translate(ea), null);
 				this.seqD.write(writeReq);
@@ -395,11 +395,11 @@ class OoOThread: Thread {
 				rs.status = RUUStationStatus.COMPLETED;
 				this.readyq.popFront();
 			} else if(rs.inLsq && rs.uop.isLoad) {
-				void readCallback(Request req) {
+				void readCallback(CPURequest req) {
 					this.eventq.enqueue((cast(ReadCPURequest) req).rs, 1);
 				}
 
-				Addr ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
+				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 
 				ReadCPURequest req = new ReadCPURequest(rs.uop, rs.pc, ea, rs, this.mmu.translate(ea), &readCallback);
 
@@ -437,7 +437,7 @@ class OoOThread: Thread {
 
 			this.intRegs[ZeroReg] = 0;
 
-			Addr pc = fr.pc;
+			uint pc = fr.pc;
 			DynamicInst uop = fr.uop;
 
 			if(!uop.isNop) {
@@ -501,7 +501,7 @@ class OoOThread: Thread {
 		}
 	}
 
-	DynamicInst fetchAndDecodeAt(Addr pc) {		
+	DynamicInst fetchAndDecodeAt(uint pc) {		
 		StaticInst staticInst = this.isa.decode(pc, this.mem);
 		DynamicInst uop = new DynamicInst(this, pc, staticInst);
 
@@ -518,7 +518,7 @@ class OoOThread: Thread {
 		assert(this.fetchNpc);
 
 		if(block != this.fetchBlock) {
-			void callback(Request req) {
+			void callback(CPURequest req) {
 				this.canFetch = true;
 			}
 
@@ -543,7 +543,7 @@ class OoOThread: Thread {
 
 			this.pc = this.npc;
 			this.npc = this.nnpc;
-			this.nnpc += Addr.sizeof;
+			this.nnpc += uint.sizeof;
 
 			uop.execute();
 
@@ -590,7 +590,7 @@ class OoOThread: Thread {
 	uint issueWidth;
 	uint commitWidth;
 	
-	Addr fetchPc, fetchNpc, fetchNnpc;
+	uint fetchPc, fetchNpc, fetchNnpc;
 	
 	ulong lastCommittedCycle;
 	

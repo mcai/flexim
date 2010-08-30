@@ -55,7 +55,9 @@ public import flexim.isa.misc;
 public import flexim.linux.process;
 public import flexim.linux.syscall;
 
+public import flexim.mem.cache;
 public import flexim.mem.functional;
+public import flexim.mem.sequencer;
 public import flexim.mem.timing;
 public import flexim.mem.transactional;
 
@@ -66,9 +68,9 @@ public import flexim.sim.simulator;
 public import flexim.sim.stats;
 
 public import flexim.util.arithmetic;
+public import flexim.util.ds;
 public import flexim.util.elf;
 public import flexim.util.events;
 public import flexim.util.faults;
 public import flexim.util.mixins;
-public import flexim.util.providers;
 public import flexim.util.queues;

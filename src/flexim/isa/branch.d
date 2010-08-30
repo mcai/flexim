@@ -340,11 +340,11 @@ abstract class Jump: StaticInst {
 			this.target = this[JMPTARG] << 2;
 		}
 
-		void jump(Thread thread, Addr addr) {
+		void jump(Thread thread, uint addr) {
 			thread.nnpc = addr;
 		}
 		
-		abstract Addr targetPc(Thread thread);
+		abstract uint targetPc(Thread thread);
 
 	private:
 		uint target;
@@ -359,7 +359,7 @@ class J: Jump {
 		override void setupDeps() {
 		}
 		
-		override Addr targetPc(Thread thread) {
+		override uint targetPc(Thread thread) {
 			return mbits(thread.npc, 32, 28) | this.target;
 		}
 
@@ -378,7 +378,7 @@ class Jal: Jump {
 			this.destRegIdx ~= ReturnAddressReg;
 		}
 
-		override Addr targetPc(Thread thread) {
+		override uint targetPc(Thread thread) {
 			return mbits(thread.npc, 32, 28) | this.target;
 		}
 
@@ -399,7 +399,7 @@ class Jalr: Jump {
 			this.destRegIdx ~= this[RD];
 		}
 		
-		override Addr targetPc(Thread thread) {
+		override uint targetPc(Thread thread) {
 			return thread.intRegs[this[RS]];
 		}
 
@@ -419,7 +419,7 @@ class Jr: Jump {
 			this.srcRegIdx ~= this[RS];
 		}
 
-		override Addr targetPc(Thread thread) {
+		override uint targetPc(Thread thread) {
 			return thread.intRegs[this[RS]];
 		}
 
