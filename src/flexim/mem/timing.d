@@ -23,7 +23,7 @@ module flexim.mem.timing;
 
 import flexim.all;
 
-class PendingRequest {
+abstract class PendingRequest {
 	this(uint addr) {
 		this.addr = addr;
 		
@@ -34,22 +34,25 @@ class PendingRequest {
 		this.isShared = false;
 	}
 	
+	abstract bool isRead();
+	abstract bool isBlocking();
+	
 	uint addr;
+	
+	CoherentCacheNode except;
 
 	uint set, way, tag;
 	uint srcSet, srcWay, srcTag;
+	
+	DirLock dirLock;
 
 	MESIState state;
 	
-	CoherentCacheNode except;
+	uint pendings;
 	
 	bool isShared;
 	bool isWriteback;
 	bool isEviction;
-	
-	uint pendings;
-	
-	DirLock dirLock;
 }
 
 class PendingCPURequest(CPURequestT): PendingRequest {
@@ -58,6 +61,14 @@ class PendingCPURequest(CPURequestT): PendingRequest {
 		
 		this.cpuRequest = cpuRequest;
 		this.source = source;
+	}
+	
+	override bool isRead() {
+		return (this.cpuRequest.type == CPURequestType.READ);
+	}
+	
+	override bool isBlocking() {
+		return false;
 	}
 	
 	override string toString() {
@@ -245,6 +256,10 @@ class PendingCacheRequest(CacheRequestT): PendingRequest {
 		return this.cacheRequest.cpuRequest;
 	}
 	
+	override bool isRead() {
+		return (this.cpuRequest.type == CPURequestType.READ);
+	}
+	
 	override string toString() {
 		return format("PendingCacheRequest[cacheRequest=%s]", this.cacheRequest);
 	}
@@ -256,11 +271,19 @@ class PendingEvictCacheRequest: PendingCacheRequest!(EvictCacheRequest) {
 	this(EvictCacheRequest cacheRequest) {
 		super(cacheRequest);
 	}
+	
+	override bool isBlocking() {
+		return true;
+	}
 }
 
 class PendingUpdownReadCacheRequest: PendingCacheRequest!(UpdownReadCacheRequest) {
 	this(UpdownReadCacheRequest cacheRequest) {
 		super(cacheRequest);
+	}
+	
+	override bool isBlocking() {
+		return false;
 	}
 }
 
@@ -268,17 +291,29 @@ class PendingDownupReadCacheRequest: PendingCacheRequest!(DownupReadCacheRequest
 	this(DownupReadCacheRequest cacheRequest) {
 		super(cacheRequest);
 	}
+	
+	override bool isBlocking() {
+		return true;
+	}
 }
 
 class PendingWriteCacheRequest: PendingCacheRequest!(WriteCacheRequest) {
 	this(WriteCacheRequest cacheRequest) {
 		super(cacheRequest);
 	}
+	
+	override bool isBlocking() {
+		return false;
+	}
 }
 
 class PendingInvalidateCacheRequest: PendingCacheRequest!(InvalidateCacheRequest) {
 	this(InvalidateCacheRequest cacheRequest) {
 		super(cacheRequest);
+	}
+	
+	override bool isBlocking() {
+		return true;
 	}
 }
 
@@ -532,6 +567,25 @@ class CoherentCache: CoherentCacheNode {
 		
 		bool hit = this.cache.findBlock(pendingRequest.addr, pendingRequest.set, pendingRequest.way, pendingRequest.tag, pendingRequest.state);
 		
+		this.stat.accesses++;
+		if(hit) {
+			this.stat.hits++;
+		}
+		if(pendingRequest.isRead) {
+			this.stat.reads++;
+			pendingRequest.isBlocking ? this.stat.blockingReads++ : this.stat.nonblockingReads++;
+			if(hit) {
+				this.stat.readHits++;
+			}
+		}
+		else {
+			this.stat.writes++;
+			pendingRequest.isBlocking ? this.stat.blockingWrites++ : this.stat.nonblockingWrites++;
+			if(hit) {
+				this.stat.writeHits++;
+			}
+		}
+		
 		uint dumbTag = 0;
 		
 		if(!hit) {
@@ -566,6 +620,7 @@ class CoherentCache: CoherentCacheNode {
 		logging.infof(LogCategory.MESI, "%s.findAndLockFinish(%s)", this.name, pendingRequest);
 		
 		if(pendingRequest.isEviction) {
+			this.stat.evictions++;
 			uint dumbTag = 0;
 			this.cache.getBlock(pendingRequest.set, pendingRequest.way, dumbTag, pendingRequest.state); 
 		}
