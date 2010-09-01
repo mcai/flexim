@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ExperimentStat title="WCETBench-fir-1x1" cwd="../stats/experiments">
-   <SimulationStat title="WCETBench-fir-1x1" cwd="../stats/experiments" duration="445">
+   <SimulationStat title="WCETBench-fir-1x1" cwd="../stats/experiments" duration="465">
       <ProcessorStat>
          <ThreadStat totalInsts="2679">
          </ThreadStat>

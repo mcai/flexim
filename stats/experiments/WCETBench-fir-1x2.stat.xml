@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<ExperimentStat title="WCETBench-fir-1x2" cwd="../stats/experiments">
+   <SimulationStat title="WCETBench-fir-1x2" cwd="../stats/experiments" duration="908">
+      <ProcessorStat>
+         <ThreadStat totalInsts="2679">
+         </ThreadStat>
+         <ThreadStat totalInsts="2679">
+         </ThreadStat>
+      </ProcessorStat>
+      <MemorySystemStat>
+         <CacheStat hits="67" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="0" nonblockingReads="115" reads="115" blockingReads="0" name="l1I-1" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="67" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="115" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="0" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="0" nonblockingReads="136" reads="136" blockingReads="0" name="l2" writeRetries="0" noRetryWriteHits="0" writes="128" readHits="0" nonblockingWrites="128" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="264" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="428" noRetryWrites="0" noRetryAccesses="0" writeHits="25" evictions="0" nonblockingReads="423" reads="423" blockingReads="0" name="l1D-0" writeRetries="0" noRetryWriteHits="0" writes="89" readHits="403" nonblockingWrites="89" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="512" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="67" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="0" nonblockingReads="115" reads="115" blockingReads="0" name="l1I-0" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="67" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="115" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="428" noRetryWrites="0" noRetryAccesses="0" writeHits="25" evictions="0" nonblockingReads="423" reads="423" blockingReads="0" name="l1D-1" writeRetries="0" noRetryWriteHits="0" writes="89" readHits="403" nonblockingWrites="89" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="512" noRetryReadHits="0">
+         </CacheStat>
+      </MemorySystemStat>
+   </SimulationStat>
+</ExperimentStat>

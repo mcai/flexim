@@ -42,7 +42,6 @@ abstract class PendingRequest {
 	CoherentCacheNode except;
 
 	uint set, way, tag;
-	uint srcSet, srcWay, srcTag;
 	
 	DirLock dirLock;
 
@@ -385,7 +384,7 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	override void receiveLoad(ReadCPURequest cpuRequest, Sequencer source) {
-		logging.infof(LogCategory.MESI, "%s.receiveLoad(%s, %s)", this.name, cpuRequest, source);
+		//logging.infof(LogCategory.MESI, "%s.receiveLoad(%s, %s)", this.name, cpuRequest, source);
 		
 		PendingReadCPURequest pendingCpuRequest = new PendingReadCPURequest(cpuRequest, source);
 		this.pendingReadCpuRequests.add(pendingCpuRequest);
@@ -394,7 +393,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void sendLoadResponse(ReadCPURequest cpuRequest, Sequencer source) {
-		logging.infof(LogCategory.MESI, "%s.sendLoadResponse(%s, %s)", this.name, cpuRequest, source);
+		//logging.infof(LogCategory.MESI, "%s.sendLoadResponse(%s, %s)", this.name, cpuRequest, source);
 		
 		source.receiveLoadResponse(cpuRequest, this);
 	}
@@ -402,7 +401,7 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	override void receiveStore(WriteCPURequest cpuRequest, Sequencer source) {
-		logging.infof(LogCategory.MESI, "%s.receiveStore(%s, %s)", this.name, cpuRequest, source);
+		//logging.infof(LogCategory.MESI, "%s.receiveStore(%s, %s)", this.name, cpuRequest, source);
 		
 		PendingWriteCPURequest pendingCpuRequest = new PendingWriteCPURequest(cpuRequest, source);
 		this.pendingWriteCpuRequests.add(pendingCpuRequest);
@@ -413,29 +412,30 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void sendEvict(EvictCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendEvict(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendEvict(%s)", this.name, cacheRequest);
 		
 		cacheRequest.target.receiveEvict(cacheRequest);
 	}
 	
 	override void receiveEvict(EvictCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.receiveEvict(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.receiveEvict(%s)", this.name, cacheRequest);
 		
 		PendingEvictCacheRequest pendingCacheRequest = new PendingEvictCacheRequest(cacheRequest);
+		pendingCacheRequest.except = pendingCacheRequest.cacheRequest.source;
 		this.pendingEvictCacheRequests.add(pendingCacheRequest);
 
 		this.beginServicingEvict(pendingCacheRequest);
 	}
 	
 	void sendEvictResponse(EvictCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendEvictResponse(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendEvictResponse(%s)", this.name, cacheRequest);
 		
 		EvictCacheResponse cacheResponse = new EvictCacheResponse(cacheRequest);
 		cacheRequest.source.receiveEvictResponse(cacheResponse);
 	}
 	
 	override void receiveEvictResponse(EvictCacheResponse cacheResponse) {
-		logging.infof(LogCategory.MESI, "%s.receiveEvictResponse(%s)", this.name, cacheResponse);
+		//logging.infof(LogCategory.MESI, "%s.receiveEvictResponse(%s)", this.name, cacheResponse);
 
 		cacheResponse.cacheRequest.complete();
 	}
@@ -443,13 +443,13 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void sendUpdownRead(UpdownReadCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendUpdownRead(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendUpdownRead(%s)", this.name, cacheRequest);
 		
 		cacheRequest.target.receiveUpdownRead(cacheRequest);
 	}
 	
 	override void receiveUpdownRead(UpdownReadCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.receiveUpdownRead(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.receiveUpdownRead(%s)", this.name, cacheRequest);
 		
 		PendingUpdownReadCacheRequest pendingCacheRequest = new PendingUpdownReadCacheRequest(cacheRequest);
 		this.pendingUpdownReadCacheRequests.add(pendingCacheRequest);
@@ -458,14 +458,14 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void sendUpdownReadResponse(UpdownReadCacheRequest cacheRequest, bool isShared) {
-		logging.infof(LogCategory.MESI, "%s.sendUpdownReadResponse(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendUpdownReadResponse(%s)", this.name, cacheRequest);
 		
 		UpdownReadCacheResponse cacheResponse = new UpdownReadCacheResponse(cacheRequest, isShared);
 		cacheRequest.source.receiveUpdownReadResponse(cacheResponse);
 	}
 	
 	override void receiveUpdownReadResponse(UpdownReadCacheResponse cacheResponse) {
-		logging.infof(LogCategory.MESI, "%s.receiveUpdownReadResponse(%s)", this.name, cacheResponse);
+		//logging.infof(LogCategory.MESI, "%s.receiveUpdownReadResponse(%s)", this.name, cacheResponse);
 		
 		cacheResponse.cacheRequest.complete();
 	}
@@ -473,13 +473,13 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void sendDownupRead(DownupReadCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendDownupRead(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendDownupRead(%s)", this.name, cacheRequest);
 		
 		cacheRequest.target.receiveDownupRead(cacheRequest);
 	}
 	
 	override void receiveDownupRead(DownupReadCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.receiveDownupRead(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.receiveDownupRead(%s)", this.name, cacheRequest);
 		
 		PendingDownupReadCacheRequest pendingCacheRequest = new PendingDownupReadCacheRequest(cacheRequest);
 		this.pendingDownupReadCacheRequests.add(pendingCacheRequest);
@@ -488,14 +488,14 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void sendDownupReadResponse(DownupReadCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendDownupReadResponse(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendDownupReadResponse(%s)", this.name, cacheRequest);
 		
 		DownupReadCacheResponse cacheResponse = new DownupReadCacheResponse(cacheRequest);
 		cacheRequest.source.receiveDownupReadResponse(cacheResponse);
 	}
 	
 	override void receiveDownupReadResponse(DownupReadCacheResponse cacheResponse) {
-		logging.infof(LogCategory.MESI, "%s.receiveDownupReadResponse(%s)", this.name, cacheResponse);
+		//logging.infof(LogCategory.MESI, "%s.receiveDownupReadResponse(%s)", this.name, cacheResponse);
 		
 		cacheResponse.cacheRequest.complete();
 	}
@@ -503,29 +503,31 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void sendWrite(WriteCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendWrite(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendWrite(%s)", this.name, cacheRequest);
 		
 		cacheRequest.target.receiveWrite(cacheRequest);
 	}
 	
 	override void receiveWrite(WriteCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.receiveWrite(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.receiveWrite(%s)", this.name, cacheRequest);
 		
 		PendingWriteCacheRequest pendingCacheRequest = new PendingWriteCacheRequest(cacheRequest);
+		pendingCacheRequest.except = pendingCacheRequest.cacheRequest.source;
+		
 		this.pendingWriteCacheRequests.add(pendingCacheRequest);
 
 		this.beginServicingWrite(pendingCacheRequest);
 	}
 	
 	void sendWriteResponse(WriteCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendWriteResponse(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendWriteResponse(%s)", this.name, cacheRequest);
 		
 		WriteCacheResponse cacheResponse = new WriteCacheResponse(cacheRequest);
 		cacheRequest.source.receiveWriteResponse(cacheResponse);
 	}
 	
 	override void receiveWriteResponse(WriteCacheResponse cacheResponse) {
-		logging.infof(LogCategory.MESI, "%s.receiveWriteResponse(%s)", this.name, cacheResponse);
+		//logging.infof(LogCategory.MESI, "%s.receiveWriteResponse(%s)", this.name, cacheResponse);
 		
 		cacheResponse.cacheRequest.complete();
 	}
@@ -533,13 +535,13 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void sendInvalidate(InvalidateCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendInvalidate(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendInvalidate(%s)", this.name, cacheRequest);
 		
 		cacheRequest.target.receiveInvalidate(cacheRequest);
 	}
 	
 	override void receiveInvalidate(InvalidateCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.receiveInvalidate(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.receiveInvalidate(%s)", this.name, cacheRequest);
 		
 		PendingInvalidateCacheRequest pendingCacheRequest = new PendingInvalidateCacheRequest(cacheRequest);
 		this.pendingInvalidateCacheRequests.add(pendingCacheRequest);
@@ -548,14 +550,14 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void sendInvalidateResponse(InvalidateCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.sendInvalidateResponse(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendInvalidateResponse(%s)", this.name, cacheRequest);
 		
 		InvalidateCacheResponse cacheResponse = new InvalidateCacheResponse(cacheRequest);
 		cacheRequest.source.receiveInvalidateResponse(cacheResponse);
 	}
 	
 	override void receiveInvalidateResponse(InvalidateCacheResponse cacheResponse) {
-		logging.infof(LogCategory.MESI, "%s.receiveInvalidateResponse(%s)", this.name, cacheResponse);
+		//logging.infof(LogCategory.MESI, "%s.receiveInvalidateResponse(%s)", this.name, cacheResponse);
 		
 		cacheResponse.cacheRequest.complete();
 	}
@@ -563,7 +565,7 @@ class CoherentCache: CoherentCacheNode {
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	void findAndLock(PendingRequestT)(PendingRequestT pendingRequest, void delegate() callback) {
-		logging.infof(LogCategory.MESI, "%s.findAndLock(%s)", this.name, pendingRequest);
+		//logging.infof(LogCategory.MESI, "%s.findAndLock(%s)", this.name, pendingRequest);
 		
 		bool hit = this.cache.findBlock(pendingRequest.addr, pendingRequest.set, pendingRequest.way, pendingRequest.tag, pendingRequest.state);
 		
@@ -617,7 +619,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void findAndLockFinish(PendingRequestT)(PendingRequestT pendingRequest, void delegate() callback) {
-		logging.infof(LogCategory.MESI, "%s.findAndLockFinish(%s)", this.name, pendingRequest);
+		//logging.infof(LogCategory.MESI, "%s.findAndLockFinish(%s)", this.name, pendingRequest);
 		
 		if(pendingRequest.isEviction) {
 			this.stat.evictions++;
@@ -629,7 +631,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void beginServicingLoad(PendingReadCPURequest pendingCpuRequest) {
-		logging.infof(LogCategory.MESI, "%s.beginServicingLoad(%s)", this.name, pendingCpuRequest);
+		//logging.infof(LogCategory.MESI, "%s.beginServicingLoad(%s)", this.name, pendingCpuRequest);
 		
 		this.findAndLock(pendingCpuRequest, 
 			{
@@ -648,7 +650,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void endServicingLoad(PendingReadCPURequest pendingCpuRequest) {
-		logging.infof(LogCategory.MESI, "%s.endServicingLoad(%s)", this.name, pendingCpuRequest);
+		//logging.infof(LogCategory.MESI, "%s.endServicingLoad(%s)", this.name, pendingCpuRequest);
 		
 		this.cache.accessBlock(pendingCpuRequest.set, pendingCpuRequest.way);
 		this.sendLoadResponse(pendingCpuRequest.cpuRequest, pendingCpuRequest.source);
@@ -657,7 +659,7 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void beginServicingStore(PendingWriteCPURequest pendingCpuRequest) {
-		logging.infof(LogCategory.MESI, "%s.beginServicingStore(%s)", this.name, pendingCpuRequest);
+		//logging.infof(LogCategory.MESI, "%s.beginServicingStore(%s)", this.name, pendingCpuRequest);
 		
 		this.findAndLock(pendingCpuRequest, 
 			{
@@ -675,7 +677,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void endServicingStore(PendingWriteCPURequest pendingCpuRequest) {
-		logging.infof(LogCategory.MESI, "%s.endServicingStore(%s)", this.name, pendingCpuRequest);
+		//logging.infof(LogCategory.MESI, "%s.endServicingStore(%s)", this.name, pendingCpuRequest);
 		
 		this.cache.accessBlock(pendingCpuRequest.set, pendingCpuRequest.way);
 		this.cache.setBlock(pendingCpuRequest.set, pendingCpuRequest.way, pendingCpuRequest.tag, MESIState.MODIFIED);
@@ -684,9 +686,11 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void initiateEvict(EvictCacheRequest cacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.initiateEvict(%d, %d)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.initiateEvict(%s)", this.name, cacheRequest);
 				
 		PendingEvictCacheRequest pendingCacheRequest = new PendingEvictCacheRequest(cacheRequest);
+		pendingCacheRequest.except = null;
+		
 		this.pendingEvictCacheRequests.add(pendingCacheRequest);
 
 		this.initiateInvalidate(pendingCacheRequest, 
@@ -695,17 +699,17 @@ class CoherentCache: CoherentCacheNode {
 					cacheRequest.complete();
 				}
 				else if(pendingCacheRequest.state == MESIState.MODIFIED) {
-					this.sendEvict(cacheRequest);
+					this.eventQueue.schedule({this.sendEvict(cacheRequest);}, 2);
 					pendingCacheRequest.isWriteback = true;
 				}
 				else {
-					this.sendEvict(cacheRequest);
+					this.eventQueue.schedule({this.sendEvict(cacheRequest);}, 2);
 				}
 			});
 	}
 	
 	void beginServicingEvict(PendingEvictCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.beginServicingEvict(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.beginServicingEvict(%s)", this.name, pendingCacheRequest);
 		
 		this.findAndLock(pendingCacheRequest, 
 			{
@@ -735,7 +739,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void endServicingEvict(PendingEvictCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.endServicingEvict(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.endServicingEvict(%s)", this.name, pendingCacheRequest);
 		
 		DirEntry dirEntry = this.cache.dir.dirEntries[pendingCacheRequest.set][pendingCacheRequest.way];
 		dirEntry.unsetSharer(pendingCacheRequest.cacheRequest.source);
@@ -749,25 +753,59 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void beginServicingUpdownRead(PendingUpdownReadCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.beginServicingUpdownRead(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.beginServicingUpdownRead(%s)", this.name, pendingCacheRequest);
 		
 		this.findAndLock(pendingCacheRequest, 
 			{
+				pendingCacheRequest.pendings = 1;
+				
 				if(!isReadHit(pendingCacheRequest.state)) {
 					UpdownReadCacheRequest cacheRequest = new UpdownReadCacheRequest(this, this.next, pendingCacheRequest.cpuRequest,
 						{
+							this.cache.setBlock(pendingCacheRequest.set, pendingCacheRequest.way, pendingCacheRequest.tag, pendingCacheRequest.isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
 							this.endServicingUpdownRead(pendingCacheRequest);
 						});
 					this.sendUpdownRead(cacheRequest);
 				}
 				else {
+					DirEntry dirEntry = this.cache.dir.dirEntries[pendingCacheRequest.set][pendingCacheRequest.way];
+					
+					if(dirEntry.owner !is null && dirEntry.owner != pendingCacheRequest.cacheRequest.source) {
+						pendingCacheRequest.pendings++;
+
+						UpdownReadCacheRequest cacheRequest = new UpdownReadCacheRequest(this, dirEntry.owner, pendingCacheRequest.cpuRequest,
+							{
+								this.endServicingUpdownRead(pendingCacheRequest);
+							});
+						this.sendUpdownRead(cacheRequest);
+					}
+						
 					this.endServicingUpdownRead(pendingCacheRequest);
 				}
 			});
 	}
 	
 	void endServicingUpdownRead(PendingUpdownReadCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.endServicingUpdownRead(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.endServicingUpdownRead(%s)", this.name, pendingCacheRequest);
+		
+		pendingCacheRequest.pendings--;
+		if(pendingCacheRequest.pendings > 0) {
+			return;
+		}
+		
+		DirEntry dirEntry = this.cache.dir.dirEntries[pendingCacheRequest.set][pendingCacheRequest.way];
+		if(dirEntry.owner !is null && dirEntry.owner != pendingCacheRequest.cacheRequest.source) {
+			dirEntry.owner = null;
+		}
+		
+		dirEntry.setSharer(pendingCacheRequest.cacheRequest.source);
+		bool isShared = dirEntry.isShared;
+		
+		if(!isShared) {
+			dirEntry.owner = pendingCacheRequest.cacheRequest.source;
+		}
+		
+		this.cache.accessBlock(pendingCacheRequest.set, pendingCacheRequest.way);
 		
 		this.pendingUpdownReadCacheRequests.remove(pendingCacheRequest);
 		this.sendUpdownReadResponse(pendingCacheRequest.cacheRequest, pendingCacheRequest.isShared);
@@ -776,22 +814,40 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void beginServicingDownupRead(PendingDownupReadCacheRequest pendingCacheRequest) {		
-		logging.infof(LogCategory.MESI, "%s.beginServicingDownupRead(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.beginServicingDownupRead(%s)", this.name, pendingCacheRequest);
 		
 		this.findAndLock(pendingCacheRequest, 
 			{
-				DirEntry dirEntry = this.cache.dir.dirEntries[pendingCacheRequest.set][pendingCacheRequest.way];
-				dirEntry.owner = null;
+				pendingCacheRequest.pendings = 1;
 				
-				this.cache.setBlock(pendingCacheRequest.set, pendingCacheRequest.way, pendingCacheRequest.tag, MESIState.SHARED);
-				this.cache.accessBlock(pendingCacheRequest.set, pendingCacheRequest.way);
+				DirEntry dirEntry = this.cache.dir.dirEntries[pendingCacheRequest.set][pendingCacheRequest.way];
+				if(dirEntry.owner !is null) {
+					pendingCacheRequest.pendings++;
+
+					DownupReadCacheRequest cacheRequest = new DownupReadCacheRequest(this, dirEntry.owner, pendingCacheRequest.cpuRequest,
+						{
+							this.endServicingDownupRead(pendingCacheRequest);
+						});
+					this.sendDownupRead(cacheRequest);
+				}
 				
 				this.endServicingDownupRead(pendingCacheRequest);
 			});
 	}
 	
 	void endServicingDownupRead(PendingDownupReadCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.endServicingDownupRead(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.endServicingDownupRead(%s)", this.name, pendingCacheRequest);
+		
+		pendingCacheRequest.pendings--;
+		if(pendingCacheRequest.pendings > 0) {
+			return;
+		}
+		
+		DirEntry dirEntry = this.cache.dir.dirEntries[pendingCacheRequest.set][pendingCacheRequest.way];
+		dirEntry.owner = null;
+		
+		this.cache.setBlock(pendingCacheRequest.set, pendingCacheRequest.way, pendingCacheRequest.tag, MESIState.SHARED);
+		this.cache.accessBlock(pendingCacheRequest.set, pendingCacheRequest.way);
 		
 		this.pendingDownupReadCacheRequests.remove(pendingCacheRequest);
 		this.sendDownupReadResponse(pendingCacheRequest.cacheRequest);
@@ -800,25 +856,28 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void beginServicingWrite(PendingWriteCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.beginServicingWrite(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.beginServicingWrite(%s)", this.name, pendingCacheRequest);
 								
 		this.findAndLock(pendingCacheRequest, 
 			{
-				if(!isWriteHit(pendingCacheRequest.state)) {
-					WriteCacheRequest cacheRequest = new WriteCacheRequest(this, this.next, pendingCacheRequest.cacheRequest.cpuRequest,
-						{
-							this.endServicingWrite(pendingCacheRequest);
-						});
-					this.sendWrite(cacheRequest);
-				}
-				else {
-					this.endServicingWrite(pendingCacheRequest);
-				}
+				this.initiateInvalidate(pendingCacheRequest,
+				{
+					if(!isWriteHit(pendingCacheRequest.state)) {
+						WriteCacheRequest cacheRequest = new WriteCacheRequest(this, this.next, pendingCacheRequest.cacheRequest.cpuRequest,
+							{
+								this.endServicingWrite(pendingCacheRequest);
+							});
+						this.sendWrite(cacheRequest);
+					}
+					else {
+						this.endServicingWrite(pendingCacheRequest);
+					}
+				});
 			});
 	}
 	
 	void endServicingWrite(PendingWriteCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.endServicingWrite(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.endServicingWrite(%s)", this.name, pendingCacheRequest);
 		
 		DirEntry dirEntry = this.cache.dir.dirEntries[pendingCacheRequest.set][pendingCacheRequest.way];
 		dirEntry.setSharer(pendingCacheRequest.cacheRequest.source);
@@ -836,7 +895,7 @@ class CoherentCache: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	void initiateInvalidate(PendingCacheRequestT)(PendingCacheRequestT pendingCacheRequest, void delegate() callback) {
-		logging.infof(LogCategory.MESI, "%s.initiateInvalidate(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.initiateInvalidate(%s)", this.name, pendingCacheRequest);
 		
 		uint tag = this.cache[pendingCacheRequest.set][pendingCacheRequest.way].tag;
 		pendingCacheRequest.pendings = 1;
@@ -865,7 +924,7 @@ class CoherentCache: CoherentCacheNode {
 					callback();
 				}				
 			});
-			this.sendInvalidate(cacheRequest);			
+			this.sendInvalidate(cacheRequest);
 			pendingCacheRequest.pendings++;
 		}
 		
@@ -877,20 +936,20 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void beginServicingInvalidate(PendingInvalidateCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.beginServicingInvalidate(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.beginServicingInvalidate(%s)", this.name, pendingCacheRequest);
 								
 		this.findAndLock(pendingCacheRequest, 
 			{
 				this.initiateInvalidate(pendingCacheRequest, 
 					{
 						this.cache.setBlock(pendingCacheRequest.set, pendingCacheRequest.way, 0, MESIState.INVALID);
-						this.endServicingInvalidate(pendingCacheRequest);				
+						this.endServicingInvalidate(pendingCacheRequest);
 					});
 			});
 	}
 	
 	void endServicingInvalidate(PendingInvalidateCacheRequest pendingCacheRequest) {
-		logging.infof(LogCategory.MESI, "%s.endServicingInvalidate(%s)", this.name, pendingCacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.endServicingInvalidate(%s)", this.name, pendingCacheRequest);
 		
 		this.pendingInvalidateCacheRequests.remove(pendingCacheRequest);
 		this.sendInvalidateResponse(pendingCacheRequest.cacheRequest);
@@ -948,12 +1007,12 @@ class MemoryController: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	override void receiveUpdownRead(UpdownReadCacheRequest cacheRequest){
-		logging.infof(LogCategory.MESI, "%s.receiveReadRequest(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.receiveReadRequest(%s)", this.name, cacheRequest);
 		this.sendUpdownReadResponse(cacheRequest);
 	}
 	
 	void sendUpdownReadResponse(UpdownReadCacheRequest cacheRequest){
-		logging.infof(LogCategory.MESI, "%s.sendReadRequestResponse(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.sendReadRequestResponse(%s)", this.name, cacheRequest);
 		
 		UpdownReadCacheResponse cacheResponse = new UpdownReadCacheResponse(cacheRequest, false);
 		cacheRequest.source.receiveUpdownReadResponse(cacheResponse);
@@ -976,7 +1035,7 @@ class MemoryController: CoherentCacheNode {
 	///////////////////////////////////////////////////
 	
 	override void receiveWrite(WriteCacheRequest cacheRequest){
-		logging.infof(LogCategory.MESI, "%s.receiveWriteRequest(%s)", this.name, cacheRequest);
+		//logging.infof(LogCategory.MESI, "%s.receiveWriteRequest(%s)", this.name, cacheRequest);
 	}
 	
 	override void receiveWriteResponse(WriteCacheResponse cacheResponse){

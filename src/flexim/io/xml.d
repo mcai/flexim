@@ -120,13 +120,13 @@ abstract class XMLFileSerializer(ObjectT) {
 	abstract ObjectT load(XMLConfigFile xmlConfigFile);
 	
 	void saveXML(ObjectT config, string xmlFileName) {
-		logging.infof(LogCategory.XML, "%s.saveXML(%s, %s)", "XMLFileSerializer", config, xmlFileName);
+		//logging.infof(LogCategory.XML, "%s.saveXML(%s, %s)", "XMLFileSerializer", config, xmlFileName);
 		XMLConfigFile xmlConfigFile = save(config);
 		serialize(xmlConfigFile, xmlFileName);
 	}
 	
 	ObjectT loadXML(string xmlFileName, ObjectT defaultValue = null) {
-		logging.infof(LogCategory.XML, "%s.loadXML(%s)", "XMLFileSerializer", xmlFileName);
+		//logging.infof(LogCategory.XML, "%s.loadXML(%s)", "XMLFileSerializer", xmlFileName);
 		if(exists(xmlFileName)) {
 			XMLConfigFile xmlConfigFile = deserialize(xmlFileName);
 			return load(xmlConfigFile);

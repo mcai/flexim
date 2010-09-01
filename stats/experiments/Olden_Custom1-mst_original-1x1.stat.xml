@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <ExperimentStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments">
-   <SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments" duration="1004532">
+   <SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments" duration="216356">
       <ProcessorStat>
-         <ThreadStat totalInsts="2316067">
+         <ThreadStat totalInsts="2316079">
          </ThreadStat>
       </ProcessorStat>
       <MemorySystemStat>
-         <CacheStat hits="0" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="0" nonblockingReads="0" reads="0" blockingReads="0" name="l2" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="0" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="0" noRetryReadHits="0">
+         <CacheStat hits="11088" noRetryWrites="0" noRetryAccesses="0" writeHits="191" evictions="0" nonblockingReads="13200" reads="13200" blockingReads="0" name="l2" writeRetries="0" noRetryWriteHits="0" writes="42960" readHits="10897" nonblockingWrites="42960" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="56160" noRetryReadHits="0">
          </CacheStat>
-         <CacheStat hits="0" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="0" nonblockingReads="0" reads="0" blockingReads="0" name="l1D-0" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="0" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="0" noRetryReadHits="0">
+         <CacheStat hits="464616" noRetryWrites="0" noRetryAccesses="0" writeHits="162582" evictions="12833" nonblockingReads="314944" reads="314944" blockingReads="0" name="l1D-0" writeRetries="0" noRetryWriteHits="0" writes="205542" readHits="302034" nonblockingWrites="205542" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="520486" noRetryReadHits="0">
          </CacheStat>
-         <CacheStat hits="0" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="0" nonblockingReads="0" reads="0" blockingReads="0" name="l1I-0" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="0" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="0" noRetryReadHits="0">
+         <CacheStat hits="280068" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="53" nonblockingReads="280358" reads="280358" blockingReads="0" name="l1I-0" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="280068" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="280358" noRetryReadHits="0">
          </CacheStat>
       </MemorySystemStat>
    </SimulationStat>

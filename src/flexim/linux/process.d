@@ -86,7 +86,7 @@ class Process {
 					new_section_addr = shdr.sh_addr;
 
 					if(shdr.sh_size > 0 && (shdr.sh_flags & SHF_ALLOC)) {
-						logging.infof(LogCategory.PROCESS, "Loading %s (%d bytes) at address 0x%08x", binary.getSectionName(shdr), shdr.sh_size, new_section_addr);
+						//logging.infof(LogCategory.PROCESS, "Loading %s (%d bytes) at address 0x%08x", binary.getSectionName(shdr), shdr.sh_size, new_section_addr);
 
 						MemoryAccessType perm = MemoryAccessType.INIT | MemoryAccessType.READ;
 

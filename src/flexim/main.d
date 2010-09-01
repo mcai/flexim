@@ -37,12 +37,14 @@ void runExperiment(string experimentName) {
 
 void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
-	logging.info(LogCategory.SIMULATOR, "Copyright (c) 2010 Min Cai <itecgo@163.com>.");
+	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
 	
-	string experimentName = "WCETBench-fir-1x1";
+	//string experimentName = "WCETBench-fir-1x1";
+	//string experimentName = "WCETBench-fir-1x2";
 	//string experimentName = "Olden_Custom1-em3d_original-1x1";
 	//string experimentName = "Olden_Custom1-mst_original-1x1";
+	string experimentName = "Olden_Custom1-mst_original-1x2";
 	
 	getopt(args, "experiment", &experimentName);
 	
