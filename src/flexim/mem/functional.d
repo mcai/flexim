@@ -474,7 +474,7 @@ class Memory {
 		 * access 'size' bytes at 'addr'. These two fields do not need to be
 		 * aligned to page boundaries. If some page already exists, add permissions. */
 		void map(uint addr, int size, MemoryAccessType perm) {
-			logging.infof(LogCategory.MEMORY, "Memory.map(), addr: 0x%08x ~ 0x%08x, size: %d, perm: 0x%x", addr, addr + size, size, perm);
+			//logging.infof(LogCategory.MEMORY, "Memory.map(), addr: 0x%08x ~ 0x%08x, size: %d, perm: 0x%x", addr, addr + size, size, perm);
 			uint tag1, tag2, tag;
 			MemoryPage page;
 
