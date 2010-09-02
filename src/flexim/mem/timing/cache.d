@@ -1,5 +1,5 @@
 /*
- * flexim/mem/cache.d
+ * flexim/mem/timing/cache.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.mem.cache;
+module flexim.mem.timing.cache;
 
 import flexim.all;
 

@@ -59,9 +59,9 @@ class Logger {
 	//		this.enable(LogCategory.EVENT_QUEUE);
 	//		this.enable(LogCategory.PROCESSOR);
 	//		this.enable(LogCategory.REGISTER);
-	//		this.enable(LogCategory.REQUEST);
+			this.enable(LogCategory.REQUEST);
 	//		this.enable(LogCategory.CACHE);
-			this.enable(LogCategory.MESI);
+	//		this.enable(LogCategory.MESI);
 	//		this.enable(LogCategory.MEMORY);
 	//		this.enable(LogCategory.NET);
 			this.enable(LogCategory.CONFIG);
@@ -70,7 +70,7 @@ class Logger {
 	//		this.enable(LogCategory.OOO);
 	//		this.enable(LogCategory.TEST);
 	//		this.enable(LogCategory.XML);
-	//		this.enable(LogCategory.DEBUG);
+			this.enable(LogCategory.DEBUG);
 	}
 	
 	void enable(LogCategory category) {

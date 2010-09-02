@@ -55,10 +55,12 @@ public import flexim.isa.misc;
 public import flexim.linux.process;
 public import flexim.linux.syscall;
 
-public import flexim.mem.cache;
 public import flexim.mem.functional;
-public import flexim.mem.sequencer;
-public import flexim.mem.timing;
+public import flexim.mem.timing.cache;
+public import flexim.mem.timing.coherentcache;
+public import flexim.mem.timing.mem;
+public import flexim.mem.timing.protocol;
+public import flexim.mem.timing.sequencer;
 public import flexim.mem.transactional;
 
 public import flexim.sim.benchmark;

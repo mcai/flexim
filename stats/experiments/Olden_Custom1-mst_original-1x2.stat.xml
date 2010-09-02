@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<ExperimentStat title="Olden_Custom1-mst_original-1x2" cwd="../stats/experiments">
+   <SimulationStat title="Olden_Custom1-mst_original-1x2" cwd="../stats/experiments" duration="60413">
+      <ProcessorStat>
+         <ThreadStat totalInsts="2316079">
+         </ThreadStat>
+         <ThreadStat totalInsts="2316070">
+         </ThreadStat>
+      </ProcessorStat>
+      <MemorySystemStat>
+         <CacheStat hits="280068" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="52" nonblockingReads="280358" reads="280358" blockingReads="0" name="l1I-1" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="280068" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="280358" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="23003" noRetryWrites="0" noRetryAccesses="0" writeHits="457" evictions="0" nonblockingReads="26456" reads="26458" blockingReads="2" name="l2" writeRetries="0" noRetryWriteHits="0" writes="85995" readHits="22546" nonblockingWrites="85981" blockingWrites="14" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="112453" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="464645" noRetryWrites="0" noRetryAccesses="0" writeHits="162636" evictions="12834" nonblockingReads="314950" reads="314950" blockingReads="0" name="l1D-0" writeRetries="0" noRetryWriteHits="0" writes="205639" readHits="302009" nonblockingWrites="205542" blockingWrites="97" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="520589" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="280068" noRetryWrites="0" noRetryAccesses="0" writeHits="0" evictions="53" nonblockingReads="280358" reads="280358" blockingReads="0" name="l1I-0" writeRetries="0" noRetryWriteHits="0" writes="0" readHits="280068" nonblockingWrites="0" blockingWrites="0" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="280358" noRetryReadHits="0">
+         </CacheStat>
+         <CacheStat hits="464613" noRetryWrites="0" noRetryAccesses="0" writeHits="162590" evictions="12871" nonblockingReads="314959" reads="314959" blockingReads="0" name="l1D-1" writeRetries="0" noRetryWriteHits="0" writes="205632" readHits="302023" nonblockingWrites="205537" blockingWrites="95" noRetryReads="0" noRetryHits="0" readRetries="0" accesses="520591" noRetryReadHits="0">
+         </CacheStat>
+      </MemorySystemStat>
+   </SimulationStat>
+</ExperimentStat>

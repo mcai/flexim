@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ExperimentStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments">
-   <SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments" duration="216356">
+   <SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/experiments" duration="4050577">
       <ProcessorStat>
          <ThreadStat totalInsts="2316079">
          </ThreadStat>

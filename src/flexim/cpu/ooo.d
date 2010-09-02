@@ -289,7 +289,7 @@ class OoOThread: Thread {
 
 			this.stat.totalInsts++;
 
-			//logging.infof(LogCategory.DEBUG, "t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
+			logging.infof(LogCategory.DEBUG, "t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
 		}
 	}
 
@@ -389,21 +389,21 @@ class OoOThread: Thread {
 			if(rs.inLsq && rs.uop.isStore) {
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 
-				WriteCPURequest writeReq = new WriteCPURequest(rs.uop, rs.pc, ea, rs, this.mmu.translate(ea), null);
-				this.seqD.write(writeReq);
+				StoreCacheRequest req = new StoreCacheRequest(this.seqD, this.mmu.translate(ea), {});
+				this.seqD.receiveRequest(req);
 
 				rs.status = RUUStationStatus.COMPLETED;
 				this.readyq.popFront();
 			} else if(rs.inLsq && rs.uop.isLoad) {
-				void readCallback(CPURequest req) {
-					this.eventq.enqueue((cast(ReadCPURequest) req).rs, 1);
+				void loadCallback(LoadCacheRequest req) {
+					this.eventq.enqueue(req.rs, 1);
 				}
-
+				
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 
-				ReadCPURequest req = new ReadCPURequest(rs.uop, rs.pc, ea, rs, this.mmu.translate(ea), &readCallback);
-
-				this.seqD.read(req);
+				LoadCacheRequest req = new LoadCacheRequest(this.seqD, this.mmu.translate(ea), rs, &loadCallback);
+				this.seqD.receiveRequest(req);
+				
 				rs.status = RUUStationStatus.ISSUED;
 				this.readyq.popFront();
 			} else {
@@ -518,15 +518,11 @@ class OoOThread: Thread {
 		assert(this.fetchNpc);
 
 		if(block != this.fetchBlock) {
-			void callback(CPURequest req) {
-				this.canFetch = true;
-			}
-
 			this.fetchBlock = block;
 
-			ReadCPURequest req = new ReadCPURequest(null, this.fetchNpc, this.fetchNpc, null, this.mmu.translate(this.fetchNpc), &callback);
-
-			this.seqI.read(req);
+			LoadCacheRequest req = new LoadCacheRequest(this.seqI, this.mmu.translate(this.fetchNpc), null, {this.canFetch = true;});
+			this.seqI.receiveRequest(req);
+			
 			this.canFetch = false;
 		}
 

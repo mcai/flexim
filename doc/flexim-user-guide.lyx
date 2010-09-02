@@ -2,7 +2,7 @@
 \lyxformat 345
 \begin_document
 \begin_header
-\textclass article
+\textclass paper
 \use_default_options true
 \language english
 \inputencoding auto
@@ -47,11 +47,32 @@
 \begin_body
 
 \begin_layout Title
-Flexim Simulator User Guide (Pre-release)
+Flexim Simulator User Guide
+\end_layout
+
+\begin_layout SubTitle
+(Pre-release, Work-in-Progress)
 \end_layout
 
 \begin_layout Author
 Min Cai
+\end_layout
+
+\begin_layout Institution
+Beijing Institute of Technology
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part
+Introduction
 \end_layout
 
 \begin_layout Section
@@ -61,7 +82,7 @@ About Flexim
 \begin_layout Standard
 Flexim is an open-source, modular and highly configurable architectural
  simulator for evaluating emerging multicore processors.
- It can run statically compiled MIPS32 LE programs.
+ It can run statically compiled MIPS32 Little-Endian (LE) programs.
  
 \end_layout
 
@@ -146,476 +167,6 @@ Easy to use.
 \end_layout
 
 \end_deeper
-\begin_layout Section
-Development Progress
-\end_layout
-
-\begin_layout Standard
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Category
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Current Progress
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Functional Simulation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "75col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Int.
- Inst.
- Decoding & Execution
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-OK for wcet-bench, mst, em3d, etc.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Fp.
- Inst.
- Decoding & Execution
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-OK for wcet-bench, mst, em3d, etc.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-System Call Emulation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-OK for wcet-bench, mst, em3d, etc.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-MIPS LE ELF Exe.
- Loader
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-Can run statically compiled programs
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Performance Simulation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "75col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="5" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Five-stage OoO pipelining
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color magenta
-RUU-based; to be written
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Set-associative cache structure
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-OK
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Cache coherence
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color magenta
-Being rewritten; in good progress
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-On-chip interconnect
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color red
-Planned
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Interface to external DRAM simulators
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color red
-To be planned
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Common Infrastructure
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "75col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Eventing and callback mechanism
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-OK, pervasive use in existing code
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Categorized logging mechanism
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-OK, limited use in existing code
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-XML-based I/O for configs and stats 
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color green
-OK
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Plotting and table generation for experiments
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\color red
-Planned
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
 System Requirements
 \end_layout
@@ -745,6 +296,1728 @@ type "mailto:"
 \end_inset
 
 >.
+\end_layout
+
+\begin_layout Part
+Design Documentation
+\end_layout
+
+\begin_layout Section
+Overview
+\end_layout
+
+\begin_layout Standard
+The whole development of the Flexim simulator encompasses three main categories
+ of functionalities: functional simulation, performance simulation and supportin
+g infrastructure.
+\end_layout
+
+\begin_layout Section
+Development Progress
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Main Category
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Current Progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Functional Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+
+\size small
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Int.
+ Inst.
+ Decoding & Execution
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Fp.
+ Inst.
+ Decoding & Execution
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+System Call Emulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+MIPS LE ELF Exe.
+ Loader
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Can run statically compiled programs
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Performance Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+
+\size small
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Five-stage OoO pipelining
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+RUU-based; to be written
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Set-associative cache structure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+OK
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Cache coherence
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Being rewritten; in good progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+On-chip interconnect
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Interface to external DRAM simulators
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+To be planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Supporting Infrastructure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+
+\size small
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Eventing and callback mechanisms
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+OK, pervasive use in existing code
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Categorized logging mechanism
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+OK, limited use in existing code
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+XML-based I/O for configs and stats 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+OK
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Plotting and table generation for experiments
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size small
+Planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Functional Simulation
+\end_layout
+
+\begin_layout Subsection
+Instruction Decoding and Execution
+\end_layout
+
+\begin_layout Standard
+In Flexim, there are two kinds of instructions, i.e., static instructions
+ and dynamic instructions.
+\end_layout
+
+\begin_layout Subsubsection
+Basic Instructions
+\end_layout
+
+\begin_layout Enumerate
+syscall.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.syscall(thread.intRegs[2]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sll.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << this[SA];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sllv.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << bits(thread.intRegs[this[RS]
+], 4, 0);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sra.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]] >> this[SA];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+srav.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				>> bits(thread.intRegs[this[RS]], 4, 0);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+srl.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RT]] >> this[SA];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+srlv.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RT]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				>> bits(thread.intRegs[this[RS]], 4, 0);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Branching Instructions
+\end_layout
+
+\begin_layout Enumerate
+Common operations found in the implementation of branching operations.
+\begin_inset Newline newline
+\end_inset
+
+Displacement calculation:
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.displacement = sext(this[OFFSET] << 2, 16);
+\end_layout
+
+\end_inset
+
+Branching function: 
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void branch(Thread thread) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.nnpc = thread.npc + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+b.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.branch(thread);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bal.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[ReturnAddressReg] = thread.nnpc;
+\end_layout
+
+\begin_layout Plain Layout
+
+this.branch(thread);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+beq.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] == cast(int) thread.intRegs[this[RT]])
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+beqz.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bgez.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] >= 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bgezal.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[ReturnAddressReg] = thread.nnpc;
+\end_layout
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] >= 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bgtz.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] > 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+blez.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] <= 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bltz.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] < 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bltzal.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[ReturnAddressReg] = thread.nnpc;
+\end_layout
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] < 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bne.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] != cast(int) thread.intRegs[this[RT]])
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bnez.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(cast(int) thread.intRegs[this[RS]] != 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bc1f.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fcsr = thread.miscRegs.fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(cond) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bc1t.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fcsr = thread.miscRegs.fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(cond) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bc1fl.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fcsr = thread.miscRegs.fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(cond) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.npc = thread.nnpc;
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.nnpc = thread.nnpc + uint.sizeof;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+bc1tl.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fcsr = thread.miscRegs.fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(cond) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	this.branch(thread);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.npc = thread.nnpc;
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.nnpc = thread.nnpc + uint.sizeof;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Jumping Instructions
+\end_layout
+
+\begin_layout Enumerate
+Common operations found in the implementation of jumping operations.
+\begin_inset Newline newline
+\end_inset
+
+Abstract definition of target PC calculation:
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+abstract uint targetPc(Thread thread);
+\end_layout
+
+\end_inset
+
+Jumping function: 
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void jump(Thread thread, uint addr) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.nnpc = addr;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+j.
+\end_layout
+
+\begin_layout Enumerate
+jal.
+\end_layout
+
+\begin_layout Enumerate
+jalr.
+\end_layout
+
+\begin_layout Enumerate
+jr.
+\end_layout
+
+\begin_layout Subsubsection
+Floating Point Arithmetic Instructions
+\end_layout
+
+\begin_layout Subsubsection
+Integer Arithmetic Instructions
+\end_layout
+
+\begin_layout Subsubsection
+Memory Access Instructions
+\end_layout
+
+\begin_layout Subsection
+System Call Emulation
+\end_layout
+
+\begin_layout Standard
+A few system calls are emulated for the correct execution of the whole wcet_benc
+h benchmark suite, and mst and em3d from the Olden benchmark suite.
+\end_layout
+
+\begin_layout Subsection
+MIPS Little-Endian ELF Executable Loader
+\end_layout
+
+\begin_layout Section
+Performance Simulation
+\end_layout
+
+\begin_layout Subsection
+Five-Stage Out-of-Order Pipelining
+\end_layout
+
+\begin_layout Standard
+A classic five-stage out-of-order issue processor core is modeled after
+ the SimpleScalar implementation.
+ Methods in class OoOThread implementing the pipeline stages are outlined
+ below.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="7" columns="3">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Method Name
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Insts Transfer between Queues
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Comments
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+commit()
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+RUU 
+\begin_inset Formula $\longrightarrow$
+\end_inset
+
+ <committed>
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Retiring insts, EAs 
+\begin_inset Formula $\dashrightarrow$
+\end_inset
+
+ LSQ
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+writeback()
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+EventQ 
+\begin_inset Formula $\dashrightarrow$
+\end_inset
+
+ ReadyQ
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Resolving reg deps
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+refreshLsq()
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+LSQ 
+\begin_inset Formula $\longrightarrow$
+\end_inset
+
+ ReadyQ
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Resolving mem deps
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+issue()
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+ReadyQ 
+\begin_inset Formula $\longrightarrow$
+\end_inset
+
+ EventQ
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Accessing FUs and data caches
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+dispatch()
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+FetchQ 
+\begin_inset Formula $\longrightarrow$
+\end_inset
+
+ RUU 
+\begin_inset Formula $+$
+\end_inset
+
+ LSQ 
+\begin_inset Formula $+$
+\end_inset
+
+ ReadyQ
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Resolving reg deps
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+fetch()
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+ICache 
+\begin_inset Formula $\longrightarrow$
+\end_inset
+
+ FetchQ
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\size footnotesize
+Fetching and decoding insts
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Set-Associative Cache Structure
+\end_layout
+
+\begin_layout Subsection
+Cache Coherence
+\end_layout
+
+\begin_layout Subsection
+On-Chip Interconnect
+\end_layout
+
+\begin_layout Subsection
+Interface to External DRAM Simulators
+\end_layout
+
+\begin_layout Section
+Supporting Infrastructure
+\end_layout
+
+\begin_layout Standard
+There are various supporting modules aside the aforementioned main components
+ to advocate the reusability of the simulator, in which the ELF program
+ loader component is used to load statically compiled MIPS32 little-endian
+ executable into the simulator, the event queue component is used extensively
+ to event driven the simulator per cycle, and the logging component supports
+ configurable logging functionalities that can facilitate development and
+ even be useful after release.
+\end_layout
+
+\begin_layout Subsection
+Eventing and Callback Mechanisms
+\end_layout
+
+\begin_layout Subsection
+Categorized Logging Mechanism
+\end_layout
+
+\begin_layout Subsection
+XML-Based Input/Output for Configurations and Statistics
+\end_layout
+
+\begin_layout Subsection
+Plotting and Table Generation for Experiments
+\end_layout
+
+\begin_layout Part
+Evaluation and Comparisons to Other Simulators
+\end_layout
+
+\begin_layout Section
+Benchmark Evaluation
+\end_layout
+
+\begin_layout Subsection
+Criteria
+\end_layout
+
+\begin_layout Subsection
+Results
+\end_layout
+
+\begin_layout Section
+Comparison to Other Simulators
+\end_layout
+
+\begin_layout Subsection
+Results
 \end_layout
 
 \end_body

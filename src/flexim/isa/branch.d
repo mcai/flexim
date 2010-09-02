@@ -304,7 +304,7 @@ class Bc1fl: Branch {
 			}
 			else {
 				thread.npc = thread.nnpc;
-				thread.nnpc = thread.nnpc + 4;
+				thread.nnpc = thread.nnpc + uint.sizeof;
 			}
 		}
 }
@@ -328,7 +328,7 @@ class Bc1tl: Branch {
 			}
 			else {
 				thread.npc = thread.nnpc;
-				thread.nnpc = thread.nnpc + 4;
+				thread.nnpc = thread.nnpc + uint.sizeof;
 			}
 		}
 }
