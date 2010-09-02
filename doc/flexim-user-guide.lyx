@@ -1,0 +1,751 @@
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Flexim Simulator User Guide (Pre-release)
+\end_layout
+
+\begin_layout Author
+Min Cai
+\end_layout
+
+\begin_layout Section
+About Flexim
+\end_layout
+
+\begin_layout Standard
+Flexim is an open-source, modular and highly configurable architectural
+ simulator for evaluating emerging multicore processors.
+ It can run statically compiled MIPS32 LE programs.
+ 
+\end_layout
+
+\begin_layout Standard
+For the latest Flexim code, please visit the project's website on Github:
+ 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://github.com/mcai/flexim"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Section
+Key Features
+\end_layout
+
+\begin_layout Enumerate
+Architectural
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Simulation of a classic five-stage superscalar pipeline with out-of-order
+ execution.
+ 
+\end_layout
+
+\begin_layout Itemize
+Multi-level memory hierarchy with the directory-based MESI cache coherence
+ protocol.
+ 
+\end_layout
+
+\begin_layout Itemize
+Support for Syscall-emulation mode simulation (i.e., application only, no
+ need to boot an OS).
+ 
+\end_layout
+
+\begin_layout Itemize
+Correct execution of several state-of-the-art benchmark suites, e.g., wcet_bench,
+ Olden and CPU2006.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Non-architectural
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Developed from scratch in the object-oriented system programming language
+ D 2.0.
+ Great efforts are made to advocate software engineering practices in the
+ simulator construction.
+ 
+\end_layout
+
+\begin_layout Itemize
+A powerful infrastructure that provides common functionalities such as eventing,
+ logging and XML I/O.
+ 
+\end_layout
+
+\begin_layout Itemize
+Pervasive use of XML-based I/O for architectural, workload and experiment
+ configurations and statistics.
+ 
+\end_layout
+
+\begin_layout Itemize
+Easy to use.
+ No scripting.
+ Only required are a statically compiled simulator executable and a few
+ XML files.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Section
+Development Progress
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Category
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Current Progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Functional Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Int.
+ Inst.
+ Decoding & Execution
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Fp.
+ Inst.
+ Decoding & Execution
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+System Call Emulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MIPS LE ELF Exe.
+ Loader
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+Can run statically compiled programs
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Performance Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Five-stage OoO pipelining
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color magenta
+RUU-based; to be written
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Set-associative cache structure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+OK
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cache coherence
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color magenta
+Being rewritten; in good progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+On-chip interconnect
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color red
+Planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Interface to external DRAM simulators
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color red
+To be planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Common Infrastructure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Eventing and callback mechanism
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+OK, pervasive use in existing code
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Categorized logging mechanism
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+OK, limited use in existing code
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+XML-based I/O for configs and stats 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color green
+OK
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Plotting and table generation for experiments
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\color red
+Planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+System Requirements
+\end_layout
+
+\begin_layout Enumerate
+Make sure that you have a Ubuntu 10.04 Linux machine.
+ Other popular Linux distributions may work as well if you are lucky enough.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Make sure that you have the latest DMD 2.0 compiler installed.
+ If not, go to this page and download "dmd D 2.0 compiler 1-click install
+ for Ubuntu": 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://www.digitalmars.com/d/download.html"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+How to Build and Run Flexim
+\end_layout
+
+\begin_layout Enumerate
+Unpack the zip or tar file containing the Flexim source.
+ 
+\end_layout
+
+\begin_layout Enumerate
+In the main directory of the distribution, you can 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+build Flexim using the command: '
+\family typewriter
+make
+\family default
+';
+\end_layout
+
+\begin_layout Itemize
+remove all the built files using the command: '
+\family typewriter
+make clean
+\family default
+'.
+ 
+\end_layout
+
+\begin_layout Standard
+By default, the flexim binary is placed in the bin/ folder.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Download and unpack cross-compiler-mipsel.tar.bz2 from 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://github.com/mcai/flexim/downloads/"
+
+\end_inset
+
+.
+ Use it to compile MIPS32 LE programs to be simulated by Flexim.
+ 
+\end_layout
+
+\begin_layout Enumerate
+In the subdirectory build/, you can start simulation with the default simulation
+ configuration using the command: 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+./flexim
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+./flexim --experiment=<experiment-name>
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Benchmarks and experiments are specified in the subdirectory configs/benchmarks
+/ and configs/experiments/, respectively.
+\end_layout
+
+\begin_layout Enumerate
+You can find configuration and statistics files in the configs/ and stats/
+ subdirectories, respectively.
+ Some sample XML files are provided for your reference.
+\end_layout
+
+\begin_layout Enumerate
+Useful tip: As with all other open source projects, you can learn more by
+ digging into the Flexim source code.
+\end_layout
+
+\begin_layout Section
+Contact Information
+\end_layout
+
+\begin_layout Standard
+If you have any questions, please feel free to contact: Min Cai <
+\begin_inset CommandInset href
+LatexCommand href
+target "itecgo@163.com"
+type "mailto:"
+
+\end_inset
+
+>.
+\end_layout
+
+\end_body
+\end_document
