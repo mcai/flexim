@@ -178,7 +178,7 @@ abstract class CoherentCacheNode: EventProcessor {
 		this.eventQueue = new DelegateEventQueue();
 		Simulator.singleInstance.addEventProcessor(this.eventQueue);
 		
-		this.pendingRequests = new CacheRequestQueue();
+		//this.pendingRequests = new CacheRequestQueue();
 		
 		Simulator.singleInstance.addEventProcessor(this);
 	}
@@ -224,14 +224,14 @@ abstract class CoherentCacheNode: EventProcessor {
 	void sendCacheResponse(RequestT)(RequestT request) {
 		//logging.infof(LogCategory.MESI, "%s.sendCacheResponse(%s)", this.name, response);
 
-		this.pendingRequests.remove(request);
+		//this.pendingRequests.remove(request);
 		request.source.receiveCacheResponse(request);
 	}
 		
 	void receiveCacheRequest(RequestT)(RequestT request) {
 		//logging.infof(LogCategory.MESI, "%s.receiveCacheRequest(%s)", this.name, request);
 
-		this.pendingRequests.add(request);
+		//this.pendingRequests.add(request);
 		this.service(request);
 	}
 	
@@ -256,7 +256,7 @@ abstract class CoherentCacheNode: EventProcessor {
 	
 	DelegateEventQueue eventQueue;
 	
-	CacheRequestQueue pendingRequests;
+	//CacheRequestQueue pendingRequests;
 	
 	static bool isUpdownRequest(CoherentCacheNode source, CoherentCacheNode target) {
 		return source.level < target.level;

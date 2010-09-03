@@ -164,7 +164,7 @@ class CoherentCache: CoherentCacheNode {
 	void initiateEvict(EvictCacheRequest request) {
 		//logging.infof(LogCategory.MESI, "%s.initiateEvict(%s)", this.name, request);
 		
-		this.pendingRequests.add(request);
+		//this.pendingRequests.add(request); //TODO
 
 		this.initiateInvalidate(request, 
 			{
