@@ -57,7 +57,7 @@ public import flexim.linux.syscall;
 
 public import flexim.mem.functional;
 public import flexim.mem.timing.cache;
-public import flexim.mem.timing.coherentcache;
+public import flexim.mem.timing.common;
 public import flexim.mem.timing.mem;
 public import flexim.mem.timing.protocol;
 public import flexim.mem.timing.sequencer;

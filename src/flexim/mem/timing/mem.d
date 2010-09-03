@@ -25,17 +25,20 @@ import flexim.all;
 
 class MemoryController: CoherentCacheNode {
 	this(MemorySystem memorySystem) {
-		super(memorySystem, "mem");
+		super(memorySystem, "mem"); //TODO: please add configuration and statistics support for memory controller.
 	}
 	
 	override void service(UpdownReadCacheRequest request){
 		//logging.infof(LogCategory.MESI, "%s.receiveReadRequest(%s)", this.name, request);
+		
 		request.isShared = false;
-		this.sendCacheResponse(request);
+		this.eventQueue.schedule({this.sendCacheResponse(request);}, 400); //TODO: replace 400 with dynamic latency calculation.
 	}
 	
 	override void service(WriteCacheRequest request){
 		//logging.infof(LogCategory.MESI, "%s.receiveWriteRequest(%s)", this.name, request);
+		
+		this.eventQueue.schedule({this.sendCacheResponse(request);}, 400); //TODO: replace 400 with dynamic latency calculation.
 	}
 	
 	override uint level() {

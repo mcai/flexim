@@ -22,7 +22,7 @@ src/flexim/linux/syscall.d
 src/flexim/main.d
 src/flexim/mem/functional.d
 src/flexim/mem/timing/cache.d
-src/flexim/mem/timing/coherentcache.d
+src/flexim/mem/timing/common.d
 src/flexim/mem/timing/mem.d
 src/flexim/mem/timing/protocol.d
 src/flexim/mem/timing/sequencer.d

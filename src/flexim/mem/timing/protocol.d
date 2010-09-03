@@ -158,7 +158,7 @@ class CoherentCache: CoherentCacheNode {
 		this.cache.accessBlock(request.set, request.way);
 		this.cache.setBlock(request.set, request.way, request.tag, MESIState.MODIFIED);
 		
-		this.pendingRequests.remove(request);
+		this.sendCacheResponse(request);
 	}
 	
 	void initiateEvict(EvictCacheRequest request) {

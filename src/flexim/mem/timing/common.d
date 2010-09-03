@@ -1,5 +1,5 @@
 /*
- * flexim/mem/timing/coherentcache.d
+ * flexim/mem/timing/common.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.mem.timing.coherentcache;
+module flexim.mem.timing.common;
 
 import flexim.all;
 
