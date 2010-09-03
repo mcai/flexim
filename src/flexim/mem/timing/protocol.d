@@ -23,10 +23,20 @@ module flexim.mem.timing.protocol;
 
 import flexim.all;
 
-class CoherentCache: CoherentCacheBase {
+class CoherentCache: CoherentCacheNode {
 	this(MemorySystem memorySystem, CacheConfig cacheConfig) {
-		super(memorySystem, cacheConfig);
-	}	
+		super(memorySystem, cacheConfig.name);
+		
+		this.cacheConfig = cacheConfig;
+		
+		this.cache = new Cache(cacheConfig);
+		
+		this.stat = new CacheStat(this.name);
+	}
+	
+	uint retryLat() {
+		return this.cacheConfig.hitLatency + uniform(0, this.cacheConfig.hitLatency + 2);
+	}
 	
 	void findAndLock(RequestT)(RequestT request, void delegate() callback) {
 		//logging.infof(LogCategory.MESI, "%s.findAndLock(%s)", this.name, request);
@@ -405,4 +415,14 @@ class CoherentCache: CoherentCacheBase {
 		
 		this.sendCacheResponse(request);
 	}
+	
+	override uint level() {
+		return this.cacheConfig.level;
+	}
+	
+	CacheConfig cacheConfig;
+	
+	CacheStat stat;
+
+	Cache cache;
 }

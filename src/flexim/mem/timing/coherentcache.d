@@ -167,47 +167,13 @@ class InvalidateCacheRequest: CacheRequest {
 	}
 }
 
-abstract class CoherentCacheNode: MemorySystemNode {
-	this(string name, MemorySystem memorySystem) {
-		super(name, memorySystem);
-	}
-	
-	abstract void receiveRequest(LoadCacheRequest request);
-	abstract void receiveRequest(StoreCacheRequest request);
-	abstract void receiveRequest(EvictCacheRequest request);
-	abstract void receiveRequest(UpdownReadCacheRequest request);
-	abstract void receiveRequest(DownupReadCacheRequest request);
-	abstract void receiveRequest(WriteCacheRequest request);
-	abstract void receiveRequest(InvalidateCacheRequest request);
-
-	abstract void receiveResponse(LoadCacheRequest request);
-	abstract void receiveResponse(StoreCacheRequest request);
-	abstract void receiveResponse(EvictCacheRequest request);
-	abstract void receiveResponse(UpdownReadCacheRequest request);
-	abstract void receiveResponse(DownupReadCacheRequest request);
-	abstract void receiveResponse(WriteCacheRequest request);
-	abstract void receiveResponse(InvalidateCacheRequest request);
-	
-	override string toString() {
-		return format("CoherentCacheNode[name=%s]", this.name);
-	}
-	
-	CoherentCacheNode next;	
-	
-	DelegateEventQueue eventQueue;
-}
-
-abstract class CoherentCacheBase: CoherentCacheNode, EventProcessor {
+abstract class CoherentCacheNode: EventProcessor {
 	alias List!(CacheRequest) CacheRequestQueue;
 	
-	this(MemorySystem memorySystem, CacheConfig cacheConfig) {
-		super(cacheConfig.name, memorySystem);
-		
-		this.cacheConfig = cacheConfig;
-		
-		this.cache = new Cache(cacheConfig);
-		
-		this.stat = new CacheStat(this.name);
+	this(MemorySystem memorySystem, string name) {
+		this.id = currentId++;
+		this.name = name;
+		this.memorySystem = memorySystem;
 		
 		this.eventQueue = new DelegateEventQueue();
 		Simulator.singleInstance.addEventProcessor(this.eventQueue);
@@ -217,26 +183,49 @@ abstract class CoherentCacheBase: CoherentCacheNode, EventProcessor {
 		Simulator.singleInstance.addEventProcessor(this);
 	}
 	
-	uint retryLat() {
-		return this.cacheConfig.hitLatency + uniform(0, this.cacheConfig.hitLatency + 2);
-	}
-	
 	override void processEvents() {
 		//assert(0); //TODO
 	}
 	
-	abstract void service(LoadCacheRequest pendingCpuRequest);
-	abstract void service(StoreCacheRequest pendingCpuRequest);
-	abstract void service(EvictCacheRequest pendingCacheRequest); 
-	abstract void service(UpdownReadCacheRequest pendingCacheRequest); 
-	abstract void service(DownupReadCacheRequest pendingCacheRequest);
-	abstract void service(WriteCacheRequest pendingCacheRequest);
-	abstract void service(InvalidateCacheRequest pendingCacheRequest);
+	void service(LoadCacheRequest pendingCpuRequest) {
+		assert(0);
+	}
+	
+	void service(StoreCacheRequest pendingCpuRequest) {
+		assert(0);
+	}
+	
+	void service(EvictCacheRequest pendingCacheRequest) {
+		assert(0);
+	}
+	
+	void service(UpdownReadCacheRequest pendingCacheRequest) {
+		assert(0);
+	}
+	
+	void service(DownupReadCacheRequest pendingCacheRequest) {
+		assert(0);
+	}
+	
+	void service(WriteCacheRequest pendingCacheRequest) {
+		assert(0);
+	}
+	
+	void service(InvalidateCacheRequest pendingCacheRequest) {
+		assert(0);
+	}
 	
 	void sendCacheRequest(RequestT)(RequestT request) {
 		//logging.infof(LogCategory.MESI, "%s.sendCacheRequest(%s)", this.name, request);
 		
-		request.target.receiveRequest(request);
+		request.target.receiveCacheRequest(request);
+	}
+	
+	void sendCacheResponse(RequestT)(RequestT request) {
+		//logging.infof(LogCategory.MESI, "%s.sendCacheResponse(%s)", this.name, response);
+
+		this.pendingRequests.remove(request);
+		request.source.receiveCacheResponse(request);
 	}
 		
 	void receiveCacheRequest(RequestT)(RequestT request) {
@@ -246,84 +235,36 @@ abstract class CoherentCacheBase: CoherentCacheNode, EventProcessor {
 		this.service(request);
 	}
 	
-	void sendCacheResponse(RequestT)(RequestT request) {
-		//logging.infof(LogCategory.MESI, "%s.sendCacheResponse(%s)", this.name, response);
-
-		this.pendingRequests.remove(request);
-		request.source.receiveResponse(request);
-	}
-	
 	void receiveCacheResponse(CacheRequest request) {
 		//logging.infof(LogCategory.MESI, "%s.receiveCacheResponse(%s)", this.name, request);
 		
 		request.complete();
 	}
 	
-	override void receiveRequest(LoadCacheRequest request) {
-		this.receiveCacheRequest(request);
-	}
+	abstract uint level();
 	
-	override void receiveRequest(StoreCacheRequest request) {
-		this.receiveCacheRequest(request);
+	override string toString() {
+		return format("CoherentCacheNode[name=%s]", this.name);
 	}
+
+	string name;
+	ulong id;
 	
-	override void receiveRequest(EvictCacheRequest request) {
-		this.receiveCacheRequest(request);
-	}
+	MemorySystem memorySystem;
 	
-	override void receiveRequest(UpdownReadCacheRequest request) {
-		this.receiveCacheRequest(request);
-	}
+	CoherentCacheNode next;	
 	
-	override void receiveRequest(DownupReadCacheRequest request) {
-		this.receiveCacheRequest(request);
-	}
-	
-	override void receiveRequest(WriteCacheRequest request) {
-		this.receiveCacheRequest(request);
-	}
-	
-	override void receiveRequest(InvalidateCacheRequest request) {
-		this.receiveCacheRequest(request);
-	}
-	
-	override void receiveResponse(LoadCacheRequest request) {
-		this.receiveCacheResponse(request);
-	}
-	
-	override void receiveResponse(StoreCacheRequest request) {
-		this.receiveCacheResponse(request);
-	}
-	
-	override void receiveResponse(EvictCacheRequest request) {
-		this.receiveCacheResponse(request);
-	}
-	
-	override void receiveResponse(UpdownReadCacheRequest request) {
-		this.receiveCacheResponse(request);
-	}
-	
-	override void receiveResponse(DownupReadCacheRequest request) {
-		this.receiveCacheResponse(request);
-	}
-	
-	override void receiveResponse(WriteCacheRequest request) {
-		this.receiveCacheResponse(request);
-	}
-	
-	override void receiveResponse(InvalidateCacheRequest request) {
-		this.receiveCacheResponse(request);
-	}
+	DelegateEventQueue eventQueue;
 	
 	CacheRequestQueue pendingRequests;
 	
-	CacheConfig cacheConfig;
-	
-	CacheStat stat;
-
-	Cache cache;
-	
-	static bool isUpdownRequest(CoherentCacheBase source, CoherentCacheBase target) {
-		return source.cacheConfig.level < target.cacheConfig.level;
+	static bool isUpdownRequest(CoherentCacheNode source, CoherentCacheNode target) {
+		return source.level < target.level;
 	}
+	
+	static this() {
+		currentId = 0;
+	}
+	
+	static ulong currentId;
 }

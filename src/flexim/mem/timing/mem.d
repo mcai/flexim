@@ -25,70 +25,20 @@ import flexim.all;
 
 class MemoryController: CoherentCacheNode {
 	this(MemorySystem memorySystem) {
-		super("mem", memorySystem);
+		super(memorySystem, "mem");
 	}
 	
-	override void receiveRequest(LoadCacheRequest cpuRequest){
-		assert(0);
-	}
-	
-	override void receiveRequest(StoreCacheRequest cpuRequest){
-		assert(0);
-	}
-	
-	override void receiveRequest(EvictCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveRequest(UpdownReadCacheRequest request){
+	override void service(UpdownReadCacheRequest request){
 		//logging.infof(LogCategory.MESI, "%s.receiveReadRequest(%s)", this.name, request);
+		request.isShared = false;
 		this.sendCacheResponse(request);
 	}
 	
-	override void receiveRequest(DownupReadCacheRequest request){
-		assert(0);
-	}
-	
-	override void receiveRequest(WriteCacheRequest request){
+	override void service(WriteCacheRequest request){
 		//logging.infof(LogCategory.MESI, "%s.receiveWriteRequest(%s)", this.name, request);
 	}
 	
-	override void receiveRequest(InvalidateCacheRequest request){
+	override uint level() {
 		assert(0);
-	}
-	
-	override void receiveResponse(LoadCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(StoreCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(EvictCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(UpdownReadCacheRequest request){
-		assert(0);
-	}
-	
-	override void receiveResponse(DownupReadCacheRequest request){
-		assert(0);
-	}
-	
-	override void receiveResponse(WriteCacheRequest request){
-		assert(0);
-	}
-	
-	override void receiveResponse(InvalidateCacheRequest request){
-		assert(0);
-	}
-	
-	void sendCacheResponse(UpdownReadCacheRequest request){
-		//logging.infof(LogCategory.MESI, "%sendCacheResponse(%s)", this.name, request);
-		
-		request.isShared = false;
-		request.source.receiveResponse(request);
 	}
 }

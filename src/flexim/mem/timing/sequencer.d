@@ -23,136 +23,23 @@ module flexim.mem.timing.sequencer;
 
 import flexim.all;
 
-abstract class MemorySystemNode {
-	this(string name, MemorySystem memorySystem) {
-		this.id = currentId++;
-		this.name = name;
-		this.memorySystem = memorySystem;
-	}
-
-	override string toString() {
-		return format("%s", this.name);
-	}
-
-	string name;
-	ulong id;
-	
-	MemorySystem memorySystem;
-	
-	static this() {
-		currentId = 0;
-	}
-	
-	static ulong currentId;
-}
-
 class Sequencer: CoherentCacheNode {
-	this(string name, CoherentCacheBase l1Cache) {
-		super(name, l1Cache.memorySystem);
+	this(string name, CoherentCache l1Cache) {
+		super(l1Cache.memorySystem, name);
 
 		this.l1Cache = l1Cache;
-
-		this.maxReadCapacity = 32;
 	}
 	
-	override void receiveRequest(LoadCacheRequest request) {
-		//logging.infof(LogCategory.REQUEST, "%s.receiveRequest(%s)", this.name, request);
-		
-		uint blockPhaddr = this.blockAddress(request.addr);
-
-		if(blockPhaddr in this.pendingReads) {
-			this.pendingReads[blockPhaddr] ~= request;
-		} else if(this.canAcceptRead(blockPhaddr)) {
-			this.pendingReads[blockPhaddr] ~= request;
-			this.sendLoad(request, this.l1Cache);
-		} else {
-			assert(0);
-			//TODO: schedule retry request
-		}
-	}
-	
-	override void receiveRequest(StoreCacheRequest request) {
+	override void service(LoadCacheRequest request) {
 		//logging.infof(LogCategory.REQUEST, "%s.receiveRequest(%s)", this.name, request);
 
-		this.sendStore(request, this.l1Cache);
+		this.sendCacheRequest(request);
 	}
 	
-	override void receiveRequest(EvictCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveRequest(UpdownReadCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveRequest(DownupReadCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveRequest(WriteCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveRequest(InvalidateCacheRequest request) {
-		assert(0);
-	}
+	override void service(StoreCacheRequest request) {
+		//logging.infof(LogCategory.REQUEST, "%s.receiveRequest(%s)", this.name, request);
 
-	override void receiveResponse(LoadCacheRequest request) {
-		//logging.infof(LogCategory.REQUEST, "%s.receiveResponse(%s)", this.name, request);
-
-		uint blockPhaddr = this.blockAddress(request.addr);
-		
-		assert(blockPhaddr in this.pendingReads, format("pendingReads.length=%d", this.pendingReads.length));
-
-		if(blockPhaddr in this.pendingReads) {
-			foreach(pendingRead; this.pendingReads[blockPhaddr]) {
-				this.completeRequest(pendingRead);
-			}
-
-			this.pendingReads.remove(blockPhaddr);
-		}
-	}
-	
-	override void receiveResponse(StoreCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(EvictCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(UpdownReadCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(DownupReadCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(WriteCacheRequest request) {
-		assert(0);
-	}
-	
-	override void receiveResponse(InvalidateCacheRequest request) {
-		assert(0);
-	}
-	
-	void sendLoad(LoadCacheRequest req, CoherentCacheNode target) {
-		target.receiveRequest(req);
-	}
-	
-	void sendStore(StoreCacheRequest req, CoherentCacheNode target) {
-		target.receiveRequest(req);
-	}
-
-	bool canAcceptRead(uint addr) {
-		return (this.pendingReads.length < this.maxReadCapacity);
-	}
-
-	void completeRequest(LoadCacheRequest request) {
-		//logging.infof(LogCategory.REQUEST, "%s.completeRequest(%s)", this.name, request);
-		
-		request.complete();
+		this.sendCacheRequest(request);
 	}
 	
 	uint blockSize() {
@@ -162,14 +49,14 @@ class Sequencer: CoherentCacheNode {
 	uint blockAddress(uint addr) {
 		return this.l1Cache.cache.tag(addr);
 	}
-
-	override string toString() {
-		return format("%s[pendingReads.length=%d]", this.name, this.pendingReads.length);
+	
+	override uint level() {
+		assert(0);
 	}
 
-	uint maxReadCapacity;
+	override string toString() {
+		return format("%s", this.name);
+	}
 
-	LoadCacheRequest[][uint] pendingReads;
-
-	CoherentCacheBase l1Cache;
+	CoherentCache l1Cache;
 }

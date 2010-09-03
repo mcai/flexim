@@ -390,7 +390,7 @@ class OoOThread: Thread {
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 
 				StoreCacheRequest req = new StoreCacheRequest(this.seqD, this.mmu.translate(ea), {});
-				this.seqD.receiveRequest(req);
+				this.seqD.receiveCacheRequest(req);
 
 				rs.status = RUUStationStatus.COMPLETED;
 				this.readyq.popFront();
@@ -402,7 +402,7 @@ class OoOThread: Thread {
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 
 				LoadCacheRequest req = new LoadCacheRequest(this.seqD, this.mmu.translate(ea), rs, &loadCallback);
-				this.seqD.receiveRequest(req);
+				this.seqD.receiveCacheRequest(req);
 				
 				rs.status = RUUStationStatus.ISSUED;
 				this.readyq.popFront();
@@ -521,7 +521,7 @@ class OoOThread: Thread {
 			this.fetchBlock = block;
 
 			LoadCacheRequest req = new LoadCacheRequest(this.seqI, this.mmu.translate(this.fetchNpc), null, {this.canFetch = true;});
-			this.seqI.receiveRequest(req);
+			this.seqI.receiveCacheRequest(req);
 			
 			this.canFetch = false;
 		}
