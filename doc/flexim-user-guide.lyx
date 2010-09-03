@@ -51,7 +51,12 @@ Flexim Simulator User Guide
 \end_layout
 
 \begin_layout SubTitle
-(Pre-release, Work-in-Progress)
+(2010.9.
+ 
+\color red
+Pre-release, Work-in-Progress
+\color inherit
+)
 \end_layout
 
 \begin_layout Author
@@ -848,6 +853,22 @@ Basic Instructions
 \end_layout
 
 \begin_layout Enumerate
+nop.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
 syscall.
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
@@ -1007,17 +1028,7 @@ status open
 
 \begin_layout Plain Layout
 
-void branch(Thread thread) {
-\end_layout
-
-\begin_layout Plain Layout
-
-	thread.nnpc = thread.npc + this.displacement;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
+thread.nnpc = thread.npc + this.displacement;
 \end_layout
 
 \end_inset
@@ -1580,12 +1591,1439 @@ status open
 
 \begin_layout Plain Layout
 
-void jump(Thread thread, uint addr) {
+thread.nnpc = addr;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+j.
+\begin_inset Newline newline
+\end_inset
+
+Target PC calculation:
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return mbits(thread.npc, 32, 28) | this.target;
+\end_layout
+
+\end_inset
+
+Execution: 
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.jump(thread, this.targetPc(thread));
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+jal.
+\begin_inset Newline newline
+\end_inset
+
+Target PC calculation:
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return mbits(thread.npc, 32, 28) | this.target;
+\end_layout
+
+\end_inset
+
+Execution: 
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[ReturnAddressReg] = thread.nnpc;
 \end_layout
 
 \begin_layout Plain Layout
 
-	thread.nnpc = addr;
+this.jump(thread, this.targetPc(thread));
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+jalr.
+\begin_inset Newline newline
+\end_inset
+
+Target PC calculation:
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.intRegs[this[RS]];
+\end_layout
+
+\end_inset
+
+Execution: 
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.nnpc;
+\end_layout
+
+\begin_layout Plain Layout
+
+this.jump(thread, this.targetPc(thread));
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+jr.
+\begin_inset Newline newline
+\end_inset
+
+Target PC calculation:
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.intRegs[this[RS]];
+\end_layout
+
+\end_inset
+
+Execution: 
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.jump(thread, this.targetPc(thread));
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Floating Point Arithmetic Instructions
+\end_layout
+
+\begin_layout Enumerate
+add_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double ft = thread.floatRegs.getDouble(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = fs + ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sub_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double ft = thread.floatRegs.getDouble(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = fs - ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mul_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double ft = thread.floatRegs.getDouble(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = fs * ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+div_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double ft = thread.floatRegs.getDouble(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = fs / ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sqrt_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = sqrt(fs);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+abs_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = fabs(fs);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+neg_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = -1 * fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mov_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+add_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float ft = thread.floatRegs.getFloat(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = fs + ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sub_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float ft = thread.floatRegs.getFloat(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = fs - ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mul_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float ft = thread.floatRegs.getFloat(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = fs * ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+div_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float ft = thread.floatRegs.getFloat(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = fs / ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sqrt_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = sqrt(fs);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+abs_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = fabs(fs);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+neg_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = -fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mov_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_d_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = cast(double) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_w_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint fd = cast(uint) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setUint(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_l_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+ulong fd = cast(ulong) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setUlong(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_s_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = cast(float) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_w_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint fd = cast(uint) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setUint(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_l_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+ulong fd = cast(ulong) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setUlong(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_s_w.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fs = thread.floatRegs.getUint(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = cast(float) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_d_w.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fs = thread.floatRegs.getUint(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = cast(double) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_s_l.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ulong fs = thread.floatRegs.getUlong(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float fd = cast(float) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setFloat(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cvt_d_l.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ulong fs = thread.floatRegs.getUlong(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double fd = cast(double) fs;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setDouble(fd, this[FD]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+c_<cond>_d type instructions, which include c_f_d, c_un_d, c_eq_d, c_ueq_d,
+ c_olt_d, c_ult_d, c_ole_d, c_ule_d, c_sf_d, c_ngle_d, c_seq_d, c_ngl_d,
+ c_lt_d, c_nge_d, c_le_d and c_ngt_d.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double fs = thread.floatRegs.getDouble(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+double ft = thread.floatRegs.getDouble(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint fcsr = thread.miscRegs.fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\end_layout
+
+\begin_layout Plain Layout
+
+bool less;
+\end_layout
+
+\begin_layout Plain Layout
+
+bool equal;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+bool unordered = isnan(fs) || isnan(ft);
+\end_layout
+
+\begin_layout Plain Layout
+
+if(unordered) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	equal = false;
+\end_layout
+
+\begin_layout Plain Layout
+
+	less = false;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+	equal = fs == ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+	less = fs < ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint cond = this[COND];
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(((cond&0x4) && less)||((cond&0x2) && equal)||((cond&0x1) && unordered))
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+	setFCC(fcsr, this[CC]);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+	clearFCC(fcsr, this[CC]);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.fcsr = fcsr;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+c_<cond>_s type instructions, which include c_f_s, c_un_s, c_eq_s, c_ueq_s,
+ c_olt_s, c_ult_s, c_ole_s, c_ule_s, c_sf_s, c_ngle_s, c_seq_s, c_ngl_s,
+ c_lt_s, c_nge_s, c_le_s and c_ngt_s.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+float fs = thread.floatRegs.getFloat(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+float ft = thread.floatRegs.getFloat(this[FT]);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint fcsr = thread.miscRegs.fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\end_layout
+
+\begin_layout Plain Layout
+
+bool less;
+\end_layout
+
+\begin_layout Plain Layout
+
+bool equal;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+bool unordered = isnan(fs) || isnan(ft);
+\end_layout
+
+\begin_layout Plain Layout
+
+if(unordered) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	equal = false;
+\end_layout
+
+\begin_layout Plain Layout
+
+	less = false;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+	equal = fs == ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+	less = fs < ft;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint cond = this[COND];
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(((cond&0x4) && less)||((cond&0x2) && equal)||((cond&0x1) && unordered))
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+	setFCC(fcsr, this[CC]);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+	clearFCC(fcsr, this[CC]);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.fcsr = fcsr;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mfc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fs = thread.floatRegs.getUint(this[FS]);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = fs;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+cfc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint fcsr = thread.miscRegs.fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint rt = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(this[FS] == 31) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	rt = fcsr;
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.intRegs[this[RT]] = rt;
 \end_layout
 
 \begin_layout Plain Layout
@@ -1599,31 +3037,1649 @@ void jump(Thread thread, uint addr) {
 \end_layout
 
 \begin_layout Enumerate
-j.
+mtc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint rt = thread.intRegs[this[RT]];
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setUint(rt, this[FS]);
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Enumerate
-jal.
+ctc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint rt = thread.intRegs[this[RT]];
 \end_layout
 
-\begin_layout Enumerate
-jalr.
+\begin_layout Plain Layout
+
 \end_layout
 
-\begin_layout Enumerate
-jr.
+\begin_layout Plain Layout
+
+if(this[FS]) {
 \end_layout
 
-\begin_layout Subsubsection
-Floating Point Arithmetic Instructions
+\begin_layout Plain Layout
+
+	thread.miscRegs.fcsr = rt;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
 Integer Arithmetic Instructions
 \end_layout
 
+\begin_layout Enumerate
+Common operations found in the implementation of integer arithmetic operations.
+\begin_inset Newline newline
+\end_inset
+
+imm.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.imm = cast(short) machInst[INTIMM];
+\end_layout
+
+\end_inset
+
+zextImm.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.zextImm = 0x0000FFFF & machInst[INTIMM];
+\end_layout
+
+\end_inset
+
+sextImm.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.sextImm = sext(machInst[INTIMM], 16);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+add.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				+ cast(int) thread.intRegs[this[RT]];
+\end_layout
+
+\begin_layout Plain Layout
+
+logging.warn(LogCategory.INSTRUCTION, "Add: overflow trap not implemented.");
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+addi.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] + this.sextImm;
+\end_layout
+
+\begin_layout Plain Layout
+
+logging.warn(LogCategory.INSTRUCTION, "Addi: overflow trap not implemented.");
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+addiu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] + this.sextImm;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+addu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				+ cast(int) thread.intRegs[this[RT]];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sub.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				- cast(int) thread.intRegs[this[RT]];
+\end_layout
+
+\begin_layout Plain Layout
+
+logging.warn(LogCategory.INSTRUCTION, "Sub: overflow trap not implemented.");
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+subu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				- cast(int) thread.intRegs[this[RT]];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+and.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.intRegs[this[RS]] & thread.intRegs[this[RT]];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+andi.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = thread.intRegs[this[RS]] & this.zextImm;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+nor.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = ~(thread.intRegs[this[RS]] | thread.intRegs[this[RT]]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+or.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.intRegs[this[RS]] | thread.intRegs[this[RT]];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+ori.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = thread.intRegs[this[RS]] | this.zextImm;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+xor.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.intRegs[this[RS]] ^ thread.intRegs[this[RT]];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+xori.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = thread.intRegs[this[RS]] ^ this.zextImm;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+slt.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				< cast(int) thread.intRegs[this[RT]] ? 1 : 0;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+slti.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] < this.sextImm
+ ? 1 : 0;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sltiu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = cast(uint) thread.intRegs[this[RS]] < this.zextImm
+ ? 1 : 0;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sltu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RS]]
+\end_layout
+
+\begin_layout Plain Layout
+
+				< cast(uint) thread.intRegs[this[RT]] ? 1 : 0;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lui.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = this.imm << 16;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+divu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ulong rs = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+ulong rt = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint lo = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint hi = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+rs = thread.intRegs[this[RS]];
+\end_layout
+
+\begin_layout Plain Layout
+
+rt = thread.intRegs[this[RT]];
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(rt != 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	lo = cast(uint) (rs / rt);
+\end_layout
+
+\begin_layout Plain Layout
+
+	hi = cast(uint) (rs % rt);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.lo = lo;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.hi = hi;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+div.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+long rs = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+long rt = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint lo = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint hi = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+rs = sext(thread.intRegs[this[RS]], 32);
+\end_layout
+
+\begin_layout Plain Layout
+
+rt = sext(thread.intRegs[this[RT]], 32);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(rt != 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	lo = cast(uint) (rs / rt);
+\end_layout
+
+\begin_layout Plain Layout
+
+	hi = cast(uint) (rs % rt);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.lo = lo;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.hi = hi;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mflo.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.miscRegs.lo;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mfhi.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RD]] = thread.miscRegs.hi;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mtlo.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.miscRegs.lo = thread.intRegs[this[RD]];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mthi.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+thread.miscRegs.hi = thread.intRegs[this[RD]];
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+mult.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+long rs = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+long rt = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+rs = sext(thread.intRegs[this[RS]], 32);
+\end_layout
+
+\begin_layout Plain Layout
+
+rt = sext(thread.intRegs[this[RT]], 32);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+long val = rs * rt;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint lo = cast(uint) bits64(val, 31, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint hi = cast(uint) bits64(val, 63, 32);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.lo = lo;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.hi = hi;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+multu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ulong rs = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+ulong rt = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+rs = thread.intRegs[this[RS]];
+\end_layout
+
+\begin_layout Plain Layout
+
+rt = thread.intRegs[this[RT]];
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+ulong val = rs * rt;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint lo = cast(uint) bits64(val, 31, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint hi = cast(uint) bits64(val, 63, 32);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.lo = lo;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.miscRegs.hi = hi;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsubsection
 Memory Access Instructions
+\end_layout
+
+\begin_layout Enumerate
+Common operations found in the implementation of memory access operations.
+\begin_inset Newline newline
+\end_inset
+
+displacement calculation.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.displacement = sext(machInst[OFFSET], 16);
+\end_layout
+
+\end_inset
+
+basic effective address calculation.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lb.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+byte mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readByte(this.ea(thread), cast(ubyte*) &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = mem;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lbu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ubyte mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readByte(this.ea(thread), &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = mem;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lh.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+short mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readHalfWord(this.ea(thread), cast(ushort*) &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = mem;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lhu.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ushort mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readHalfWord(this.ea(thread), &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = mem;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lw.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+int mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readWord(this.ea(thread), cast(uint*) &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = mem;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lwl.
+\begin_inset Newline newline
+\end_inset
+
+overriden effective address calculation.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+return addr & ~3;
+\end_layout
+
+\end_inset
+
+
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint ea = addr & ~3;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint byte_offset = addr & 3;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readWord(ea, &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mem_shift = 24 - 8 * byte_offset;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint rt = (mem << mem_shift) | (thread.intRegs[this[RT]] & mask(mem_shift));
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = rt;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lwr.
+\begin_inset Newline newline
+\end_inset
+
+overriden effective address calculation.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+return addr & ~3;
+\end_layout
+
+\end_inset
+
+
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint ea = addr & ~3;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint byte_offset = addr & 3;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readWord(ea, &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mem_shift = 8 * byte_offset;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint rt = (thread.intRegs[this[RT]] & (mask(mem_shift) << (32 - mem_shift)))
+\end_layout
+
+\begin_layout Plain Layout
+
+				| (mem >> mem_shift);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = rt;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+ll.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint mem = 0;		
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readWord(this.ea(thread), &mem);		
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = mem;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lwc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readWord(this.ea(thread), &mem);			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setUint(mem, this[FT]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+ldc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ulong mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readDoubleWord(this.ea(thread), &mem);			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.floatRegs.setUlong(mem, this[FT]);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sb.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ubyte mem = cast(ubyte) bits(thread.intRegs[this[RT]], 7, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeByte(this.ea(thread), mem);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sh.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ushort mem = cast(ushort) bits(thread.intRegs[this[RT]], 15, 0);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeHalfWord(this.ea(thread), mem);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sw.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint mem = thread.intRegs[this[RT]];
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeWord(this.ea(thread), mem);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+swl.
+\begin_inset Newline newline
+\end_inset
+
+overriden effective address calculation.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+return addr & ~3;
+\end_layout
+
+\end_inset
+
+
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint ea = addr & ~3;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint byte_offset = addr & 3;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readWord(ea, &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint reg_shift = 24 - 8 * byte_offset;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mem_shift = 32 - reg_shift;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+mem = (mem & (mask(reg_shift) << mem_shift)) | (thread.intRegs[this[RT]]
+ >> reg_shift);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeWord(ea, mem);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+swr.
+\begin_inset Newline newline
+\end_inset
+
+overriden effective address calculation.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+return addr & ~3;
+\end_layout
+
+\end_inset
+
+
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint addr = thread.intRegs[this[RS]] + this.displacement;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint ea = addr & ~3;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint byte_offset = addr & 3;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mem = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readWord(ea, &mem);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint reg_shift = 8 * byte_offset;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+mem = thread.intRegs[this[RT]] << reg_shift | (mem & (mask(reg_shift)));
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeWord(ea, mem);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sc.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint rt = thread.intRegs[this[RT]];
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeWord(this.ea(thread), rt);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.intRegs[this[RT]] = 1;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+swc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint ft = thread.floatRegs.getUint(this[FT]);			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeWord(this.ea(thread), ft);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+sdc1.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ulong ft = thread.floatRegs.getUlong(this[FT]);			
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeDoubleWord(this.ea(thread), ft);
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -1633,6 +4689,778 @@ System Call Emulation
 \begin_layout Standard
 A few system calls are emulated for the correct execution of the whole wcet_benc
 h benchmark suite, and mst and em3d from the Olden benchmark suite.
+\end_layout
+
+\begin_layout Enumerate
+exit.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+logging.haltf(LogCategory.SYSCALL, "target called exit(%d)", thread.getSyscallArg(0
+) & 0xff);
+\end_layout
+
+\begin_layout Plain Layout
+
+return 1;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+read.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+int fd = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint buf_addr = thread.getSyscallArg(1);
+\end_layout
+
+\begin_layout Plain Layout
+
+size_t count = thread.getSyscallArg(2);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+void* buf = malloc(count);
+\end_layout
+
+\begin_layout Plain Layout
+
+ssize_t ret = core.sys.posix.unistd.read(fd, buf, count);
+\end_layout
+
+\begin_layout Plain Layout
+
+if(ret > 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.mem.writeBlock(buf_addr, ret, cast(ubyte*) buf);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+free(buf);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+return ret;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+write.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+int fd = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint buf_addr = thread.getSyscallArg(1);
+\end_layout
+
+\begin_layout Plain Layout
+
+size_t count = thread.getSyscallArg(2);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+void* buf = malloc(count);
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.readBlock(buf_addr, count, cast(ubyte*) buf);
+\end_layout
+
+\begin_layout Plain Layout
+
+ssize_t ret = core.sys.posix.unistd.write(fd, buf, count);
+\end_layout
+
+\begin_layout Plain Layout
+
+free(buf);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+return ret;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+open.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+char path[MAXBUFSIZE];
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint addr = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint tgtFlags = thread.getSyscallArg(1);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint mode = thread.getSyscallArg(2);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+int strlen = thread.mem.readString(addr, MAXBUFSIZE, &path[0]);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+// translate open flags
+\end_layout
+
+\begin_layout Plain Layout
+
+int hostFlags = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+foreach(t; openFlagTable) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	if(tgtFlags & t.tgtFlag) {
+\end_layout
+
+\begin_layout Plain Layout
+
+		tgtFlags &= ~t.tgtFlag;
+\end_layout
+
+\begin_layout Plain Layout
+
+		hostFlags |= t.hostFlag;
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+// any target flags left?
+\end_layout
+
+\begin_layout Plain Layout
+
+if(tgtFlags != 0)
+\end_layout
+
+\begin_layout Plain Layout
+
+		logging.fatalf(LogCategory.SYSCALL,
+\end_layout
+
+\begin_layout Plain Layout
+
+			"Syscall: open: cannot decode flags 0x%x", tgtFlags);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+// Adjust path for current working directory
+\end_layout
+
+\begin_layout Plain Layout
+
+path = thread.process.fullPath(to!(string)(path));
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+// open the file
+\end_layout
+
+\begin_layout Plain Layout
+
+int fd = open(path.ptr, hostFlags, mode);
+\end_layout
+
+\begin_layout Plain Layout
+
+return fd;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+close.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+int fd = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+int ret = close(fd);
+\end_layout
+
+\begin_layout Plain Layout
+
+return ret;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+lseek.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+int fildes = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+off_t offset = thread.getSyscallArg(1);
+\end_layout
+
+\begin_layout Plain Layout
+
+int whence = thread.getSyscallArg(2);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+off_t ret = lseek(fildes, offset, whence);
+\end_layout
+
+\begin_layout Plain Layout
+
+return ret;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+getpid.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.process.pid;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+getuid.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.process.uid;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+brk.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint oldbrk, newbrk;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint oldbrk_rnd, newbrk_rnd;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+newbrk = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+oldbrk = thread.process.brk;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(newbrk == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	return thread.process.brk;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+newbrk_rnd = Rounding!(uint).roundUp(newbrk, MEM_PAGESIZE);
+\end_layout
+
+\begin_layout Plain Layout
+
+oldbrk_rnd = Rounding!(uint).roundUp(oldbrk, MEM_PAGESIZE);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(newbrk > oldbrk) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.mem.map(oldbrk_rnd, newbrk_rnd - oldbrk_rnd,
+\end_layout
+
+\begin_layout Plain Layout
+
+		MemoryAccessType.READ | MemoryAccessType.WRITE);
+\end_layout
+
+\begin_layout Plain Layout
+
+} else if(newbrk < oldbrk) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.mem.unmap(newbrk_rnd, oldbrk_rnd - newbrk_rnd);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.process.brk = newbrk;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+return thread.process.brk;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+getgid.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.process.gid;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+geteuid.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.process.euid;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+getegid.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+return thread.process.egid;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+fstat.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+int fd = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint buf_addr = thread.getSyscallArg(1);
+\end_layout
+
+\begin_layout Plain Layout
+
+stat_t* buf = cast(stat_t*)(malloc(stat_t.sizeof));
+\end_layout
+
+\begin_layout Plain Layout
+
+int ret = fstat(fd, buf);
+\end_layout
+
+\begin_layout Plain Layout
+
+if(ret >= 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	thread.mem.writeBlock(buf_addr, stat_t.sizeof, cast(ubyte*) buf);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+free(buf);
+\end_layout
+
+\begin_layout Plain Layout
+
+return ret;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+uname.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+utsname un = {"Linux", "sim", "2.6", "Tue Apr 5 12:21:57 UTC 2005", "mips"};
+\end_layout
+
+\begin_layout Plain Layout
+
+thread.mem.writeBlock(thread.getSyscallArg(0), un.sizeof, cast(ubyte*) &un);
+\end_layout
+
+\begin_layout Plain Layout
+
+return 0;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+_llseek.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+int fd = thread.getSyscallArg(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint offset_high = thread.getSyscallArg(1);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint offset_low = thread.getSyscallArg(2);
+\end_layout
+
+\begin_layout Plain Layout
+
+uint result_addr = thread.getSyscallArg(3);
+\end_layout
+
+\begin_layout Plain Layout
+
+int whence = thread.getSyscallArg(4);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+int ret;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(offset_high == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	off_t lseek_ret = lseek(fd, offset_low, whence);
+\end_layout
+
+\begin_layout Plain Layout
+
+	if(lseek_ret >= 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+		ret = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+	else {
+\end_layout
+
+\begin_layout Plain Layout
+
+		ret = -1;
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+	ret = -1;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+return ret;
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
