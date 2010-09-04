@@ -28,20 +28,24 @@ class MemoryController: CoherentCacheNode {
 		super(memorySystem, "mem"); //TODO: please add configuration and statistics support for memory controller.
 	}
 	
-	override void service(UpdownReadCacheRequest request){
-		//logging.infof(LogCategory.MESI, "%s.receiveReadRequest(%s)", this.name, request);
-		
-		request.isShared = false;
-		this.eventQueue.schedule({this.sendCacheResponse(request);}, 400); //TODO: replace 400 with dynamic latency calculation.
-	}
-	
-	override void service(WriteCacheRequest request){
-		//logging.infof(LogCategory.MESI, "%s.receiveWriteRequest(%s)", this.name, request);
-		
-		this.eventQueue.schedule({this.sendCacheResponse(request);}, 400); //TODO: replace 400 with dynamic latency calculation.
-	}
-	
 	override uint level() {
 		assert(0);
+	}
+	
+	////////////////////////////////////////////////
+	
+	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, void delegate(bool hasError) onReceiveReplyCallback) {
+		writefln("%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
+		this.schedule({onReceiveReplyCallback(false);}, 400);
+	}
+	
+	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.schedule({onCompletedCallback(false, false);}, 400);
+	}
+	
+	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) {
+		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.schedule({onCompletedCallback(false);}, 400);
 	}
 }

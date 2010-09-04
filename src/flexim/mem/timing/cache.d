@@ -55,7 +55,7 @@ class DirEntry {
 	}
 	
 	bool isShared() {
-		return this.sharers.length > 0;
+		return this.sharers.length > 1;
 	}
 	
 	bool isOwned() {
@@ -86,11 +86,10 @@ class DirLock {
 		this.x = x;
 	}
 
-	bool lock(ulong lockerRequestId) {
+	bool lock() {
 		if(this.locked) {
 			return false;
 		} else {			
-			this.lockerRequestId = lockerRequestId;
 			this.locked = true;
 			return true;
 		}
@@ -111,8 +110,6 @@ class DirLock {
 	uint x;
 
 	bool locked;
-	
-	ulong lockerRequestId;
 }
 
 class Dir {
@@ -174,6 +171,7 @@ class CacheBlock {
 		
 		this.state = MESIState.INVALID;
 		this.tag = 0;
+		this.transientTag = 0;
 		this.lastAccess = 0;
 	}
 
@@ -184,7 +182,7 @@ class CacheBlock {
 	CacheSet set;
 	uint way;
 	
-	uint tag;
+	uint tag, transientTag;
 	MESIState state;
 
 	ulong lastAccess;

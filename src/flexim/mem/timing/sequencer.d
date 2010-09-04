@@ -30,16 +30,18 @@ class Sequencer: CoherentCacheNode {
 		this.l1Cache = l1Cache;
 	}
 	
-	override void service(LoadCacheRequest request) {
-		//logging.infof(LogCategory.REQUEST, "%s.receiveRequest(%s)", this.name, request);
-
-		this.sendCacheRequest(request);
+	void load(uint addr, bool isRetry, RUUStation rs, void delegate(RUUStation rs) onCompletedCallback2) {		
+		this.load(addr, isRetry, {onCompletedCallback2(rs);});
 	}
 	
-	override void service(StoreCacheRequest request) {
-		//logging.infof(LogCategory.REQUEST, "%s.receiveRequest(%s)", this.name, request);
-
-		this.sendCacheRequest(request);
+	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.l1Cache.load(addr, isRetry, onCompletedCallback);
+	}
+	
+	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.l1Cache.store(addr, isRetry, onCompletedCallback);
 	}
 	
 	uint blockSize() {

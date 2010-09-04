@@ -23,153 +23,7 @@ module flexim.mem.timing.common;
 
 import flexim.all;
 
-enum CacheRequestType: string {
-	LOAD = "LOAD",
-	STORE = "STORE",
-	EVICT = "EVICT",
-	UPDOWN_READ = "UPDOWN_READ",
-	DOWNUP_READ = "DOWNUP_READ",
-	WRITE = "WRITE",
-	INVALIDATE = "INVALIDATE"
-}
-
-abstract class CacheRequest {
-	this(CacheRequestType type, CoherentCacheNode source, CoherentCacheNode target, uint addr, void delegate() onCompletedCallback) {
-		this.id = currentId++;
-		
-		this.type = type;
-		
-		this.source = source;
-		this.target = target;
-		
-		this.addr = addr;
-		this.onCompletedCallback = onCompletedCallback;
-		
-		this.set = this.way = this.tag = 0;
-		
-		this.state = MESIState.INVALID;
-		
-		this.isShared = false;
-	}
-	
-	void complete() {
-		if(this.onCompletedCallback !is null) {
-			this.onCompletedCallback();
-		}
-	}
-
-	override string toString() {
-		return format("%s[ID=%d, addr=0x%x]", to!(string)(this.type), this.id, this.addr);
-	}
-
-	ulong id;
-	
-	CacheRequestType type;
-	
-	CoherentCacheNode source;
-	CoherentCacheNode target;
-	
-	uint addr;
-	
-	void delegate() onCompletedCallback;
-
-	uint set, way, tag;
-	
-	DirLock dirLock;
-
-	MESIState state;
-	
-	uint pendings;
-	
-	bool hasError;
-	bool isShared;
-	bool isWriteback;
-	bool isEviction;
-	
-	bool isRead;
-	bool isBlocking;
-	
-	static this() {
-		currentId = 0;
-	}
-	
-	static ulong currentId;
-}
-
-class LoadCacheRequest: CacheRequest {
-	this(Sequencer source, uint phaddr, RUUStation rs, void delegate(LoadCacheRequest) del) {
-		this(source, phaddr, rs, {del(this);});
-	}
-	
-	this(Sequencer source, uint phaddr, RUUStation rs, void delegate() onCompletedCallback) {
-		super(CacheRequestType.LOAD, source, source.l1Cache, phaddr, onCompletedCallback);
-		
-		this.isRead = true;
-		this.isBlocking = false;
-		
-		this.rs = rs;
-	}
-	
-	RUUStation rs;
-}
-
-class StoreCacheRequest: CacheRequest {
-	this(Sequencer source, uint phaddr, void delegate() onCompletedCallback) {
-		super(CacheRequestType.STORE, source, source.l1Cache, phaddr, onCompletedCallback);
-		
-		this.isRead = false;
-		this.isBlocking = false;
-	}
-}
-
-class EvictCacheRequest: CacheRequest {
-	this(CoherentCacheNode source, CoherentCacheNode target, uint addr, void delegate() onCompletedCallback) {
-		super(CacheRequestType.EVICT, source, target, addr, onCompletedCallback);
-		
-		this.isRead = false;
-		this.isBlocking = true;
-	}
-}
-
-class UpdownReadCacheRequest: CacheRequest {
-	this(CoherentCacheNode source, CoherentCacheNode target, uint addr, void delegate() onCompletedCallback) {
-		super(CacheRequestType.UPDOWN_READ, source, target, addr, onCompletedCallback);
-		
-		this.isRead = true;
-		this.isBlocking = false;
-	}
-}
-
-class DownupReadCacheRequest: CacheRequest {
-	this(CoherentCacheNode source, CoherentCacheNode target, uint addr, void delegate() onCompletedCallback) {
-		super(CacheRequestType.DOWNUP_READ, source, target, addr, onCompletedCallback);
-		
-		this.isRead = true;
-		this.isBlocking = true;
-	}
-}
-
-class WriteCacheRequest: CacheRequest {
-	this(CoherentCacheNode source, CoherentCacheNode target, uint addr, void delegate() onCompletedCallback) {
-		super(CacheRequestType.WRITE, source, target, addr, onCompletedCallback);
-		
-		this.isRead = false;
-		this.isBlocking = false;
-	}
-}
-
-class InvalidateCacheRequest: CacheRequest {
-	this(CoherentCacheNode source, CoherentCacheNode target, uint addr, void delegate() onCompletedCallback) {
-		super(CacheRequestType.INVALIDATE, source, target, addr, onCompletedCallback);
-		
-		this.isRead = false;
-		this.isBlocking = true;
-	}
-}
-
-abstract class CoherentCacheNode: EventProcessor {
-	alias List!(CacheRequest) CacheRequestQueue;
-	
+abstract class CoherentCacheNode {	
 	this(MemorySystem memorySystem, string name) {
 		this.id = currentId++;
 		this.name = name;
@@ -177,74 +31,75 @@ abstract class CoherentCacheNode: EventProcessor {
 		
 		this.eventQueue = new DelegateEventQueue();
 		Simulator.singleInstance.addEventProcessor(this.eventQueue);
-		
-		//this.pendingRequests = new CacheRequestQueue();
-		
-		Simulator.singleInstance.addEventProcessor(this);
 	}
 	
-	override void processEvents() {
-		//assert(0); //TODO
+	void schedule(void delegate() event, ulong delay = 0) {
+		this.eventQueue.schedule(event, delay);
 	}
 	
-	void service(LoadCacheRequest pendingCpuRequest) {
+	void load(uint addr, bool isRetry, 
+		void delegate() onCompletedCallback) {
+		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		assert(0);
 	}
 	
-	void service(StoreCacheRequest pendingCpuRequest) {
+	void store(uint addr, bool isRetry, 
+		void delegate() onCompletedCallback) {
+		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		assert(0);
 	}
 	
-	void service(EvictCacheRequest pendingCacheRequest) {
+	void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
+		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
+		writefln("%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
 		assert(0);
 	}
 	
-	void service(UpdownReadCacheRequest pendingCacheRequest) {
+	void invalidate(CoherentCacheNode except, uint set, uint way, 
+		void delegate() onCompletedCallback) {
+		writefln("%s.invalidate(except=%s, set=%d, way=%d)", this, except, set, way);
 		assert(0);
 	}
 	
-	void service(DownupReadCacheRequest pendingCacheRequest) {
+	void evict(uint set, uint way, 
+		void delegate(bool hasError) onCompletedCallback) {
+		writefln("%s.evict(set=%d, way=%d)", this, set, way);
 		assert(0);
 	}
 	
-	void service(WriteCacheRequest pendingCacheRequest) {
+	void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, 
+		void delegate(bool hasError) onReceiveReplyCallback) {
+		writefln("%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
 		assert(0);
 	}
 	
-	void service(InvalidateCacheRequest pendingCacheRequest) {
+	void readRequest(CoherentCacheNode target, uint addr, 
+		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		writefln("%s.readRequest(target=%s, addr=0x%x)", this, target, addr);
 		assert(0);
 	}
 	
-	void sendCacheRequest(RequestT)(RequestT request) {
-		//logging.infof(LogCategory.MESI, "%s.sendCacheRequest(%s)", this.name, request);
-		
-		request.target.receiveCacheRequest(request);
+	void readRequestReceive(CoherentCacheNode source, uint addr, 
+		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		assert(0);
+	}
+	void writeRequest(CoherentCacheNode target, uint addr, 
+		void delegate(bool hasError) onCompletedCallback) {
+		writefln("%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
+		assert(0);
 	}
 	
-	void sendCacheResponse(RequestT)(RequestT request) {
-		//logging.infof(LogCategory.MESI, "%s.sendCacheResponse(%s)", this.name, response);
-
-		//this.pendingRequests.remove(request);
-		request.source.receiveCacheResponse(request);
-	}
-		
-	void receiveCacheRequest(RequestT)(RequestT request) {
-		//logging.infof(LogCategory.MESI, "%s.receiveCacheRequest(%s)", this.name, request);
-
-		//this.pendingRequests.add(request);
-		this.service(request);
-	}
-	
-	void receiveCacheResponse(CacheRequest request) {
-		//logging.infof(LogCategory.MESI, "%s.receiveCacheResponse(%s)", this.name, request);
-		
-		request.complete();
+	void writeRequestReceive(CoherentCacheNode source, uint addr, 
+		void delegate(bool hasError) onCompletedCallback) {
+		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		assert(0);
 	}
 	
 	abstract uint level();
 	
 	override string toString() {
-		return format("CoherentCacheNode[name=%s]", this.name);
+		return format("%s", this.name);
 	}
 
 	string name;
@@ -256,15 +111,47 @@ abstract class CoherentCacheNode: EventProcessor {
 	
 	DelegateEventQueue eventQueue;
 	
-	//CacheRequestQueue pendingRequests;
-	
-	static bool isUpdownRequest(CoherentCacheNode source, CoherentCacheNode target) {
-		return source.level < target.level;
-	}
-	
 	static this() {
 		currentId = 0;
 	}
 	
 	static ulong currentId;
 }
+
+/////////////////////////////////////
+
+class MSHRTarget {
+	this() {
+	}
+
+	uint threadId;
+}
+
+class MSHR {
+	this(uint numTargetSlots) {
+		this.numTargetSlots = numTargetSlots;
+		this.targets = new MSHRTarget[this.numTargetSlots];
+	}
+	
+	uint addr;
+	bool isValid;	
+	MSHRTarget[] targets;
+	
+	uint numTargetSlots;
+}
+
+class MSHRFile {
+	this(uint capacity) {
+		this.capacity = capacity;
+		this.entries = new MSHR[this.capacity];
+	}
+	
+	bool isFull() {
+		assert(0);
+	}
+	
+	uint capacity;
+	MSHR[] entries;
+}
+
+alias MSHRFile WriteBuffer;

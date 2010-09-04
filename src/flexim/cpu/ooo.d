@@ -26,8 +26,6 @@ import flexim.all;
 const uint STORE_ADDR_INDEX = 0;
 const uint STORE_OP_INDEX = 1;
 
-ulong currentInstructionSequenceID = 0;
-
 class Link(LinkT, EntryT) {
 	this(string name, EntryT entry) {
 		this.name = name;
@@ -64,14 +62,14 @@ enum RUUStationStatus : string {
 
 class RUUStation {
 	this(uint pc, DynamicInst uop) {
+		this.id = ++currentId;
+		
 		this.pc = pc;
 		this.uop = uop;
 
 		this.inLsq = false;
 		this.eaComp = false;
 		this.ea = 0;
-
-		this.seq = ++currentInstructionSequenceID;
 
 		this.status = RUUStationStatus.FETCHED;
 	}
@@ -95,8 +93,8 @@ class RUUStation {
 	override string toString() {
 		string str;
 		
-		str ~= format("RUUStation[uop=%s, inLsq=%s, eaComp=%s, ea=%d, seq=%d, status=%s, operandsReady=%s]",
-				this.uop, this.inLsq, this.eaComp, this.ea, this.seq, this.status, this.operandsReady);
+		str ~= format("RUUStation[uop=%s, inLsq=%s, eaComp=%s, ea=%d, id=%d, status=%s, operandsReady=%s]",
+				this.uop, this.inLsq, this.eaComp, this.ea, this.id, this.status, this.operandsReady);
 		
 		if(this.uop.isStore) {
 			str ~= format("\n     storeOpReady=%s, operandsReady=%s", this.storeOpReady, this.operandsReady);
@@ -109,18 +107,24 @@ class RUUStation {
 		return str;
 	}
 
+	ulong id;
+
 	uint pc;
 	DynamicInst uop;
 	bool inLsq;
 	bool eaComp;
 	uint ea;
 
-	ulong seq;
-
 	RUUStationStatus status;
 
 	RUUStation[uint] ideps;
 	uint[MAX_ODEPS] onames;
+	
+	static this() {
+		currentId = 0;
+	}
+	
+	static ulong currentId;
 }
 
 class RegisterDependency {
@@ -162,77 +166,22 @@ class LSQ: Queue!(RUUStation) {
 	}
 }
 
-enum EventQEventType: string {
-	DEFAULT = "default"
-}
-
-class EventQ: EventQueue!(EventQEventType, RUUStation) {
-	public:
-		this(string name) {
-			super(name);
-
-			this.registerHandler(EventQEventType.DEFAULT, &this.haltHandler);
-		}
-
-		void haltHandler(EventQEventType eventType, RUUStation context, ulong when) {
-			this.buffer ~= context;
-		}
-
-		void enqueue(RUUStation rs, ulong delay) {
-			this.schedule(EventQEventType.DEFAULT, rs, delay);
-		}
-
-		bool empty() {
-			return this.buffer.empty;
-		}
-
-		uint size() {
-			return this.buffer.length;
-		}
-
-		int opApply(int delegate(ref uint, ref RUUStation) dg) {
-			int result;
-
-			foreach(ref uint i, ref RUUStation p; this.buffer) {
-				result = dg(i, p);
-				if(result)
-					break;
-			}
-			return result;
-		}
-
-		int opApply(int delegate(ref RUUStation) dg) {
-			int result;
-
-			foreach(ref RUUStation p; this.buffer) {
-				result = dg(p);
-				if(result)
-					break;
-			}
-			return result;
-		}
-
-		void popFront() {			
-			this.buffer.popFront;
-		}
-
-		RUUStation front() {
-			return this.buffer.front;
-		}
-
-		override string toString() {
-			string str;
-
-			str ~= format("%s[size=%d]\n", this.name, this.size);
-
-			foreach(i, entry; this) {
-				str ~= format("  %2d: %s\n", i, to!(string)(entry));
-			}
-
-			return str;
-		}
-
-		RUUStation[] buffer;
+class EventQ: Queue!(RUUStation), EventProcessor {
+	this(string name) {
+		super(name, 1024);
+		
+		this.eventQueue = new DelegateEventQueue();
+	}
+	
+	void enqueue(RUUStation rs, ulong delay) {
+		this.eventQueue.schedule({this ~= rs;}, delay);
+	}
+	
+	override void processEvents() {
+		this.eventQueue.processEvents();
+	}
+	
+	DelegateEventQueue eventQueue;
 }
 
 enum FetchStatus: string {
@@ -289,7 +238,7 @@ class OoOThread: Thread {
 
 			this.stat.totalInsts++;
 
-			//logging.infof(LogCategory.DEBUG, "t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
+			logging.infof(LogCategory.DEBUG, "t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
 		}
 	}
 
@@ -388,21 +337,19 @@ class OoOThread: Thread {
 
 			if(rs.inLsq && rs.uop.isStore) {
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
-
-				StoreCacheRequest req = new StoreCacheRequest(this.seqD, this.mmu.translate(ea), {});
-				this.seqD.receiveCacheRequest(req);
+				
+				this.seqD.store(this.mmu.translate(ea), false, {});
 
 				rs.status = RUUStationStatus.COMPLETED;
 				this.readyq.popFront();
 			} else if(rs.inLsq && rs.uop.isLoad) {
-				void loadCallback(LoadCacheRequest req) {
-					this.eventq.enqueue(req.rs, 1);
-				}
-				
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
-
-				LoadCacheRequest req = new LoadCacheRequest(this.seqD, this.mmu.translate(ea), rs, &loadCallback);
-				this.seqD.receiveCacheRequest(req);
+				
+				this.seqD.load(this.mmu.translate(ea), false, rs, 
+					(RUUStation rs)
+					{
+						this.eventq.enqueue(rs, 1);
+					});
 				
 				rs.status = RUUStationStatus.ISSUED;
 				this.readyq.popFront();
@@ -519,9 +466,11 @@ class OoOThread: Thread {
 
 		if(block != this.fetchBlock) {
 			this.fetchBlock = block;
-
-			LoadCacheRequest req = new LoadCacheRequest(this.seqI, this.mmu.translate(this.fetchNpc), null, {this.canFetch = true;});
-			this.seqI.receiveCacheRequest(req);
+			
+			this.seqI.load(this.mmu.translate(this.fetchNpc), false, 
+				{
+					this.canFetch = true;
+				});
 			
 			this.canFetch = false;
 		}
