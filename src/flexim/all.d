@@ -75,4 +75,3 @@ public import flexim.util.elf;
 public import flexim.util.events;
 public import flexim.util.faults;
 public import flexim.util.mixins;
-public import flexim.util.queues;

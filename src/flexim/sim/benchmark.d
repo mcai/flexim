@@ -103,17 +103,17 @@ class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite) {
 	override XMLConfigFile save(BenchmarkSuite benchmarkSuite) {
 		XMLConfigFile xmlConfigFile = new XMLConfigFile("BenchmarkSuite");
 		
-		xmlConfigFile.attributes["title"] = benchmarkSuite.title;
-		xmlConfigFile.attributes["cwd"] = benchmarkSuite.cwd;
+		xmlConfigFile["title"] = benchmarkSuite.title;
+		xmlConfigFile["cwd"] = benchmarkSuite.cwd;
 		
 		foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
 			XMLConfig xmlConfig = new XMLConfig("Benchmark");
-			xmlConfig.attributes["title"] = benchmark.title;
-			xmlConfig.attributes["cwd"] = benchmark.cwd;
-			xmlConfig.attributes["exe"] = benchmark.exe;
-			xmlConfig.attributes["argsLiteral"] = benchmark.argsLiteral;
-			xmlConfig.attributes["stdin"] = benchmark.stdin;
-			xmlConfig.attributes["stdout"] = benchmark.stdout;
+			xmlConfig["title"] = benchmark.title;
+			xmlConfig["cwd"] = benchmark.cwd;
+			xmlConfig["exe"] = benchmark.exe;
+			xmlConfig["argsLiteral"] = benchmark.argsLiteral;
+			xmlConfig["stdin"] = benchmark.stdin;
+			xmlConfig["stdout"] = benchmark.stdout;
 			
 			xmlConfigFile.entries ~= xmlConfig;
 		}
@@ -122,18 +122,18 @@ class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite) {
 	}
 	
 	override BenchmarkSuite load(XMLConfigFile xmlConfigFile) {
-		string bs_title = xmlConfigFile.attributes["title"];
-		string bs_cwd = xmlConfigFile.attributes["cwd"];
+		string bs_title = xmlConfigFile["title"];
+		string bs_cwd = xmlConfigFile["cwd"];
 		
 		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(bs_title, bs_cwd);
 		
 		foreach(entry; xmlConfigFile.entries) {
-			string title = entry.attributes["title"];
-			string cwd = entry.attributes["cwd"];
-			string exe = entry.attributes["exe"];
-			string argsLiteral = entry.attributes["argsLiteral"];
-			string stdin = entry.attributes["stdin"];
-			string stdout = entry.attributes["stdout"];
+			string title = entry["title"];
+			string cwd = entry["cwd"];
+			string exe = entry["exe"];
+			string argsLiteral = entry["argsLiteral"];
+			string stdin = entry["stdin"];
+			string stdout = entry["stdout"];
 			
 			Benchmark benchmark = new Benchmark(title, cwd, exe, argsLiteral, stdin, stdout);
 			benchmarkSuite.register(benchmark);

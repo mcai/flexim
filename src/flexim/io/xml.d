@@ -37,9 +37,35 @@ class XMLConfig {
 			this.attributes.length,
 			this.entries.length > 0 ? reduce!("a ~ b")(map!(to!(string))(this.entries)) : "N/A");
 	}
+	
+	void opIndexAssign(string value, string index) {
+		this.attributeKeys ~= index;
+		this.attributes[index] = value;
+		writefln("%s.opIndexAssign(index=%s, value=%s)", this.typeName, index, value);
+	}
+	
+	string opIndex(string index) {
+		return this.attributes[index];
+	}
+
+	int opApply(int delegate(ref string, ref string) dg) {
+		int result;
+		
+		foreach(key; this.attributeKeys) {
+			string value = this.attributes[key];
+			result = dg(key, value);
+			if(result)
+				break;
+		}
+		
+		return result;
+	}
 
 	string typeName;
-	string[string] attributes;	
+	
+	private string[] attributeKeys;
+	private string[string] attributes;
+	
 	XMLConfig[] entries;
 }
 
@@ -57,8 +83,8 @@ void serialize(XMLConfig entry, Element rootElement) {
 	serialize(entry, rootElement, element);
 }
 	
-void serialize(XMLConfig entry, Element rootElement, Element element) {				
-	foreach(key, value; entry.attributes) {
+void serialize(XMLConfig entry, Element rootElement, Element element) {
+	foreach(key, value; entry) {
         element.tag.attr[key] = value;
 	}
 	
@@ -81,7 +107,7 @@ void deserialize(XMLConfig rootEntry, ElementParser xml) {
 	XMLConfig entry = new XMLConfig(xml.tag.name);
 	
 	foreach(key, value; xml.tag.attr) {
-		entry.attributes[key] = value;
+		entry[key] = value;
 	}
 
     xml.onStartTag[null] = (ElementParser xml) {
@@ -103,7 +129,7 @@ XMLConfigFile deserialize(string xmlFileName) {
 	XMLConfigFile xmlConfig = new XMLConfigFile(xml.tag.name);
 	
 	foreach(key, value; xml.tag.attr) {
-		xmlConfig.attributes[key] = value;
+		xmlConfig[key] = value;
 	}
 
     xml.onStartTag[null] = (ElementParser xml) {

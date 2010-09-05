@@ -48,14 +48,14 @@ class ThreadStatXMLSerializer: XMLSerializer!(ThreadStat) {
 	override XMLConfig save(ThreadStat threadStat) {
 		XMLConfig xmlConfig = new XMLConfig("ThreadStat");
 		
-		xmlConfig.attributes["totalInsts"] = to!(string)(threadStat.totalInsts);
+		xmlConfig["totalInsts"] = to!(string)(threadStat.totalInsts);
 			
 		return xmlConfig;
 	}
 	
 	override ThreadStat load(XMLConfig xmlConfig) {
-		uint num = to!(uint)(xmlConfig.attributes["num"]);
-		ulong totalInsts = to!(ulong)(xmlConfig.attributes["totalInsts"]);
+		uint num = to!(uint)(xmlConfig["num"]);
+		ulong totalInsts = to!(ulong)(xmlConfig["totalInsts"]);
 			
 		ThreadStat threadStat = new ThreadStat(num);
 		threadStat.totalInsts = totalInsts;
@@ -154,55 +154,55 @@ class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
 	override XMLConfig save(CacheStat cacheStat) {
 		XMLConfig xmlConfig = new XMLConfig("CacheStat");
 
-		xmlConfig.attributes["name"] = cacheStat.name;
-		xmlConfig.attributes["accesses"] = to!(string)(cacheStat.accesses);
-		xmlConfig.attributes["hits"] = to!(string)(cacheStat.hits);
-		xmlConfig.attributes["evictions"] = to!(string)(cacheStat.evictions);
-		xmlConfig.attributes["reads"] = to!(string)(cacheStat.reads);
-		xmlConfig.attributes["blockingReads"] = to!(string)(cacheStat.blockingReads);
-		xmlConfig.attributes["nonblockingReads"] = to!(string)(cacheStat.nonblockingReads);
-		xmlConfig.attributes["readHits"] = to!(string)(cacheStat.readHits);
-		xmlConfig.attributes["writes"] = to!(string)(cacheStat.writes);
-		xmlConfig.attributes["blockingWrites"] = to!(string)(cacheStat.blockingWrites);
-		xmlConfig.attributes["nonblockingWrites"] = to!(string)(cacheStat.nonblockingWrites);
-		xmlConfig.attributes["writeHits"] = to!(string)(cacheStat.writeHits);
+		xmlConfig["name"] = cacheStat.name;
+		xmlConfig["accesses"] = to!(string)(cacheStat.accesses);
+		xmlConfig["hits"] = to!(string)(cacheStat.hits);
+		xmlConfig["evictions"] = to!(string)(cacheStat.evictions);
+		xmlConfig["reads"] = to!(string)(cacheStat.reads);
+		xmlConfig["blockingReads"] = to!(string)(cacheStat.blockingReads);
+		xmlConfig["nonblockingReads"] = to!(string)(cacheStat.nonblockingReads);
+		xmlConfig["readHits"] = to!(string)(cacheStat.readHits);
+		xmlConfig["writes"] = to!(string)(cacheStat.writes);
+		xmlConfig["blockingWrites"] = to!(string)(cacheStat.blockingWrites);
+		xmlConfig["nonblockingWrites"] = to!(string)(cacheStat.nonblockingWrites);
+		xmlConfig["writeHits"] = to!(string)(cacheStat.writeHits);
 		
-		xmlConfig.attributes["readRetries"] = to!(string)(cacheStat.readRetries);
-		xmlConfig.attributes["writeRetries"] = to!(string)(cacheStat.writeRetries);
+		xmlConfig["readRetries"] = to!(string)(cacheStat.readRetries);
+		xmlConfig["writeRetries"] = to!(string)(cacheStat.writeRetries);
 		
-		xmlConfig.attributes["noRetryAccesses"] = to!(string)(cacheStat.noRetryAccesses);
-		xmlConfig.attributes["noRetryHits"] = to!(string)(cacheStat.noRetryHits);
-		xmlConfig.attributes["noRetryReads"] = to!(string)(cacheStat.noRetryReads);
-		xmlConfig.attributes["noRetryReadHits"] = to!(string)(cacheStat.noRetryReadHits);
-		xmlConfig.attributes["noRetryWrites"] = to!(string)(cacheStat.noRetryWrites);
-		xmlConfig.attributes["noRetryWriteHits"] = to!(string)(cacheStat.noRetryWriteHits);
+		xmlConfig["noRetryAccesses"] = to!(string)(cacheStat.noRetryAccesses);
+		xmlConfig["noRetryHits"] = to!(string)(cacheStat.noRetryHits);
+		xmlConfig["noRetryReads"] = to!(string)(cacheStat.noRetryReads);
+		xmlConfig["noRetryReadHits"] = to!(string)(cacheStat.noRetryReadHits);
+		xmlConfig["noRetryWrites"] = to!(string)(cacheStat.noRetryWrites);
+		xmlConfig["noRetryWriteHits"] = to!(string)(cacheStat.noRetryWriteHits);
 			
 		return xmlConfig;
 	}
 	
 	override CacheStat load(XMLConfig xmlConfig) {
-		string name = xmlConfig.attributes["name"];
-		ulong accesses = to!(ulong)(xmlConfig.attributes["accesses"]);
-		ulong hits = to!(ulong)(xmlConfig.attributes["hits"]);
-		ulong evictions = to!(ulong)(xmlConfig.attributes["evictions"]);
-		ulong reads = to!(ulong)(xmlConfig.attributes["reads"]);
-		ulong blockingReads = to!(ulong)(xmlConfig.attributes["blockingReads"]);
-		ulong nonblockingReads = to!(ulong)(xmlConfig.attributes["nonblockingReads"]);
-		ulong readHits = to!(ulong)(xmlConfig.attributes["readHits"]);
-		ulong writes = to!(ulong)(xmlConfig.attributes["writes"]);
-		ulong blockingWrites = to!(ulong)(xmlConfig.attributes["blockingWrites"]);
-		ulong nonblockingWrites = to!(ulong)(xmlConfig.attributes["nonblockingWrites"]);
-		ulong writeHits = to!(ulong)(xmlConfig.attributes["writeHits"]);
+		string name = xmlConfig["name"];
+		ulong accesses = to!(ulong)(xmlConfig["accesses"]);
+		ulong hits = to!(ulong)(xmlConfig["hits"]);
+		ulong evictions = to!(ulong)(xmlConfig["evictions"]);
+		ulong reads = to!(ulong)(xmlConfig["reads"]);
+		ulong blockingReads = to!(ulong)(xmlConfig["blockingReads"]);
+		ulong nonblockingReads = to!(ulong)(xmlConfig["nonblockingReads"]);
+		ulong readHits = to!(ulong)(xmlConfig["readHits"]);
+		ulong writes = to!(ulong)(xmlConfig["writes"]);
+		ulong blockingWrites = to!(ulong)(xmlConfig["blockingWrites"]);
+		ulong nonblockingWrites = to!(ulong)(xmlConfig["nonblockingWrites"]);
+		ulong writeHits = to!(ulong)(xmlConfig["writeHits"]);
 
-		ulong readRetries = to!(ulong)(xmlConfig.attributes["readRetries"]);
-		ulong writeRetries = to!(ulong)(xmlConfig.attributes["writeRetries"]);
+		ulong readRetries = to!(ulong)(xmlConfig["readRetries"]);
+		ulong writeRetries = to!(ulong)(xmlConfig["writeRetries"]);
 		
-		ulong noRetryAccesses = to!(ulong)(xmlConfig.attributes["noRetryAccesses"]);
-		ulong noRetryHits = to!(ulong)(xmlConfig.attributes["noRetryHits"]);
-		ulong noRetryReads = to!(ulong)(xmlConfig.attributes["noRetryReads"]);
-		ulong noRetryReadHits = to!(ulong)(xmlConfig.attributes["noRetryReadHits"]);
-		ulong noRetryWrites = to!(ulong)(xmlConfig.attributes["noRetryWrites"]);
-		ulong noRetryWriteHits = to!(ulong)(xmlConfig.attributes["noRetryWriteHits"]);
+		ulong noRetryAccesses = to!(ulong)(xmlConfig["noRetryAccesses"]);
+		ulong noRetryHits = to!(ulong)(xmlConfig["noRetryHits"]);
+		ulong noRetryReads = to!(ulong)(xmlConfig["noRetryReads"]);
+		ulong noRetryReadHits = to!(ulong)(xmlConfig["noRetryReadHits"]);
+		ulong noRetryWrites = to!(ulong)(xmlConfig["noRetryWrites"]);
+		ulong noRetryWriteHits = to!(ulong)(xmlConfig["noRetryWriteHits"]);
 			
 		CacheStat cacheStat = new CacheStat(name);
 		
@@ -258,17 +258,17 @@ class MemoryStatXMLSerializer: XMLSerializer!(MemoryStat) {
 	override XMLConfig save(MemoryStat memoryStat) {
 		XMLConfig xmlConfig = new XMLConfig("MemoryStat");
 		
-		xmlConfig.attributes["accesses"] = to!(string)(memoryStat.accesses);
-		xmlConfig.attributes["reads"] = to!(string)(memoryStat.reads);
-		xmlConfig.attributes["writes"] = to!(string)(memoryStat.writes);
+		xmlConfig["accesses"] = to!(string)(memoryStat.accesses);
+		xmlConfig["reads"] = to!(string)(memoryStat.reads);
+		xmlConfig["writes"] = to!(string)(memoryStat.writes);
 			
 		return xmlConfig;
 	}
 	
 	override MemoryStat load(XMLConfig xmlConfig) {
-		ulong accesses = to!(ulong)(xmlConfig.attributes["accesses"]);
-		ulong reads = to!(ulong)(xmlConfig.attributes["reads"]);
-		ulong writes = to!(ulong)(xmlConfig.attributes["writes"]);
+		ulong accesses = to!(ulong)(xmlConfig["accesses"]);
+		ulong reads = to!(ulong)(xmlConfig["reads"]);
+		ulong writes = to!(ulong)(xmlConfig["writes"]);
 			
 		MemoryStat memoryStat = new MemoryStat();
 		memoryStat.accesses = accesses;
@@ -303,7 +303,7 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 	
 	override XMLConfig save(MemorySystemStat memorySystemStat) {
 		XMLConfig xmlConfig = new XMLConfig("MemorySystemStat");
-		xmlConfig.attributes["numCaches"] = to!(string)(memorySystemStat.cacheStats.length);
+		xmlConfig["numCaches"] = to!(string)(memorySystemStat.cacheStats.length);
 		
 		foreach(cacheName, cacheStat; memorySystemStat.cacheStats) {
 			xmlConfig.entries ~= CacheStatXMLSerializer.singleInstance.save(cacheStat);
@@ -316,7 +316,7 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 	
 	override MemorySystemStat load(XMLConfig xmlConfig) {
 		MemorySystemStat memorySystemStat = new MemorySystemStat();
-		uint numCaches = to!(uint)(xmlConfig.attributes["numCaches"]);
+		uint numCaches = to!(uint)(xmlConfig["numCaches"]);
 			
 		for(uint i = 0; i < numCaches; i++) {
 			CacheStat cacheStat = CacheStatXMLSerializer.singleInstance.load(xmlConfig.entries[i]);
@@ -363,9 +363,9 @@ class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
 	
 	override XMLConfig save(SimulationStat simulationStat) {
 		XMLConfig xmlConfig = new XMLConfig("SimulationStat");
-		xmlConfig.attributes["title"] = simulationStat.title;
-		xmlConfig.attributes["cwd"] = simulationStat.cwd;
-		xmlConfig.attributes["duration"] = to!(string)(simulationStat.duration);
+		xmlConfig["title"] = simulationStat.title;
+		xmlConfig["cwd"] = simulationStat.cwd;
+		xmlConfig["duration"] = to!(string)(simulationStat.duration);
 		
 		xmlConfig.entries ~= ProcessorStatXMLSerializer.singleInstance.save(simulationStat.processorStat);
 		xmlConfig.entries ~= MemorySystemStatXMLSerializer.singleInstance.save(simulationStat.memorySystemStat);
@@ -374,9 +374,9 @@ class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
 	}
 	
 	override SimulationStat load(XMLConfig xmlConfig) {
-		string title = xmlConfig.attributes["title"];
-		string cwd = xmlConfig.attributes["cwd"];
-		long duration = to!(long)(xmlConfig.attributes["duration"]);
+		string title = xmlConfig["title"];
+		string cwd = xmlConfig["cwd"];
+		long duration = to!(long)(xmlConfig["duration"]);
 		
 		SimulationStat simulationStat = new SimulationStat(title, cwd);		
 		simulationStat.duration = duration;
@@ -434,8 +434,8 @@ class ExperimentStatXMLFileSerializer: XMLFileSerializer!(ExperimentStat) {
 	override XMLConfigFile save(ExperimentStat experimentStat) {
 		XMLConfigFile xmlConfigFile = new XMLConfigFile("ExperimentStat");
 		
-		xmlConfigFile.attributes["title"] = experimentStat.title;
-		xmlConfigFile.attributes["cwd"] = experimentStat.cwd;
+		xmlConfigFile["title"] = experimentStat.title;
+		xmlConfigFile["cwd"] = experimentStat.cwd;
 			
 		foreach(simulationStat; experimentStat.simulationStats) {
 			xmlConfigFile.entries ~= SimulationStatXMLSerializer.singleInstance.save(simulationStat);
@@ -445,8 +445,8 @@ class ExperimentStatXMLFileSerializer: XMLFileSerializer!(ExperimentStat) {
 	}
 	
 	override ExperimentStat load(XMLConfigFile xmlConfigFile) {
-		string title = xmlConfigFile.attributes["title"];
-		string cwd = xmlConfigFile.attributes["cwd"];
+		string title = xmlConfigFile["title"];
+		string cwd = xmlConfigFile["cwd"];
 		
 		ExperimentStat experimentStat = new ExperimentStat(title, cwd);
 

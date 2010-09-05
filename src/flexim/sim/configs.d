@@ -85,19 +85,19 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	
 	override XMLConfig save(ContextConfig contextConfig) {
 		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
-		xmlConfig.attributes["num"] = to!(string)(contextConfig.num);
-		xmlConfig.attributes["binariesDir"] = contextConfig.binariesDir;
-		xmlConfig.attributes["benchmarkSuiteName"] = contextConfig.benchmarkSuiteName;
-		xmlConfig.attributes["benchmarkName"] = contextConfig.benchmarkName;
+		xmlConfig["num"] = to!(string)(contextConfig.num);
+		xmlConfig["binariesDir"] = contextConfig.binariesDir;
+		xmlConfig["benchmarkSuiteName"] = contextConfig.benchmarkSuiteName;
+		xmlConfig["benchmarkName"] = contextConfig.benchmarkName;
 			
 		return xmlConfig;
 	}
 	
 	override ContextConfig load(XMLConfig xmlConfig) {
-		uint num = to!(uint)(xmlConfig.attributes["num"]);
-		string binariesDir = xmlConfig.attributes["binariesDir"];
-		string benchmarkSuiteName = xmlConfig.attributes["benchmarkSuiteName"];
-		string benchmarkName = xmlConfig.attributes["benchmarkName"];
+		uint num = to!(uint)(xmlConfig["num"]);
+		string binariesDir = xmlConfig["binariesDir"];
+		string benchmarkSuiteName = xmlConfig["benchmarkSuiteName"];
+		string benchmarkName = xmlConfig["benchmarkName"];
 		
 		ContextConfig contextConfig = new ContextConfig(num, binariesDir, benchmarkSuiteName, benchmarkName);
 		return contextConfig;
@@ -152,11 +152,11 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 	override XMLConfig save(ProcessorConfig processorConfig) {
 		XMLConfig xmlConfig = new XMLConfig("ProcessorConfig");
 		
-		xmlConfig.attributes["maxCycle"] = to!(string)(processorConfig.maxCycle);
-		xmlConfig.attributes["maxInsts"] = to!(string)(processorConfig.maxInsts);
-		xmlConfig.attributes["maxTime"] = to!(string)(processorConfig.maxTime);
-		xmlConfig.attributes["numCores"] = to!(string)(processorConfig.numCores);
-		xmlConfig.attributes["numThreads"] = to!(string)(processorConfig.numThreads);
+		xmlConfig["maxCycle"] = to!(string)(processorConfig.maxCycle);
+		xmlConfig["maxInsts"] = to!(string)(processorConfig.maxInsts);
+		xmlConfig["maxTime"] = to!(string)(processorConfig.maxTime);
+		xmlConfig["numCores"] = to!(string)(processorConfig.numCores);
+		xmlConfig["numThreads"] = to!(string)(processorConfig.numThreads);
 		
 		foreach(context; processorConfig.contexts) {
 			xmlConfig.entries ~= ContextConfigXMLSerializer.singleInstance.save(context);
@@ -166,11 +166,11 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 	}
 	
 	override ProcessorConfig load(XMLConfig xmlConfig) {
-		ulong maxCycle = to!(ulong)(xmlConfig.attributes["maxCycle"]);
-		ulong maxInsts = to!(ulong)(xmlConfig.attributes["maxInsts"]);
-		ulong maxTime = to!(ulong)(xmlConfig.attributes["maxTime"]);
-		uint numCores = to!(uint)(xmlConfig.attributes["numCores"]);
-		uint numThreads = to!(uint)(xmlConfig.attributes["numThreads"]);
+		ulong maxCycle = to!(ulong)(xmlConfig["maxCycle"]);
+		ulong maxInsts = to!(ulong)(xmlConfig["maxInsts"]);
+		ulong maxTime = to!(ulong)(xmlConfig["maxTime"]);
+		uint numCores = to!(uint)(xmlConfig["numCores"]);
+		uint numThreads = to!(uint)(xmlConfig["numThreads"]);
 			
 		ProcessorConfig processorConfig = new ProcessorConfig(maxCycle, maxInsts, maxTime, numCores, numThreads);
 				
@@ -222,27 +222,27 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	override XMLConfig save(CacheConfig cacheConfig) {
 		XMLConfig xmlConfig = new XMLConfig("CacheConfig");
 		
-		xmlConfig.attributes["name"] = cacheConfig.name;
-		xmlConfig.attributes["level"] = to!(string)(cacheConfig.level);
-		xmlConfig.attributes["numSets"] = to!(string)(cacheConfig.numSets);
-		xmlConfig.attributes["assoc"] = to!(string)(cacheConfig.assoc);
-		xmlConfig.attributes["blockSize"] = to!(string)(cacheConfig.blockSize);
-		xmlConfig.attributes["hitLatency"] = to!(string)(cacheConfig.hitLatency);
-		xmlConfig.attributes["missLatency"] = to!(string)(cacheConfig.missLatency);
-		xmlConfig.attributes["policy"] = to!(string)(cacheConfig.policy);
+		xmlConfig["name"] = cacheConfig.name;
+		xmlConfig["level"] = to!(string)(cacheConfig.level);
+		xmlConfig["numSets"] = to!(string)(cacheConfig.numSets);
+		xmlConfig["assoc"] = to!(string)(cacheConfig.assoc);
+		xmlConfig["blockSize"] = to!(string)(cacheConfig.blockSize);
+		xmlConfig["hitLatency"] = to!(string)(cacheConfig.hitLatency);
+		xmlConfig["missLatency"] = to!(string)(cacheConfig.missLatency);
+		xmlConfig["policy"] = to!(string)(cacheConfig.policy);
 		
 		return xmlConfig;
 	}
 	
 	override CacheConfig load(XMLConfig xmlConfig) {
-		string name = xmlConfig.attributes["name"];
-		uint level = to!(uint)(xmlConfig.attributes["level"]);
-		uint numSets = to!(uint)(xmlConfig.attributes["numSets"]);
-		uint assoc = to!(uint)(xmlConfig.attributes["assoc"]);
-		uint blockSize = to!(uint)(xmlConfig.attributes["blockSize"]);
-		uint hitLatency = to!(uint)(xmlConfig.attributes["hitLatency"]);
-		uint missLatency = to!(uint)(xmlConfig.attributes["missLatency"]);
-		CacheReplacementPolicy policy = cast(CacheReplacementPolicy) (xmlConfig.attributes["policy"]);
+		string name = xmlConfig["name"];
+		uint level = to!(uint)(xmlConfig["level"]);
+		uint numSets = to!(uint)(xmlConfig["numSets"]);
+		uint assoc = to!(uint)(xmlConfig["assoc"]);
+		uint blockSize = to!(uint)(xmlConfig["blockSize"]);
+		uint hitLatency = to!(uint)(xmlConfig["hitLatency"]);
+		uint missLatency = to!(uint)(xmlConfig["missLatency"]);
+		CacheReplacementPolicy policy = cast(CacheReplacementPolicy) (xmlConfig["policy"]);
 			
 		CacheConfig cacheConfig = new CacheConfig(name, level, numSets, assoc, blockSize, hitLatency, missLatency, policy);
 		
@@ -275,13 +275,13 @@ class MemoryConfigXMLSerializer: XMLSerializer!(MemoryConfig) {
 	override XMLConfig save(MemoryConfig memoryConfig) {
 		XMLConfig xmlConfig = new XMLConfig("MemoryConfig");
 		
-		xmlConfig.attributes["latency"] = to!(string)(memoryConfig.latency);
+		xmlConfig["latency"] = to!(string)(memoryConfig.latency);
 		
 		return xmlConfig;
 	}
 	
 	override MemoryConfig load(XMLConfig xmlConfig) {
-		uint latency = to!(uint)(xmlConfig.attributes["latency"]);
+		uint latency = to!(uint)(xmlConfig["latency"]);
 			
 		MemoryConfig memoryConfig = new MemoryConfig(latency);
 		
@@ -313,7 +313,7 @@ class MemorySystemConfigXMLSerializer: XMLSerializer!(MemorySystemConfig) {
 	
 	override XMLConfig save(MemorySystemConfig memorySystemConfig) {
 		XMLConfig xmlConfig = new XMLConfig("MemorySystemConfig");
-		xmlConfig.attributes["numCaches"] = to!(string)(memorySystemConfig.caches.length);
+		xmlConfig["numCaches"] = to!(string)(memorySystemConfig.caches.length);
 		
 		foreach(cacheName, cache; memorySystemConfig.caches) {
 			xmlConfig.entries ~= CacheConfigXMLSerializer.singleInstance.save(cache);
@@ -326,7 +326,7 @@ class MemorySystemConfigXMLSerializer: XMLSerializer!(MemorySystemConfig) {
 	
 	override MemorySystemConfig load(XMLConfig xmlConfig) {
 		MemorySystemConfig memorySystemConfig = new MemorySystemConfig();
-		uint numCaches = to!(uint)(xmlConfig.attributes["numCaches"]);
+		uint numCaches = to!(uint)(xmlConfig["numCaches"]);
 			
 		for(uint i = 0; i < numCaches; i++) {
 			CacheConfig cacheConfig = CacheConfigXMLSerializer.singleInstance.load(xmlConfig.entries[i]);
@@ -368,8 +368,8 @@ class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig) {
 	
 	override XMLConfig save(SimulationConfig simulationConfig) {
 		XMLConfig xmlConfig = new XMLConfig("SimulationConfig");
-		xmlConfig.attributes["title"] = simulationConfig.title;
-		xmlConfig.attributes["cwd"] = simulationConfig.cwd;
+		xmlConfig["title"] = simulationConfig.title;
+		xmlConfig["cwd"] = simulationConfig.cwd;
 		
 		xmlConfig.entries ~= ProcessorConfigXMLSerializer.singleInstance.save(simulationConfig.processorConfig);
 		xmlConfig.entries ~= MemorySystemConfigXMLSerializer.singleInstance.save(simulationConfig.memorySystemConfig);
@@ -378,8 +378,8 @@ class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig) {
 	}
 	
 	override SimulationConfig load(XMLConfig xmlConfig) {
-		string title = xmlConfig.attributes["title"];
-		string cwd = xmlConfig.attributes["cwd"];
+		string title = xmlConfig["title"];
+		string cwd = xmlConfig["cwd"];
 		
 		SimulationConfig simulationConfig = new SimulationConfig(title, cwd);
 
@@ -435,8 +435,8 @@ class ExperimentConfigXMLFileSerializer: XMLFileSerializer!(ExperimentConfig) {
 	override XMLConfigFile save(ExperimentConfig experimentConfig) {
 		XMLConfigFile xmlConfigFile = new XMLConfigFile("ExperimentConfig");
 		
-		xmlConfigFile.attributes["title"] = experimentConfig.title;
-		xmlConfigFile.attributes["cwd"] = experimentConfig.cwd;
+		xmlConfigFile["title"] = experimentConfig.title;
+		xmlConfigFile["cwd"] = experimentConfig.cwd;
 			
 		foreach(simulationConfig; experimentConfig.simulationConfigs) {
 			xmlConfigFile.entries ~= SimulationConfigXMLSerializer.singleInstance.save(simulationConfig);
@@ -446,8 +446,8 @@ class ExperimentConfigXMLFileSerializer: XMLFileSerializer!(ExperimentConfig) {
 	}
 	
 	override ExperimentConfig load(XMLConfigFile xmlConfigFile) {
-		string title = xmlConfigFile.attributes["title"];
-		string cwd = xmlConfigFile.attributes["cwd"];
+		string title = xmlConfigFile["title"];
+		string cwd = xmlConfigFile["cwd"];
 		
 		ExperimentConfig experimentConfig = new ExperimentConfig(title, cwd);
 

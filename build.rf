@@ -38,4 +38,3 @@ src/flexim/util/elf.d
 src/flexim/util/events.d
 src/flexim/util/faults.d
 src/flexim/util/mixins.d
-src/flexim/util/queues.d
