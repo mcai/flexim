@@ -92,7 +92,7 @@ class FetchRecord {
 	DynamicInst uop;
 }
 
-enum RUUStationStatus : string {
+enum RUUStationState : string {
 	FETCHED = "FETCHED",
 	READY = "READY",
 	ISSUED = "ISSUED",
@@ -110,7 +110,7 @@ class RUUStation {
 		this.eaComp = false;
 		this.ea = 0;
 
-		this.status = RUUStationStatus.FETCHED;
+		this.state = RUUStationState.FETCHED;
 	}
 
 	bool storeAddrReady() {
@@ -132,8 +132,8 @@ class RUUStation {
 	override string toString() {
 		string str;
 		
-		str ~= format("RUUStation[uop=%s, inLsq=%s, eaComp=%s, ea=%d, id=%d, status=%s, operandsReady=%s]",
-				this.uop, this.inLsq, this.eaComp, this.ea, this.id, this.status, this.operandsReady);
+		str ~= format("RUUStation[uop=%s, inLsq=%s, eaComp=%s, ea=%d, id=%d, state=%s, operandsReady=%s]",
+				this.uop, this.inLsq, this.eaComp, this.ea, this.id, this.state, this.operandsReady);
 		
 		if(this.uop.isStore) {
 			str ~= format("\n     storeOpReady=%s, operandsReady=%s", this.storeOpReady, this.operandsReady);
@@ -154,7 +154,7 @@ class RUUStation {
 	bool eaComp;
 	uint ea;
 
-	RUUStationStatus status;
+	RUUStationState state;
 
 	RUUStation[uint] ideps;
 	uint[MAX_ODEPS] onames;
@@ -232,6 +232,8 @@ class Processor {
 		this(CPUSimulator simulator, string name) {
 			this.simulator = simulator;
 			this.name = name;
+			
+			this.activeThreadCount = 0;
 		}
 
 		Core core(string name) {
@@ -289,6 +291,10 @@ class Processor {
 				core.fetch();
 			}
 		}
+		
+		bool canRun() {
+			return this.activeThreadCount > 0;
+		}
 
 		void run() {
 			this.commit();
@@ -302,6 +308,8 @@ class Processor {
 		CPUSimulator simulator;
 		string name;
 		Core[string] cores;
+		
+		int activeThreadCount;
 }
 
 class Core {
@@ -326,7 +334,7 @@ class Core {
 	void writeback() {
 		while(!this.eventq.empty) {
 			RUUStation rs = this.eventq.front;
-			rs.status = RUUStationStatus.COMPLETED;
+			rs.state = RUUStationState.COMPLETED;
 
 			rs.uop.thread.clearRegDeps(rs);
 
@@ -355,7 +363,9 @@ class Core {
 	
 	void fetch() {
 		foreach(thread; this.threads) {
-			thread.fetch();
+			if(thread.canFetch) {
+				thread.fetch();
+			}
 		}
 	}
 
@@ -366,9 +376,9 @@ class Core {
 	EventQ eventq;
 }
 
-enum ThreadStatus {
+enum ThreadState {
+	Inactive,
 	Active,
-	Suspended,
 	Halted
 }
 
@@ -407,87 +417,20 @@ class Thread {
 		
 		this.stat = new ThreadStat(this.num);
 		simulation.stat.processorStat.threadStats ~= this.stat;
-	}
-	
-	void setFetchNpcFromNpc() {
-		this.fetchNpc = this.npc;
-	}
-	
-	void setFetchNnpcFromNnpc() {
-		this.fetchNnpc = this.nnpc;
-	}
-	
-	void setNpcFromFetchNpc() {
-		this.npc = this.fetchNpc;
-	}
-
-	uint getSyscallArg(int i) {
-		assert(i < 6);
-		return this.intRegs[FirstArgumentReg + i];
-	}
-
-	void setSyscallArg(int i, uint val) {
-		assert(i < 6);
-		this.intRegs[FirstArgumentReg + i] = val;
-	}
-
-	void setSyscallReturn(uint return_value) {
-		this.intRegs[ReturnValueReg] = return_value;
-		this.intRegs[SyscallSuccessReg] = return_value == cast(uint) -EINVAL ? 1 : 0;
-	}
-
-	void syscall(uint callnum) {
-		this.syscallEmul.syscall(callnum, this);
-	}
-
-	void clearArchRegs() {
-		this.pc = 0;
-		this.npc = 0;
-		this.nnpc = 0;
 		
-		this.intRegs = new IntRegisterFile();
-		this.floatRegs = new FloatRegisterFile();
-		this.miscRegs = new MiscRegisterFile();
-	}
-
-	/*void run() {
-		this.pc = this.npc;
-		this.npc = this.nnpc;
-		this.nnpc += uint.sizeof;
-			
-		StaticInst staticInst = this.isa.decode(this.pc, this.mem);
-		DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
-		uop.execute();
-	}*/
-	
-	uint num;
-
-	Sequencer seqI() {
-		return this.core.processor.simulator.memorySystem.seqIs[this.num];
-	}
-	
-	CoherentCacheNode l1I() {
-		return this.core.processor.simulator.memorySystem.l1Is[this.num];
-	}
-
-	Sequencer seqD() {
-		return this.core.processor.simulator.memorySystem.seqDs[this.num];
-	}
-	
-	CoherentCacheNode l1D() {
-		return this.core.processor.simulator.memorySystem.l1Ds[this.num];
+		this.state = ThreadState.Active;
 	}
 	
 	void commit() {
 		for(uint numCommitted = 0; !this.ruu.empty && numCommitted < this.commitWidth; ) {
 			RUUStation rs = this.ruu.front;
 
-			if(rs.status != RUUStationStatus.COMPLETED) {
+			if(rs.state != RUUStationState.COMPLETED) {
 				break;
 			}
 
 			if(rs.eaComp) {
-				if(this.lsq.front.status != RUUStationStatus.COMPLETED) {
+				if(this.lsq.front.state != RUUStationState.COMPLETED) {
 					break;
 				}
 
@@ -511,7 +454,7 @@ class Thread {
 				
 				this.seqD.store(this.mmu.translate(ea), false, {});
 
-				rs.status = RUUStationStatus.COMPLETED;
+				rs.state = RUUStationState.COMPLETED;
 				this.readyq.popFront();
 			} else if(rs.inLsq && rs.uop.isLoad) {
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
@@ -522,12 +465,12 @@ class Thread {
 						this.core.eventq.enqueue(rs, 1);
 					});
 				
-				rs.status = RUUStationStatus.ISSUED;
+				rs.state = RUUStationState.ISSUED;
 				this.readyq.popFront();
 			} else {
 				this.core.eventq.enqueue(rs, 1);
 
-				rs.status = RUUStationStatus.ISSUED;
+				rs.state = RUUStationState.ISSUED;
 				this.readyq.popFront();
 			}
 		}
@@ -549,26 +492,26 @@ class Thread {
 						}
 					}
 				}
-			} else if(rs.uop.isLoad && rs.status == RUUStationStatus.FETCHED && rs.operandsReady) {
+			} else if(rs.uop.isLoad && rs.state == RUUStationState.FETCHED && rs.operandsReady) {
 				if(count(stdUnknowns, rs.ea) == 0) {
 					this.readyq ~= rs;
-					rs.status = RUUStationStatus.READY;
+					rs.state = RUUStationState.READY;
 				}
 			}
 
 			//////TODO remove below
-			if(rs.status == RUUStationStatus.FETCHED && rs.operandsReady) {
+			if(rs.state == RUUStationState.FETCHED && rs.operandsReady) {
 				this.readyq ~= rs;
-				rs.status = RUUStationStatus.READY;
+				rs.state = RUUStationState.READY;
 			}
 			//////TODO remove above
 		}
 
 		//////TODO remove below
 		foreach(rs; this.ruu) {
-			if(rs.status == RUUStationStatus.FETCHED && rs.operandsReady) {
+			if(rs.state == RUUStationState.FETCHED && rs.operandsReady) {
 				this.readyq ~= rs;
-				rs.status = RUUStationStatus.READY;
+				rs.state = RUUStationState.READY;
 			}
 		}
 		//////TODO remove above
@@ -600,7 +543,7 @@ class Thread {
 						if(dependent.operandsReady) {
 							if(!dependent.inLsq || dependent.uop.isStore) {
 								this.readyq ~= dependent; //TODO: uncomment it
-								dependent.status = RUUStationStatus.READY;
+								dependent.state = RUUStationState.READY;
 							}
 						}
 					}
@@ -668,12 +611,12 @@ class Thread {
 
 					if(rs.operandsReady) {
 						this.readyq ~= rs;
-						rs.status = RUUStationStatus.READY;
+						rs.state = RUUStationState.READY;
 					}
 
 					if(uop.isStore && rsMem.operandsReady) {
 						this.readyq ~= rsMem;
-						rsMem.status = RUUStationStatus.READY;
+						rsMem.state = RUUStationState.READY;
 					}
 				} else {
 					foreach(i, idep; uop.staticInst.srcRegIdx) {
@@ -686,7 +629,7 @@ class Thread {
 
 					if(rs.operandsReady) {
 						this.readyq ~= rs;
-						rs.status = RUUStationStatus.READY;
+						rs.state = RUUStationState.READY;
 					}
 				}
 			}
@@ -706,6 +649,10 @@ class Thread {
 		return new DynamicInst(this, pc, staticInst);
 	}
 	
+	bool canFetch() {
+		return this.state == ThreadState.Active && !this.fetchStalled;
+	}
+	
 	void fetch() {
 		uint block = aligned(this.fetchNpc, this.seqI.blockSize);
 
@@ -714,10 +661,10 @@ class Thread {
 			
 			this.seqI.load(this.mmu.translate(this.fetchNpc), false, 
 				{
-					this.canFetch = true;
+					this.fetchStalled = false;
 				});
 			
-			this.canFetch = false;
+			this.fetchStalled = true;
 		}
 
 		for(uint i = 0; i < this.fetchWidth; i++) {
@@ -745,47 +692,102 @@ class Thread {
 		}
 	}
 	
+	void setFetchNpcFromNpc() {
+		this.fetchNpc = this.npc;
+	}
+	
+	void setFetchNnpcFromNnpc() {
+		this.fetchNnpc = this.nnpc;
+	}
+	
+	void setNpcFromFetchNpc() {
+		this.npc = this.fetchNpc;
+	}
+
+	uint getSyscallArg(int i) {
+		assert(i < 6);
+		return this.intRegs[FirstArgumentReg + i];
+	}
+
+	void setSyscallArg(int i, uint val) {
+		assert(i < 6);
+		this.intRegs[FirstArgumentReg + i] = val;
+	}
+
+	void setSyscallReturn(uint return_value) {
+		this.intRegs[ReturnValueReg] = return_value;
+		this.intRegs[SyscallSuccessReg] = return_value == cast(uint) -EINVAL ? 1 : 0;
+	}
+
+	void syscall(uint callnum) {
+		this.syscallEmul.syscall(callnum, this);
+	}
+
+	void clearArchRegs() {
+		this.pc = 0;
+		this.npc = 0;
+		this.nnpc = 0;
+		
+		this.intRegs = new IntRegisterFile();
+		this.floatRegs = new FloatRegisterFile();
+		this.miscRegs = new MiscRegisterFile();
+	}
+	
+	void halt(int exitCode) {
+		logging.infof(LogCategory.SIMULATOR, "target called exit(%d)", exitCode);
+		this.state = ThreadState.Halted;
+		this.core.processor.activeThreadCount--;
+	}
+
+	Sequencer seqI() {
+		return this.core.processor.simulator.memorySystem.seqIs[this.num];
+	}
+	
+	CoherentCacheNode l1I() {
+		return this.core.processor.simulator.memorySystem.l1Is[this.num];
+	}
+
+	Sequencer seqD() {
+		return this.core.processor.simulator.memorySystem.seqDs[this.num];
+	}
+	
+	CoherentCacheNode l1D() {
+		return this.core.processor.simulator.memorySystem.l1Ds[this.num];
+	}
+	
 	MMU mmu() {
 		return this.core.processor.simulator.memorySystem.mmu;
 	}
-
+	
+	uint num;
 	string name;
-
-	Process process;
-	Memory mem;
-	SyscallEmul syscallEmul;
-
-	ThreadStatus status;
-
-	uint pc;
-	uint npc;
-	uint nnpc;
-
-	Core core;
 	
 	ISA isa;
 	
 	IntRegisterFile intRegs;
 	FloatRegisterFile floatRegs;
 	MiscRegisterFile miscRegs;
+	
+	Memory mem;
+
+	Core core;
+	
+	Process process;
+	SyscallEmul syscallEmul;
+
+	uint pc, npc, nnpc;
+	uint fetchPc, fetchNpc, fetchNnpc;
 
 	Bpred bpred;
-
 	uint stackRecoverIdx;
-	
-	ThreadStat stat;
-	
-	//////////////////////////////
+
+	bool fetchStalled;
+	uint fetchBlock;
 	
 	uint fetchWidth;
 	uint decodeWidth;
 	uint issueWidth;
 	uint commitWidth;
-	
-	uint fetchPc, fetchNpc, fetchNnpc;
-
-	bool canFetch = true;
-	uint fetchBlock;
 	
 	IFQ fetchq;
 	ReadyQ readyq;
@@ -793,4 +795,8 @@ class Thread {
 	LSQ lsq;
 	
 	RegisterDependency[uint] regDeps;
+	
+	ThreadState state;
+	
+	ThreadStat stat;
 }

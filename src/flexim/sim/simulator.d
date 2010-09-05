@@ -123,6 +123,8 @@ class CPUSimulator : Simulator {
 				Thread thread = new Thread(simulation, i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
 				
 				core.addThread(thread);
+				
+				this.processor.activeThreadCount++;
 			}
 
 			this.processor.addCore(core);
@@ -135,7 +137,7 @@ class CPUSimulator : Simulator {
 		PerformanceCounter counter = new PerformanceCounter();
 		counter.start();
 
-		while(!this.eventQueue.halted) {
+		while(!this.eventQueue.halted && this.processor.canRun) {
 			this.processor.run();
 
 			foreach(eventProcessor; this.eventProcessors) {

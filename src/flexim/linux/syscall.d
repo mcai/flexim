@@ -67,7 +67,7 @@ struct utsname {
 
 /* 1 */
 uint exit_impl(SyscallDesc desc, Thread thread) {
-	logging.haltf(LogCategory.SYSCALL, "target called exit(%d)", thread.getSyscallArg(0) & 0xff);
+	thread.halt(thread.getSyscallArg(0) & 0xff);
 	return 1;
 }
 
