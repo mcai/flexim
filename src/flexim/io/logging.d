@@ -33,7 +33,7 @@ enum LogCategory: string {
 	REGISTER = "REGISTER",
 	REQUEST = "REQUEST",
 	CACHE = "CACHE",
-	MESI = "MESI",
+	COHERENCE = "COHERENCE",
 	MEMORY = "MEMORY",
 	NET = "NET",
 	INSTRUCTION = "INSTRUCTION",
@@ -61,7 +61,7 @@ class Logger {
 	//		this.enable(LogCategory.REGISTER);
 			this.enable(LogCategory.REQUEST);
 	//		this.enable(LogCategory.CACHE);
-	//		this.enable(LogCategory.MESI);
+			this.enable(LogCategory.COHERENCE);
 	//		this.enable(LogCategory.MEMORY);
 	//		this.enable(LogCategory.NET);
 			this.enable(LogCategory.CONFIG);

@@ -52,7 +52,7 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
 		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
-		writefln("%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
+		//logging.infof(LogCategory.COHERENCE, "%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
 		uint set, way, tag;
 		MESIState state;
 		
@@ -147,7 +147,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		//logging.infof(LogCategory.COHERENCE, "%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		this.findAndLock(addr, false, true, isRetry,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{
@@ -183,7 +183,7 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		//logging.infof(LogCategory.COHERENCE, "%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		this.findAndLock(addr, false, false, isRetry, 
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{
@@ -221,7 +221,7 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void evict(uint set, uint way,
 		void delegate(bool hasError) onCompletedCallback) {
-		writefln("%s.evict(set=%d, way=%d)", this, set, way);
+		//logging.infof(LogCategory.COHERENCE, "%s.evict(set=%d, way=%d)", this, set, way);
 		uint tag;
 		MESIState state;
 		
@@ -266,33 +266,9 @@ class CoherentCache: CoherentCacheNode {
 			});		
 	}
 	
-	void evictProcess(CoherentCacheNode source, uint set, uint way, DirLock dirLock,
-		void delegate(bool hasError) onReceiveReplyCallback) {
-		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-		dirEntry.unsetSharer(source);
-		if(dirEntry.owner == source) {
-			dirEntry.owner = null;
-		}
-		dirLock.unlock();
-		onReceiveReplyCallback(false);
-	}
-	
-	void evictWritebackFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, DirLock dirLock,
-		void delegate(bool hasError) onReceiveReplyCallback) {
-		if(!hasError) {
-			this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
-			this.cache.accessBlock(set, way);
-			this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
-		}
-		else {
-			dirLock.unlock();
-			onReceiveReplyCallback(true);
-		}
-	}
-	
 	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback,
 		void delegate(bool hasError) onReceiveReplyCallback) {
-		writefln("%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
+		//logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
 		
 		this.findAndLock(addr, false, false, false, 
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
@@ -323,6 +299,30 @@ class CoherentCache: CoherentCacheNode {
 			});
 	}
 	
+	void evictWritebackFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, DirLock dirLock,
+		void delegate(bool hasError) onReceiveReplyCallback) {
+		if(!hasError) {
+			this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
+			this.cache.accessBlock(set, way);
+			this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
+		}
+		else {
+			dirLock.unlock();
+			onReceiveReplyCallback(true);
+		}
+	}
+	
+	void evictProcess(CoherentCacheNode source, uint set, uint way, DirLock dirLock,
+		void delegate(bool hasError) onReceiveReplyCallback) {
+		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+		dirEntry.unsetSharer(source);
+		if(dirEntry.owner == source) {
+			dirEntry.owner = null;
+		}
+		dirLock.unlock();
+		onReceiveReplyCallback(false);
+	}
+	
 	void evictReplyReceive(bool hasError, uint srcSet, uint srcWay, void delegate(bool hasError) onCompletedCallback) {
 		this.schedule(
 			{
@@ -335,34 +335,34 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void readRequest(CoherentCacheNode target, uint addr,
 		void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		writefln("%s.readRequest(target=%s, addr=0x%x)", this, target, addr);
+		//logging.infof(LogCategory.COHERENCE, "%s.readRequest(target=%s, addr=0x%x)", this, target, addr);
 		this.schedule(
 			{
 				target.readRequestReceive(this, addr, onCompletedCallback);
 			}, 8);
 	}
 	
-	void readRequestUpdownFinish(CoherentCacheNode source, uint set, uint way, DirLock dirLock, ref uint pending,
-			void delegate(bool hasError, bool isShard) onCompletedCallback) {
-		pending--;
-		if(pending == 0) {
-			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-			if(dirEntry.owner !is null && dirEntry.owner != source) {
-				dirEntry.owner = null;
-			}
-			
-			dirEntry.setSharer(source);
-			if(!dirEntry.isShared) {
-				dirEntry.owner = source;
-			}
-			
-			this.cache.accessBlock(set, way);
-			dirLock.unlock();
-			this.schedule(
-				{
-					onCompletedCallback(false, dirEntry.isShared);
-				}, 2);
-		}
+	override void readRequestReceive(CoherentCacheNode source, uint addr,
+		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		//logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.findAndLock(addr, this.next == source, true, false,
+			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
+			{				
+				if(!hasError) {
+					if(source.next == this) {
+						this.readRequestUpdown(source, set, way, tag, state, dirLock, onCompletedCallback);
+					}
+					else {
+						this.readRequestDownup(set, way, tag, dirLock, onCompletedCallback);
+					}
+				}
+				else {
+					this.schedule(
+						{
+							onCompletedCallback(true, false);
+						}, 2);
+				}
+			});
 	}
 	
 	void readRequestUpdown(CoherentCacheNode source, uint set, uint way, uint tag, MESIState state, DirLock dirLock,
@@ -402,7 +402,47 @@ class CoherentCache: CoherentCacheNode {
 		}
 	}		
 	
-	void downUpFinish(uint set, uint way, uint tag, DirLock dirLock, ref uint pending,
+	void readRequestUpdownFinish(CoherentCacheNode source, uint set, uint way, DirLock dirLock, ref uint pending,
+			void delegate(bool hasError, bool isShard) onCompletedCallback) {
+		pending--;
+		if(pending == 0) {
+			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+			if(dirEntry.owner !is null && dirEntry.owner != source) {
+				dirEntry.owner = null;
+			}
+			
+			dirEntry.setSharer(source);
+			if(!dirEntry.isShared) {
+				dirEntry.owner = source;
+			}
+			
+			this.cache.accessBlock(set, way);
+			dirLock.unlock();
+			this.schedule(
+				{
+					onCompletedCallback(false, dirEntry.isShared);
+				}, 2);
+		}
+	}
+			
+	void readRequestDownup(uint set, uint way, uint tag, DirLock dirLock,
+		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		uint pending = 1;
+		
+		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+		if(dirEntry.owner !is null) {
+			pending++;
+			this.readRequest(dirEntry.owner, tag,
+				(bool hasError, bool isShared)
+				{
+					this.readRequestDownUpFinish(set, way, tag, dirLock, pending, onCompletedCallback);
+				});
+		}
+		
+		this.readRequestDownUpFinish(set, way, tag, dirLock, pending, onCompletedCallback);
+	}
+	
+	void readRequestDownUpFinish(uint set, uint way, uint tag, DirLock dirLock, ref uint pending,
 			void delegate(bool hasError, bool isShared) onCompletedCallback) {
 		pending--;
 		
@@ -419,86 +459,19 @@ class CoherentCache: CoherentCacheNode {
 				}, 2);
 		}
 	}
-			
-	void readRequestDownup(uint set, uint way, uint tag, DirLock dirLock,
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		uint pending = 1;
-		
-		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-		if(dirEntry.owner !is null) {
-			pending++;
-			this.readRequest(dirEntry.owner, tag,
-				(bool hasError, bool isShared)
-				{
-					this.downUpFinish(set, way, tag, dirLock, pending, onCompletedCallback);
-				});
-		}
-		
-		this.downUpFinish(set, way, tag, dirLock, pending, onCompletedCallback);
-	}
-	
-	override void readRequestReceive(CoherentCacheNode source, uint addr,
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
-		this.findAndLock(addr, this.next == source, true, false,
-			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
-			{				
-				if(!hasError) {
-					if(source.next == this) {
-						this.readRequestUpdown(source, set, way, tag, state, dirLock, onCompletedCallback);
-					}
-					else {
-						this.readRequestDownup(set, way, tag, dirLock, onCompletedCallback);
-					}
-				}
-				else {
-					this.schedule(
-						{
-							onCompletedCallback(true, false);
-						}, 2);
-				}
-			});
-	}
 	
 	override void writeRequest(CoherentCacheNode target, uint addr,
 		void delegate(bool hasError) onCompletedCallback) {
-		writefln("%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
+		//logging.infof(LogCategory.COHERENCE, "%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
 		this.schedule(
 			{
 				target.writeRequestReceive(this, addr, onCompletedCallback);
 			}, 2);
 	}
 	
-	void writeRequestUpdownFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, MESIState state, DirLock dirLock,
-			void delegate(bool hasError) onCompletedCallback) {
-		if(!hasError) {
-			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-			dirEntry.setSharer(source);
-			dirEntry.owner = source;
-			
-			this.cache.accessBlock(set, way);
-			if(state != MESIState.MODIFIED) {
-				this.cache.setBlock(set, way, tag, MESIState.EXCLUSIVE);
-			}
-			
-			dirLock.unlock();
-			this.schedule(
-				{
-					onCompletedCallback(false);
-				}, 2);									
-		}
-		else {
-			dirLock.unlock();
-			this.schedule(
-				{
-					onCompletedCallback(true);
-				}, 2);
-		}
-	}
-	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr,
 		void delegate(bool hasError) onCompletedCallback) {
-		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		//logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
 		this.findAndLock(addr, this.next == source, false, false,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{				
@@ -536,8 +509,35 @@ class CoherentCache: CoherentCacheNode {
 			});
 	}
 	
+	void writeRequestUpdownFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, MESIState state, DirLock dirLock,
+			void delegate(bool hasError) onCompletedCallback) {
+		if(!hasError) {
+			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+			dirEntry.setSharer(source);
+			dirEntry.owner = source;
+			
+			this.cache.accessBlock(set, way);
+			if(state != MESIState.MODIFIED) {
+				this.cache.setBlock(set, way, tag, MESIState.EXCLUSIVE);
+			}
+			
+			dirLock.unlock();
+			this.schedule(
+				{
+					onCompletedCallback(false);
+				}, 2);									
+		}
+		else {
+			dirLock.unlock();
+			this.schedule(
+				{
+					onCompletedCallback(true);
+				}, 2);
+		}
+	}
+	
 	override void invalidate(CoherentCacheNode except, uint set, uint way, void delegate() onCompletedCallback) {
-		writefln("%s.invalidate(except=%s, set=%d, way=%d)", this, except, set, way);
+		//logging.infof(LogCategory.COHERENCE, "%s.invalidate(except=%s, set=%d, way=%d)", this, except, set, way);
 		uint tag;
 		MESIState state;
 		
@@ -577,7 +577,7 @@ class CoherentCache: CoherentCacheNode {
 		
 		if(pending == 0) {
 			onCompletedCallback();
-		}		
+		}
 	}
 	
 	CacheConfig cacheConfig;

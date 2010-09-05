@@ -35,17 +35,17 @@ class MemoryController: CoherentCacheNode {
 	////////////////////////////////////////////////
 	
 	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, void delegate(bool hasError) onReceiveReplyCallback) {
-		writefln("%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
+		//logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
 		this.schedule({onReceiveReplyCallback(false);}, 400);
 	}
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		//logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
 		this.schedule({onCompletedCallback(false, false);}, 400);
 	}
 	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) {
-		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		//logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
 		this.schedule({onCompletedCallback(false);}, 400);
 	}
 }

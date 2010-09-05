@@ -35,12 +35,12 @@ class Sequencer: CoherentCacheNode {
 	}
 	
 	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		//logging.infof(LogCategory.COHERENCE, "%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		this.l1Cache.load(addr, isRetry, onCompletedCallback);
 	}
 	
 	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		//logging.infof(LogCategory.COHERENCE, "%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		this.l1Cache.store(addr, isRetry, onCompletedCallback);
 	}
 	
