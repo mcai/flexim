@@ -41,7 +41,6 @@ class XMLConfig {
 	void opIndexAssign(string value, string index) {
 		this.attributeKeys ~= index;
 		this.attributes[index] = value;
-		writefln("%s.opIndexAssign(index=%s, value=%s)", this.typeName, index, value);
 	}
 	
 	string opIndex(string index) {
