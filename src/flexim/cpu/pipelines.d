@@ -1,5 +1,5 @@
 /*
- * flexim/cpu/ooo.d
+ * flexim/cpu/pipelines.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,9 +19,48 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.cpu.ooo;
+module flexim.cpu.pipelines;
 
 import flexim.all;
+
+import core.stdc.errno;
+
+class FU {
+	this(FUCategory master, FUType fuType, uint opLat, uint issueLat) {
+		this.master = master;
+		this.fuType = fuType;
+		this.opLat = opLat;
+		this.issueLat = issueLat;
+	}
+
+	override string toString() {
+		return format("%s[master=%s, fuType=%s, opLat=%d, issueLat=%d]", "FU", this.master.name, to!(string)(this.fuType), this.opLat, this.issueLat);
+	}
+
+	FUCategory master;
+
+	FUType fuType;
+	uint opLat;
+	uint issueLat;
+}
+
+class FUCategory {
+	this(string name, uint quantity, uint busy) {
+		this.name = name;
+		this.quantity = quantity;
+		this.busy = busy;
+	}
+
+	override string toString() {
+		return format("%s[name=%s, quantity=%d, busy=%d]", "FUCategory", this.name, this.quantity, this.busy);
+	}
+
+	string name;
+	uint quantity;
+	uint busy;
+
+	FU[] x;
+}
 
 const uint STORE_ADDR_INDEX = 0;
 const uint STORE_OP_INDEX = 1;
@@ -184,40 +223,261 @@ class EventQ: Queue!(RUUStation), EventProcessor {
 	DelegateEventQueue eventQueue;
 }
 
-enum FetchStatus: string {
-	RUNNING = "RUNNING",
-	ICACHE_WAIT_RESPONSE = "ICACHE_WAIT_RESPONSE",
-	ICACHE_WAIT_RETRY = "ICACHE_WAIT_RETRY",
-	ICACHE_ACCESS_COMPLETE = "ICACHE_ACCESS_COMPLETE"
+class Processor {
+	public:
+		this(CPUSimulator simulator) {
+			this(simulator, "");
+		}
+
+		this(CPUSimulator simulator, string name) {
+			this.simulator = simulator;
+			this.name = name;
+		}
+
+		Core core(string name) {
+			if(name in this.cores) {
+				return this.cores[name];
+			}
+
+			return null;
+		}
+
+		void addCore(Core core) {
+			this.cores[core.name] = core;
+			this.cores[core.name].processor = this;
+		}
+
+		void removeCore(Core core) {
+			if(core.name in this.cores) {
+				this.cores[core.name].processor = null;
+				this.cores.remove(core.name);
+			}
+		}
+		
+		void commit() {
+			foreach(core; this.cores) {
+				core.commit();
+			}
+		}
+		
+		void writeback() {
+			foreach(core; this.cores) {
+				core.writeback();
+			}
+		}
+		
+		void issue() {
+			foreach(core; this.cores) {
+				core.issue();
+			}
+		}
+		
+		void dispatch() {
+			foreach(core; this.cores) {
+				core.dispatch();
+			}
+		}
+		
+		void decode() {
+			foreach(core; this.cores) {
+				core.decode();
+			}
+		}
+		
+		void fetch() {
+			foreach(core; this.cores) {
+				core.fetch();
+			}
+		}
+
+		void run() {
+			this.commit();
+			this.writeback();
+			this.issue();
+			this.dispatch();
+			this.decode();
+			this.fetch();
+		}
+
+		CPUSimulator simulator;
+		string name;
+		Core[string] cores;
 }
 
-class OoOThread: Thread {
+class Core {
+	this(string name) {
+		this.name = name;
+		
+		this.eventq = new EventQ("EventQ" ~ "-" ~ this.name);
+		Simulator.singleInstance.addEventProcessor(this.eventq);
+	}
+
+	void addThread(Thread thread) { //TODO: merge with this.threads ~= thread
+		thread.core = this;
+		this.threads ~= thread;
+	}
+	
+	void commit() {
+		foreach(thread; this.threads) { //TODO: commit width
+			thread.commit();
+		}
+	}
+	
+	void writeback() {
+		while(!this.eventq.empty) {
+			RUUStation rs = this.eventq.front;
+			rs.status = RUUStationStatus.COMPLETED;
+
+			rs.uop.thread.clearRegDeps(rs);
+
+			this.eventq.popFront();
+		}
+	}
+	
+	void issue() {
+		foreach(thread; this.threads) { //TODO: issue width
+			thread.issueIq();
+			thread.issueLsq();
+		}
+	}
+	
+	void dispatch() {
+		foreach(thread; this.threads) { //TODO: dispatch width
+			thread.dispatch();
+		}
+	}
+	
+	void decode() {
+		foreach(thread; this.threads) {
+			thread.decode();
+		}
+	}
+	
+	void fetch() {
+		foreach(thread; this.threads) {
+			thread.fetch();
+		}
+	}
+
+	string name;
+	Processor processor;
+	Thread[] threads;
+	
+	EventQ eventq;
+}
+
+enum ThreadStatus {
+	Active,
+	Suspended,
+	Halted
+}
+
+class Thread {
 	this(Simulation simulation, uint num, string name, Process process) {
-		super(num, name, process);
+		this.num = num;
 		
-		this.stat = new ThreadStat(this.num);
+		this.name = name;
 		
-		simulation.stat.processorStat.threadStats ~= this.stat;
+		this.process = process;
 
-		this.fetchWidth = 4;
-		this.decodeWidth = 4;
-		this.issueWidth = 4;
-		this.commitWidth = 4;
+		this.mem = new Memory();
+		
+		this.isa = new MipsISA();
+		
+		this.syscallEmul = new SyscallEmul();
 
-		this.fetchStatus = FetchStatus.RUNNING;
+		this.bpred = new CombinedBpred();
+
+		this.clearArchRegs();
+
+		this.process.load(this);
+
+		this.setFetchNpcFromNpc();
+		this.setFetchNnpcFromNnpc();
 
 		this.fetchq = new IFQ("IFQ" ~ "-" ~ this.name);
 		this.readyq = new ReadyQ("ReadyQ" ~ "-" ~ this.name);
 		this.ruu = new RUU("RUU" ~ "-" ~ this.name);
 		this.lsq = new LSQ("LSQ" ~ "-" ~ this.name);
-		this.eventq = new EventQ("EventQ" ~ "-" ~ this.name);
 
-		this.setFetchNpcFromNpc();
-		this.setFetchNnpcFromNnpc();
+		this.fetchWidth = 4;
+		this.decodeWidth = 4;
+		this.issueWidth = 4;
+		this.commitWidth = 4;
 		
-		Simulator.singleInstance.addEventProcessor(this.eventq);
+		this.stat = new ThreadStat(this.num);
+		simulation.stat.processorStat.threadStats ~= this.stat;
+	}
+	
+	void setFetchNpcFromNpc() {
+		this.fetchNpc = this.npc;
+	}
+	
+	void setFetchNnpcFromNnpc() {
+		this.fetchNnpc = this.nnpc;
+	}
+	
+	void setNpcFromFetchNpc() {
+		this.npc = this.fetchNpc;
 	}
 
+	uint getSyscallArg(int i) {
+		assert(i < 6);
+		return this.intRegs[FirstArgumentReg + i];
+	}
+
+	void setSyscallArg(int i, uint val) {
+		assert(i < 6);
+		this.intRegs[FirstArgumentReg + i] = val;
+	}
+
+	void setSyscallReturn(uint return_value) {
+		this.intRegs[ReturnValueReg] = return_value;
+		this.intRegs[SyscallSuccessReg] = return_value == cast(uint) -EINVAL ? 1 : 0;
+	}
+
+	void syscall(uint callnum) {
+		this.syscallEmul.syscall(callnum, this);
+	}
+
+	void clearArchRegs() {
+		this.pc = 0;
+		this.npc = 0;
+		this.nnpc = 0;
+		
+		this.intRegs = new IntRegisterFile();
+		this.floatRegs = new FloatRegisterFile();
+		this.miscRegs = new MiscRegisterFile();
+	}
+
+	/*void run() {
+		this.pc = this.npc;
+		this.npc = this.nnpc;
+		this.nnpc += uint.sizeof;
+			
+		StaticInst staticInst = this.isa.decode(this.pc, this.mem);
+		DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
+		uop.execute();
+	}*/
+	
+	uint num;
+
+	Sequencer seqI() {
+		return this.core.processor.simulator.memorySystem.seqIs[this.num];
+	}
+	
+	CoherentCacheNode l1I() {
+		return this.core.processor.simulator.memorySystem.l1Is[this.num];
+	}
+
+	Sequencer seqD() {
+		return this.core.processor.simulator.memorySystem.seqDs[this.num];
+	}
+	
+	CoherentCacheNode l1D() {
+		return this.core.processor.simulator.memorySystem.l1Ds[this.num];
+	}
+	
 	void commit() {
 		for(uint numCommitted = 0; !this.ruu.empty && numCommitted < this.commitWidth; ) {
 			RUUStation rs = this.ruu.front;
@@ -241,56 +501,39 @@ class OoOThread: Thread {
 			//logging.infof(LogCategory.DEBUG, "t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
 		}
 	}
+	
+	void issueIq() {
+		for(uint numIssued = 0; !this.readyq.empty && numIssued < this.issueWidth; numIssued++) {
+			RUUStation rs = this.readyq.front;
 
-	void clearRegDeps(RUUStation rs) {
-		foreach(i, oname; rs.onames) {
-			if(oname != ZeroReg) {
-				if(oname in this.regDeps) {
-					foreach(dependent; this.regDeps[oname].dependents) {
-						dependent.ideps.remove(oname);
+			if(rs.inLsq && rs.uop.isStore) {
+				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
+				
+				this.seqD.store(this.mmu.translate(ea), false, {});
 
-						if(dependent.operandsReady) {
-							if(!dependent.inLsq || dependent.uop.isStore) {
-								this.readyq ~= dependent;
-								dependent.status = RUUStationStatus.READY;
-							}
-						}
-					}
+				rs.status = RUUStationStatus.COMPLETED;
+				this.readyq.popFront();
+			} else if(rs.inLsq && rs.uop.isLoad) {
+				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
+				
+				this.seqD.load(this.mmu.translate(ea), false, rs, 
+					(RUUStation rs)
+					{
+						this.core.eventq.enqueue(rs, 1);
+					});
+				
+				rs.status = RUUStationStatus.ISSUED;
+				this.readyq.popFront();
+			} else {
+				this.core.eventq.enqueue(rs, 1);
 
-					//////TODO remove below
-					foreach(lsq; this.lsq) {
-						if(oname in lsq.ideps) {
-							lsq.ideps.remove(oname);
-						}
-					}
-					//////TODO remove above
-
-					//////TODO remove below
-					foreach(ruu; this.ruu) {
-						if(oname in ruu.ideps) {
-							ruu.ideps.remove(oname);
-						}
-					}
-					//////TODO remove above
-
-					this.regDeps.remove(oname);
-				}
+				rs.status = RUUStationStatus.ISSUED;
+				this.readyq.popFront();
 			}
 		}
 	}
-
-	void writeback() {
-		while(!this.eventq.empty) {
-			RUUStation rs = this.eventq.front;
-			rs.status = RUUStationStatus.COMPLETED;
-
-			this.clearRegDeps(rs);
-
-			this.eventq.popFront();
-		}
-	}
-
-	void refreshLsq() {
+	
+	void issueLsq() {
 		uint[] stdUnknowns;
 
 		foreach(rs; this.lsq) {
@@ -331,37 +574,6 @@ class OoOThread: Thread {
 		//////TODO remove above
 	}
 
-	void issue() {
-		for(uint numIssued = 0; !this.readyq.empty && numIssued < this.issueWidth; numIssued++) {
-			RUUStation rs = this.readyq.front;
-
-			if(rs.inLsq && rs.uop.isStore) {
-				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
-				
-				this.seqD.store(this.mmu.translate(ea), false, {});
-
-				rs.status = RUUStationStatus.COMPLETED;
-				this.readyq.popFront();
-			} else if(rs.inLsq && rs.uop.isLoad) {
-				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
-				
-				this.seqD.load(this.mmu.translate(ea), false, rs, 
-					(RUUStation rs)
-					{
-						this.eventq.enqueue(rs, 1);
-					});
-				
-				rs.status = RUUStationStatus.ISSUED;
-				this.readyq.popFront();
-			} else {
-				this.eventq.enqueue(rs, 1);
-
-				rs.status = RUUStationStatus.ISSUED;
-				this.readyq.popFront();
-			}
-		}
-	}
-
 	void linkIdep(RUUStation rs, uint idepNum, uint idepName) {
 		if(idepName != ZeroReg && idepName in this.regDeps) {
 			rs.ideps[idepName] = this.regDeps[idepName].creator;
@@ -378,6 +590,43 @@ class OoOThread: Thread {
 		}
 	}
 
+	void clearRegDeps(RUUStation rs) {
+		foreach(i, oname; rs.onames) {
+			if(oname != ZeroReg) {
+				if(oname in this.regDeps) {
+					foreach(dependent; this.regDeps[oname].dependents) {
+						dependent.ideps.remove(oname);
+
+						if(dependent.operandsReady) {
+							if(!dependent.inLsq || dependent.uop.isStore) {
+								this.readyq ~= dependent; //TODO: uncomment it
+								dependent.status = RUUStationStatus.READY;
+							}
+						}
+					}
+
+					//////TODO remove below
+					foreach(lsq; this.lsq) {
+						if(oname in lsq.ideps) {
+							lsq.ideps.remove(oname);
+						}
+					}
+					//////TODO remove above
+
+					//////TODO remove below
+					foreach(ruu; this.ruu) {
+						if(oname in ruu.ideps) {
+							ruu.ideps.remove(oname);
+						}
+					}
+					//////TODO remove above
+
+					this.regDeps.remove(oname);
+				}
+			}
+		}
+	}
+	
 	void dispatch() {
 		for(uint numDispatched = 0; numDispatched < this.fetchWidth && !this.ruu.full && !this.lsq.full && !this.fetchq.empty; ) {
 			FetchRecord fr = this.fetchq.front;
@@ -447,22 +696,18 @@ class OoOThread: Thread {
 			this.fetchq.popFront();
 		}
 	}
+	
+	void decode() {
+		//TODO: split fetch and decode operations
+	}
 
 	DynamicInst fetchAndDecodeAt(uint pc) {		
 		StaticInst staticInst = this.isa.decode(pc, this.mem);
-		DynamicInst uop = new DynamicInst(this, pc, staticInst);
-
-		return uop;
+		return new DynamicInst(this, pc, staticInst);
 	}
-
-	bool canFetch = true;
-
-	uint fetchBlock;
-
+	
 	void fetch() {
 		uint block = aligned(this.fetchNpc, this.seqI.blockSize);
-
-		assert(this.fetchNpc);
 
 		if(block != this.fetchBlock) {
 			this.fetchBlock = block;
@@ -499,36 +744,38 @@ class OoOThread: Thread {
 			this.fetchq ~= fr;
 		}
 	}
-
-	override void run() {
-		this.commit();
-	
-		this.writeback();
-	
-		this.refreshLsq();
-	
-		this.issue();
-	
-		this.dispatch();
-	
-		this.fetch();
-	}
-	
-	void setFetchNpcFromNpc() {
-		this.fetchNpc = this.npc;
-	}
-	
-	void setFetchNnpcFromNnpc() {
-		this.fetchNnpc = this.nnpc;
-	}
-	
-	void setNpcFromFetchNpc() {
-		this.npc = this.fetchNpc;
-	}
 	
 	MMU mmu() {
 		return this.core.processor.simulator.memorySystem.mmu;
 	}
+
+	string name;
+
+	Process process;
+	Memory mem;
+	SyscallEmul syscallEmul;
+
+	ThreadStatus status;
+
+	uint pc;
+	uint npc;
+	uint nnpc;
+
+	Core core;
+	
+	ISA isa;
+	
+	IntRegisterFile intRegs;
+	FloatRegisterFile floatRegs;
+	MiscRegisterFile miscRegs;
+
+	Bpred bpred;
+
+	uint stackRecoverIdx;
+	
+	ThreadStat stat;
+	
+	//////////////////////////////
 	
 	uint fetchWidth;
 	uint decodeWidth;
@@ -536,16 +783,14 @@ class OoOThread: Thread {
 	uint commitWidth;
 	
 	uint fetchPc, fetchNpc, fetchNnpc;
-	
-	ulong lastCommittedCycle;
-	
-	FetchStatus fetchStatus;
+
+	bool canFetch = true;
+	uint fetchBlock;
 	
 	IFQ fetchq;
 	ReadyQ readyq;
 	RUU ruu;
 	LSQ lsq;
-	EventQ eventq;
 	
 	RegisterDependency[uint] regDeps;
 }

@@ -120,7 +120,7 @@ class CPUSimulator : Simulator {
 				
 				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 
-				Thread thread = new OoOThread(simulation, i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
+				Thread thread = new Thread(simulation, i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
 				
 				core.addThread(thread);
 			}
