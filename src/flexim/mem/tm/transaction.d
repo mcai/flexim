@@ -1,5 +1,5 @@
 /*
- * flexim/mem/transactional.d
+ * flexim/mem/tm/transaction.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.mem.transactional;
+module flexim.mem.tm.transaction;
 
 import flexim.all;
 
@@ -78,5 +78,4 @@ class Transaction {
 	
 	uint pc;
 	uint lastLoad;
-	
 }

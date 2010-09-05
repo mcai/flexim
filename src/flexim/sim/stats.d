@@ -293,7 +293,7 @@ class MemorySystemStat: Stat {
 		return format("MemorySystemStat[cacheStats.length=%d]", this.cacheStats.length);
 	}
 	
-	CacheStat[string] cacheStats;
+	CacheStat[] cacheStats;
 	MemoryStat memoryStat;
 }
 
@@ -305,7 +305,7 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 		XMLConfig xmlConfig = new XMLConfig("MemorySystemStat");
 		xmlConfig["numCaches"] = to!(string)(memorySystemStat.cacheStats.length);
 		
-		foreach(cacheName, cacheStat; memorySystemStat.cacheStats) {
+		foreach(cacheStat; memorySystemStat.cacheStats) {
 			xmlConfig.entries ~= CacheStatXMLSerializer.singleInstance.save(cacheStat);
 		}
 		
@@ -320,7 +320,7 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 			
 		for(uint i = 0; i < numCaches; i++) {
 			CacheStat cacheStat = CacheStatXMLSerializer.singleInstance.load(xmlConfig.entries[i]);
-			memorySystemStat.cacheStats[cacheStat.name] = cacheStat;
+			memorySystemStat.cacheStats ~= cacheStat;
 		}
 		
 		memorySystemStat.memoryStat = MemoryStatXMLSerializer.singleInstance.load(xmlConfig.entries[numCaches]);

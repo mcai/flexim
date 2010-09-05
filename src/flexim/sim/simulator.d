@@ -173,14 +173,11 @@ class MemorySystem {
 	
 	CoherentCache createCache(string cacheName) {
 		CacheConfig cacheConfig = this.simulationConfig.memorySystemConfig.caches[cacheName];
-		CoherentCache cache = new CoherentCache(this, cacheConfig);
-		this.simulation.stat.memorySystemStat.cacheStats[cache.name] = cache.stat;
-		return cache;
+		return new CoherentCache(this, cacheConfig);
 	}
 
 	void createMemoryHierarchy() {
 		this.mem = new MemoryController(this, this.simulationConfig.memorySystemConfig.mem);
-		this.simulation.stat.memorySystemStat.memoryStat = this.mem.stat;
 				
 		this.l2 = this.createCache("l2");
 		this.l2.next = this.mem;
@@ -209,6 +206,15 @@ class MemorySystem {
 		}
 		
 		this.mmu = new MMU();
+
+		for(uint i = 0; i < this.endNodeCount; i++) {
+			this.simulation.stat.memorySystemStat.cacheStats ~= this.l1Is[i].stat;
+			this.simulation.stat.memorySystemStat.cacheStats ~= this.l1Ds[i].stat;
+		}
+
+		this.simulation.stat.memorySystemStat.cacheStats ~= this.l2.stat;
+		
+		this.simulation.stat.memorySystemStat.memoryStat = this.mem.stat;
 	}
 	
 	SimulationConfig simulationConfig() {
@@ -220,10 +226,10 @@ class MemorySystem {
 	Sequencer[] seqIs;
 	Sequencer[] seqDs;
 
-	CoherentCacheNode[] l1Is;
-	CoherentCacheNode[] l1Ds;
+	CoherentCache[] l1Is;
+	CoherentCache[] l1Ds;
 
-	CoherentCacheNode l2;
+	CoherentCache l2;
 	
 	MemoryController mem;
 	

@@ -20,13 +20,14 @@ src/flexim/isa/misc.d
 src/flexim/linux/process.d
 src/flexim/linux/syscall.d
 src/flexim/main.d
-src/flexim/mem/functional.d
+src/flexim/mem/functional/mem.d
+src/flexim/mem/functional/mmu.d
 src/flexim/mem/timing/cache.d
-src/flexim/mem/timing/coherence.d
 src/flexim/mem/timing/common.d
 src/flexim/mem/timing/mem.d
+src/flexim/mem/timing/mesi.d
 src/flexim/mem/timing/sequencer.d
-src/flexim/mem/transactional.d
+src/flexim/mem/tm/transaction.d
 src/flexim/sim/benchmark.d
 src/flexim/sim/configs.d
 src/flexim/sim/simulations.d
