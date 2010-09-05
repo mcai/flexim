@@ -238,6 +238,53 @@ class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
 	static CacheStatXMLSerializer singleInstance;
 }
 
+class MemoryStat: Stat {
+	this() {
+	}
+	
+	override string toString() {
+		return format("MemoryStat");
+	}
+
+	ulong accesses;
+	ulong reads;
+	ulong writes;
+}
+
+class MemoryStatXMLSerializer: XMLSerializer!(MemoryStat) {
+	this() {
+	}
+	
+	override XMLConfig save(MemoryStat memoryStat) {
+		XMLConfig xmlConfig = new XMLConfig("MemoryStat");
+		
+		xmlConfig.attributes["accesses"] = to!(string)(memoryStat.accesses);
+		xmlConfig.attributes["reads"] = to!(string)(memoryStat.reads);
+		xmlConfig.attributes["writes"] = to!(string)(memoryStat.writes);
+			
+		return xmlConfig;
+	}
+	
+	override MemoryStat load(XMLConfig xmlConfig) {
+		ulong accesses = to!(ulong)(xmlConfig.attributes["accesses"]);
+		ulong reads = to!(ulong)(xmlConfig.attributes["reads"]);
+		ulong writes = to!(ulong)(xmlConfig.attributes["writes"]);
+			
+		MemoryStat memoryStat = new MemoryStat();
+		memoryStat.accesses = accesses;
+		memoryStat.reads = reads;
+		memoryStat.writes = writes;
+		
+		return memoryStat;
+	}
+	
+	static this() {
+		singleInstance = new MemoryStatXMLSerializer();
+	}
+	
+	static MemoryStatXMLSerializer singleInstance;
+}
+
 class MemorySystemStat: Stat {
 	this() {
 	}
@@ -247,6 +294,7 @@ class MemorySystemStat: Stat {
 	}
 	
 	CacheStat[string] cacheStats;
+	MemoryStat memoryStat;
 }
 
 class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {	
@@ -255,21 +303,27 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 	
 	override XMLConfig save(MemorySystemStat memorySystemStat) {
 		XMLConfig xmlConfig = new XMLConfig("MemorySystemStat");
+		xmlConfig.attributes["numCaches"] = to!(string)(memorySystemStat.cacheStats.length);
 		
 		foreach(cacheName, cacheStat; memorySystemStat.cacheStats) {
 			xmlConfig.entries ~= CacheStatXMLSerializer.singleInstance.save(cacheStat);
 		}
+		
+		xmlConfig.entries ~= MemoryStatXMLSerializer.singleInstance.save(memorySystemStat.memoryStat);
 		
 		return xmlConfig;
 	}
 	
 	override MemorySystemStat load(XMLConfig xmlConfig) {
 		MemorySystemStat memorySystemStat = new MemorySystemStat();
-		
-		foreach(entry; xmlConfig.entries) {
-			CacheStat cacheStat = CacheStatXMLSerializer.singleInstance.load(entry);
+		uint numCaches = to!(uint)(xmlConfig.attributes["numCaches"]);
+			
+		for(uint i = 0; i < numCaches; i++) {
+			CacheStat cacheStat = CacheStatXMLSerializer.singleInstance.load(xmlConfig.entries[i]);
 			memorySystemStat.cacheStats[cacheStat.name] = cacheStat;
 		}
+		
+		memorySystemStat.memoryStat = MemoryStatXMLSerializer.singleInstance.load(xmlConfig.entries[numCaches]);
 		
 		return memorySystemStat;
 	}

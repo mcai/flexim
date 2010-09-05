@@ -24,28 +24,42 @@ module flexim.mem.timing.mem;
 import flexim.all;
 
 class MemoryController: CoherentCacheNode {
-	this(MemorySystem memorySystem) {
-		super(memorySystem, "mem"); //TODO: please add configuration and statistics support for memory controller.
+	this(MemorySystem memorySystem, MemoryConfig config) {
+		super(memorySystem, "mem");
+		
+		this.config = config;
+		this.stat = new MemoryStat();
 	}
 	
 	override uint level() {
 		assert(0);
 	}
 	
-	////////////////////////////////////////////////
+	uint latency() {
+		return this.config.latency;
+	}
 	
 	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, void delegate(bool hasError) onReceiveReplyCallback) {
 		//logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
-		this.schedule({onReceiveReplyCallback(false);}, 400);
+		this.stat.accesses++;
+		this.stat.writes++;
+		this.schedule({onReceiveReplyCallback(false);}, this.latency);
 	}
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) {
 		//logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
-		this.schedule({onCompletedCallback(false, false);}, 400);
+		this.stat.accesses++;
+		this.stat.reads++;
+		this.schedule({onCompletedCallback(false, false);}, this.latency);
 	}
 	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) {
 		//logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
-		this.schedule({onCompletedCallback(false);}, 400);
+		this.stat.accesses++;
+		this.stat.writes++;
+		this.schedule({onCompletedCallback(false);}, this.latency);
 	}
+	
+	MemoryConfig config;
+	MemoryStat stat;
 }

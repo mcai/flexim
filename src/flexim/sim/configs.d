@@ -256,6 +256,45 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	static CacheConfigXMLSerializer singleInstance;
 }
 
+class MemoryConfig: Config!(MemoryConfig) {
+	this(uint latency) {
+		this.latency = latency;
+	}
+	
+	override string toString() {
+		return format("MemoryConfig[latency=%d]", this.latency);
+	}
+	
+	uint latency;
+}
+
+class MemoryConfigXMLSerializer: XMLSerializer!(MemoryConfig) {
+	this() {
+	}
+	
+	override XMLConfig save(MemoryConfig memoryConfig) {
+		XMLConfig xmlConfig = new XMLConfig("MemoryConfig");
+		
+		xmlConfig.attributes["latency"] = to!(string)(memoryConfig.latency);
+		
+		return xmlConfig;
+	}
+	
+	override MemoryConfig load(XMLConfig xmlConfig) {
+		uint latency = to!(uint)(xmlConfig.attributes["latency"]);
+			
+		MemoryConfig memoryConfig = new MemoryConfig(latency);
+		
+		return memoryConfig;
+	}
+	
+	static this() {
+		singleInstance = new MemoryConfigXMLSerializer();
+	}
+	
+	static MemoryConfigXMLSerializer singleInstance;
+}
+
 class MemorySystemConfig: Config!(MemorySystemConfig) {		
 	this() {
 	}
@@ -264,7 +303,8 @@ class MemorySystemConfig: Config!(MemorySystemConfig) {
 		return format("MemorySystemConfig[caches.length=%d]", this.caches.length);
 	}
 	
-	CacheConfig[string] caches;
+	CacheConfig[string] caches;	
+	MemoryConfig mem;
 }
 
 class MemorySystemConfigXMLSerializer: XMLSerializer!(MemorySystemConfig) {	
@@ -273,21 +313,27 @@ class MemorySystemConfigXMLSerializer: XMLSerializer!(MemorySystemConfig) {
 	
 	override XMLConfig save(MemorySystemConfig memorySystemConfig) {
 		XMLConfig xmlConfig = new XMLConfig("MemorySystemConfig");
+		xmlConfig.attributes["numCaches"] = to!(string)(memorySystemConfig.caches.length);
 		
 		foreach(cacheName, cache; memorySystemConfig.caches) {
 			xmlConfig.entries ~= CacheConfigXMLSerializer.singleInstance.save(cache);
 		}
+		
+		xmlConfig.entries ~= MemoryConfigXMLSerializer.singleInstance.save(memorySystemConfig.mem);
 		
 		return xmlConfig;
 	}
 	
 	override MemorySystemConfig load(XMLConfig xmlConfig) {
 		MemorySystemConfig memorySystemConfig = new MemorySystemConfig();
-		
-		foreach(entry; xmlConfig.entries) {
-			CacheConfig cacheConfig = CacheConfigXMLSerializer.singleInstance.load(entry);
+		uint numCaches = to!(uint)(xmlConfig.attributes["numCaches"]);
+			
+		for(uint i = 0; i < numCaches; i++) {
+			CacheConfig cacheConfig = CacheConfigXMLSerializer.singleInstance.load(xmlConfig.entries[i]);
 			memorySystemConfig.caches[cacheConfig.name] = cacheConfig;
 		}
+		
+		memorySystemConfig.mem = MemoryConfigXMLSerializer.singleInstance.load(xmlConfig.entries[numCaches]);
 		
 		return memorySystemConfig;
 	}

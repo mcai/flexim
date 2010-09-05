@@ -24,18 +24,16 @@ module flexim.mem.timing.coherence;
 import flexim.all;
 
 class CoherentCache: CoherentCacheNode {
-	this(MemorySystem memorySystem, CacheConfig cacheConfig) {
-		super(memorySystem, cacheConfig.name);
-		
-		this.cacheConfig = cacheConfig;
-		
-		this.cache = new Cache(cacheConfig);
-		
+	this(MemorySystem memorySystem, CacheConfig config) {
+		super(memorySystem, config.name);
+
+		this.cache = new Cache(config);
+		this.config = config;
 		this.stat = new CacheStat(this.name);
 	}
 	
 	uint retryLat() {
-		return this.cacheConfig.hitLatency + uniform(0, this.cacheConfig.hitLatency + 2);
+		return this.config.hitLatency + uniform(0, this.config.hitLatency + 2);
 	}
 	
 	void retry(void delegate() action) {
@@ -43,11 +41,11 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	uint hitLatency() {
-		return this.cacheConfig.hitLatency;
+		return this.config.hitLatency;
 	}
 	
 	override uint level() {
-		return this.cacheConfig.level;
+		return this.config.level;
 	}
 	
 	override void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
@@ -579,10 +577,8 @@ class CoherentCache: CoherentCacheNode {
 			onCompletedCallback();
 		}
 	}
-	
-	CacheConfig cacheConfig;
-	
-	CacheStat stat;
 
 	Cache cache;
+	CacheConfig config;
+	CacheStat stat;
 }

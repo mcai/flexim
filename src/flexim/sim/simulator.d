@@ -179,7 +179,8 @@ class MemorySystem {
 	}
 
 	void createMemoryHierarchy() {
-		this.mem = new MemoryController(this);
+		this.mem = new MemoryController(this, this.simulationConfig.memorySystemConfig.mem);
+		this.simulation.stat.memorySystemStat.memoryStat = this.mem.stat;
 				
 		this.l2 = this.createCache("l2");
 		this.l2.next = this.mem;
