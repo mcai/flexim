@@ -50,90 +50,13 @@ class CoherentCache: CoherentCacheNode {
 		return this.cacheConfig.level;
 	}
 	
-	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
-		this.findAndLock(addr, false, true, isRetry,
-			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
-			{
-				if(!hasError) {
-					if(!isReadHit(state)) {
-						this.readRequest(this.next, addr,
-						(bool hasError, bool isShared) 
-						{
-							if(!hasError) {
-								this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
-								this.cache.accessBlock(set, way);
-								
-								onCompletedCallback();
-							}
-							else {
-								this.stat.readRetries++;
-								dirLock.unlock();
-								this.retry({this.load(addr, true, onCompletedCallback);});
-							}
-						});
-					}
-					else {
-						this.cache.accessBlock(set, way);
-						
-						onCompletedCallback();
-					}
-				}
-				else {
-					this.stat.readRetries++;
-					this.retry({this.load(addr, true, onCompletedCallback);});
-				}
-			});
-	}
-	
-	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
-		this.findAndLock(addr, false, false, isRetry, 
-			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
-			{
-				if(!hasError) {
-					if(!isWriteHit(state)) {
-						this.writeRequest(this.next, addr,
-							(bool hasError)
-							{
-								if(!hasError) {
-									this.cache.accessBlock(set, way);
-									this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
-									
-									dirLock.unlock();
-									
-									onCompletedCallback();
-								}
-								else {
-									this.stat.writeRetries++;
-									dirLock.unlock();
-									this.retry({this.store(addr, true, onCompletedCallback);});
-								}
-							});
-					}
-					else {
-						this.cache.accessBlock(set, way);
-						this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
-						
-						dirLock.unlock();
-						
-						onCompletedCallback();
-					}
-				}
-				else {
-					this.stat.writeRetries++;
-					this.retry({this.store(addr, true, onCompletedCallback);});
-				}
-			});
-	}
-	
 	override void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
 		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
 		writefln("%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
 		uint set, way, tag;
 		MESIState state;
 		
-		bool hit = this.cache.findBlock(addr, set, way, tag, state);
+		bool hit = this.cache.findBlock(addr, set, way, tag, state, true);
 		
 		this.stat.accesses++;
 		if(hit) {
@@ -172,9 +95,15 @@ class CoherentCache: CoherentCacheNode {
 			}
 		}
 		
+		uint dumbTag;
+		
+		if(!hit) {
+			way = this.cache.replaceBlock(set);
+			this.cache.getBlock(set, way, dumbTag, state);
+		}
+		
 		DirLock dirLock = this.cache.dir.dirLocks[set];
-		//if(!dirLock.lock()) { //TODO
-		if(false) {
+		if(!dirLock.lock()) {
 			if(isBlocking) {
 				onCompletedCallback(true, set, way, state, tag, dirLock);
 			}
@@ -210,14 +139,401 @@ class CoherentCache: CoherentCacheNode {
 			else {			
 			this.schedule(
 				{
-					uint dumbTag;
-					
-					this.cache.getBlock(set, way, dumbTag, state);
 					onCompletedCallback(false, set, way, state, tag, dirLock);
 				},
 				this.hitLatency);
 			}
 		}
+	}
+	
+	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.findAndLock(addr, false, true, isRetry,
+			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
+			{
+				if(!hasError) {
+					if(!isReadHit(state)) {
+						this.readRequest(this.next, tag,
+						(bool hasError, bool isShared) 
+						{
+							if(!hasError) {
+								this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
+								this.cache.accessBlock(set, way);
+								dirLock.unlock();								
+								onCompletedCallback();
+							}
+							else {
+								this.stat.readRetries++;
+								dirLock.unlock();
+								this.retry({this.load(addr, true, onCompletedCallback);});
+							}
+						});
+					}
+					else {
+						this.cache.accessBlock(set, way);	
+						dirLock.unlock();					
+						onCompletedCallback();
+					}
+				}
+				else {
+					this.stat.readRetries++;
+					this.retry({this.load(addr, true, onCompletedCallback);});
+				}
+			});
+	}
+	
+	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.findAndLock(addr, false, false, isRetry, 
+			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
+			{
+				if(!hasError) {
+					if(!isWriteHit(state)) {
+						this.writeRequest(this.next, tag,
+							(bool hasError)
+							{
+								if(!hasError) {
+									this.cache.accessBlock(set, way);
+									this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
+									dirLock.unlock();
+									onCompletedCallback();
+								}
+								else {
+									this.stat.writeRetries++;
+									dirLock.unlock();
+									this.retry({this.store(addr, true, onCompletedCallback);});
+								}
+							});
+					}
+					else {
+						this.cache.accessBlock(set, way);
+						this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
+						dirLock.unlock();
+						onCompletedCallback();
+					}
+				}
+				else {
+					this.stat.writeRetries++;
+					this.retry({this.store(addr, true, onCompletedCallback);});
+				}
+			});
+	}
+	
+	override void evict(uint set, uint way,
+		void delegate(bool hasError) onCompletedCallback) {
+		writefln("%s.evict(set=%d, way=%d)", this, set, way);
+		uint tag;
+		MESIState state;
+		
+		this.cache.getBlock(set, way, tag, state);
+		
+		uint srcSet = set;
+		uint srcWay = way;
+		uint srcTag = tag;
+		CoherentCacheNode target = this.next;
+			
+		this.invalidate(null, set, way, 
+			{
+				if(state == MESIState.INVALID) {
+					onCompletedCallback(false);
+				}
+				else if(state == MESIState.MODIFIED) {
+					this.schedule(
+						{
+							target.evictReceive(this, srcTag, true, 
+								(bool hasError)
+								{
+									this.schedule(
+										{
+											this.evictReplyReceive(hasError, srcSet, srcWay, onCompletedCallback);
+										}, 2);
+								});
+						}, 2);
+				}
+				else {
+					this.schedule(
+						{
+							target.evictReceive(this, srcTag, false, 
+								(bool hasError)
+								{
+									this.schedule(
+										{
+											this.evictReplyReceive(hasError, srcSet, srcWay, onCompletedCallback);
+										}, 2);
+								});
+						}, 2);
+				}
+			});		
+	}
+	
+	void evictProcess(CoherentCacheNode source, uint set, uint way, DirLock dirLock,
+		void delegate(bool hasError) onReceiveReplyCallback) {
+		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+		dirEntry.unsetSharer(source);
+		if(dirEntry.owner == source) {
+			dirEntry.owner = null;
+		}
+		dirLock.unlock();
+		onReceiveReplyCallback(false);
+	}
+	
+	void evictWritebackFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, DirLock dirLock,
+		void delegate(bool hasError) onReceiveReplyCallback) {
+		if(!hasError) {
+			this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
+			this.cache.accessBlock(set, way);
+			this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
+		}
+		else {
+			dirLock.unlock();
+			onReceiveReplyCallback(true);
+		}
+	}
+	
+	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback,
+		void delegate(bool hasError) onReceiveReplyCallback) {
+		writefln("%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
+		
+		this.findAndLock(addr, false, false, false, 
+			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
+			{				
+				if(!hasError) {
+					if(!isWriteback) {
+						this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
+					}
+					else {
+						this.invalidate(source, set, way, 
+							{
+								if(state == MESIState.SHARED) {
+									this.writeRequest(this.next, tag,
+										(bool hasError)
+										{
+											this.evictWritebackFinish(source, hasError, set, way, tag, dirLock, onReceiveReplyCallback);
+										});
+								}
+								else {
+									this.evictWritebackFinish(source, false, set, way, tag, dirLock, onReceiveReplyCallback);
+								}
+							});
+					}
+				}
+				else {
+					onReceiveReplyCallback(true);
+				}
+			});
+	}
+	
+	void evictReplyReceive(bool hasError, uint srcSet, uint srcWay, void delegate(bool hasError) onCompletedCallback) {
+		this.schedule(
+			{
+				if(!hasError) {
+					this.cache.setBlock(srcSet, srcWay, 0, MESIState.INVALID);
+				}
+				onCompletedCallback(hasError);
+			}, 2);
+	}
+	
+	override void readRequest(CoherentCacheNode target, uint addr,
+		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		writefln("%s.readRequest(target=%s, addr=0x%x)", this, target, addr);
+		this.schedule(
+			{
+				target.readRequestReceive(this, addr, onCompletedCallback);
+			}, 8);
+	}
+	
+	void readRequestUpdownFinish(CoherentCacheNode source, uint set, uint way, DirLock dirLock, ref uint pending,
+			void delegate(bool hasError, bool isShard) onCompletedCallback) {
+		pending--;
+		if(pending == 0) {
+			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+			if(dirEntry.owner !is null && dirEntry.owner != source) {
+				dirEntry.owner = null;
+			}
+			
+			dirEntry.setSharer(source);
+			if(!dirEntry.isShared) {
+				dirEntry.owner = source;
+			}
+			
+			this.cache.accessBlock(set, way);
+			dirLock.unlock();
+			this.schedule(
+				{
+					onCompletedCallback(false, dirEntry.isShared);
+				}, 2);
+		}
+	}
+	
+	void readRequestUpdown(CoherentCacheNode source, uint set, uint way, uint tag, MESIState state, DirLock dirLock,
+		void delegate(bool hasError, bool isShard) onCompletedCallback) {
+		uint pending = 1;
+		
+		if(state != MESIState.INVALID) {
+			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+			
+			if(dirEntry.owner !is null && dirEntry.owner != source) {
+				pending++;
+				this.readRequest(dirEntry.owner, tag,
+					(bool hasError, bool isShared)
+					{
+						this.readRequestUpdownFinish(source, set, way, dirLock, pending, onCompletedCallback);
+					});
+			}
+
+			this.readRequestUpdownFinish(source, set, way, dirLock, pending, onCompletedCallback);
+		}
+		else {
+			this.readRequest(this.next, tag,
+				(bool hasError, bool isShared)
+				{
+					if(!hasError) {
+						this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
+						this.readRequestUpdownFinish(source, set, way, dirLock, pending, onCompletedCallback);
+					}
+					else {
+						dirLock.unlock();
+						this.schedule(
+							{
+								onCompletedCallback(true, false);
+							}, 2);
+					}
+				});
+		}
+	}		
+	
+	void downUpFinish(uint set, uint way, uint tag, DirLock dirLock, ref uint pending,
+			void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		pending--;
+		
+		if(pending == 0) {
+			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+			dirEntry.owner = null;
+			
+			this.cache.setBlock(set, way, tag, MESIState.SHARED);
+			this.cache.accessBlock(set, way);
+			dirLock.unlock();
+			this.schedule(
+				{
+					onCompletedCallback(false, false);
+				}, 2);
+		}
+	}
+			
+	void readRequestDownup(uint set, uint way, uint tag, DirLock dirLock,
+		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		uint pending = 1;
+		
+		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+		if(dirEntry.owner !is null) {
+			pending++;
+			this.readRequest(dirEntry.owner, tag,
+				(bool hasError, bool isShared)
+				{
+					this.downUpFinish(set, way, tag, dirLock, pending, onCompletedCallback);
+				});
+		}
+		
+		this.downUpFinish(set, way, tag, dirLock, pending, onCompletedCallback);
+	}
+	
+	override void readRequestReceive(CoherentCacheNode source, uint addr,
+		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.findAndLock(addr, this.next == source, true, false,
+			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
+			{				
+				if(!hasError) {
+					if(source.next == this) {
+						this.readRequestUpdown(source, set, way, tag, state, dirLock, onCompletedCallback);
+					}
+					else {
+						this.readRequestDownup(set, way, tag, dirLock, onCompletedCallback);
+					}
+				}
+				else {
+					this.schedule(
+						{
+							onCompletedCallback(true, false);
+						}, 2);
+				}
+			});
+	}
+	
+	override void writeRequest(CoherentCacheNode target, uint addr,
+		void delegate(bool hasError) onCompletedCallback) {
+		writefln("%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
+		this.schedule(
+			{
+				target.writeRequestReceive(this, addr, onCompletedCallback);
+			}, 2);
+	}
+	
+	void writeRequestUpdownFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, MESIState state, DirLock dirLock,
+			void delegate(bool hasError) onCompletedCallback) {
+		if(!hasError) {
+			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+			dirEntry.setSharer(source);
+			dirEntry.owner = source;
+			
+			this.cache.accessBlock(set, way);
+			if(state != MESIState.MODIFIED) {
+				this.cache.setBlock(set, way, tag, MESIState.EXCLUSIVE);
+			}
+			
+			dirLock.unlock();
+			this.schedule(
+				{
+					onCompletedCallback(false);
+				}, 2);									
+		}
+		else {
+			dirLock.unlock();
+			this.schedule(
+				{
+					onCompletedCallback(true);
+				}, 2);
+		}
+	}
+	
+	override void writeRequestReceive(CoherentCacheNode source, uint addr,
+		void delegate(bool hasError) onCompletedCallback) {
+		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.findAndLock(addr, this.next == source, false, false,
+			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
+			{				
+				if(!hasError) {
+					this.invalidate(source, set, way, 
+						{
+							if(source.next == this) {
+								if(state == MESIState.MODIFIED || state == MESIState.EXCLUSIVE) {
+									writeRequestUpdownFinish(source, false, set, way, tag, state, dirLock, onCompletedCallback);
+								}
+								else {
+									this.writeRequest(this.next, tag,
+										(bool hasError)
+										{
+											writeRequestUpdownFinish(source, hasError, set, way, tag, state, dirLock, onCompletedCallback);
+										});
+								}
+							}
+							else {
+								this.cache.setBlock(set, way, 0, MESIState.INVALID);
+								dirLock.unlock();
+								this.schedule(
+									{
+										onCompletedCallback(false);
+									}, 2);
+							}
+						});
+				}
+				else {
+					this.schedule(
+						{
+							onCompletedCallback(true);
+						}, 2);
+				}
+			});
 	}
 	
 	override void invalidate(CoherentCacheNode except, uint set, uint way, void delegate() onCompletedCallback) {
@@ -262,297 +578,6 @@ class CoherentCache: CoherentCacheNode {
 		if(pending == 0) {
 			onCompletedCallback();
 		}		
-	}
-	
-	override void evict(uint set, uint way,
-		void delegate(bool hasError) onCompletedCallback) {
-		writefln("%s.evict(set=%d, way=%d)", this, set, way);
-		uint tag;
-		MESIState state;
-		
-		this.cache.getBlock(set, way, tag, state);
-		
-		uint srcSet = set;
-		uint srcWay = way;
-		uint srcTag = tag;
-		CoherentCacheNode target = this.next;
-			
-		this.invalidate(null, set, way, 
-			{
-				if(state == MESIState.INVALID) {
-					onCompletedCallback(false);
-				}
-				else if(state == MESIState.MODIFIED) {
-					target.evictReceive(this, srcTag, true, 
-						(bool hasError)
-						{
-							if(!hasError) {
-								this.cache.setBlock(srcSet, srcWay, 0, MESIState.INVALID);
-							}
-							onCompletedCallback(hasError);
-						});
-				}
-				else {
-					target.evictReceive(this, srcTag, false, 
-						(bool hasError)
-						{
-							if(!hasError) {
-								this.cache.setBlock(srcSet, srcWay, 0, MESIState.INVALID);
-							}
-							onCompletedCallback(hasError);
-						});
-				}
-			});		
-	}
-	
-	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback,
-		void delegate(bool hasError) onReceiveReplyCallback) {
-		writefln("%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
-		this.findAndLock(addr, false, false, false, 
-			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
-			{
-				if(!hasError) {
-					if(!isWriteback) {
-						DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-						dirEntry.unsetSharer(source);
-						if(dirEntry.owner == source) {
-							dirEntry.owner = null;
-						}
-						dirLock.unlock();
-						
-						onReceiveReplyCallback(false);
-					}
-					else {
-						this.invalidate(source, set, way, 
-							{
-								if(state == MESIState.SHARED) {
-									this.writeRequest(this.next, addr,
-										(bool hasError)
-										{
-											if(!hasError) {
-												this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
-												this.cache.accessBlock(set, way);
-												
-												DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-												dirEntry.unsetSharer(source);
-												if(dirEntry.owner == source) {
-													dirEntry.owner = null;
-												}
-												dirLock.unlock();
-												
-												onReceiveReplyCallback(false);
-											}
-											else {
-												dirLock.unlock();
-												onReceiveReplyCallback(true);
-											}
-										});
-								}
-								else {
-									this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
-									this.cache.accessBlock(set, way);
-									
-									DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-									dirEntry.unsetSharer(source);
-									if(dirEntry.owner == source) {
-										dirEntry.owner = null;
-									}
-									dirLock.unlock();
-									
-									onReceiveReplyCallback(false);
-								}
-							});
-					}
-				}
-				else {
-					onReceiveReplyCallback(true);
-				}
-			});
-	}
-	
-	override void readRequest(CoherentCacheNode target, uint addr,
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		writefln("%s.readRequest(target=%s, addr=0x%x)", this, target, addr);
-		target.readRequestReceive(this, addr, onCompletedCallback);
-	}
-	
-	override void readRequestReceive(CoherentCacheNode source, uint addr,
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
-		this.findAndLock(addr, this.next == source, true, false,
-			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
-			{
-				if(!hasError) {
-					if(source.next == this) {
-						uint pending = 1;
-						
-						if(state != MESIState.INVALID) {
-							DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-							
-							if(dirEntry.owner !is null && dirEntry.owner != source) {
-								pending++;
-								this.readRequest(dirEntry.owner, tag,
-									(bool hasError, bool isShared)
-									{
-										pending--;
-										if(pending == 0) {
-											if(dirEntry.owner !is null && dirEntry.owner != source) {
-												dirEntry.owner = null;
-											}
-											
-											dirEntry.setSharer(source);
-											if(!dirEntry.isShared) {
-												dirEntry.owner = source;
-											}
-											
-											this.cache.accessBlock(set, way);
-											dirLock.unlock();
-											onCompletedCallback(false, dirEntry.isShared);
-										}
-									});
-							}
-
-							pending--;
-							if(pending == 0) {
-								if(dirEntry.owner !is null && dirEntry.owner != source) {
-									dirEntry.owner = null;
-								}
-								
-								dirEntry.setSharer(source);
-								if(!dirEntry.isShared) {
-									dirEntry.owner = source;
-								}
-								
-								this.cache.accessBlock(set, way);
-								dirLock.unlock();
-								onCompletedCallback(false, dirEntry.isShared);
-							}
-						}
-						else {
-							this.readRequest(this.next, tag,
-								(bool hasError, bool isShared)
-								{
-									if(!hasError) {
-										this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
-										
-										pending--;
-										if(pending == 0) {
-											DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-											if(dirEntry.owner !is null && dirEntry.owner != source) {
-												dirEntry.owner = null;
-											}
-											
-											dirEntry.setSharer(source);
-											if(!dirEntry.isShared) {
-												dirEntry.owner = source;
-											}
-											
-											this.cache.accessBlock(set, way);
-											dirLock.unlock();
-											onCompletedCallback(false, dirEntry.isShared);
-										}
-									}
-									else {
-										dirLock.unlock();
-										onCompletedCallback(true, false);
-									}
-								});
-						}
-					}
-					else {
-						uint pending = 1;
-						
-						DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-						
-						void downUpFinish() {
-							pending--;
-							
-							if(pending == 0) {
-								dirEntry.owner = null;
-								
-								this.cache.setBlock(set, way, tag, MESIState.SHARED);
-								this.cache.accessBlock(set, way);
-								dirLock.unlock();
-								onCompletedCallback(false, false);
-							}
-						}
-						
-						if(dirEntry.owner !is null) {
-							pending++;
-							this.readRequest(dirEntry.owner, tag,
-								(bool hasError, bool isShared)
-								{
-									downUpFinish();
-								});
-						}
-						
-						downUpFinish();
-					}
-				}
-				else {
-					onCompletedCallback(true, false);
-				}
-			});
-	}
-	
-	override void writeRequest(CoherentCacheNode target, uint addr,
-		void delegate(bool hasError) onCompletedCallback) {
-		writefln("%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
-		target.writeRequestReceive(this, addr, onCompletedCallback);
-	}
-	
-	override void writeRequestReceive(CoherentCacheNode source, uint addr,
-		void delegate(bool hasError) onCompletedCallback) {
-		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
-		this.findAndLock(addr, this.next == source, false, false,
-			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
-			{
-				void writeRequestUpdownFinish(bool hasError) {
-					if(!hasError) {
-						DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-						dirEntry.setSharer(source);
-						dirEntry.owner = source;
-						
-						this.cache.accessBlock(set, way);
-						if(state != MESIState.MODIFIED) {
-							this.cache.setBlock(set, way, tag, MESIState.EXCLUSIVE);
-						}
-						
-						dirLock.unlock();
-						onCompletedCallback(false);												
-					}
-					else {
-						dirLock.unlock();
-						onCompletedCallback(true);
-					}
-				}
-				
-				if(!hasError) {
-					this.invalidate(source, set, way, 
-						{
-							if(source.next == this) {
-								if(state == MESIState.MODIFIED || state == MESIState.EXCLUSIVE) {
-									writeRequestUpdownFinish(false);
-								}
-								else {
-									this.writeRequest(this.next, tag,
-										(bool hasError)
-										{
-											writeRequestUpdownFinish(hasError);
-										});
-								}
-							}
-							else {
-								this.cache.setBlock(set, way, 0, MESIState.INVALID);
-								dirLock.unlock();
-								onCompletedCallback(false);
-							}
-						});
-				}
-				else {
-					onCompletedCallback(true);
-				}
-			});
 	}
 	
 	CacheConfig cacheConfig;

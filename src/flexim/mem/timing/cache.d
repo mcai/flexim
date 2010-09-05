@@ -254,7 +254,7 @@ class Cache {
 		this.dir = new Dir(this.numSets, this.assoc);
 	}
 	
-	CacheBlock blockOf(uint addr) {
+	CacheBlock blockOf(uint addr, bool checkTransientTag = false) {
 		uint tag = this.tag(addr);
 		uint set = this.set(addr);
 
@@ -262,16 +262,22 @@ class Cache {
 			if(blk.tag == tag && blk.state != MESIState.INVALID) {
 				return blk;
 			}
+			if(checkTransientTag) {
+				if(blk.transientTag == tag
+					&& this.dir.dirLocks[set].locked) {
+					return blk;
+				}
+			}
 		}
 
 		return null;
 	}
 	
-	bool findBlock(uint addr, ref uint set, ref uint way, ref uint tag, ref MESIState state) {
+	bool findBlock(uint addr, ref uint set, ref uint way, ref uint tag, ref MESIState state, bool checkTransientTag = false) {
 		set = this.set(addr);
 		tag = this.tag(addr);
 				
-		CacheBlock blkFound = blockOf(addr);
+		CacheBlock blkFound = this.blockOf(addr, checkTransientTag);
 		
 		if(blkFound !is null) {
 			way = blkFound.way;

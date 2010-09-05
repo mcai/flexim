@@ -37,6 +37,12 @@ abstract class CoherentCacheNode {
 		this.eventQueue.schedule(event, delay);
 	}
 	
+	void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
+		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
+		writefln("%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
+		assert(0);
+	}
+	
 	void load(uint addr, bool isRetry, 
 		void delegate() onCompletedCallback) {
 		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
@@ -46,18 +52,6 @@ abstract class CoherentCacheNode {
 	void store(uint addr, bool isRetry, 
 		void delegate() onCompletedCallback) {
 		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
-		assert(0);
-	}
-	
-	void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
-		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
-		writefln("%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
-		assert(0);
-	}
-	
-	void invalidate(CoherentCacheNode except, uint set, uint way, 
-		void delegate() onCompletedCallback) {
-		writefln("%s.invalidate(except=%s, set=%d, way=%d)", this, except, set, way);
 		assert(0);
 	}
 	
@@ -93,6 +87,12 @@ abstract class CoherentCacheNode {
 	void writeRequestReceive(CoherentCacheNode source, uint addr, 
 		void delegate(bool hasError) onCompletedCallback) {
 		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		assert(0);
+	}
+	
+	void invalidate(CoherentCacheNode except, uint set, uint way, 
+		void delegate() onCompletedCallback) {
+		writefln("%s.invalidate(except=%s, set=%d, way=%d)", this, except, set, way);
 		assert(0);
 	}
 	
