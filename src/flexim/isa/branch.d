@@ -25,7 +25,7 @@ import flexim.all;
 
 abstract class Branch: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 			this.displacement = sext(this[OFFSET] << 2, 16);
 		}
@@ -41,7 +41,7 @@ abstract class Branch: StaticInst {
 class B: Branch {
 	public:
 		this(MachInst machInst) {
-			super("b", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("b", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
@@ -56,11 +56,11 @@ class B: Branch {
 class Bal: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.destRegIdx ~= ReturnAddressReg;
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override void execute(Thread thread) {
@@ -72,12 +72,12 @@ class Bal: Branch {
 class Beq: Branch {
 	public:
 		this(MachInst machInst) {
-			super("beq", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("beq", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -90,11 +90,11 @@ class Beq: Branch {
 class Beqz: Branch {
 	public:
 		this(MachInst machInst) {
-			super("beqz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("beqz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -107,11 +107,11 @@ class Beqz: Branch {
 class Bgez: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bgez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bgez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -124,12 +124,12 @@ class Bgez: Branch {
 class Bgezal: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bgezal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bgezal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= ReturnAddressReg;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override void execute(Thread thread) {
@@ -143,11 +143,11 @@ class Bgezal: Branch {
 class Bgtz: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bgtz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bgtz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -160,11 +160,11 @@ class Bgtz: Branch {
 class Blez: Branch {
 	public:
 		this(MachInst machInst) {
-			super("blez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("blez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -177,11 +177,11 @@ class Blez: Branch {
 class Bltz: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bltz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bltz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -194,12 +194,12 @@ class Bltz: Branch {
 class Bltzal: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bltzal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bltzal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {			
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= ReturnAddressReg;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override void execute(Thread thread) {
@@ -213,12 +213,12 @@ class Bltzal: Branch {
 class Bne: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bne", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bne", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -231,11 +231,11 @@ class Bne: Branch {
 class Bnez: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bnez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("bnez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -248,11 +248,11 @@ class Bnez: Branch {
 class Bc1f: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bc1f", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+			super("bc1f", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -268,11 +268,11 @@ class Bc1f: Branch {
 class Bc1t: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bc1t", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+			super("bc1t", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -288,11 +288,11 @@ class Bc1t: Branch {
 class Bc1fl: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bc1fl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+			super("bc1fl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -312,11 +312,11 @@ class Bc1fl: Branch {
 class Bc1tl: Branch {
 	public:
 		this(MachInst machInst) {
-			super("bc1tl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FUType.NONE);
+			super("bc1tl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -335,7 +335,7 @@ class Bc1tl: Branch {
 
 abstract class Jump: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 			this.target = this[JMPTARG] << 2;
 		}
@@ -353,7 +353,7 @@ abstract class Jump: StaticInst {
 class J: Jump {
 	public:
 		this(MachInst machInst) {
-			super("j", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("j", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
@@ -371,11 +371,11 @@ class J: Jump {
 class Jal: Jump {
 	public:
 		this(MachInst machInst) {
-			super("jal", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FUType.IntALU);
+			super("jal", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.destRegIdx ~= ReturnAddressReg;
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override uint targetPc(Thread thread) {
@@ -391,12 +391,12 @@ class Jal: Jump {
 class Jalr: Jump {
 	public:
 		this(MachInst machInst) {
-			super("jalr", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.CALL | StaticInstFlag.INDIRJMP, FUType.IntALU);
+			super("jalr", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.CALL | StaticInstFlag.INDIRJMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 		
 		override uint targetPc(Thread thread) {
@@ -412,11 +412,11 @@ class Jalr: Jump {
 class Jr: Jump {
 	public:
 		this(MachInst machInst) {
-			super("jr", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.RET | StaticInstFlag.INDIRJMP, FUType.NONE);
+			super("jr", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.RET | StaticInstFlag.INDIRJMP, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override uint targetPc(Thread thread) {

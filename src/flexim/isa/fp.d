@@ -25,40 +25,40 @@ import flexim.all;
 
 abstract class FloatOp: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 		}
 }
 
 abstract class FloatBinaryOp: FloatOp {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
 abstract class FloatUnaryOp: FloatOp {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
 class Add_d: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("add_d", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
+			super("add_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
 		override void execute(Thread thread) {
@@ -74,7 +74,7 @@ class Add_d: FloatBinaryOp {
 class Sub_d: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("sub_d", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
+			super("sub_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
 		override void execute(Thread thread) {
@@ -90,7 +90,7 @@ class Sub_d: FloatBinaryOp {
 class Mul_d: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("mul_d", machInst, StaticInstFlag.FCOMP, FUType.FloatMULT);
+			super("mul_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatMULT);
 		}
 
 		override void execute(Thread thread) {
@@ -106,7 +106,7 @@ class Mul_d: FloatBinaryOp {
 class Div_d: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("div_d", machInst, StaticInstFlag.FCOMP, FUType.FloatDIV);
+			super("div_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatDIV);
 		}
 
 		override void execute(Thread thread) {
@@ -122,7 +122,7 @@ class Div_d: FloatBinaryOp {
 class Sqrt_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("sqrt_d", machInst, StaticInstFlag.FCOMP, FUType.FloatSQRT);
+			super("sqrt_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatSQRT);
 		}
 
 		override void execute(Thread thread) {
@@ -137,7 +137,7 @@ class Sqrt_d: FloatUnaryOp {
 class Abs_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("abs_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+			super("abs_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
 		override void execute(Thread thread) {
@@ -152,7 +152,7 @@ class Abs_d: FloatUnaryOp {
 class Neg_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("neg_d", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+			super("neg_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
 		override void execute(Thread thread) {
@@ -167,7 +167,7 @@ class Neg_d: FloatUnaryOp {
 class Mov_d: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("mov_d", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("mov_d", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
 		override void execute(Thread thread) {
@@ -181,7 +181,7 @@ class Mov_d: FloatUnaryOp {
 class Add_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("add_s", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
+			super("add_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
 		override void execute(Thread thread) {
@@ -197,7 +197,7 @@ class Add_s: FloatBinaryOp {
 class Sub_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("sub_s", machInst, StaticInstFlag.FCOMP, FUType.FloatADD);
+			super("sub_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
 		override void execute(Thread thread) {
@@ -213,7 +213,7 @@ class Sub_s: FloatBinaryOp {
 class Mul_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("mul_s", machInst, StaticInstFlag.FCOMP, FUType.FloatMULT);
+			super("mul_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatMULT);
 		}
 
 		override void execute(Thread thread) {
@@ -229,7 +229,7 @@ class Mul_s: FloatBinaryOp {
 class Div_s: FloatBinaryOp {
 	public:
 		this(MachInst machInst) {
-			super("div_s", machInst, StaticInstFlag.FCOMP, FUType.FloatDIV);
+			super("div_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatDIV);
 		}
 
 		override void execute(Thread thread) {
@@ -245,7 +245,7 @@ class Div_s: FloatBinaryOp {
 class Sqrt_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("sqrt_s", machInst, StaticInstFlag.FCOMP, FUType.FloatSQRT);
+			super("sqrt_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatSQRT);
 		}
 
 		override void execute(Thread thread) {
@@ -260,7 +260,7 @@ class Sqrt_s: FloatUnaryOp {
 class Abs_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("abs_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+			super("abs_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
 		override void execute(Thread thread) {
@@ -275,7 +275,7 @@ class Abs_s: FloatUnaryOp {
 class Neg_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("neg_s", machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+			super("neg_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
 		override void execute(Thread thread) {
@@ -290,7 +290,7 @@ class Neg_s: FloatUnaryOp {
 class Mov_s: FloatUnaryOp {
 	public:
 		this(MachInst machInst) {
-			super("mov_s", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("mov_s", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
 		override void execute(Thread thread) {
@@ -304,12 +304,12 @@ class Mov_s: FloatUnaryOp {
 abstract class FloatConvertOp: FloatOp {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.FCOMP, FUType.FloatCVT);
+			super(mnemonic, machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCVT);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= FP_Base_DepTag + this[FD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
@@ -455,22 +455,22 @@ class Cvt_d_l: FloatConvertOp {
 
 abstract class FloatCompareOp: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.srcRegIdx ~= FP_Base_DepTag + this[FT];
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 }
 
 class C_cond_d(alias mnemonic): FloatCompareOp {
 	public:
 		this(MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+			super(mnemonic, machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
 		override void execute(Thread thread) {
@@ -507,7 +507,7 @@ class C_cond_d(alias mnemonic): FloatCompareOp {
 class C_cond_s(alias mnemonic): FloatCompareOp {
 	public:
 		this(MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.FCOMP, FUType.FloatCMP);
+			super(mnemonic, machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
 		override void execute(Thread thread) {

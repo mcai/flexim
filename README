@@ -2,6 +2,9 @@
 Flexim - A modular and highly configurable multicore simulator written in D
 --------------------------------
 
+This README briefly describes what Flexim is and how to setup & run Flexim. For more details, 
+please refer to the Flexim User Guide under the subdirectory doc/ of the distribution.
+
 == License Information ==
    Copyright (c) 2010 by Min Cai <itecgo@163.com>
    
@@ -45,6 +48,14 @@ Flexim - A modular and highly configurable multicore simulator written in D
    If not, go to this page and download "dmd D 2.0 compiler 1-click install for Ubuntu"
    http://www.digitalmars.com/d/download.html
 
+== How to compile Benchmarks for Flexim ==
+   Flexim supports the statically linked MIPS32 LE binaries. It supports the full set of wcet_bench benchmarks.
+   Other popular benchmarks such as Olden and CPU2006 are being tested.
+ 
+   Download and unpack cross-compiler-mipsel.tar.bz2 from http://github.com/mcai/flexim/downloads/.
+   Use it to compile MIPS32 LE binaries to be simulated by Flexim.
+   See the Makefiles under the subdirectory tests/ of the distribution for sample use.
+
 == How to Build and Run Flexim ==
  1. Unpack the zip or tar file containing the Flexim source.
  
@@ -54,15 +65,18 @@ Flexim - A modular and highly configurable multicore simulator written in D
     b) remove all the built files using the command:
       make clean
     Note: By default, the flexim binary is placed in the bin/ folder.
- 
- 3. Download and unpack cross-compiler-mipsel.tar.bz2 from http://github.com/mcai/flexim/downloads/.
-   Use it to compile MIPS32 LE programs to be simulated by Flexim.
-   See the subdirectory microbenchmarks/ of the distribution for sample use.
 
- 4. In the subdirectory build/, you can simulate a MIPS32 LE program using the command:
-    ./flexim <path-to-mipsel-executable> <args> //TODO!!!!!!!!!!!!!
+ 3. In order to run the simulator, you will need to set up a few configuration files.
+    The Flexim User Guide describes these files in detail.
+    A few sample configuration files have been provided for your reference.
 
-== Contact Information ==
-  If you have any questions, please feel free to contact:
-	Min Cai <itecgo@163.com>
+
+Good Luck!
+
+Min Cai
+
+School of Computer Science and Technology
+Beijing Institute of Technology
+Beijing, China
+<itecgo@163.com>
   

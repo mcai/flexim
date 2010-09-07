@@ -113,7 +113,7 @@ class CPUSimulator : Simulator {
 		SimulationConfig simulationConfig = simulation.config;
 		
 		for(uint i = 0; i < simulationConfig.processorConfig.numCores; i++) {
-			Core core = new Core(format("%d", i));
+			Core core = new Core(i);
 				
 			for(uint j = 0; j < simulationConfig.processorConfig.numThreads; j++) {
 				ContextConfig context = simulationConfig.processorConfig.contexts[i * simulationConfig.processorConfig.numThreads + j];
@@ -169,7 +169,7 @@ class CPUSimulator : Simulator {
 class MemorySystem {
 	this(Simulation simulation) {	
 		this.simulation = simulation;		
-		this.endNodeCount = simulation.config.processorConfig.numCores * simulation.config.processorConfig.numThreads;
+		this.endNodeCount = simulation.config.processorConfig.numCores;
 		this.createMemoryHierarchy();
 	}
 	

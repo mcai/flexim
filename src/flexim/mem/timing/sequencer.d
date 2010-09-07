@@ -30,7 +30,7 @@ class Sequencer: CoherentCacheNode {
 		this.l1Cache = l1Cache;
 	}
 	
-	void load(uint addr, bool isRetry, RUUStation rs, void delegate(RUUStation rs) onCompletedCallback2) {		
+	void load(uint addr, bool isRetry, ReorderBufferEntry rs, void delegate(ReorderBufferEntry rs) onCompletedCallback2) {		
 		this.load(addr, isRetry, {onCompletedCallback2(rs);});
 	}
 	

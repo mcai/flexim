@@ -84,7 +84,14 @@ class Queue(EntryT) {
 	}
 
 	EntryT front() {
-		return this.entries.front;
+		if(!this.empty) {
+			return this.entries.front;
+		}
+		return null;
+	}
+	
+	EntryT back() {
+		return this.entries.back;
 	}
 
 	void opOpAssign(string op, EntryT)(EntryT entry)
@@ -94,6 +101,18 @@ class Queue(EntryT) {
 			logging.fatalf(LogCategory.MISC, "%s", this);
 		}
 		this.entries ~= entry;
+	}
+	
+	EntryT opIndex(uint index) {
+		return this.entries[index];
+	}
+	
+	void opIndexAssign(EntryT value, uint index) {
+		this.entries[index] = value;
+	}
+	
+	void clear() {
+		this.entries.clear();
 	}
 
 	override string toString() {

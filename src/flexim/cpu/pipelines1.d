@@ -19,14 +19,111 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.cpu.pipelines;
+/*module flexim.cpu.pipelines;
 
 import flexim.all;
 
 import core.stdc.errno;
 
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+enum PhysicalRegisterState: string {
+	FREE = "FREE",
+	ALLOC = "ALLOC",
+	WB = "WB",
+	ARCH = "ARCH"
+}
+
+class PhysicalRegister {
+	this() {
+		this.readyCycle = 0; //TODO: is it correct?
+		this.state = PhysicalRegisterState.FREE;
+	}
+	
+	ulong readyCycle;
+	PhysicalRegisterState state;
+}
+
+class PhysicalRegisterFile {
+	this(uint capacity) {
+		this.capacity = capacity;
+		
+		this.entries = new PhysicalRegister[this.capacity];
+		for(uint i = 0; i < this.capacity; i++) {
+			this.entries[i] = new PhysicalRegister();
+		}
+	}
+	
+	PhysicalRegister findFree() {
+		foreach(entry; this.entries) {
+			if(entry.state == PhysicalRegisterState.FREE) {
+				return entry;
+			}
+		}
+
+		return null;
+	}
+	
+	PhysicalRegister opIndex(uint index) {
+		return this.entries[index];
+	}
+	
+	void opIndexAssign(PhysicalRegister value, uint index) {
+		this.entries[index] = value;
+	}
+	
+	uint capacity;
+	PhysicalRegister[] entries;
+}
+
+enum PhysicalRegisterType: string {
+	NONE = "NONE",
+	INT = "INT",
+	FP = "FP"
+}
+
+enum IssueQueueEntryState: string {
+	FREE = "FREE",
+	ALLOC = "ALLOC"
+}
+
+class IssueQueueEntry {
+	this() {
+		this.state = IssueQueueEntryState.FREE;
+	}
+	
+	IssueQueueEntryState state;
+}
+
+class IssueQueue: Queue!(IssueQueueEntry) {
+	this(string name) {
+		super(name, 1024);
+		
+		this.entries = new IssueQueueEntry[this.capacity];
+		for(uint i = 0; i < this.capacity; i++) {
+			this.entries[i] = new IssueQueueEntry();
+		}
+	}
+	
+	IssueQueueEntry findFree() {
+		foreach(entry; this.entries) {
+			if(entry.state == IssueQueueEntryState.FREE) {
+				return entry;
+			}
+		}
+		
+		return null;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
 class FU {
-	this(FUCategory master, FUType fuType, uint opLat, uint issueLat) {
+	this(FUCategory master, FunctionalUnitType fuType, uint opLat, uint issueLat) {
 		this.master = master;
 		this.fuType = fuType;
 		this.opLat = opLat;
@@ -39,7 +136,7 @@ class FU {
 
 	FUCategory master;
 
-	FUType fuType;
+	FunctionalUnitType fuType;
 	uint opLat;
 	uint issueLat;
 }
@@ -65,19 +162,6 @@ class FUCategory {
 const uint STORE_ADDR_INDEX = 0;
 const uint STORE_OP_INDEX = 1;
 
-class Link(LinkT, EntryT) {
-	this(string name, EntryT entry) {
-		this.name = name;
-		this.entry = entry;
-		this.next = null;
-	}
-
-	string name;
-
-	EntryT entry;
-	LinkT next;
-}
-
 class FetchRecord {
 	this(uint pc, DynamicInst uop) {
 		this.pc = pc;
@@ -92,14 +176,18 @@ class FetchRecord {
 	DynamicInst uop;
 }
 
-enum RUUStationState : string {
+enum ReorderBufferEntryState : string {
 	FETCHED = "FETCHED",
+	DISPATCHED = "DISPATCHED",
 	READY = "READY",
 	ISSUED = "ISSUED",
 	COMPLETED = "COMPLETED"
 }
 
-class RUUStation {
+const uint MAX_IDEPS = 3;
+const uint MAX_ODEPS = 2;
+
+class ReorderBufferEntry {
 	this(uint pc, DynamicInst uop) {
 		this.id = ++currentId;
 		
@@ -110,7 +198,7 @@ class RUUStation {
 		this.eaComp = false;
 		this.ea = 0;
 
-		this.state = RUUStationState.FETCHED;
+		this.state = ReorderBufferEntryState.FETCHED;
 	}
 
 	bool storeAddrReady() {
@@ -132,7 +220,7 @@ class RUUStation {
 	override string toString() {
 		string str;
 		
-		str ~= format("RUUStation[uop=%s, inLsq=%s, eaComp=%s, ea=%d, id=%d, state=%s, operandsReady=%s]",
+		str ~= format("ReorderBufferEntry[uop=%s, inLsq=%s, eaComp=%s, ea=%d, id=%d, state=%s, operandsReady=%s]",
 				this.uop, this.inLsq, this.eaComp, this.ea, this.id, this.state, this.operandsReady);
 		
 		if(this.uop.isStore) {
@@ -150,14 +238,22 @@ class RUUStation {
 
 	uint pc;
 	DynamicInst uop;
+	
 	bool inLsq;
+	bool inIq;
+	
 	bool eaComp;
 	uint ea;
 
-	RUUStationState state;
+	ReorderBufferEntryState state;
+	
+	PhysicalRegister[MAX_IDEPS] destPhysRegs;
+	PhysicalRegister[MAX_ODEPS] srcPhysregs;
 
-	RUUStation[uint] ideps;
+	/////////////////
+	ReorderBufferEntry[uint] ideps;
 	uint[MAX_ODEPS] onames;
+	//////////////////////
 	
 	static this() {
 		currentId = 0;
@@ -167,7 +263,7 @@ class RUUStation {
 }
 
 class RegisterDependency {
-	this(uint regName, RUUStation creator) {
+	this(uint regName, ReorderBufferEntry creator) {
 		this.regName = regName;
 		this.creator = creator;
 	}
@@ -177,42 +273,42 @@ class RegisterDependency {
 	}
 
 	uint regName;
-	RUUStation creator;
-	RUUStation[] dependents;
+	ReorderBufferEntry creator;
+	ReorderBufferEntry[] dependents;
 }
 
-class IFQ: Queue!(FetchRecord) {
+class IFQ: Queue!(FetchRecord) { //FIFO Queue
 	this(string name) {
 		super(name, 4);
 	}
 }
 
-class ReadyQ: Queue!(RUUStation) {
+class ReadyQ: Queue!(ReorderBufferEntry) { //FIFO Queue
 	this(string name) {
 		super(name, 80);
 	}
 }
 
-class RUU: Queue!(RUUStation) {
+class ROB: Queue!(ReorderBufferEntry) { //Circular Buffer
 	this(string name) {
 		super(name, 16);
 	}
 }
 
-class LSQ: Queue!(RUUStation) {
+class LSQ: Queue!(ReorderBufferEntry) { //Circular Buffer
 	this(string name) {
 		super(name, 8);
 	}
 }
 
-class EventQ: Queue!(RUUStation), EventProcessor {
+class EventQ: Queue!(ReorderBufferEntry), EventProcessor { //Priority queue
 	this(string name) {
 		super(name, 1024);
 		
 		this.eventQueue = new DelegateEventQueue();
 	}
 	
-	void enqueue(RUUStation rs, ulong delay) {
+	void enqueue(ReorderBufferEntry rs, ulong delay) {
 		this.eventQueue.schedule({this ~= rs;}, delay);
 	}
 	
@@ -333,8 +429,8 @@ class Core {
 	
 	void writeback() {
 		while(!this.eventq.empty) {
-			RUUStation rs = this.eventq.front;
-			rs.state = RUUStationState.COMPLETED;
+			ReorderBufferEntry rs = this.eventq.front;
+			rs.state = ReorderBufferEntryState.COMPLETED;
 
 			rs.uop.thread.clearRegDeps(rs);
 
@@ -363,9 +459,7 @@ class Core {
 	
 	void fetch() {
 		foreach(thread; this.threads) {
-			if(thread.canFetch) {
-				thread.fetch();
-			}
+			thread.fetch();
 		}
 	}
 
@@ -407,7 +501,7 @@ class Thread {
 
 		this.fetchq = new IFQ("IFQ" ~ "-" ~ this.name);
 		this.readyq = new ReadyQ("ReadyQ" ~ "-" ~ this.name);
-		this.ruu = new RUU("RUU" ~ "-" ~ this.name);
+		this.rob = new ROB("ROB" ~ "-" ~ this.name);
 		this.lsq = new LSQ("LSQ" ~ "-" ~ this.name);
 
 		this.fetchWidth = 4;
@@ -422,55 +516,59 @@ class Thread {
 	}
 	
 	void commit() {
-		for(uint numCommitted = 0; !this.ruu.empty && numCommitted < this.commitWidth; ) {
-			RUUStation rs = this.ruu.front;
+		if(Simulator.singleInstance.currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {
+			logging.fatal(LogCategory.SIMULATOR, "No instruction committed in one million cycles.");
+		}
+		
+		for(uint numCommitted = 0; !this.rob.empty && numCommitted < this.commitWidth; ) {
+			ReorderBufferEntry rs = this.rob.front;
 
-			if(rs.state != RUUStationState.COMPLETED) {
+			if(rs.state != ReorderBufferEntryState.COMPLETED) {
 				break;
 			}
 
 			if(rs.eaComp) {
-				if(this.lsq.front.state != RUUStationState.COMPLETED) {
+				if(this.lsq.front.state != ReorderBufferEntryState.COMPLETED) {
 					break;
 				}
 
 				this.lsq.popFront();
 			}
 
-			this.ruu.popFront();
+			this.rob.popFront();
+			
+			this.lastCommitCycle = Simulator.singleInstance.currentCycle;
 
 			this.stat.totalInsts++;
-
-			//logging.infof(LogCategory.DEBUG, "t%s one instruction committed (uop=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, rs.uop);
 		}
 	}
 	
 	void issueIq() {
 		for(uint numIssued = 0; !this.readyq.empty && numIssued < this.issueWidth; numIssued++) {
-			RUUStation rs = this.readyq.front;
+			ReorderBufferEntry rs = this.readyq.front;
 
 			if(rs.inLsq && rs.uop.isStore) {
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 				
 				this.seqD.store(this.mmu.translate(ea), false, {});
 
-				rs.state = RUUStationState.COMPLETED;
+				rs.state = ReorderBufferEntryState.COMPLETED;
 				this.readyq.popFront();
 			} else if(rs.inLsq && rs.uop.isLoad) {
 				uint ea = (cast(MemoryOp) (rs.uop.staticInst)).ea(this);
 				
 				this.seqD.load(this.mmu.translate(ea), false, rs, 
-					(RUUStation rs)
+					(ReorderBufferEntry rs)
 					{
 						this.core.eventq.enqueue(rs, 1);
 					});
 				
-				rs.state = RUUStationState.ISSUED;
+				rs.state = ReorderBufferEntryState.ISSUED;
 				this.readyq.popFront();
 			} else {
 				this.core.eventq.enqueue(rs, 1);
 
-				rs.state = RUUStationState.ISSUED;
+				rs.state = ReorderBufferEntryState.ISSUED;
 				this.readyq.popFront();
 			}
 		}
@@ -492,39 +590,39 @@ class Thread {
 						}
 					}
 				}
-			} else if(rs.uop.isLoad && rs.state == RUUStationState.FETCHED && rs.operandsReady) {
+			} else if(rs.uop.isLoad && rs.state == ReorderBufferEntryState.FETCHED && rs.operandsReady) {
 				if(count(stdUnknowns, rs.ea) == 0) {
 					this.readyq ~= rs;
-					rs.state = RUUStationState.READY;
+					rs.state = ReorderBufferEntryState.READY;
 				}
 			}
 
 			//////TODO remove below
-			if(rs.state == RUUStationState.FETCHED && rs.operandsReady) {
+			if(rs.state == ReorderBufferEntryState.FETCHED && rs.operandsReady) {
 				this.readyq ~= rs;
-				rs.state = RUUStationState.READY;
+				rs.state = ReorderBufferEntryState.READY;
 			}
 			//////TODO remove above
 		}
 
 		//////TODO remove below
-		foreach(rs; this.ruu) {
-			if(rs.state == RUUStationState.FETCHED && rs.operandsReady) {
+		foreach(rs; this.rob) {
+			if(rs.state == ReorderBufferEntryState.FETCHED && rs.operandsReady) {
 				this.readyq ~= rs;
-				rs.state = RUUStationState.READY;
+				rs.state = ReorderBufferEntryState.READY;
 			}
 		}
 		//////TODO remove above
 	}
 
-	void linkIdep(RUUStation rs, uint idepNum, uint idepName) {
+	void linkIdep(ReorderBufferEntry rs, uint idepNum, uint idepName) {
 		if(idepName != ZeroReg && idepName in this.regDeps) {
 			rs.ideps[idepName] = this.regDeps[idepName].creator;
 			this.regDeps[idepName].dependents ~= rs;
 		}
 	}
 
-	void installOdep(RUUStation rs, uint odepNum, uint odepName) {
+	void installOdep(ReorderBufferEntry rs, uint odepNum, uint odepName) {
 		if(odepName == ZeroReg) {
 			rs.onames[odepNum] = ZeroReg;
 		} else {
@@ -533,7 +631,7 @@ class Thread {
 		}
 	}
 
-	void clearRegDeps(RUUStation rs) {
+	void clearRegDeps(ReorderBufferEntry rs) {
 		foreach(i, oname; rs.onames) {
 			if(oname != ZeroReg) {
 				if(oname in this.regDeps) {
@@ -543,7 +641,7 @@ class Thread {
 						if(dependent.operandsReady) {
 							if(!dependent.inLsq || dependent.uop.isStore) {
 								this.readyq ~= dependent; //TODO: uncomment it
-								dependent.state = RUUStationState.READY;
+								dependent.state = ReorderBufferEntryState.READY;
 							}
 						}
 					}
@@ -557,9 +655,9 @@ class Thread {
 					//////TODO remove above
 
 					//////TODO remove below
-					foreach(ruu; this.ruu) {
-						if(oname in ruu.ideps) {
-							ruu.ideps.remove(oname);
+					foreach(rob; this.rob) {
+						if(oname in rob.ideps) {
+							rob.ideps.remove(oname);
 						}
 					}
 					//////TODO remove above
@@ -571,7 +669,7 @@ class Thread {
 	}
 	
 	void dispatch() {
-		for(uint numDispatched = 0; numDispatched < this.fetchWidth && !this.ruu.full && !this.lsq.full && !this.fetchq.empty; ) {
+		for(uint numDispatched = 0; numDispatched < this.fetchWidth && !this.rob.full && !this.lsq.full && !this.fetchq.empty; ) {
 			FetchRecord fr = this.fetchq.front;
 
 			this.intRegs[ZeroReg] = 0;
@@ -580,13 +678,13 @@ class Thread {
 			DynamicInst uop = fr.uop;
 
 			if(!uop.isNop) {
-				RUUStation rs = new RUUStation(pc, uop);
-				this.ruu ~= rs;
+				ReorderBufferEntry rs = new ReorderBufferEntry(pc, uop);
+				this.rob ~= rs;
 
 				if(uop.isMem) {
 					rs.eaComp = true;
 
-					RUUStation rsMem = new RUUStation(pc, uop);
+					ReorderBufferEntry rsMem = new ReorderBufferEntry(pc, uop);
 					rsMem.eaComp = false;
 					rsMem.ea = (cast(MemoryOp) uop.staticInst).ea(this);
 
@@ -611,12 +709,12 @@ class Thread {
 
 					if(rs.operandsReady) {
 						this.readyq ~= rs;
-						rs.state = RUUStationState.READY;
+						rs.state = ReorderBufferEntryState.READY;
 					}
 
 					if(uop.isStore && rsMem.operandsReady) {
 						this.readyq ~= rsMem;
-						rsMem.state = RUUStationState.READY;
+						rsMem.state = ReorderBufferEntryState.READY;
 					}
 				} else {
 					foreach(i, idep; uop.staticInst.srcRegIdx) {
@@ -629,7 +727,7 @@ class Thread {
 
 					if(rs.operandsReady) {
 						this.readyq ~= rs;
-						rs.state = RUUStationState.READY;
+						rs.state = ReorderBufferEntryState.READY;
 					}
 				}
 			}
@@ -641,40 +739,14 @@ class Thread {
 	}
 	
 	void decode() {
-		//TODO: split fetch and decode operations
-	}
-
-	DynamicInst fetchAndDecodeAt(uint pc) {		
-		StaticInst staticInst = this.isa.decode(pc, this.mem);
-		return new DynamicInst(this, pc, staticInst);
-	}
-	
-	bool canFetch() {
-		return this.state == ThreadState.Active && !this.fetchStalled;
-	}
-	
-	void fetch() {
-		uint block = aligned(this.fetchNpc, this.seqI.blockSize);
-
-		if(block != this.fetchBlock) {
-			this.fetchBlock = block;
-			
-			this.seqI.load(this.mmu.translate(this.fetchNpc), false, 
-				{
-					this.fetchStalled = false;
-				});
-			
-			this.fetchStalled = true;
-		}
-
 		for(uint i = 0; i < this.fetchWidth; i++) {
-			if(this.fetchq.full || !this.canFetch || aligned(this.fetchNpc, this.seqI.blockSize) != block) {
+			if(this.fetchq.full || aligned(this.fetchNpc, this.seqI.blockSize) != this.fetchBlock) {
 				break;
 			}
 			this.fetchPc = this.fetchNpc;
 			this.fetchNpc = this.fetchNnpc;
 
-			DynamicInst uop = this.fetchAndDecodeAt(this.fetchPc);
+			DynamicInst uop = new DynamicInst(this, this.fetchPc, this.isa.decode(this.fetchPc, this.mem));
 
 			this.setNpcFromFetchNpc();
 
@@ -689,6 +761,23 @@ class Thread {
 
 			FetchRecord fr = new FetchRecord(uop.pc, uop);
 			this.fetchq ~= fr;
+		}
+	}
+	
+	void fetch() {
+		if(this.state == ThreadState.Active && !this.fetchStalled) {
+			uint block = aligned(this.fetchNpc, this.seqI.blockSize);
+	
+			if(block != this.fetchBlock) {
+				this.fetchBlock = block;
+				
+				this.seqI.load(this.mmu.translate(this.fetchNpc), false, 
+					{
+						this.fetchStalled = false;
+					});
+				
+				this.fetchStalled = true;
+			}
 		}
 	}
 	
@@ -789,9 +878,11 @@ class Thread {
 	uint issueWidth;
 	uint commitWidth;
 	
+	ulong lastCommitCycle;
+	
 	IFQ fetchq;
 	ReadyQ readyq;
-	RUU ruu;
+	ROB rob;
 	LSQ lsq;
 	
 	RegisterDependency[uint] regDeps;
@@ -799,4 +890,12 @@ class Thread {
 	ThreadState state;
 	
 	ThreadStat stat;
-}
+	
+	///////////////////////////////////////////////
+	
+	uint[uint] renameTable;
+	
+	///////////////////////////////////////////////
+	
+	static const uint COMMIT_TIMEOUT = 1000000;
+}*/

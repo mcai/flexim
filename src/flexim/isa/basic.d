@@ -26,11 +26,11 @@ import flexim.all;
 class Syscall: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("syscall", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("syscall", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= 2;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, 2);
 		}
 
 		override void execute(Thread thread) {
@@ -41,12 +41,12 @@ class Syscall: StaticInst {
 class Sll: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("sll", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("sll", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -57,13 +57,13 @@ class Sll: StaticInst {
 class Sllv: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("sllv", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("sllv", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -74,12 +74,12 @@ class Sllv: StaticInst {
 class Sra: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("sra", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("sra", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -90,13 +90,13 @@ class Sra: StaticInst {
 class Srav: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("srav", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("srav", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -107,12 +107,12 @@ class Srav: StaticInst {
 class Srl: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("srl", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("srl", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -123,13 +123,13 @@ class Srl: StaticInst {
 class Srlv: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("srlv", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("srlv", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {

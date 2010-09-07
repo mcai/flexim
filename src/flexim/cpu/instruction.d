@@ -300,7 +300,7 @@ enum StaticInstFlag: uint {
 }
 
 /* possible functional units */
-enum FUType: uint {
+enum FunctionalUnitType: uint {
 	NONE = 0,
 	IntALU,
 	IntMULT,
@@ -314,9 +314,6 @@ enum FUType: uint {
 	RdPort,
 	WrPort
 };
-
-const uint MAX_IDEPS = 3;
-const uint MAX_ODEPS = 2;
 
 abstract class ISA {
 	StaticInst decode(uint pc, Memory mem) {
@@ -343,9 +340,25 @@ abstract class ISA {
 	StaticInst[uint] decodedInsts;
 }
 
+enum RegisterDependencyType {
+	INT,
+	FP,
+	MISC
+}
+
+class RegisterDependency {
+	this(RegisterDependencyType type, uint num) {
+		this.type = type;
+		this.num = num;
+	}
+	
+	RegisterDependencyType type;
+	uint num;
+}
+
 abstract class StaticInst {
 	public:		
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			this.mnemonic = mnemonic;
 			this.machInst = machInst;
 			this.flags = flags;
@@ -368,7 +381,7 @@ abstract class StaticInst {
 			return this.m_flags;
 		}
 		
-		FUType fuType() {
+		FunctionalUnitType fuType() {
 			return this.m_fuType;
 		}
 
@@ -381,9 +394,57 @@ abstract class StaticInst {
 		uint opIndex(BitField field) {
 			return this.machInst[field];
 		}
+		
+		bool isLongLat() {
+			return (this.flags & StaticInstFlag.LONGLAT) == StaticInstFlag.LONGLAT;
+		}
+		
+		bool isTrap() {
+			return (this.flags & StaticInstFlag.TRAP) == StaticInstFlag.TRAP;
+		}
+		
+		bool isMem() {
+			return (this.flags & StaticInstFlag.MEM) == StaticInstFlag.MEM;
+		}
+		
+		bool isLoad() {
+			return this.isMem && (this.flags & StaticInstFlag.LOAD) == StaticInstFlag.LOAD;
+		}
+		
+		bool isStore() {
+			return this.isMem && (this.flags & StaticInstFlag.STORE) == StaticInstFlag.STORE;
+		}
 
-		uint[] srcRegIdx;
-		uint[] destRegIdx;
+		bool isConditional() {
+			return (this.flags & StaticInstFlag.COND) == StaticInstFlag.COND;
+		}
+
+		bool isUnconditional() {
+			return (this.flags & StaticInstFlag.UNCOND) == StaticInstFlag.UNCOND;
+		}
+		
+		bool isDirectJump() {
+			return (this.flags & StaticInstFlag.DIRJMP) != StaticInstFlag.DIRJMP;
+		}
+
+		bool isControl() {
+			return (this.flags & StaticInstFlag.CTRL) == StaticInstFlag.CTRL;
+		}
+
+		bool isCall() {
+			return (this.flags & StaticInstFlag.CALL) == StaticInstFlag.CALL;
+		}
+
+		bool isReturn() {
+			return (this.flags & StaticInstFlag.RET) == StaticInstFlag.RET;
+		}
+		
+		bool isNop() {
+			return (cast(Nop)this) !is null;
+		}
+		
+		RegisterDependency[] ideps;
+		RegisterDependency[] odeps;
 
 	protected:		
 		void machInst(MachInst value) {
@@ -398,14 +459,14 @@ abstract class StaticInst {
 			this.m_flags = value;
 		}
 		
-		void fuType(FUType value) {
+		void fuType(FunctionalUnitType value) {
 			this.m_fuType = value;
 		}
 		
 		MachInst m_machInst;
 		string m_mnemonic;
 		StaticInstFlag m_flags;
-		FUType m_fuType;
+		FunctionalUnitType m_fuType;
 }
 
 class DynamicInst {
@@ -414,54 +475,6 @@ class DynamicInst {
 			this.thread = thread;
 			this.pc = pc;
 			this.staticInst = staticInst;
-		}
-		
-		bool isLongLat() {
-			return (this.staticInst.flags & StaticInstFlag.LONGLAT) == StaticInstFlag.LONGLAT;
-		}
-		
-		bool isTrap() {
-			return (this.staticInst.flags & StaticInstFlag.TRAP) == StaticInstFlag.TRAP;
-		}
-		
-		bool isMem() {
-			return (this.staticInst.flags & StaticInstFlag.MEM) == StaticInstFlag.MEM;
-		}
-		
-		bool isLoad() {
-			return this.isMem && (this.staticInst.flags & StaticInstFlag.LOAD) == StaticInstFlag.LOAD;
-		}
-		
-		bool isStore() {
-			return this.isMem && (this.staticInst.flags & StaticInstFlag.STORE) == StaticInstFlag.STORE;
-		}
-
-		bool isConditional() {
-			return (this.staticInst.flags & StaticInstFlag.COND) == StaticInstFlag.COND;
-		}
-
-		bool isUnconditional() {
-			return (this.staticInst.flags & StaticInstFlag.UNCOND) == StaticInstFlag.UNCOND;
-		}
-		
-		bool isDirectJump() {
-			return (this.staticInst.flags & StaticInstFlag.DIRJMP) != StaticInstFlag.DIRJMP;
-		}
-
-		bool isControl() {
-			return (this.staticInst.flags & StaticInstFlag.CTRL) == StaticInstFlag.CTRL;
-		}
-
-		bool isCall() {
-			return (this.staticInst.flags & StaticInstFlag.CALL) == StaticInstFlag.CALL;
-		}
-
-		bool isReturn() {
-			return (this.staticInst.flags & StaticInstFlag.RET) == StaticInstFlag.RET;
-		}
-		
-		bool isNop() {
-			return (cast(Nop)this.staticInst) !is null;
 		}
 		
 		void execute() {

@@ -25,7 +25,7 @@ import flexim.all;
 
 class MemoryOp: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 
 			this.displacement = sext(machInst[OFFSET], 16);
@@ -42,17 +42,21 @@ class MemoryOp: StaticInst {
 
 		override void setupDeps() {
 			this.setupEaDeps();
+			
+			this.eaOdeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.EA);
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.EA);
+			
 			this.setupMemDeps();
 		}
 		
 		abstract void setupEaDeps();
 		abstract void setupMemDeps();
-
-		uint[] eaSrcRegIdx;
-		uint[] eaDestRegIdx;
-
-		uint[] memSrcRegIdx;
-		uint[] memDestRegIdx;
+		
+		RegisterDependency[] eaIdeps;
+		RegisterDependency[] eaOdeps;
+		
+		RegisterDependency[] memIdeps;
+		RegisterDependency[] memOdeps;
 
 	private:
 		void displacement(int value) {
@@ -65,17 +69,15 @@ class MemoryOp: StaticInst {
 class Lb: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lb", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lb", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= this[RT];
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -88,17 +90,15 @@ class Lb: MemoryOp {
 class Lbu: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lbu", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lbu", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= this[RT];
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -111,17 +111,15 @@ class Lbu: MemoryOp {
 class Lh: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lh", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lh", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -134,17 +132,15 @@ class Lh: MemoryOp {
 class Lhu: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lhu", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lhu", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -157,17 +153,15 @@ class Lhu: MemoryOp {
 class Lw: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lw", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lw", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -180,18 +174,16 @@ class Lw: MemoryOp {
 class Lwl: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lwl", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lwl", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= this[RT];
-			this.memDestRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -221,18 +213,16 @@ class Lwl: MemoryOp {
 class Lwr: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lwr", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lwr", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= this[RT];
-			this.memDestRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -262,17 +252,15 @@ class Lwr: MemoryOp {
 class Ll: MemoryOp {
 	public:
 	this(MachInst machInst) {
-		super("ll", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+		super("ll", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 	}
 
 	override void setupEaDeps() {
-		this.eaSrcRegIdx ~= this[RS];
-		this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+		this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 	}
 
 	override void setupMemDeps() {
-		this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-		this.memDestRegIdx ~= this[RT];
+		this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 	}
 
 	override void execute(Thread thread) {		
@@ -285,17 +273,15 @@ class Ll: MemoryOp {
 class Lwc1: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("lwc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("lwc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 	
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {			
@@ -308,17 +294,15 @@ class Lwc1: MemoryOp {
 class Ldc1: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("ldc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FUType.RdPort);
+			super("ldc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 	
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= FP_Base_DepTag + this[FT];
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {			
@@ -331,17 +315,15 @@ class Ldc1: MemoryOp {
 class Sb: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("sb", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("sb", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -353,17 +335,15 @@ class Sb: MemoryOp {
 class Sh: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("sh", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("sh", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -375,17 +355,15 @@ class Sh: MemoryOp {
 class Sw: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("sw", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("sw", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -397,17 +375,15 @@ class Sw: MemoryOp {
 class Swl: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("swl", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("swl", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -438,17 +414,15 @@ class Swl: MemoryOp {
 class Swr: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("swr", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("swr", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= this[RT];
+		override void setupMemDeps() {
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -478,18 +452,16 @@ class Swr: MemoryOp {
 class Sc: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("sc", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("sc", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 	
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaSrcRegIdx ~= this[RT];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memDestRegIdx ~= this[RT];
+			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 	
 		override void execute(Thread thread) {
@@ -502,17 +474,15 @@ class Sc: MemoryOp {
 class Swc1: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("swc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("swc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 	
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {			
@@ -524,17 +494,15 @@ class Swc1: MemoryOp {
 class Sdc1: MemoryOp {
 	public:
 		this(MachInst machInst) {
-			super("sdc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FUType.WrPort);
+			super("sdc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 	
 		override void setupEaDeps() {
-			this.eaSrcRegIdx ~= this[RS];
-			this.eaDestRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
 		override void setupMemDeps() {
-			this.memSrcRegIdx ~= Misc_Base_DepTag + MiscRegNums.EA;
-			this.memSrcRegIdx ~= FP_Base_DepTag + this[FT];
+			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {		

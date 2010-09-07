@@ -26,7 +26,7 @@ import flexim.all;
 class Nop: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("nop", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("nop", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 		
 		override void setupDeps() {
@@ -39,7 +39,7 @@ class Nop: StaticInst {
 class FailUnimplemented: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.NONE, FUType.NONE);
+			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 
 		}
 		
@@ -55,7 +55,7 @@ class FailUnimplemented: StaticInst {
 class CP0Unimplemented: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.NONE, FUType.NONE);
+			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 
 		}
 		
@@ -71,7 +71,7 @@ class CP0Unimplemented: StaticInst {
 class CP1Unimplemented: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.NONE, FUType.NONE);
+			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 
 		}
 		
@@ -87,7 +87,7 @@ class CP1Unimplemented: StaticInst {
 class CP2Unimplemented: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.NONE, FUType.NONE);
+			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 
 		}
 		
@@ -103,7 +103,7 @@ class CP2Unimplemented: StaticInst {
 class WarnUnimplemented: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.NONE, FUType.NONE);
+			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 
 		}
 		
@@ -119,7 +119,7 @@ class WarnUnimplemented: StaticInst {
 class Unknown: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("unknown", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("unknown", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 		
 		override void setupDeps() {
@@ -133,7 +133,7 @@ class Unknown: StaticInst {
 class Trap: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.NONE, FUType.NONE);
+			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 		
 		override void setupDeps() {
@@ -143,7 +143,7 @@ class Trap: StaticInst {
 class TrapImm: StaticInst {
 	public:
 		this(string mnemonic, MachInst machInst) {
-			super(mnemonic, machInst, StaticInstFlag.NONE, FUType.NONE);
+			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 
 			this.imm = cast(short) machInst[INTIMM];
 		}

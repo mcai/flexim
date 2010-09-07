@@ -25,7 +25,7 @@ import flexim.all;
 
 class CP1Control: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 		}
 }
@@ -33,12 +33,12 @@ class CP1Control: StaticInst {
 class Mfc1: CP1Control {
 	public:
 		this(MachInst machInst) {
-			super("mfc1", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("mfc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= FP_Base_DepTag + this[FS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {			
@@ -50,12 +50,12 @@ class Mfc1: CP1Control {
 class Cfc1: CP1Control {
 	public:
 		this(MachInst machInst) {
-			super("cfc1", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("cfc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {			
@@ -73,12 +73,12 @@ class Cfc1: CP1Control {
 class Mtc1: CP1Control {
 	public:
 		this(MachInst machInst) {
-			super("mtc1", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("mtc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= FP_Base_DepTag + this[FS];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 		}
 
 		override void execute(Thread thread) {
@@ -90,12 +90,12 @@ class Mtc1: CP1Control {
 class Ctc1: CP1Control {
 	public:
 		this(MachInst machInst) {
-			super("ctc1", machInst, StaticInstFlag.NONE, FUType.NONE);
+			super("ctc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.FCSR;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {

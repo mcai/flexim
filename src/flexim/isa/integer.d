@@ -25,14 +25,14 @@ import flexim.all;
 
 abstract class IntOp: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 		}
 }
 
 abstract class IntImmOp: StaticInst {
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FUType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
 			super(mnemonic, machInst, flags, fuType);
 
 			this.imm = cast(short) machInst[INTIMM];
@@ -51,13 +51,13 @@ abstract class IntImmOp: StaticInst {
 class Add: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("add", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("add", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -69,12 +69,12 @@ class Add: IntOp {
 class Addi: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("addi", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FUType.IntALU);
+			super("addi", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -86,12 +86,12 @@ class Addi: IntImmOp {
 class Addiu: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("addiu", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FUType.IntALU);
+			super("addiu", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -102,13 +102,13 @@ class Addiu: IntImmOp {
 class Addu: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("addu", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("addu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -119,13 +119,13 @@ class Addu: IntOp {
 class Sub: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("sub", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("sub", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -137,13 +137,13 @@ class Sub: IntOp {
 class Subu: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("subu", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("subu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -154,13 +154,13 @@ class Subu: IntOp {
 class And: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("and", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("and", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -171,12 +171,12 @@ class And: IntOp {
 class Andi: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("andi", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FUType.IntALU);
+			super("andi", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -187,13 +187,13 @@ class Andi: IntImmOp {
 class Nor: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("nor", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("nor", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -204,13 +204,13 @@ class Nor: IntOp {
 class Or: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("or", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("or", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -221,12 +221,12 @@ class Or: IntOp {
 class Ori: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("ori", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FUType.IntALU);
+			super("ori", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -237,13 +237,13 @@ class Ori: IntImmOp {
 class Xor: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("xor", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("xor", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -254,12 +254,12 @@ class Xor: IntOp {
 class Xori: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("xori", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FUType.IntALU);
+			super("xori", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -270,13 +270,13 @@ class Xori: IntImmOp {
 class Slt: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("slt", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("slt", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -287,12 +287,12 @@ class Slt: IntOp {
 class Slti: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("slti", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FUType.IntALU);
+			super("slti", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -303,12 +303,12 @@ class Slti: IntImmOp {
 class Sltiu: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("sltiu", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FUType.IntALU);
+			super("sltiu", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.destRegIdx ~= this[RT];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -319,13 +319,13 @@ class Sltiu: IntImmOp {
 class Sltu: IntOp {
 	public:
 		this(MachInst machInst) {
-			super("sltu", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("sltu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -336,11 +336,11 @@ class Sltu: IntOp {
 class Lui: IntImmOp {
 	public:
 		this(MachInst machInst) {
-			super("lui", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("lui", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.destRegIdx ~= this[RT];
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -351,14 +351,14 @@ class Lui: IntImmOp {
 class Divu: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("divu", machInst, StaticInstFlag.ICOMP, FUType.IntDIV);
+			super("divu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntDIV);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.LO;
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.HI;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
 		override void execute(Thread thread) {
@@ -384,14 +384,14 @@ class Divu: StaticInst {
 class Div: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("div", machInst, StaticInstFlag.ICOMP, FUType.IntDIV);
+			super("div", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntDIV);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.LO;
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.HI;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
 		override void execute(Thread thread) {
@@ -417,12 +417,12 @@ class Div: StaticInst {
 class Mflo: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("mflo", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("mflo", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.LO;
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -433,12 +433,12 @@ class Mflo: StaticInst {
 class Mfhi: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("mfhi", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("mfhi", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= Misc_Base_DepTag + MiscRegNums.HI;
-			this.destRegIdx ~= this[RD];
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -449,12 +449,12 @@ class Mfhi: StaticInst {
 class Mtlo: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("mtlo", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("mtlo", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RD];
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.LO;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
 		}
 
 		override void execute(Thread thread) {
@@ -465,12 +465,12 @@ class Mtlo: StaticInst {
 class Mthi: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("mthi", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("mthi", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RD];
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.HI;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
 		override void execute(Thread thread) {
@@ -481,14 +481,14 @@ class Mthi: StaticInst {
 class Mult: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("mult", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("mult", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.LO;
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.HI;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
 		override void execute(Thread thread) {
@@ -511,14 +511,14 @@ class Mult: StaticInst {
 class Multu: StaticInst {
 	public:
 		this(MachInst machInst) {
-			super("multu", machInst, StaticInstFlag.ICOMP, FUType.IntALU);
+			super("multu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
 		override void setupDeps() {
-			this.srcRegIdx ~= this[RS];
-			this.srcRegIdx ~= this[RT];
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.LO;
-			this.destRegIdx ~= Misc_Base_DepTag + MiscRegNums.HI;
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
+			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
 		override void execute(Thread thread) {
