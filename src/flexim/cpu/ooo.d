@@ -136,11 +136,13 @@ enum PhysicalRegisterState: string {
 
 class PhysicalRegister {
 	this() {
-		this.readyCycle = 0; //TODO: is it correct?
+		this.readyCycle = cast(ulong)-1;
+		this.specReadyCycle = cast(ulong)-1;
 		this.state = PhysicalRegisterState.FREE;
 	}
 	
 	ulong readyCycle;
+	ulong specReadyCycle;
 	PhysicalRegisterState state;
 }
 
@@ -277,26 +279,29 @@ const uint MAX_ODEPS = 2;
 const uint STORE_ADDR_INDEX = 0;
 const uint STORE_OP_INDEX = 1;
 
-enum ReorderBufferEntryState : string {
-	FETCHED = "FETCHED",
-	DISPATCHED = "DISPATCHED",
-	READY = "READY",
-	ISSUED = "ISSUED",
-	COMPLETED = "COMPLETED"
-}
-
 class ReorderBufferEntry {
 	this(uint pc, DynamicInst uop) {
 		this.id = ++currentId;
 		
-		this.pc = pc;
 		this.uop = uop;
+		this.pc = pc;
 
 		this.inLoadStoreQueue = false;
+		this.inIssueQueue = false;
+		
 		this.isEffectiveAddressComputation = false;
 		this.effectiveAddress = 0;
-
-		this.state = ReorderBufferEntryState.FETCHED;
+		
+		this.isRecoverInst = false;
+		//this.stackRecoverIndex = -1; //TODO
+		
+		this.isSpeculative = false;
+		
+		this.dispatched = false;
+		this.queued = false;
+		this.issued = false;
+		this.completed = false;
+		this.replayed = false;
 		
 		this.execLat = 0; //TODO: correct?
 		
@@ -339,16 +344,21 @@ class ReorderBufferEntry {
 	bool isEffectiveAddressComputation;
 	uint effectiveAddress;
 	
+	bool isRecoverInst;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
 	
 	bool isSpeculative;
-
-	ReorderBufferEntryState state;
 	
-	PhysicalRegister[MAX_ODEPS] physRegs;
-	PhysicalRegister[MAX_ODEPS] oldPhysRegs;
-	PhysicalRegister[MAX_IDEPS] srcPhysregs;
+	bool dispatched;
+	bool queued;
+	bool issued;
+	bool completed;
+	bool replayed;
+	
+	uint[] physRegs;
+	uint[] oldPhysRegs;
+	uint[] srcPhysregs;
 	
 	uint execLat;
 	
@@ -526,16 +536,59 @@ class Core {
 		}
 	}
 	
+	PhysicalRegisterFile getPhysicalRegisterFile(RegisterDependencyType type) {
+		if(type == RegisterDependencyType.INT) {
+			return this.intRegFile;
+		}
+		else if(type == RegisterDependencyType.FP) {
+			return this.fpRegFile;
+		}
+		else {
+			return this.miscRegFile;
+		}
+	}
+	
 	void writeback() {
 		while(!this.eventQueue.empty) {
 			ReorderBufferEntry rs = this.eventQueue.front;
-			rs.state = ReorderBufferEntryState.COMPLETED;
+			rs.completed = true;
+
+			if(!rs.isEffectiveAddressComputation) {
+				foreach(i, physReg; rs.physRegs) {
+					PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+					
+					if(regFile[physReg].readyCycle != Simulator.singleInstance.currentCycle) {
+						regFile[physReg].readyCycle = Simulator.singleInstance.currentCycle;
+						assert(0);
+					}
+					
+					regFile[physReg].state = PhysicalRegisterState.WB;
+				}
+			}
 			
-			assert(0); //TODO: mark the destination physreg as written back
+			if(rs.isRecoverInst) {
+				if(rs.inLoadStoreQueue) {
+					assert(0);
+				}
+				
+				rs.uop.thread.recoverReorderBuffer(rs);
+				rs.uop.thread.pred.recover(rs.pc, rs.stackRecoverIndex);
+			}
 			
-			assert(0); //TODO: does this operation reveal a mis-predicted branch?
-			
-			assert(0); //TODO: if we speculatively update branch-predictor, do it here
+			if(rs.uop.thread.pred !is null && 
+				this.bpredSpecUpdate == BpredSpecUpdate.WB &&
+				!rs.inLoadStoreQueue &&
+				rs.uop.staticInst.isControl) {
+				rs.uop.thread.pred.update(
+					rs.pc,
+					rs.npc,
+					rs.npc != (rs.pc + uint.sizeof),
+					rs.predPc != (rs.pc + uint.sizeof),
+					rs.predPc == rs.npc,
+					rs.uop.staticInst,
+					rs.dirUpdate
+				);
+			}
 			
 			this.eventQueue.popFront();
 		}
@@ -549,7 +602,7 @@ class Core {
 			
 			if(rs.allOperandsSpecReady) {
 				this.readyQueue ~= rs;
-				rs.state = ReorderBufferEntryState.READY;
+				rs.queued = true;
 			}
 			else {
 				toWaitq ~= rs;
@@ -570,17 +623,18 @@ class Core {
 		
 		for(uint numIssued = 0; !this.readyQueue.empty && numIssued < this.issueWidth; numIssued++) {
 			ReorderBufferEntry rs = this.readyQueue.front;
-			
-			//rs.state = ReorderBufferEntryState.ISSUED; //TODO: remove it
+
+			rs.queued = false;
 			
 			if(rs.inLoadStoreQueue && rs.uop.staticInst.isStore) {
-				rs.state = ReorderBufferEntryState.COMPLETED;
+				rs.issued = true;
+				rs.completed = true;
 			}
 			else {
 				if(rs.uop.staticInst.fuType != FunctionalUnitType.NONE) {
 					FunctionalUnit fu = this.fuPool.getFree(rs.uop.staticInst.fuType);
 					if(fu !is null) {
-						rs.state = ReorderBufferEntryState.ISSUED;
+						rs.issued = true;
 						
 						fu.master.busy = fu.issueLat;
 						
@@ -623,7 +677,7 @@ class Core {
 					}
 				}
 				else {
-					rs.state = ReorderBufferEntryState.ISSUED;
+					rs.issued = true;
 					
 					rs.execLat = 1;
 					assert(0);
@@ -641,6 +695,7 @@ class Core {
 		
 		foreach(rs; toReadyq) {
 			this.readyQueue ~= rs;
+			rs.queued = true;
 		}
 	}
 	
@@ -649,8 +704,31 @@ class Core {
 			ReorderBufferEntry rs = this.issueExecQueue.front;
 			
 			if(!rs.allOperandsSpecReady) {
-				assert(0);
-				/* TODO: handle memory misprediction! */
+				foreach(i, srcPhysReg; rs.srcPhysregs) {
+					PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(rs.uop.staticInst.ideps[i].type);
+					regFile[srcPhysReg].specReadyCycle = regFile[srcPhysReg].readyCycle - ISSUE_EXEC_DELAY;
+				}
+				
+				while(rs !is null) {
+					if(!rs.isEffectiveAddressComputation) {
+						foreach(i, physReg; rs.physRegs) {
+							PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+							regFile[physReg].specReadyCycle = cast(ulong)-1;
+							regFile[physReg].readyCycle = cast(ulong)-1;
+						}
+					}
+					
+					rs.issued = false;
+					rs.replayed = true;
+					
+					if(!rs.uop.staticInst.isLoad) {
+						this.waitingQueue ~= rs; //TODO
+					}
+					
+					rs = null;
+					
+					//TODO
+				}
 			}
 			
 			this.eventQueue.enqueue(rs, rs.execLat);
@@ -721,19 +799,20 @@ class Core {
 			}
 			
 			rs.dispatchCycle = Simulator.singleInstance.currentCycle;
-			rs.state = ReorderBufferEntryState.DISPATCHED;
+			rs.dispatched = true;
 			
 			rs.issueQueueEntry = issueQueueEntry;
 			rs.inIssueQueue = true;
 			
 			if(rs.allOperandsSpecReady) {
 				this.readyQueue ~= rs;
+				rs.queued = true;
 			}
 			
 			assert(0);
 			//TODO
 			
-			if(rs.state != ReorderBufferEntryState.READY) {
+			if(!rs.queued) {
 				assert(0);
 				this.waitingQueue ~= rs; //TODO
 			}
@@ -1127,6 +1206,10 @@ class Thread {
 		this.state = ThreadState.Active;
 	}
 	
+	void recoverReorderBuffer(ReorderBufferEntry rs) {
+		assert(0);
+	}
+	
 	void commit() {
 		if(Simulator.singleInstance.currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {
 			logging.fatal(LogCategory.SIMULATOR, "No instruction committed in one million cycles.");
@@ -1135,7 +1218,7 @@ class Thread {
 		for(uint numCommitted = 0; !this.reorderBuffer.empty && numCommitted < this.commitWidth;) {
 			ReorderBufferEntry rs = this.reorderBuffer.front;
 
-			if(rs.state != ReorderBufferEntryState.COMPLETED) {
+			if(!rs.completed) {
 				break;
 			}
 			
@@ -1188,10 +1271,10 @@ class Thread {
 					}
 				}
 			}
-			else if(rs.uop.staticInst.isLoad && rs.state == ReorderBufferEntryState.DISPATCHED && rs.allOperandsSpecReady) {
+			else if(rs.uop.staticInst.isLoad && rs.dispatched && rs.allOperandsSpecReady) {
 				if(stdUnknowns.count(rs.effectiveAddress) == 0) {
 					this.core.readyQueue ~= rs;
-					rs.state = ReorderBufferEntryState.READY;
+					rs.queued = true;
 				}
 			}
 		}
@@ -1201,7 +1284,7 @@ class Thread {
 		uint count = 0;
 		
 		foreach(rs; this.reorderBuffer) {
-			if(rs.state == ReorderBufferEntryState.FETCHED) {
+			if(!rs.dispatched) {
 				count++;
 			}
 		}
