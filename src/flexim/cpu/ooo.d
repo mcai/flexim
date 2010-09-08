@@ -513,11 +513,6 @@ class Processor {
 			
 			this.activeThreadCount = 0;
 		}
-
-		void addCore(Core core) {
-			core.processor = this;
-			this.cores ~= core;
-		}
 		
 		bool canRun() {
 			return this.activeThreadCount > 0;
@@ -549,7 +544,8 @@ enum BpredSpecUpdate {
 }
 
 class Core {	
-	this(uint num) {
+	this(Processor processor, uint num) {
+		this.processor = processor;
 		this.num = num;
 	
 		this.fetchSpeed = 1;
@@ -574,11 +570,6 @@ class Core {
 		this.isa = new MipsISA();
 		
 		this.bpredSpecUpdate = BpredSpecUpdate.ID;
-	}
-
-	void addThread(Thread thread) {
-		thread.core = this;
-		this.threads ~= thread;
 	}
 	
 	void releaseFunctionalUnits() {
@@ -699,16 +690,18 @@ class Core {
 								}
 							}
 							
+							uint loadLat;
+							
 							if(!hitInLsq) {
-								assert(0);
-								/* TODO: no! go to the data cache if addr is valid */
-								
+								loadLat = fu.opLat; //TODO: icache access
+							}
+							else {
+								loadLat = 1;
 							}
 							
-							assert(0);
-							/* TODO: all loads and stores must to access D-TLB */
+							//TODO: dtlb access
 							
-							//rs.execLat = loadLat;
+							rs.execLat = loadLat;
 							
 							this.issueExecQueue.enqueue(rs, Simulator.singleInstance.currentCycle + ISSUE_EXEC_DELAY);
 							
@@ -1169,7 +1162,7 @@ class Core {
 			this.threads[fetchThreadId].fetchPc = this.threads[fetchThreadId].fetchPredPc;
 			
 			StaticInst staticInst = this.isa.decode(this.threads[fetchThreadId].fetchPc, this.mem);
-			//TODO: icache && tlb access
+			this.threads[fetchThreadId].fetchIssueDelay += 2; //TODO: icache & itlb access
 			
 			if(this.threads[fetchThreadId].pred !is null) {
 				if(staticInst.isControl) {
@@ -1341,7 +1334,9 @@ enum ThreadState {
 }
 
 class Thread {
-	this(Simulation simulation, uint num, string name, Process process) {
+	this(Core core, Simulation simulation, uint num, string name, Process process) {
+		this.core = core;
+		
 		this.num = num;
 		
 		this.name = name;
@@ -1429,12 +1424,7 @@ class Thread {
 					
 					if(fu !is null) {
 						fu.master.busy = fu.issueLat;
-	
-						assert(0);
-						/* TODO: go to the data cache */
-						
-						assert(0);
-						/* TODO: all loads and stores must to access D-TLB */						
+						//TODO: commit store to dcache & dtlb access
 					}
 					else {
 						break;
