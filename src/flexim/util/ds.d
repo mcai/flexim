@@ -79,8 +79,34 @@ class Queue(EntryT) {
 		return result;
 	}
 
+	int opApplyReverse(int delegate(ref uint, ref EntryT) dg) {
+		int result;
+
+		foreach_reverse(ref uint i, ref EntryT p; this.entries) {
+			result = dg(i, p);
+			if(result)
+				break;
+		}
+		return result;
+	}
+
+	int opApplyReverse(int delegate(ref EntryT) dg) {
+		int result;
+
+		foreach_reverse(ref EntryT p; this.entries) {
+			result = dg(p);
+			if(result)
+				break;
+		}
+		return result;
+	}
+
 	void popFront() {
-		this.entries.popFront;
+		this.entries.popFront();
+	}
+	
+	void popBack() {
+		this.entries.popBack();
 	}
 
 	EntryT front() {
@@ -92,6 +118,19 @@ class Queue(EntryT) {
 	
 	EntryT back() {
 		return this.entries.back;
+	}
+	
+	uint indexOf(EntryT value) {
+		return this.entries.indexOf(value);
+	}
+	
+	void removeAt(uint index) {
+		assert(index >= 0 && index < this.entries.length);
+		this.entries = this.entries.remove(index);
+	}
+	
+	void remove(EntryT value) {
+		this.removeAt(this.indexOf(value));
 	}
 
 	void opOpAssign(string op, EntryT)(EntryT entry)

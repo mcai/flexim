@@ -566,11 +566,7 @@ class Core {
 				}
 			}
 			
-			if(rs.isRecoverInst) {
-				if(rs.inLoadStoreQueue) {
-					assert(0);
-				}
-				
+			if(rs.isRecoverInst) {				
 				rs.uop.thread.recoverReorderBuffer(rs);
 				rs.uop.thread.pred.recover(rs.pc, rs.stackRecoverIndex);
 			}
@@ -610,8 +606,6 @@ class Core {
 			
 			this.waitingQueue.popFront();
 		}
-		
-		assert(this.waitingQueue.empty); //TODO: temporarily added, to remove
 		
 		foreach(rs; toWaitq) {
 			this.waitingQueue ~= rs;
@@ -1206,8 +1200,41 @@ class Thread {
 		this.state = ThreadState.Active;
 	}
 	
-	void recoverReorderBuffer(ReorderBufferEntry rs) {
-		assert(0);
+	void recoverReorderBuffer(ReorderBufferEntry branchRs) {
+		ReorderBufferEntry[] toSquash;
+			
+		foreach_reverse(rs; this.reorderBuffer) {
+			if(rs != branchRs) {
+				if(rs.isEffectiveAddressComputation) {
+					this.loadStoreQueue.remove(rs);
+				}
+				
+				toSquash ~= rs;
+				
+				if(rs.inIssueQueue) {
+					this.core.issueQueue.remove(rs.issueQueueEntry);
+					rs.inIssueQueue = false;
+				}
+				
+				foreach(i, physReg; rs.physRegs) {
+					PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+					regFile[physReg].state = PhysicalRegisterState.FREE;
+				}
+				
+				foreach(i, oDep; rs.uop.staticInst.odeps) {
+					this.renameTable[oDep.num] = rs.oldPhysRegs[i];
+				}
+				
+				rs.physRegs.clear();
+			}
+			else {
+				break;
+			}
+		}
+		
+		foreach(rs; toSquash) {
+			this.reorderBuffer.remove(rs);
+		}
 	}
 	
 	void commit() {
@@ -1223,8 +1250,12 @@ class Thread {
 			}
 			
 			if(rs.isEffectiveAddressComputation) {
+				if(!this.loadStoreQueue.front.completed) {
+					break;
+				}
+				
 				if(this.loadStoreQueue.front.uop.staticInst.isStore) {
-					assert(0); //TODO: in commit()
+					assert(0); //TODO: fu in commit()
 				}
 				
 				this.loadStoreQueue.popFront();
@@ -1242,7 +1273,15 @@ class Thread {
 				);
 			}
 			
-			assert(0); //TODO: handle register deallocations
+			foreach(i, oldPhysReg; rs.oldPhysRegs) {
+				PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+				regFile[oldPhysReg].state = PhysicalRegisterState.FREE;
+			}
+			
+			foreach(i, physReg; rs.physRegs) {
+				PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+				regFile[physReg].state = PhysicalRegisterState.ARCH;
+			}
 			
 			this.reorderBuffer.popFront();
 			
@@ -1355,10 +1394,12 @@ class Thread {
 	uint fetchPredPc;
 
 	Bpred pred;
-	Bpred loadLatPred; 
+	Bpred loadLatPred;
 
 	bool fetchStalled;
 	uint fetchBlock;
+	
+	uint[] renameTable;
 	
 	uint commitWidth;
 
