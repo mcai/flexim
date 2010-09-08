@@ -71,46 +71,46 @@ class FunctionalUnitCategory {
 	uint quantity;
 	uint busy;
 
-	FunctionalUnit[] x;
+	FunctionalUnit[] entities;
 }
 
 class FunctionalUnitPool {
 	this() {		
 		FunctionalUnitCategory categoryIntegerAlu =
 			new FunctionalUnitCategory("integer-ALU", 4, 0);
-		categoryIntegerAlu.x ~=
+		categoryIntegerAlu.entities ~=
 			new FunctionalUnit(categoryIntegerAlu, FunctionalUnitType.IntALU, 1, 1);
 			
 		FunctionalUnitCategory categoryIntegerMultDiv =
 			new FunctionalUnitCategory("integer-MULT/DIV", 1, 0);
-		categoryIntegerMultDiv.x ~=
+		categoryIntegerMultDiv.entities ~=
 			new FunctionalUnit(categoryIntegerMultDiv, FunctionalUnitType.IntMULT, 3, 1);
-		categoryIntegerMultDiv.x ~=
+		categoryIntegerMultDiv.entities ~=
 			new FunctionalUnit(categoryIntegerMultDiv, FunctionalUnitType.IntDIV, 20, 19);
 			
 		FunctionalUnitCategory categoryMemoryPort =
 			new FunctionalUnitCategory("memory-port", 2, 0);
-		categoryMemoryPort.x ~=
+		categoryMemoryPort.entities ~=
 			new FunctionalUnit(categoryMemoryPort, FunctionalUnitType.RdPort, 1, 1);
-		categoryMemoryPort.x ~=
+		categoryMemoryPort.entities ~=
 			new FunctionalUnit(categoryMemoryPort, FunctionalUnitType.WrPort, 1, 1);
 			
 		FunctionalUnitCategory categoryFPAdder =
 			new FunctionalUnitCategory("FP-adder", 4, 0);
-		categoryFPAdder.x ~=
+		categoryFPAdder.entities ~=
 			new FunctionalUnit(categoryFPAdder, FunctionalUnitType.FloatADD, 2, 1);
-		categoryFPAdder.x ~=
+		categoryFPAdder.entities ~=
 			new FunctionalUnit(categoryFPAdder, FunctionalUnitType.FloatCMP, 2, 1);
-		categoryFPAdder.x ~=
+		categoryFPAdder.entities ~=
 			new FunctionalUnit(categoryFPAdder, FunctionalUnitType.FloatCVT, 2, 1);
 				
 		FunctionalUnitCategory categoryFPMultDiv =
 			new FunctionalUnitCategory("FP-MULT/DIV", 1, 0);
-		categoryFPMultDiv.x ~=
+		categoryFPMultDiv.entities ~=
 			new FunctionalUnit(categoryFPMultDiv, FunctionalUnitType.FloatMULT, 4, 1);
-		categoryFPMultDiv.x ~=
+		categoryFPMultDiv.entities ~=
 			new FunctionalUnit(categoryFPMultDiv, FunctionalUnitType.FloatDIV, 12, 12);
-		categoryFPMultDiv.x ~=
+		categoryFPMultDiv.entities ~=
 			new FunctionalUnit(categoryFPMultDiv, FunctionalUnitType.FloatSQRT, 24, 24);
 		
 		this.categories ~= categoryIntegerAlu;
@@ -120,8 +120,16 @@ class FunctionalUnitPool {
 		this.categories ~= categoryFPMultDiv;
 	}
 	
-	FunctionalUnit getFree(FunctionalUnitType fuType) {
-		assert(0);
+	FunctionalUnit getFree(FunctionalUnitType fuType) {		
+		foreach(cat; this.categories) {
+			foreach(entity; cat.entities) {
+				if(!entity.master.busy) {
+					return entity;
+				}
+			}
+		}
+		
+		return null;
 	}
 	
 	FunctionalUnitCategory[] categories;
@@ -138,21 +146,24 @@ class PhysicalRegister {
 	this() {
 		this.readyCycle = cast(ulong)-1;
 		this.specReadyCycle = cast(ulong)-1;
+		this.allocatedCycle = cast(ulong)-1;
 		this.state = PhysicalRegisterState.FREE;
 	}
 	
 	ulong readyCycle;
 	ulong specReadyCycle;
+	ulong allocatedCycle;
 	PhysicalRegisterState state;
 }
 
 class PhysicalRegisterFile {
-	this() {
-		this(1024);
+	this(Core core) {
+		this(1024, core);
 	}
 	
-	this(uint capacity) {
+	this(uint capacity, Core core) {
 		this.capacity = capacity;
+		this.core = core;
 		
 		this.entries = new PhysicalRegister[this.capacity];
 		for(uint i = 0; i < this.capacity; i++) {
@@ -170,6 +181,15 @@ class PhysicalRegisterFile {
 		return null;
 	}
 	
+	uint alloc() {
+		PhysicalRegister freeReg = this.findFree();
+		freeReg.state = PhysicalRegisterState.ALLOC;
+		freeReg.allocatedCycle = Simulator.singleInstance.currentCycle;
+		freeReg.readyCycle = cast(ulong)-1;
+		freeReg.specReadyCycle = cast(ulong)-1;
+		return this.entries.indexOf(freeReg);
+	}
+	
 	PhysicalRegister opIndex(uint index) {
 		return this.entries[index];
 	}
@@ -179,6 +199,7 @@ class PhysicalRegisterFile {
 	}
 	
 	uint capacity;
+	Core core;
 	PhysicalRegister[] entries;
 }
 
@@ -194,9 +215,9 @@ enum FetchPolicy: string {
 }
 
 class FetchRecord {	
-	this(StaticInst staticInst, uint regsPc, uint predPc, BpredUpdate dirUpdate, int stackRecoverIndex, ulong fetchedCycle) {
+	this(StaticInst staticInst, uint pc, uint predPc, BpredUpdate dirUpdate, int stackRecoverIndex, ulong fetchedCycle) {
 		this.staticInst = staticInst;
-		this.regsPc = regsPc;
+		this.pc = pc;
 		this.predPc = predPc;
 		this.dirUpdate = dirUpdate;
 		this.stackRecoverIndex = stackRecoverIndex;
@@ -208,13 +229,13 @@ class FetchRecord {
 	}
 
 	StaticInst staticInst;
-	uint regsPc, predPc;
+	uint pc, predPc;
 	BpredUpdate dirUpdate;
 	int stackRecoverIndex;
 	ulong fetchedCycle;
 }
 
-class FetchQueue: Queue!(FetchRecord) { //FIFO Queue
+class FetchQueue: Queue!(FetchRecord) {
 	this() {
 		this(4);
 	}
@@ -297,11 +318,11 @@ class ReorderBufferEntry {
 		
 		this.isSpeculative = false;
 		
-		this.dispatched = false;
-		this.queued = false;
-		this.issued = false;
-		this.completed = false;
-		this.replayed = false;
+		this.isDispatched = false;
+		this.isQueued = false;
+		this.isIssued = false;
+		this.isCompleted = false;
+		this.isReplayed = false;
 		
 		this.execLat = cast(ulong)-1;
 		
@@ -309,28 +330,52 @@ class ReorderBufferEntry {
 		this.dispatchCycle = cast(ulong)-1;
 	}
 	
-	bool storeAddressReady() {
-		assert(0);
+	bool storeOperandReady() {
+		return this.operandSpecReady(STORE_OP_INDEX);
 	}
 	
-	bool operandReady(uint opNum) {
-		assert(0);
+	bool storeAddressReady() {
+		return this.operandSpecReady(STORE_ADDR_INDEX);
+	}
+	
+	bool operandReady(uint opNum) {		
+		PhysicalRegisterFile regFile = this.uop.thread.core.getPhysicalRegisterFile(this.uop.staticInst.ideps[opNum].type);
+		return regFile[this.srcPhysRegs[opNum]].readyCycle <= Simulator.singleInstance.currentCycle;
 	}
 	
 	bool operandSpecReady(uint opNum) {
-		assert(0);
+		PhysicalRegisterFile regFile = this.uop.thread.core.getPhysicalRegisterFile(this.uop.staticInst.ideps[opNum].type);
+		return regFile[this.srcPhysRegs[opNum]].specReadyCycle <= Simulator.singleInstance.currentCycle;
 	}
 	
 	bool allOperandsReady() {
-		assert(0);
-	}
-	
-	bool oneOperandReady() {
-		assert(0);
+		if(this.isEffectiveAddressComputation) {
+			assert(0); //TODO: ea compute case in allOperandsReady()
+		}
+		else {
+			foreach(i, iDep; this.uop.staticInst.ideps) {
+				if(!this.operandReady(i)) {
+					return false;
+				}
+			}
+			
+			return true;
+		}
 	}
 	
 	bool allOperandsSpecReady() {
-		assert(0);
+		if(this.isEffectiveAddressComputation) {
+			assert(0); //TODO: ea compute case in allOperandsSpecReady()
+		}
+		else {
+			foreach(i, iDep; this.uop.staticInst.ideps) {
+				if(!this.operandSpecReady(i)) {
+					return false;
+				}
+			}
+			
+			return true;
+		}
 	}
 
 	ulong id;
@@ -350,15 +395,15 @@ class ReorderBufferEntry {
 	
 	bool isSpeculative;
 	
-	bool dispatched;
-	bool queued;
-	bool issued;
-	bool completed;
-	bool replayed;
+	bool isDispatched;
+	bool isQueued;
+	bool isIssued;
+	bool isCompleted;
+	bool isReplayed;
 	
 	uint[] physRegs;
 	uint[] oldPhysRegs;
-	uint[] srcPhysregs;
+	uint[] srcPhysRegs;
 	
 	uint execLat;
 	
@@ -492,9 +537,9 @@ class Core {
 		this.decodeWidth = 4;
 		this.issueWidth = 4;
 		
-		this.intRegFile = new PhysicalRegisterFile();
-		this.fpRegFile = new PhysicalRegisterFile();
-		this.miscRegFile = new PhysicalRegisterFile();
+		this.intRegFile = new PhysicalRegisterFile(this);
+		this.fpRegFile = new PhysicalRegisterFile(this);
+		this.miscRegFile = new PhysicalRegisterFile(this);
 		
 		this.waitingQueue = new WaitingQueue();
 		this.readyQueue = new ReadyQueue();
@@ -540,7 +585,7 @@ class Core {
 	void writeback() {
 		while(!this.eventQueue.empty) {
 			ReorderBufferEntry rs = this.eventQueue.front;
-			rs.completed = true;
+			rs.isCompleted = true;
 
 			if(!rs.isEffectiveAddressComputation) {
 				foreach(i, physReg; rs.physRegs) {
@@ -587,7 +632,7 @@ class Core {
 			
 			if(rs.allOperandsSpecReady) {
 				this.readyQueue ~= rs;
-				rs.queued = true;
+				rs.isQueued = true;
 			}
 			else {
 				toWaitq ~= rs;
@@ -607,17 +652,17 @@ class Core {
 		for(uint numIssued = 0; !this.readyQueue.empty && numIssued < this.issueWidth; numIssued++) {
 			ReorderBufferEntry rs = this.readyQueue.front;
 
-			rs.queued = false;
+			rs.isQueued = false;
 			
 			if(rs.inLoadStoreQueue && rs.uop.staticInst.isStore) {
-				rs.issued = true;
-				rs.completed = true;
+				rs.isIssued = true;
+				rs.isCompleted = true;
 			}
 			else {
 				if(rs.uop.staticInst.fuType != FunctionalUnitType.NONE) {
 					FunctionalUnit fu = this.fuPool.getFree(rs.uop.staticInst.fuType);
 					if(fu !is null) {
-						rs.issued = true;
+						rs.isIssued = true;
 						
 						fu.master.busy = fu.issueLat;
 						
@@ -672,7 +717,7 @@ class Core {
 					}
 				}
 				else {
-					rs.issued = true;
+					rs.isIssued = true;
 					
 					rs.execLat = 1;
 					this.issueExecQueue.enqueue(rs, ISSUE_EXEC_DELAY);
@@ -692,7 +737,7 @@ class Core {
 		
 		foreach(rs; toReadyq) {
 			this.readyQueue ~= rs;
-			rs.queued = true;
+			rs.isQueued = true;
 		}
 	}
 	
@@ -701,7 +746,7 @@ class Core {
 			ReorderBufferEntry rs = this.issueExecQueue.front;
 			
 			if(!rs.allOperandsSpecReady) {
-				foreach(i, srcPhysReg; rs.srcPhysregs) {
+				foreach(i, srcPhysReg; rs.srcPhysRegs) {
 					PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(rs.uop.staticInst.ideps[i].type);
 					regFile[srcPhysReg].specReadyCycle = regFile[srcPhysReg].readyCycle - ISSUE_EXEC_DELAY;
 				}
@@ -715,8 +760,8 @@ class Core {
 						}
 					}
 					
-					rs.issued = false;
-					rs.replayed = true;
+					rs.isIssued = false;
+					rs.isReplayed = true;
 					
 					if(!rs.uop.staticInst.isLoad) {
 						this.waitingQueue ~= rs;
@@ -774,7 +819,7 @@ class Core {
 			
 			while(!dispatchStalled[dispatchThreadId]) {
 				if(rs == this.threads[dispatchThreadId].reorderBuffer.front && numSearched == 0) {
-					if(!rs.dispatched) {
+					if(!rs.isDispatched) {
 						break;
 					}
 				}
@@ -784,7 +829,7 @@ class Core {
 				
 				numSearched++;
 				
-				if(!rs.dispatched) {
+				if(!rs.isDispatched) {
 					break;
 				}
 				
@@ -810,25 +855,25 @@ class Core {
 			}
 			
 			rs.dispatchCycle = Simulator.singleInstance.currentCycle;
-			rs.dispatched = true;
+			rs.isDispatched = true;
 			
 			rs.issueQueueEntry = issueQueueEntry;
 			rs.inIssueQueue = true;
 			
 			if(rs.allOperandsSpecReady) {
 				this.readyQueue ~= rs;
-				rs.queued = true;
+				rs.isQueued = true;
 			}
 			
 			if(rs.loadStoreQueueEntry !is null) {
 				ReorderBufferEntry lsq = rs.loadStoreQueueEntry;
 				lsq.dispatchCycle = Simulator.singleInstance.currentCycle;
-				lsq.dispatched = true;
+				lsq.isDispatched = true;
 				
 				if(lsq.uop.staticInst.isStore) {
 					if(lsq.allOperandsSpecReady) {
 						this.readyQueue ~= lsq;
-						lsq.queued = true;
+						lsq.isQueued = true;
 					}
 					else {
 						this.waitingQueue ~= lsq;
@@ -836,7 +881,7 @@ class Core {
 				}
 			}
 			
-			if(!rs.queued) {
+			if(!rs.isQueued) {
 				this.waitingQueue ~= rs;
 			}
 
@@ -944,14 +989,61 @@ class Core {
 			ReorderBufferEntry rs;
 			
 			if(!uop.staticInst.isNop) {
-				rs = null; //TODO: new ReorderBufferEntry();
+				rs = new ReorderBufferEntry(this.threads[dispatchThreadId].pc, uop);
+				rs.npc = this.threads[dispatchThreadId].npc;
+				rs.predPc = this.threads[dispatchThreadId].predPc;
+				rs.inLoadStoreQueue = false;
+				rs.loadStoreQueueEntry = null;
+				rs.isEffectiveAddressComputation = false;
+				rs.isRecoverInstruction = false;
+				rs.dirUpdate = this.threads[dispatchThreadId].fetchQueue.front.dirUpdate;
+				rs.stackRecoverIndex = this.threads[dispatchThreadId].fetchQueue.front.stackRecoverIndex;
+				rs.isSpeculative = this.threads[dispatchThreadId].isSpeculative;
+				rs.effectiveAddress = 0;
+				rs.isReplayed = false;
+				rs.inIssueQueue = rs.isDispatched = rs.isQueued = rs.isIssued = rs.isCompleted = false;
+				rs.renameCycle = Simulator.singleInstance.currentCycle;
+				rs.dispatchCycle = 0;
+				
+				foreach(i, iDep; rs.uop.staticInst.ideps) {
+					rs.srcPhysRegs[i] = this.threads[dispatchThreadId].renameTable[iDep.num]; //TODO: should rename table be split into int, fp and misc?
+				}
+				
+				foreach(i, oDep; rs.uop.staticInst.odeps) {
+					PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
+					
+					rs.oldPhysRegs[i] = rs.uop.thread.renameTable[oDep.num];
+					rs.physRegs[i] = regFile.alloc();
+					rs.uop.thread.renameTable[oDep.num] = rs.physRegs[i]; 
+				}
 				
 				this.threads[dispatchThreadId].reorderBuffer ~= rs;
 				
 				if(uop.staticInst.isMem) {
 					rs.isEffectiveAddressComputation = true;
 					
-					ReorderBufferEntry lsq = null; //TODO: new ReorderBufferEntry();
+					ReorderBufferEntry lsq = new ReorderBufferEntry(this.threads[dispatchThreadId].pc, uop);
+					lsq.npc = this.threads[dispatchThreadId].npc;
+					lsq.predPc = this.threads[dispatchThreadId].predPc;
+					rs.loadStoreQueueEntry = lsq;
+					lsq.inLoadStoreQueue = true;
+					lsq.inIssueQueue = false;
+					lsq.isEffectiveAddressComputation = false;
+					lsq.isDispatched = false;
+					lsq.isRecoverInstruction = false;
+					lsq.dirUpdate.pdir1 = lsq.dirUpdate.pdir2 = null;
+					lsq.dirUpdate.pmeta = null;
+					lsq.stackRecoverIndex = 0;
+					lsq.isSpeculative = this.threads[dispatchThreadId].isSpeculative;
+					lsq.effectiveAddress = (cast(MemoryOp) uop.staticInst).ea(uop.thread);
+					lsq.isReplayed = false;
+					lsq.isQueued = lsq.isIssued = lsq.isCompleted = false;
+					lsq.dispatchCycle = 0;
+					lsq.renameCycle = Simulator.singleInstance.currentCycle;
+					
+					lsq.srcPhysRegs = rs.srcPhysRegs;
+					lsq.physRegs = rs.physRegs;
+					lsq.oldPhysRegs.clear();
 					
 					this.threads[dispatchThreadId].loadStoreQueue ~= rs;
 				}
@@ -1067,16 +1159,16 @@ class Core {
 			
 			this.threads[fetchThreadId].fetchPc = this.threads[fetchThreadId].fetchPredPc;
 			
-			bool bogus = false; //TODO
+			bool bogus = false; //TODO: bogus instruction determination
 			
 			StaticInst staticInst = null;
 			
 			if(!bogus) {
 				staticInst = this.isa.decode(this.threads[fetchThreadId].fetchPc, this.mem);
-				//TODO
+				//TODO: not bogus
 			}
 			else {
-				//inst = NOP; //TODO
+				//inst = NOP; //TODO: bogus
 			}
 			
 			if(this.threads[fetchThreadId].pred !is null) {
@@ -1109,7 +1201,7 @@ class Core {
 				staticInst,
 				this.threads[fetchThreadId].fetchPc,
 				this.threads[fetchThreadId].fetchPredPc,
-				null, //TODO
+				null, //TODO: fr
 				stackRecoverIndex,
 				Simulator.singleInstance.currentCycle);
 			this.threads[fetchThreadId].fetchQueue ~= fr;
@@ -1324,17 +1416,30 @@ class Thread {
 		for(uint numCommitted = 0; !this.reorderBuffer.empty && numCommitted < this.commitWidth;) {
 			ReorderBufferEntry rs = this.reorderBuffer.front;
 
-			if(!rs.completed) {
+			if(!rs.isCompleted) {
 				break;
 			}
 			
 			if(rs.isEffectiveAddressComputation) {
-				if(!this.loadStoreQueue.front.completed) {
+				if(!this.loadStoreQueue.front.isCompleted) {
 					break;
 				}
 				
-				if(this.loadStoreQueue.front.uop.staticInst.isStore) {
-					assert(0); //TODO: fu in commit()
+				if(this.loadStoreQueue.front.uop.staticInst.isStore) {					
+					FunctionalUnit fu = this.core.fuPool.getFree(this.loadStoreQueue.front.uop.staticInst.fuType);
+					
+					if(fu !is null) {
+						fu.master.busy = fu.issueLat;
+	
+						assert(0);
+						/* TODO: go to the data cache */
+						
+						assert(0);
+						/* TODO: all loads and stores must to access D-TLB */						
+					}
+					else {
+						break;
+					}
 				}
 				
 				this.loadStoreQueue.popFront();
@@ -1389,10 +1494,10 @@ class Thread {
 					}
 				}
 			}
-			else if(rs.uop.staticInst.isLoad && rs.dispatched && rs.allOperandsSpecReady) {
+			else if(rs.uop.staticInst.isLoad && rs.isDispatched && rs.allOperandsSpecReady) {
 				if(stdUnknowns.count(rs.effectiveAddress) == 0) {
 					this.core.readyQueue ~= rs;
-					rs.queued = true;
+					rs.isQueued = true;
 				}
 			}
 		}
@@ -1402,7 +1507,7 @@ class Thread {
 		uint count = 0;
 		
 		foreach(rs; this.reorderBuffer) {
-			if(!rs.dispatched) {
+			if(!rs.isDispatched) {
 				count++;
 			}
 		}
