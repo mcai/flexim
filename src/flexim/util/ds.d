@@ -125,7 +125,7 @@ class Queue(EntryT) {
 	}
 	
 	void removeAt(uint index) {
-		assert(index >= 0 && index < this.entries.length);
+		assert(index >= 0 && index < this.size);
 		this.entries = this.entries.remove(index);
 	}
 	
@@ -143,11 +143,23 @@ class Queue(EntryT) {
 	}
 	
 	EntryT opIndex(uint index) {
+		assert(index - 1 >= 0 && index < this.size);
 		return this.entries[index];
 	}
 	
 	void opIndexAssign(EntryT value, uint index) {
 		this.entries[index] = value;
+	}
+	
+	EntryT before(EntryT entry) {
+		uint index = this.indexOf(entry);
+		return this[(index - 1) % this.size];
+	}
+	
+	EntryT after(EntryT entry) {
+		uint index = this.indexOf(entry);
+		
+		return this[(index + 1) % this.size];
 	}
 	
 	void clear() {
@@ -171,4 +183,22 @@ class Queue(EntryT) {
 	uint capacity;
 
 	EntryT[] entries;
+}
+
+class DelayedQueue(EntryT): Queue!(EntryT), EventProcessor {
+	this(string name, uint capacity) {
+		super(name, capacity);
+		this.eventQueue = new DelegateEventQueue();
+		Simulator.singleInstance.addEventProcessor(this);
+	} 
+	
+	void enqueue(EntryT entry, ulong delay = 0) {
+		this.eventQueue.schedule({this ~= entry;}, delay);
+	}
+	
+	override void processEvents() {
+		this.eventQueue.processEvents();
+	}
+	
+	DelegateEventQueue eventQueue;
 }

@@ -292,8 +292,8 @@ class ReorderBufferEntry {
 		this.isEffectiveAddressComputation = false;
 		this.effectiveAddress = 0;
 		
-		this.isRecoverInst = false;
-		//this.stackRecoverIndex = -1; //TODO
+		this.isRecoverInstruction = false;
+		this.stackRecoverIndex = -1;
 		
 		this.isSpeculative = false;
 		
@@ -303,10 +303,10 @@ class ReorderBufferEntry {
 		this.completed = false;
 		this.replayed = false;
 		
-		this.execLat = 0; //TODO: correct?
+		this.execLat = cast(ulong)-1;
 		
-		this.renameCycle = 0; //TODO: correct?
-		this.dispatchCycle = 0; //TODO: correct?
+		this.renameCycle = cast(ulong)-1;
+		this.dispatchCycle = cast(ulong)-1;
 	}
 	
 	bool storeAddressReady() {
@@ -344,7 +344,7 @@ class ReorderBufferEntry {
 	bool isEffectiveAddressComputation;
 	uint effectiveAddress;
 	
-	bool isRecoverInst;
+	bool isRecoverInstruction;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
 	
@@ -365,6 +365,7 @@ class ReorderBufferEntry {
 	ulong renameCycle;
 	ulong dispatchCycle;
 	
+	ReorderBufferEntry loadStoreQueueEntry;
 	IssueQueueEntry issueQueueEntry;
 	
 	static this() {
@@ -374,7 +375,7 @@ class ReorderBufferEntry {
 	static ulong currentId;
 }
 
-class WaitingQueue: Queue!(ReorderBufferEntry) { //FIFO Queue
+class WaitingQueue: Queue!(ReorderBufferEntry) {
 	this() {
 		this(80);
 	}
@@ -384,7 +385,7 @@ class WaitingQueue: Queue!(ReorderBufferEntry) { //FIFO Queue
 	}
 }
 
-class ReadyQueue: Queue!(ReorderBufferEntry) { //FIFO Queue
+class ReadyQueue: Queue!(ReorderBufferEntry) {
 	this() {
 		this(80);
 	}
@@ -394,7 +395,7 @@ class ReadyQueue: Queue!(ReorderBufferEntry) { //FIFO Queue
 	}
 }
 
-class IssueExecQueue: Queue!(ReorderBufferEntry) { //FIFO Queue
+class IssueExecQueue: DelayedQueue!(ReorderBufferEntry) {
 	this() {
 		this(80);
 	}
@@ -404,7 +405,7 @@ class IssueExecQueue: Queue!(ReorderBufferEntry) { //FIFO Queue
 	}
 }
 
-class ReorderBuffer: Queue!(ReorderBufferEntry) { //Circular Buffer
+class ReorderBuffer: Queue!(ReorderBufferEntry) {
 	this() {
 		this(16);
 	}
@@ -414,7 +415,7 @@ class ReorderBuffer: Queue!(ReorderBufferEntry) { //Circular Buffer
 	}
 }
 
-class LoadStoreQueue: Queue!(ReorderBufferEntry) { //Circular Buffer
+class LoadStoreQueue: Queue!(ReorderBufferEntry) {
 	this() {
 		this(8);
 	}
@@ -424,26 +425,14 @@ class LoadStoreQueue: Queue!(ReorderBufferEntry) { //Circular Buffer
 	}
 }
 
-class OoOEventQueue: Queue!(ReorderBufferEntry), EventProcessor { //Priority queue
+class OoOEventQueue: DelayedQueue!(ReorderBufferEntry) {
 	this() {
 		this(1024);
 	}
 	
 	this(uint capacity) {
 		super("eventQueue", capacity);
-		
-		this.eventQueue = new DelegateEventQueue();
 	}
-	
-	void enqueue(ReorderBufferEntry rs, ulong delay) {
-		this.eventQueue.schedule({this ~= rs;}, delay);
-	}
-	
-	override void processEvents() {
-		this.eventQueue.processEvents();
-	}
-	
-	DelegateEventQueue eventQueue;
 }
 
 class Processor {
@@ -566,7 +555,7 @@ class Core {
 				}
 			}
 			
-			if(rs.isRecoverInst) {				
+			if(rs.isRecoverInstruction) {				
 				rs.uop.thread.recoverReorderBuffer(rs);
 				rs.uop.thread.pred.recover(rs.pc, rs.stackRecoverIndex);
 			}
@@ -632,15 +621,21 @@ class Core {
 						
 						fu.master.busy = fu.issueLat;
 						
-						if(rs.inLoadStoreQueue && rs.uop.staticInst.isLoad) {
-							uint loadLat = 0;
-
-							assert(0);
-							/* TODO: for loads, determine cache access latency:
-							   first scan LSQ to see if a store forward is
-							   possible, if not, access the data cache */
+						if(rs.inLoadStoreQueue && rs.uop.staticInst.isLoad) {							
+							bool hitInLsq = false;
 							
-							if(loadLat == 0) {
+							ReorderBufferEntry lsq = rs.loadStoreQueueEntry;
+							if(lsq != rs.uop.thread.loadStoreQueue.front) {
+								for(;;) {
+									lsq = rs.uop.thread.loadStoreQueue.before(lsq);
+									
+									if(lsq.uop.staticInst.isStore && lsq.effectiveAddress == rs.effectiveAddress) {
+										hitInLsq = true;
+									}
+								}
+							}
+							
+							if(!hitInLsq) {
 								assert(0);
 								/* TODO: no! go to the data cache if addr is valid */
 								
@@ -649,21 +644,27 @@ class Core {
 							assert(0);
 							/* TODO: all loads and stores must to access D-TLB */
 							
-							rs.execLat = loadLat;
-		
-							assert(0);
-							this.issueExecQueue ~= rs; //TODO
+							//rs.execLat = loadLat;
 							
-							assert(0);
-							//TODO
+							this.issueExecQueue.enqueue(rs, Simulator.singleInstance.currentCycle + ISSUE_EXEC_DELAY);
+							
+							foreach(i, physReg; rs.physRegs) {
+								PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+								regFile[physReg].specReadyCycle = Simulator.singleInstance.currentCycle + rs.execLat + ISSUE_EXEC_DELAY;
+								regFile[physReg].readyCycle = Simulator.singleInstance.currentCycle + rs.execLat + ISSUE_EXEC_DELAY;
+							}
 						}
 						else {
 							rs.execLat = fu.opLat;
-							assert(0);
-							this.issueExecQueue ~= rs; //TODO
+							this.issueExecQueue.enqueue(rs, ISSUE_EXEC_DELAY);
 							
-							assert(0);
-							//TODO: memory accesses are woken up differently via the LSQ
+							if(!rs.isEffectiveAddressComputation) {
+								foreach(i, physReg; rs.physRegs) {
+									PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+									regFile[physReg].specReadyCycle = Simulator.singleInstance.currentCycle + rs.execLat;
+									regFile[physReg].readyCycle = Simulator.singleInstance.currentCycle + rs.execLat + ISSUE_EXEC_DELAY;
+								}
+							}
 						}
 					}
 					else {
@@ -674,11 +675,13 @@ class Core {
 					rs.issued = true;
 					
 					rs.execLat = 1;
-					assert(0);
-					this.issueExecQueue ~= rs; //TODO
+					this.issueExecQueue.enqueue(rs, ISSUE_EXEC_DELAY);
 					
-					assert(0);
-					/* TODO: wakeup dependents */
+					foreach(i, physReg; rs.physRegs) {
+						PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(rs.uop.staticInst.odeps[i].type);
+						regFile[physReg].specReadyCycle = Simulator.singleInstance.currentCycle + rs.execLat;
+						regFile[physReg].readyCycle = Simulator.singleInstance.currentCycle + rs.execLat + ISSUE_EXEC_DELAY;
+					}
 				}
 			}
 			
@@ -716,20 +719,18 @@ class Core {
 					rs.replayed = true;
 					
 					if(!rs.uop.staticInst.isLoad) {
-						this.waitingQueue ~= rs; //TODO
+						this.waitingQueue ~= rs;
 					}
 					
-					rs = null;
-					
-					//TODO
+					this.issueExecQueue.popFront();
+					rs = this.issueExecQueue.front;
 				}
 			}
 			
 			this.eventQueue.enqueue(rs, rs.execLat);
 			
 			if(rs.inIssueQueue) {
-				assert(0);
-				//this.iq.remove(rs); //TODO: uncomment it
+				this.issueQueue.remove(rs.issueQueueEntry);
 				rs.inIssueQueue = false;
 			}
 			
@@ -748,7 +749,7 @@ class Core {
 			numDispatched[i] = 0;
 		}
 		
-		dispatchThreadId = (dispatchThreadId + 1) % this.numThreads; //TODO: necessary?
+		dispatchThreadId = (dispatchThreadId + 1) % this.numThreads;
 		
 		for(uint numTotalDispatched = 0; numTotalDispatched < this.decodeWidth; ) {
 			bool allStalled = true;
@@ -770,9 +771,25 @@ class Core {
 				dispatchThreadId = (dispatchThreadId + 1) % this.numThreads;
 				continue;
 			}
-	
-			assert(0);
-			/* TODO: find the next instruction awaiting dispatch */
+			
+			while(!dispatchStalled[dispatchThreadId]) {
+				if(rs == this.threads[dispatchThreadId].reorderBuffer.front && numSearched == 0) {
+					if(!rs.dispatched) {
+						break;
+					}
+				}
+				else if(rs is null) {
+					dispatchStalled[dispatchThreadId] = true;
+				}
+				
+				numSearched++;
+				
+				if(!rs.dispatched) {
+					break;
+				}
+				
+				rs = this.threads[dispatchThreadId].reorderBuffer.after(rs);
+			}
 			
 			if(dispatchStalled[dispatchThreadId]) {
 				dispatchThreadId = (dispatchThreadId + 1) % this.numThreads;
@@ -803,12 +820,24 @@ class Core {
 				rs.queued = true;
 			}
 			
-			assert(0);
-			//TODO
+			if(rs.loadStoreQueueEntry !is null) {
+				ReorderBufferEntry lsq = rs.loadStoreQueueEntry;
+				lsq.dispatchCycle = Simulator.singleInstance.currentCycle;
+				lsq.dispatched = true;
+				
+				if(lsq.uop.staticInst.isStore) {
+					if(lsq.allOperandsSpecReady) {
+						this.readyQueue ~= lsq;
+						lsq.queued = true;
+					}
+					else {
+						this.waitingQueue ~= lsq;
+					}
+				}
+			}
 			
 			if(!rs.queued) {
-				assert(0);
-				this.waitingQueue ~= rs; //TODO
+				this.waitingQueue ~= rs;
 			}
 
 			numTotalDispatched++;			
@@ -886,22 +915,75 @@ class Core {
 			
 			assert(0);
 			/* TODO: decode the inst */
+			
+			uint targetPc = 0; //TODO: targetPc
+			
+			DynamicInst uop = null;
 
 			this.threads[dispatchThreadId].npc = this.threads[dispatchThreadId].pc + uint.sizeof;
 			
-			/*if(uop.isTrap) { //TODO
+			if(uop.staticInst.isTrap) {
 				if(this.threads[dispatchThreadId].isSpeculative) {
 					fetchStalled[dispatchThreadId] = true;
 					continue;
 				}
-			}*/
+			}
 			
 			this.threads[dispatchThreadId].clearArchRegs();
 			
-			assert(0);
-			//TODO:................................
+			//TODO: decoding...the instruction
 			
-			numRenamed++;
+			bool brTaken = this.threads[dispatchThreadId].npc != (this.threads[dispatchThreadId].pc + uint.sizeof);
+			bool brPredTaken = this.threads[dispatchThreadId].predPc != (this.threads[dispatchThreadId].pc + uint.sizeof);
+			
+			if(uop.staticInst.isControl && uop.staticInst.isDirectJump && targetPc != this.threads[dispatchThreadId].predPc && brPredTaken) {
+				this.threads[dispatchThreadId].fetchPredPc = this.threads[dispatchThreadId].fetchPc = this.threads[dispatchThreadId].npc;
+				fetchRedirected[dispatchThreadId] = true;
+			}
+			
+			ReorderBufferEntry rs;
+			
+			if(!uop.staticInst.isNop) {
+				rs = null; //TODO: new ReorderBufferEntry();
+				
+				this.threads[dispatchThreadId].reorderBuffer ~= rs;
+				
+				if(uop.staticInst.isMem) {
+					rs.isEffectiveAddressComputation = true;
+					
+					ReorderBufferEntry lsq = null; //TODO: new ReorderBufferEntry();
+					
+					this.threads[dispatchThreadId].loadStoreQueue ~= rs;
+				}
+				
+				numRenamed++;
+			}
+			else {
+				rs = null;
+			}
+			
+			if(!this.threads[dispatchThreadId].isSpeculative) {
+				if(uop.staticInst.isControl) {
+					if(this.threads[dispatchThreadId].pred !is null && this.bpredSpecUpdate == BpredSpecUpdate.ID) {
+						this.threads[dispatchThreadId].pred.update(
+							this.threads[dispatchThreadId].pc,
+							this.threads[dispatchThreadId].npc,
+							this.threads[dispatchThreadId].npc != this.threads[dispatchThreadId].pc + uint.sizeof,
+							this.threads[dispatchThreadId].predPc != this.threads[dispatchThreadId].pc + uint.sizeof,
+							this.threads[dispatchThreadId].predPc == this.threads[dispatchThreadId].npc,
+							uop.staticInst,
+							rs.dirUpdate);
+					}
+				}
+			}
+			
+			if(this.threads[dispatchThreadId].predPc != this.threads[dispatchThreadId].npc) {
+				this.threads[dispatchThreadId].isSpeculative = true;
+				rs.isRecoverInstruction = true;
+				this.threads[dispatchThreadId].recoverPc = this.threads[dispatchThreadId].npc;
+			}
+			
+			this.threads[dispatchThreadId].fetchQueue.popFront();
 		}
 	}
 	
@@ -996,8 +1078,6 @@ class Core {
 			else {
 				//inst = NOP; //TODO
 			}
-			
-			assert(staticInst !is null); //TODO: temporarily added; to remove
 			
 			if(this.threads[fetchThreadId].pred !is null) {
 				if(staticInst.isControl) {
@@ -1180,7 +1260,6 @@ class Thread {
 		this.syscallEmul = new SyscallEmul();
 
 		this.pred = new CombinedBpred();
-		this.loadLatPred = new CombinedBpred();
 
 		this.clearArchRegs();
 
@@ -1394,7 +1473,6 @@ class Thread {
 	uint fetchPredPc;
 
 	Bpred pred;
-	Bpred loadLatPred;
 
 	bool fetchStalled;
 	uint fetchBlock;
