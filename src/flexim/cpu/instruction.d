@@ -367,6 +367,10 @@ abstract class StaticInst {
 			this.setupDeps();
 		}
 		
+		uint targetPc(Thread thread) {
+			return 0;
+		}
+		
 		abstract void setupDeps();
 		
 		MachInst machInst() {

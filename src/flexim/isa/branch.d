@@ -29,9 +29,13 @@ abstract class Branch: StaticInst {
 			super(mnemonic, machInst, flags, fuType);
 			this.displacement = sext(this[OFFSET] << 2, 16);
 		}
-
+		
+		override uint targetPc(Thread thread) {
+			return thread.npc + this.displacement;
+		}
+		
 		void branch(Thread thread) {
-			thread.nnpc = thread.npc + this.displacement;
+			thread.nnpc = this.targetPc(thread);
 		}
 
 	private:
@@ -340,11 +344,9 @@ abstract class Jump: StaticInst {
 			this.target = this[JMPTARG] << 2;
 		}
 
-		void jump(Thread thread, uint addr) {
-			thread.nnpc = addr;
+		void jump(Thread thread) {
+			thread.nnpc = this.targetPc(thread);
 		}
-		
-		abstract uint targetPc(Thread thread);
 
 	private:
 		uint target;
@@ -364,7 +366,7 @@ class J: Jump {
 		}
 
 		override void execute(Thread thread) {
-			this.jump(thread, this.targetPc(thread));
+			this.jump(thread);
 		}
 }
 
@@ -384,7 +386,7 @@ class Jal: Jump {
 
 		override void execute(Thread thread) {
 			thread.intRegs[ReturnAddressReg] = thread.nnpc;
-			this.jump(thread, this.targetPc(thread));
+			this.jump(thread);
 		}
 }
 
@@ -405,7 +407,7 @@ class Jalr: Jump {
 
 		override void execute(Thread thread) {
 			thread.intRegs[this[RD]] = thread.nnpc;
-			this.jump(thread, this.targetPc(thread));
+			this.jump(thread);
 		}
 }
 
@@ -424,6 +426,6 @@ class Jr: Jump {
 		}
 
 		override void execute(Thread thread) {
-			this.jump(thread, this.targetPc(thread));
+			this.jump(thread);
 		}
 }

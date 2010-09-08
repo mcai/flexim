@@ -215,11 +215,10 @@ enum FetchPolicy: string {
 }
 
 class FetchRecord {	
-	this(StaticInst staticInst, uint pc, uint predPc, BpredUpdate dirUpdate, int stackRecoverIndex, ulong fetchedCycle) {
+	this(StaticInst staticInst, uint pc, uint predPc, int stackRecoverIndex, ulong fetchedCycle) {
 		this.staticInst = staticInst;
 		this.pc = pc;
 		this.predPc = predPc;
-		this.dirUpdate = dirUpdate;
 		this.stackRecoverIndex = stackRecoverIndex;
 		this.fetchedCycle = fetchedCycle;
 	}
@@ -338,19 +337,33 @@ class ReorderBufferEntry {
 		return this.operandSpecReady(STORE_ADDR_INDEX);
 	}
 	
-	bool operandReady(uint opNum) {		
-		PhysicalRegisterFile regFile = this.uop.thread.core.getPhysicalRegisterFile(this.uop.staticInst.ideps[opNum].type);
+	bool operandReady(RegisterDependency[] ideps, uint opNum) {		
+		PhysicalRegisterFile regFile = this.uop.thread.core.getPhysicalRegisterFile(ideps[opNum].type);
 		return regFile[this.srcPhysRegs[opNum]].readyCycle <= Simulator.singleInstance.currentCycle;
 	}
 	
-	bool operandSpecReady(uint opNum) {
-		PhysicalRegisterFile regFile = this.uop.thread.core.getPhysicalRegisterFile(this.uop.staticInst.ideps[opNum].type);
+	bool operandReady(uint opNum) {
+		return this.operandReady(this.uop.staticInst.ideps, opNum);
+	}
+	
+	bool operandSpecReady(RegisterDependency[] ideps, uint opNum) {
+		PhysicalRegisterFile regFile = this.uop.thread.core.getPhysicalRegisterFile(ideps[opNum].type);
 		return regFile[this.srcPhysRegs[opNum]].specReadyCycle <= Simulator.singleInstance.currentCycle;
+	}
+	
+	bool operandSpecReady(uint opNum) {
+		return this.operandSpecReady(this.uop.staticInst.ideps, opNum);
 	}
 	
 	bool allOperandsReady() {
 		if(this.isEffectiveAddressComputation) {
-			assert(0); //TODO: ea compute case in allOperandsReady()
+			foreach(i, iDep; (cast(MemoryOp)this.uop.staticInst).eaIdeps) {
+				if(!this.operandReady((cast(MemoryOp)this.uop.staticInst).eaIdeps, i)) {
+					return false;
+				}
+			}
+			
+			return true;
 		}
 		else {
 			foreach(i, iDep; this.uop.staticInst.ideps) {
@@ -365,7 +378,13 @@ class ReorderBufferEntry {
 	
 	bool allOperandsSpecReady() {
 		if(this.isEffectiveAddressComputation) {
-			assert(0); //TODO: ea compute case in allOperandsSpecReady()
+			foreach(i, iDep; (cast(MemoryOp)this.uop.staticInst).eaIdeps) {
+				if(!this.operandSpecReady((cast(MemoryOp)this.uop.staticInst).eaIdeps, i)) {
+					return false;
+				}
+			}
+			
+			return true;
 		}
 		else {
 			foreach(i, iDep; this.uop.staticInst.ideps) {
@@ -955,15 +974,7 @@ class Core {
 				break;
 			}
 			
-			assert(0);
-			/* TODO: get the next instruction from the IFETCH -> RENAME queue */
-			
-			assert(0);
-			/* TODO: decode the inst */
-			
-			uint targetPc = 0; //TODO: targetPc
-			
-			DynamicInst uop = null;
+			DynamicInst uop = new DynamicInst(this.threads[dispatchThreadId], this.threads[dispatchThreadId].fetchQueue.front.pc, this.threads[dispatchThreadId].fetchQueue.front.staticInst);
 
 			this.threads[dispatchThreadId].npc = this.threads[dispatchThreadId].pc + uint.sizeof;
 			
@@ -976,12 +987,10 @@ class Core {
 			
 			this.threads[dispatchThreadId].clearArchRegs();
 			
-			//TODO: decoding...the instruction
-			
 			bool brTaken = this.threads[dispatchThreadId].npc != (this.threads[dispatchThreadId].pc + uint.sizeof);
 			bool brPredTaken = this.threads[dispatchThreadId].predPc != (this.threads[dispatchThreadId].pc + uint.sizeof);
 			
-			if(uop.staticInst.isControl && uop.staticInst.isDirectJump && targetPc != this.threads[dispatchThreadId].predPc && brPredTaken) {
+			if(uop.staticInst.isControl && uop.staticInst.isDirectJump && uop.staticInst.targetPc(uop.thread) != this.threads[dispatchThreadId].predPc && brPredTaken) {
 				this.threads[dispatchThreadId].fetchPredPc = this.threads[dispatchThreadId].fetchPc = this.threads[dispatchThreadId].npc;
 				fetchRedirected[dispatchThreadId] = true;
 			}
@@ -1006,7 +1015,7 @@ class Core {
 				rs.dispatchCycle = 0;
 				
 				foreach(i, iDep; rs.uop.staticInst.ideps) {
-					rs.srcPhysRegs[i] = this.threads[dispatchThreadId].renameTable[iDep.num]; //TODO: should rename table be split into int, fp and misc?
+					rs.srcPhysRegs[i] = this.threads[dispatchThreadId].renameTable[iDep.num];
 				}
 				
 				foreach(i, oDep; rs.uop.staticInst.odeps) {
@@ -1159,17 +1168,8 @@ class Core {
 			
 			this.threads[fetchThreadId].fetchPc = this.threads[fetchThreadId].fetchPredPc;
 			
-			bool bogus = false; //TODO: bogus instruction determination
-			
-			StaticInst staticInst = null;
-			
-			if(!bogus) {
-				staticInst = this.isa.decode(this.threads[fetchThreadId].fetchPc, this.mem);
-				//TODO: not bogus
-			}
-			else {
-				//inst = NOP; //TODO: bogus
-			}
+			StaticInst staticInst = this.isa.decode(this.threads[fetchThreadId].fetchPc, this.mem);
+			//TODO: icache && tlb access
 			
 			if(this.threads[fetchThreadId].pred !is null) {
 				if(staticInst.isControl) {
@@ -1201,7 +1201,6 @@ class Core {
 				staticInst,
 				this.threads[fetchThreadId].fetchPc,
 				this.threads[fetchThreadId].fetchPredPc,
-				null, //TODO: fr
 				stackRecoverIndex,
 				Simulator.singleInstance.currentCycle);
 			this.threads[fetchThreadId].fetchQueue ~= fr;
