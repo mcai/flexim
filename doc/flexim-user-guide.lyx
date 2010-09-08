@@ -2,7 +2,19 @@
 \lyxformat 345
 \begin_document
 \begin_header
-\textclass paper
+\textclass report
+\begin_preamble
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{moreverb}
+\usepackage{multirow}
+\usepackage{makeidx}
+\usepackage{array}
+\usepackage{longtable}
+
+
+\renewcommand{\baselinestretch}{1}
+\end_preamble
 \use_default_options true
 \language english
 \inputencoding auto
@@ -17,8 +29,17 @@
 
 \graphics default
 \paperfontsize default
-\spacing single
-\use_hyperref false
+\spacing onehalf
+\use_hyperref true
+\pdf_bookmarks false
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks true
+\pdf_backref false
+\pdf_pdfusetitle true
 \papersize default
 \use_geometry true
 \use_amsmath 1
@@ -31,7 +52,7 @@
 \rightmargin 2cm
 \bottommargin 2cm
 \secnumdepth 3
-\tocdepth 3
+\tocdepth 2
 \paragraph_separation indent
 \defskip medskip
 \quotes_language english
@@ -47,12 +68,13 @@
 \begin_body
 
 \begin_layout Title
-Flexim Simulator User Guide
-\end_layout
+The Flexim User Guide
+\begin_inset Newline newline
+\end_inset
 
-\begin_layout SubTitle
-(2010.9.
- 
+
+\size footnotesize
+(
 \color red
 Pre-release, Work-in-Progress
 \color inherit
@@ -60,11 +82,27 @@ Pre-release, Work-in-Progress
 \end_layout
 
 \begin_layout Author
-Min Cai
-\end_layout
+Min Cai <
+\begin_inset CommandInset href
+LatexCommand href
+target "itecgo@163.com"
+type "mailto:"
 
-\begin_layout Institution
+\end_inset
+
+>
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
 Beijing Institute of Technology
+\begin_inset Newline newline
+\end_inset
+
+Beijing, China
 \end_layout
 
 \begin_layout Standard
@@ -76,17 +114,13 @@ LatexCommand tableofcontents
 
 \end_layout
 
-\begin_layout Part
+\begin_layout Chapter
 Introduction
 \end_layout
 
-\begin_layout Section
-About Flexim
-\end_layout
-
 \begin_layout Standard
-Flexim is an open-source, modular and highly configurable architectural
- simulator for evaluating emerging multicore processors.
+Welcome to Flexim! Flexim is an open-source, modular and highly configurable
+ architectural simulator for evaluating emerging multicore processors.
  It can run statically compiled MIPS32 Little-Endian (LE) programs.
  
 \end_layout
@@ -172,6 +206,450 @@ Easy to use.
 \end_layout
 
 \end_deeper
+\begin_layout Section
+Development Progress
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Main Category
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Current Progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Functional Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Int.
+ Inst.
+ Decoding & Execution
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Fp.
+ Inst.
+ Decoding & Execution
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+System Call Emulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+OK for wcet-bench, mst, em3d, etc.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MIPS LE ELF Exe.
+ Loader
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Can run statically compiled programs
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Performance Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Five-stage OoO pipelining
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Being rewritten; in good progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Set-associative cache structure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+OK
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Cache coherence
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Being rewritten; in good progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+On-chip interconnect
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Interface to external DRAM simulators
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+To be planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Supporting Infrastructure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Eventing and callback mechanisms
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+OK, pervasive use in existing code
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Categorized logging mechanism
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+OK, limited use in existing code
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+XML-based I/O for configs and stats 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+OK
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Plotting and table generation for experiments
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Planned
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 System Requirements
 \end_layout
@@ -288,567 +766,39 @@ Useful tip: As with all other open source projects, you can learn more by
 \end_layout
 
 \begin_layout Section
-Contact Information
-\end_layout
-
-\begin_layout Standard
-If you have any questions, please feel free to contact: Min Cai <
-\begin_inset CommandInset href
-LatexCommand href
-target "itecgo@163.com"
-type "mailto:"
-
-\end_inset
-
->.
-\end_layout
-
-\begin_layout Part
-Design Documentation
-\end_layout
-
-\begin_layout Section
-Overview
+The Structure of the File
 \end_layout
 
 \begin_layout Standard
 The whole development of the Flexim simulator encompasses three main categories
  of functionalities: functional simulation, performance simulation and supportin
 g infrastructure.
+ Chapter 2 focuses on functional simulation.
+ Chapter 3 focuses on performance simulation.
+ Chapter 4 focuses on supporting infrastructure.
 \end_layout
 
-\begin_layout Section
-Development Progress
-\end_layout
-
-\begin_layout Standard
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Main Category
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Current Progress
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
+\begin_layout Chapter
 Functional Simulation
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "75col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-
-\size small
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Int.
- Inst.
- Decoding & Execution
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-OK for wcet-bench, mst, em3d, etc.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Fp.
- Inst.
- Decoding & Execution
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-OK for wcet-bench, mst, em3d, etc.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-System Call Emulation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-OK for wcet-bench, mst, em3d, etc.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-MIPS LE ELF Exe.
- Loader
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Can run statically compiled programs
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Performance Simulation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "75col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-
-\size small
-\begin_inset Tabular
-<lyxtabular version="3" rows="5" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Five-stage OoO pipelining
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-RUU-based; to be written
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Set-associative cache structure
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-OK
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Cache coherence
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Being rewritten; in good progress
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-On-chip interconnect
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Planned
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Interface to external DRAM simulators
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-To be planned
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Supporting Infrastructure
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-width "75col%"
-special "none"
-height "1in"
-height_special "totalheight"
-status open
-
-\begin_layout Plain Layout
-
-\size small
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Eventing and callback mechanisms
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-OK, pervasive use in existing code
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Categorized logging mechanism
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-OK, limited use in existing code
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-XML-based I/O for configs and stats 
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-OK
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Plotting and table generation for experiments
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-Planned
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
+\begin_layout Section
+ELF-Formatted MIPS Little-Endian Executable Loader
 \end_layout
 
 \begin_layout Section
-Functional Simulation
-\end_layout
-
-\begin_layout Subsection
 Instruction Decoding and Execution
 \end_layout
 
 \begin_layout Standard
 In Flexim, there are two kinds of instructions, i.e., static instructions
  and dynamic instructions.
+ A static instruction represents a decoded instruction that fetched from
+ memory, and a dynamic instruction represents a dynamically-scheduled instructio
+n.
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Basic Instructions
 \end_layout
 
@@ -998,7 +948,7 @@ thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RT]]
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Branching Instructions
 \end_layout
 
@@ -1561,7 +1511,7 @@ else {
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Jumping Instructions
 \end_layout
 
@@ -1745,7 +1695,7 @@ this.jump(thread, this.targetPc(thread));
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Floating Point Arithmetic Instructions
 \end_layout
 
@@ -3094,7 +3044,7 @@ if(this[FS]) {
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Integer Arithmetic Instructions
 \end_layout
 
@@ -3888,7 +3838,7 @@ thread.miscRegs.hi = hi;
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Memory Access Instructions
 \end_layout
 
@@ -4682,7 +4632,7 @@ thread.mem.writeDoubleWord(this.ea(thread), ft);
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 System Call Emulation
 \end_layout
 
@@ -5463,16 +5413,28 @@ return ret;
 
 \end_layout
 
-\begin_layout Subsection
-MIPS Little-Endian ELF Executable Loader
-\end_layout
-
-\begin_layout Section
+\begin_layout Chapter
 Performance Simulation
 \end_layout
 
+\begin_layout Section
+Processor Frontend
+\end_layout
+
 \begin_layout Subsection
-Five-Stage Out-of-Order Pipelining
+Branch Prediction
+\end_layout
+
+\begin_layout Subsection
+The Fetch Stage
+\end_layout
+
+\begin_layout Subsection
+The Decode Stage
+\end_layout
+
+\begin_layout Section
+Processor Backend
 \end_layout
 
 \begin_layout Standard
@@ -5495,8 +5457,6 @@ A classic five-stage out-of-order issue processor core is modeled after
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Method Name
 \end_layout
 
@@ -5506,8 +5466,6 @@ Method Name
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Insts Transfer between Queues
 \end_layout
 
@@ -5517,8 +5475,6 @@ Insts Transfer between Queues
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Comments
 \end_layout
 
@@ -5530,8 +5486,6 @@ Comments
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 commit()
 \end_layout
 
@@ -5541,8 +5495,6 @@ commit()
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 RUU 
 \begin_inset Formula $\longrightarrow$
 \end_inset
@@ -5556,8 +5508,6 @@ RUU
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Retiring insts, EAs 
 \begin_inset Formula $\dashrightarrow$
 \end_inset
@@ -5573,8 +5523,6 @@ Retiring insts, EAs
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 writeback()
 \end_layout
 
@@ -5584,8 +5532,6 @@ writeback()
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 EventQ 
 \begin_inset Formula $\dashrightarrow$
 \end_inset
@@ -5599,8 +5545,6 @@ EventQ
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Resolving reg deps
 \end_layout
 
@@ -5612,8 +5556,6 @@ Resolving reg deps
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 refreshLsq()
 \end_layout
 
@@ -5623,8 +5565,6 @@ refreshLsq()
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 LSQ 
 \begin_inset Formula $\longrightarrow$
 \end_inset
@@ -5638,8 +5578,6 @@ LSQ
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Resolving mem deps
 \end_layout
 
@@ -5651,8 +5589,6 @@ Resolving mem deps
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 issue()
 \end_layout
 
@@ -5662,8 +5598,6 @@ issue()
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 ReadyQ 
 \begin_inset Formula $\longrightarrow$
 \end_inset
@@ -5677,8 +5611,6 @@ ReadyQ
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Accessing FUs and data caches
 \end_layout
 
@@ -5690,8 +5622,6 @@ Accessing FUs and data caches
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 dispatch()
 \end_layout
 
@@ -5701,8 +5631,6 @@ dispatch()
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 FetchQ 
 \begin_inset Formula $\longrightarrow$
 \end_inset
@@ -5724,8 +5652,6 @@ FetchQ
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Resolving reg deps
 \end_layout
 
@@ -5737,8 +5663,6 @@ Resolving reg deps
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 fetch()
 \end_layout
 
@@ -5748,8 +5672,6 @@ fetch()
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 ICache 
 \begin_inset Formula $\longrightarrow$
 \end_inset
@@ -5763,8 +5685,6 @@ ICache
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\size footnotesize
 Fetching and decoding insts
 \end_layout
 
@@ -5779,11 +5699,27 @@ Fetching and decoding insts
 \end_layout
 
 \begin_layout Subsection
-Set-Associative Cache Structure
+Register Renaming
 \end_layout
 
 \begin_layout Subsection
-Cache Coherence
+The Dispatch Stage
+\end_layout
+
+\begin_layout Subsection
+The Writeback Stage
+\end_layout
+
+\begin_layout Subsection
+The Commit Stage
+\end_layout
+
+\begin_layout Section
+Memory Hierarchy
+\end_layout
+
+\begin_layout Subsection
+Internal Cache Structure and Cache Coherence
 \end_layout
 
 \begin_layout Subsection
@@ -5794,7 +5730,7 @@ On-Chip Interconnect
 Interface to External DRAM Simulators
 \end_layout
 
-\begin_layout Section
+\begin_layout Chapter
 Supporting Infrastructure
 \end_layout
 
@@ -5808,24 +5744,24 @@ There are various supporting modules aside the aforementioned main components
  even be useful after release.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Eventing and Callback Mechanisms
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Categorized Logging Mechanism
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 XML-Based Input/Output for Configurations and Statistics
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Plotting and Table Generation for Experiments
 \end_layout
 
-\begin_layout Part
-Evaluation and Comparisons to Other Simulators
+\begin_layout Chapter
+Evaluation
 \end_layout
 
 \begin_layout Section
