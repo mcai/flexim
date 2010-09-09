@@ -135,10 +135,10 @@ class CoherentCache: CoherentCacheNode {
 				
 			}
 			else {			
-			this.schedule(
-				{
-					onCompletedCallback(false, set, way, state, tag, dirLock);
-				},
+				this.schedule(
+					{
+						onCompletedCallback(false, set, way, state, tag, dirLock);
+					},
 				this.hitLatency);
 			}
 		}
@@ -337,7 +337,7 @@ class CoherentCache: CoherentCacheNode {
 		this.schedule(
 			{
 				target.readRequestReceive(this, addr, onCompletedCallback);
-			}, 8);
+			}, 2);
 	}
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr,

@@ -117,7 +117,10 @@ class Queue(EntryT) {
 	}
 	
 	EntryT back() {
-		return this.entries.back;
+		if(!this.empty) {
+			this.entries.back;
+		}
+		return null;
 	}
 	
 	uint indexOf(EntryT value) {

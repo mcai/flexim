@@ -26,9 +26,9 @@ import flexim.all;
 static const string mips_gpr_names[32] = ["zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9",
 		"k0", "k1", "gp", "sp", "s8", "ra"];
 
-// Constants Related to the number of registers
-const int NumIntRegs = 32;
-const int NumFloatRegs = 32;
+const uint NumIntRegs = 32;
+const uint NumFloatRegs = 32;
+const uint NumMiscRegs = 4;
 
 enum MiscRegNums: int {
 	LO = 0,
@@ -37,11 +37,6 @@ enum MiscRegNums: int {
 	FCSR
 };
 
-// These help enumerate all the registers for dependence tracking.
-const int FP_Base_DepTag = NumIntRegs;
-const int Misc_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
-
-// Semantically meaningful register indices
 const int ZeroReg = 0;
 const int AssemblerReg = 1;
 const int SyscallSuccessReg = 7;

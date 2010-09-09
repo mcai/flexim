@@ -144,10 +144,10 @@ enum PhysicalRegisterState: string {
 
 class PhysicalRegister {
 	this() {
-		this.readyCycle = cast(ulong)-1;
-		this.specReadyCycle = cast(ulong)-1;
-		this.allocatedCycle = cast(ulong)-1;
-		this.state = PhysicalRegisterState.FREE;
+		this.readyCycle = 0;
+		this.specReadyCycle = 0;
+		this.allocatedCycle = 0;
+		this.state = PhysicalRegisterState.ARCH;
 	}
 	
 	ulong readyCycle;
@@ -183,6 +183,7 @@ class PhysicalRegisterFile {
 	
 	uint alloc() {
 		PhysicalRegister freeReg = this.findFree();
+		assert(freeReg !is null);
 		freeReg.state = PhysicalRegisterState.ALLOC;
 		freeReg.allocatedCycle = Simulator.singleInstance.currentCycle;
 		freeReg.readyCycle = cast(ulong)-1;
@@ -215,10 +216,11 @@ enum FetchPolicy: string {
 }
 
 class FetchRecord {	
-	this(StaticInst staticInst, uint pc, uint predPc, int stackRecoverIndex, ulong fetchedCycle) {
+	this(StaticInst staticInst, uint pc, uint predPc, BpredUpdate dirUpdate, int stackRecoverIndex, ulong fetchedCycle) {
 		this.staticInst = staticInst;
 		this.pc = pc;
 		this.predPc = predPc;
+		this.dirUpdate = dirUpdate;
 		this.stackRecoverIndex = stackRecoverIndex;
 		this.fetchedCycle = fetchedCycle;
 	}
@@ -400,7 +402,7 @@ class ReorderBufferEntry {
 	ulong id;
 
 	DynamicInst uop;
-	uint pc, npc, predPc;
+	uint pc, npc, nnpc, predNnpc;
 	
 	bool inLoadStoreQueue;
 	bool inIssueQueue;
@@ -420,9 +422,9 @@ class ReorderBufferEntry {
 	bool isCompleted;
 	bool isReplayed;
 	
-	uint[] physRegs;
-	uint[] oldPhysRegs;
-	uint[] srcPhysRegs;
+	uint[uint] physRegs;
+	uint[uint] oldPhysRegs;
+	uint[uint] srcPhysRegs;
 	
 	uint execLat;
 	
@@ -573,6 +575,8 @@ class Core {
 	}
 	
 	void releaseFunctionalUnits() {
+		writefln("releaseFunctionalUnits()");
+		
 		foreach(category; this.fuPool.categories) {
 			if(category.busy > 0) {
 				category.busy--;
@@ -580,19 +584,9 @@ class Core {
 		}
 	}
 	
-	PhysicalRegisterFile getPhysicalRegisterFile(RegisterDependencyType type) {
-		if(type == RegisterDependencyType.INT) {
-			return this.intRegFile;
-		}
-		else if(type == RegisterDependencyType.FP) {
-			return this.fpRegFile;
-		}
-		else {
-			return this.miscRegFile;
-		}
-	}
-	
 	void writeback() {
+		writefln("writeback()");
+		
 		while(!this.eventQueue.empty) {
 			ReorderBufferEntry rs = this.eventQueue.front;
 			rs.isCompleted = true;
@@ -612,6 +606,11 @@ class Core {
 			
 			if(rs.isRecoverInstruction) {				
 				rs.uop.thread.recoverReorderBuffer(rs);
+				
+				rs.uop.thread.isSpeculative = false;
+				rs.uop.thread.fetchQueue.clear();
+				rs.uop.thread.fetchPredNnpc = rs.uop.thread.fetchPc = rs.uop.thread.recoverPc;
+				
 				rs.uop.thread.pred.recover(rs.pc, rs.stackRecoverIndex);
 			}
 			
@@ -621,10 +620,10 @@ class Core {
 				rs.uop.staticInst.isControl) {
 				rs.uop.thread.pred.update(
 					rs.pc,
-					rs.npc,
-					rs.npc != (rs.pc + uint.sizeof),
-					rs.predPc != (rs.pc + uint.sizeof),
-					rs.predPc == rs.npc,
+					rs.nnpc,
+					rs.nnpc != (rs.npc + uint.sizeof),
+					rs.predNnpc != (rs.npc + uint.sizeof),
+					rs.predNnpc == rs.nnpc,
 					rs.uop.staticInst,
 					rs.dirUpdate
 				);
@@ -635,6 +634,8 @@ class Core {
 	}
 	
 	void wakeup() {
+		writefln("wakeup()");
+		
 		ReorderBufferEntry[] toWaitq;
 		
 		for(;!this.waitingQueue.empty;) {
@@ -657,6 +658,8 @@ class Core {
 	}
 	
 	void selection() {
+		writefln("selection()");
+		
 		ReorderBufferEntry[] toReadyq;
 		
 		for(uint numIssued = 0; !this.readyQueue.empty && numIssued < this.issueWidth; numIssued++) {
@@ -753,7 +756,9 @@ class Core {
 		}
 	}
 	
-	void execute() {		
+	void execute() {
+		writefln("execute()");
+			
 		while(!this.issueExecQueue.empty) {
 			ReorderBufferEntry rs = this.issueExecQueue.front;
 			
@@ -796,6 +801,8 @@ class Core {
 	}
 	
 	void dispatch() {
+		writefln("dispatch()");
+
 		bool[] dispatchStalled = new bool[this.numThreads];
 		uint[] numDispatched = new uint[this.numThreads];
 		uint dispatchThreadId = 0;
@@ -902,6 +909,8 @@ class Core {
 	}
 	
 	void registerRename() {
+		writefln("registerRename()");
+
 		bool[] fetchRedirected = new bool[this.numThreads];
 		bool[] fetchStalled = new bool[this.numThreads];
 		uint dispatchThreadId = 0;
@@ -984,7 +993,7 @@ class Core {
 			bool brPredTaken = this.threads[dispatchThreadId].predPc != (this.threads[dispatchThreadId].pc + uint.sizeof);
 			
 			if(uop.staticInst.isControl && uop.staticInst.isDirectJump && uop.staticInst.targetPc(uop.thread) != this.threads[dispatchThreadId].predPc && brPredTaken) {
-				this.threads[dispatchThreadId].fetchPredPc = this.threads[dispatchThreadId].fetchPc = this.threads[dispatchThreadId].npc;
+				this.threads[dispatchThreadId].fetchPredNnpc = this.threads[dispatchThreadId].fetchPc = this.threads[dispatchThreadId].npc;
 				fetchRedirected[dispatchThreadId] = true;
 			}
 			
@@ -993,7 +1002,7 @@ class Core {
 			if(!uop.staticInst.isNop) {
 				rs = new ReorderBufferEntry(this.threads[dispatchThreadId].pc, uop);
 				rs.npc = this.threads[dispatchThreadId].npc;
-				rs.predPc = this.threads[dispatchThreadId].predPc;
+				rs.predNnpc = this.threads[dispatchThreadId].predNnpc;
 				rs.inLoadStoreQueue = false;
 				rs.loadStoreQueueEntry = null;
 				rs.isEffectiveAddressComputation = false;
@@ -1008,15 +1017,14 @@ class Core {
 				rs.dispatchCycle = 0;
 				
 				foreach(i, iDep; rs.uop.staticInst.ideps) {
-					rs.srcPhysRegs[i] = this.threads[dispatchThreadId].renameTable[iDep.num];
+					rs.srcPhysRegs[i] = this.threads[dispatchThreadId].renameTables[iDep.type][iDep.num];
 				}
 				
 				foreach(i, oDep; rs.uop.staticInst.odeps) {
 					PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
-					
-					rs.oldPhysRegs[i] = rs.uop.thread.renameTable[oDep.num];
+					rs.oldPhysRegs[i] = rs.uop.thread.renameTables[oDep.type][oDep.num];
 					rs.physRegs[i] = regFile.alloc();
-					rs.uop.thread.renameTable[oDep.num] = rs.physRegs[i]; 
+					rs.uop.thread.renameTables[oDep.type][oDep.num] = rs.physRegs[i];
 				}
 				
 				this.threads[dispatchThreadId].reorderBuffer ~= rs;
@@ -1026,7 +1034,7 @@ class Core {
 					
 					ReorderBufferEntry lsq = new ReorderBufferEntry(this.threads[dispatchThreadId].pc, uop);
 					lsq.npc = this.threads[dispatchThreadId].npc;
-					lsq.predPc = this.threads[dispatchThreadId].predPc;
+					lsq.predNnpc = this.threads[dispatchThreadId].predNnpc;
 					rs.loadStoreQueueEntry = lsq;
 					lsq.inLoadStoreQueue = true;
 					lsq.inIssueQueue = false;
@@ -1061,10 +1069,10 @@ class Core {
 					if(this.threads[dispatchThreadId].pred !is null && this.bpredSpecUpdate == BpredSpecUpdate.ID) {
 						this.threads[dispatchThreadId].pred.update(
 							this.threads[dispatchThreadId].pc,
-							this.threads[dispatchThreadId].npc,
-							this.threads[dispatchThreadId].npc != this.threads[dispatchThreadId].pc + uint.sizeof,
-							this.threads[dispatchThreadId].predPc != this.threads[dispatchThreadId].pc + uint.sizeof,
-							this.threads[dispatchThreadId].predPc == this.threads[dispatchThreadId].npc,
+							this.threads[dispatchThreadId].nnpc,
+							this.threads[dispatchThreadId].nnpc != this.threads[dispatchThreadId].npc + uint.sizeof,
+							this.threads[dispatchThreadId].predNnpc != this.threads[dispatchThreadId].npc + uint.sizeof,
+							this.threads[dispatchThreadId].predNnpc == this.threads[dispatchThreadId].nnpc,
 							uop.staticInst,
 							rs.dirUpdate);
 					}
@@ -1081,154 +1089,37 @@ class Core {
 		}
 	}
 	
-	void fetch(ref uint[] sortedThreadIds) {
-		bool[] done = new bool[this.numThreads];
-		uint[] branchCnt = new uint[this.numThreads];
-		uint fetchThreadId = sortedThreadIds[0];
+	void fetch() {
+		uint count = 0;
 		
-		uint stackRecoverIndex;
+		bool[] canFetch = new bool[this.numThreads];
+		uint[] quant = new uint[this.numThreads];
 		
-		for(uint i = 0; i < this.numThreads; i++) {
-			branchCnt[i] = 0;
-			done[i] = false;
-		}
-		
-		if(this.threads[0].fetchQueue.full) {
-			sortedThreadIds[0] = sortedThreadIds[1];
-			sortedThreadIds[1] = sortedThreadIds[2];
-			sortedThreadIds[2] = sortedThreadIds[3];
-		}
-		
-		if(this.threads[0].fetchQueue.full) {
-			sortedThreadIds[0] = sortedThreadIds[1];
-			sortedThreadIds[1] = sortedThreadIds[2];
-			sortedThreadIds[2] = sortedThreadIds[3];
-		}
-		
-		for(uint i = 0; i < this.decodeWidth * this.fetchSpeed; i++) {
-			if(this.threads[fetchThreadId].fetchQueue.full) {
-				if(fetchThreadId != sortedThreadIds[1]) {
-					fetchThreadId = sortedThreadIds[1];
-				}
-				else {
-					return;
-				}
-				i--;
-				continue;
+		foreach(i, thread; this.threads) {
+			if(thread.fetchStall > 0) {
+				thread.fetchStall--;
 			}
 			
-			if(branchCnt[fetchThreadId] > 0) {
-				if(fetchThreadId != sortedThreadIds[1]) {
-					fetchThreadId = sortedThreadIds[1];
-					if(branchCnt[fetchThreadId]) {
-						return;
-					}
-				}
-				else {
-					return;
-				}
-				i--;
-				continue;
-			}
-			
-			if(done[fetchThreadId]) {
-				if(fetchThreadId != sortedThreadIds[1]) {
-					fetchThreadId = sortedThreadIds[1];
-					if(done[fetchThreadId]) {
-						return;
-					}
-				}
-				else {
-					return;
-				}
-				i--;
-				continue;
-			}
-			
-			if(this.threads[fetchThreadId].fetchIssueDelay > 0) {
-				if(fetchThreadId != sortedThreadIds[1]) {
-					fetchThreadId = sortedThreadIds[1];
-					if(this.threads[fetchThreadId].fetchIssueDelay > 0) {
-						return;
-					}
-				}
-				else {
-					return;
-				}
-				i--;
-				continue;
-			}
-			
-			this.threads[fetchThreadId].fetchPc = this.threads[fetchThreadId].fetchPredPc;
-			
-			StaticInst staticInst = this.isa.decode(this.threads[fetchThreadId].fetchPc, this.mem);
-			this.threads[fetchThreadId].fetchIssueDelay += 2; //TODO: icache & itlb access
-			
-			if(this.threads[fetchThreadId].pred !is null) {
-				if(staticInst.isControl) {
-					this.threads[fetchThreadId].fetchPredPc =
-						this.threads[fetchThreadId].pred.lookup(
-							this.threads[fetchThreadId].fetchPc,
-							0,
-							staticInst,
-							this.threads[fetchThreadId].fetchQueue.back.dirUpdate,
-							stackRecoverIndex);
-				}
-				else {
-					this.threads[fetchThreadId].fetchPredPc = 0;
-				}
-				
-				if(this.threads[fetchThreadId].fetchPredPc == 0) {
-					this.threads[fetchThreadId].fetchPredPc = this.threads[fetchThreadId].fetchPc + uint.sizeof;
-				}
-				else {
-					branchCnt[fetchThreadId]++;
-					done[fetchThreadId] = true;
-				}
-			}
-			else {
-				this.threads[fetchThreadId].fetchPredPc = this.threads[fetchThreadId].fetchPc + uint.sizeof;
-			}
-			
-			FetchRecord fr = new FetchRecord(
-				staticInst,
-				this.threads[fetchThreadId].fetchPc,
-				this.threads[fetchThreadId].fetchPredPc,
-				stackRecoverIndex,
-				Simulator.singleInstance.currentCycle);
-			this.threads[fetchThreadId].fetchQueue ~= fr;
-			
-			if(i == (this.decodeWidth * this.fetchSpeed) / 2) {
-				fetchThreadId = sortedThreadIds[1];
+			quant[i] = 0;
+			canFetch[i] = thread.canFetch;
+			if(canFetch[i]) {
+				count++;
 			}
 		}
-	}
-	
-	void icountFetch() {
-		uint[] sortedThreadIds = new uint[this.numThreads];
 		
-		for(uint i = 0; i < this.numThreads; i++) {
-			sortedThreadIds[i] = i;
+		if(count == 0) {
+			return;
 		}
 		
-		bool greater(uint a, uint b)
-		{
-			return this.threads[a].stat.totalInsts > this.threads[b].stat.totalInsts;
+		do {
+			this.currentThreadId = (this.currentThreadId + 1) % this.numThreads;
 		}
-
-		sort!(greater)(sortedThreadIds);
+		while(!canFetch[this.currentThreadId]);
+		quant[this.currentThreadId] = this.fetchWidth;
 		
-		this.fetch(sortedThreadIds);
-	}
-	
-	void roundRobinFetch(uint index) {
-		uint[] sortedThreadIds = new uint[this.numThreads];
-		
-		for(uint i = 0; i < this.numThreads; i++) {
-			sortedThreadIds[i] = (index + i) % this.numThreads;
+		foreach(i, thread; this.threads) {
+			thread.fetch(quant[i]);
 		}
-		
-		this.fetch(sortedThreadIds);
 	}
 	
 	void run() {
@@ -1254,13 +1145,7 @@ class Core {
 		
 		this.registerRename();
 		
-		if(this.fetchPolicy == FetchPolicy.ICOUNT) {
-			this.icountFetch();
-		}
-		else {
-			this.roundRobinFetch(currentThreadId);
-			currentThreadId = (currentThreadId + 1) % this.numThreads;
-		}
+		this.fetch();
 		
 		foreach(thread; this.threads) {
 			if(thread.fetchIssueDelay > 0) {
@@ -1269,7 +1154,17 @@ class Core {
 		}
 	}
 	
-	uint currentThreadId;
+	PhysicalRegisterFile getPhysicalRegisterFile(RegisterDependencyType type) {
+		if(type == RegisterDependencyType.INT) {
+			return this.intRegFile;
+		}
+		else if(type == RegisterDependencyType.FP) {
+			return this.fpRegFile;
+		}
+		else {
+			return this.miscRegFile;
+		}
+	}
 	
 	uint numThreads() {
 		return this.threads.length;
@@ -1298,6 +1193,12 @@ class Core {
 	Memory mem() {
 		return this.processor.mem;
 	}
+	
+	uint fetchWidth() {
+		return this.decodeWidth * this.fetchSpeed;
+	}
+	
+	uint currentThreadId;
 
 	uint num;
 	Processor processor;
@@ -1363,9 +1264,28 @@ class Thread {
 		simulation.stat.processorStat.threadStats ~= this.stat;
 		
 		this.state = ThreadState.Active;
+		
+		this.fetchNpc = this.npc;
+		this.fetchNnpc = this.nnpc;
+		
+		this.fetchPc = this.fetchPredNnpc = this.pc;
+		
+		for(uint i = 0; i < NumIntRegs; i++) {
+			this.renameTables[RegisterDependencyType.INT][i] = i;
+		}
+		
+		for(uint i = 0; i < NumFloatRegs; i++) {
+			this.renameTables[RegisterDependencyType.FP][i] = i;
+		}
+		
+		for(uint i = 0; i < NumMiscRegs; i++) {
+			this.renameTables[RegisterDependencyType.MISC][i] = i;
+		}
 	}
 	
 	void recoverReorderBuffer(ReorderBufferEntry branchRs) {
+		writefln("recoverReorderBuffer()");
+		
 		ReorderBufferEntry[] toSquash;
 			
 		foreach_reverse(rs; this.reorderBuffer) {
@@ -1387,7 +1307,7 @@ class Thread {
 				}
 				
 				foreach(i, oDep; rs.uop.staticInst.odeps) {
-					this.renameTable[oDep.num] = rs.oldPhysRegs[i];
+					this.renameTables[oDep.type][oDep.num] = rs.oldPhysRegs[i];
 				}
 				
 				rs.physRegs.clear();
@@ -1403,6 +1323,8 @@ class Thread {
 	}
 	
 	void commit() {
+		writefln("commit()");
+		
 		if(Simulator.singleInstance.currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {
 			logging.fatal(LogCategory.SIMULATOR, "No instruction committed in one million cycles.");
 		}
@@ -1437,10 +1359,10 @@ class Thread {
 			if(this.pred !is null && this.core.bpredSpecUpdate == BpredSpecUpdate.ID && rs.uop.staticInst.isControl) {
 				this.pred.update(
 					rs.pc,
-					rs.npc,
-					rs.npc != (rs.pc + uint.sizeof),
-					rs.predPc != (rs.pc + uint.sizeof),
-					rs.predPc == rs.npc,
+					rs.nnpc,
+					rs.nnpc != (rs.npc + uint.sizeof),
+					rs.predNnpc != (rs.npc + uint.sizeof),
+					rs.predNnpc == rs.nnpc,
 					rs.uop.staticInst,
 					rs.dirUpdate
 				);
@@ -1465,6 +1387,8 @@ class Thread {
 	}
 	
 	void refreshLoadStoreQueue() {
+		writefln("refreshLoadStoreQueue()");
+		
 		uint[] stdUnknowns;
 		
 		foreach(rs; this.loadStoreQueue) {
@@ -1492,7 +1416,64 @@ class Thread {
 		}
 	}
 	
-	uint notDispatchedCount() {		
+	bool canFetch() {
+		return this.state == ThreadState.Active && !this.fetchStalled;
+	}
+	
+	void fetch(uint quant) {
+		if(!this.canFetch || quant == 0 || this.fetchQueue.full) {
+			return;
+		}
+		
+		bool done = false;
+		
+		while(quant > 0 && !done) {
+			if(!this.canFetch) {
+				break;
+			}
+			
+			this.fetchPc = this.fetchNpc;
+			this.fetchNpc = this.fetchNnpc;
+			
+			StaticInst staticInst = this.isa.decode(this.fetchNpc, this.mem);
+			DynamicInst uop = new DynamicInst(this, this.fetchNpc, staticInst);
+			uop.execute();
+			
+			if(this.fetchNpc != this.fetchPc + uint.sizeof) {
+				done = true;
+			}
+			
+			if((this.fetchPc + uint.sizeof) % this.core.seqI.blockSize == 0) {
+				done = true;
+			}
+			
+			uint stackRecoverIndex;
+			
+			BpredUpdate dirUpdate = new BpredUpdate();
+			
+			uint dest = this.pred.lookup(
+				this.fetchPc,
+				0,
+				staticInst,
+				dirUpdate,
+				stackRecoverIndex);
+			
+			this.fetchNnpc = dest <= 1 ? this.fetchNpc + uint.sizeof : dest;
+			
+			FetchRecord fr = new FetchRecord(
+				staticInst,
+				this.fetchPc,
+				this.fetchPredNnpc,
+				dirUpdate,
+				stackRecoverIndex,
+				Simulator.singleInstance.currentCycle);
+			this.fetchQueue ~= fr;
+			
+			quant--;			
+		}
+	}
+	
+	uint notDispatchedCount() {
 		uint count = 0;
 		
 		foreach(rs; this.reorderBuffer) {
@@ -1560,18 +1541,15 @@ class Thread {
 	SyscallEmul syscallEmul;
 
 	uint pc, npc, nnpc;
-	
-	uint predPc;
+
+	uint fetchPc, fetchNpc, fetchNnpc;
+	uint fetchPredNnpc;
+	uint predPc, predNnpc;
 	uint recoverPc;
-	uint fetchPc;
-	uint fetchPredPc;
 
 	Bpred pred;
-
-	bool fetchStalled;
-	uint fetchBlock;
 	
-	uint[] renameTable;
+	uint[uint][RegisterDependencyType] renameTables;
 	
 	uint commitWidth;
 
@@ -1579,11 +1557,15 @@ class Thread {
 	ReorderBuffer reorderBuffer;
 	LoadStoreQueue loadStoreQueue;
 	
+	bool fetchStalled;
+	
 	ulong lastCommitCycle;
 	
 	bool isSpeculative;
 	
 	uint fetchIssueDelay;
+	
+	uint fetchStall;
 	
 	ThreadState state;
 	
