@@ -76,7 +76,7 @@ The Flexim User Guide
 \size footnotesize
 (
 \color red
-Pre-release, Work-in-Progress
+Pre-release, Documentation-in-Progress
 \color inherit
 )
 \end_layout
@@ -406,7 +406,7 @@ status open
 \begin_inset Text
 
 \begin_layout Plain Layout
-Five-stage OoO pipelining
+Processor core
 \end_layout
 
 \end_inset
@@ -415,7 +415,7 @@ Five-stage OoO pipelining
 \begin_inset Text
 
 \begin_layout Plain Layout
-Being rewritten; in good progress
+Being rewritten; almost complete
 \end_layout
 
 \end_inset
@@ -455,7 +455,7 @@ Cache coherence
 \begin_inset Text
 
 \begin_layout Plain Layout
-Being rewritten; in good progress
+Being rewritten; almost complete
 \end_layout
 
 \end_inset
@@ -771,19 +771,72 @@ The Structure of the File
 
 \begin_layout Standard
 The whole development of the Flexim simulator encompasses three main categories
- of functionalities: functional simulation, performance simulation and supportin
-g infrastructure.
+ of functionalities: functional simulation, performance simulation and the
+ supporting infrastructure.
  Chapter 2 focuses on functional simulation.
- Chapter 3 focuses on performance simulation.
- Chapter 4 focuses on supporting infrastructure.
+ Chapter 3 elaborates on performance simulation.
+ Chapter 4 focuses on the supporting infrastructure.
+ And Chapter 5 provides the evaluation, limitations and future work of Flexim.
 \end_layout
 
 \begin_layout Chapter
 Functional Simulation
 \end_layout
 
+\begin_layout Standard
+Functional simulation encompasses the abilities to load and parse MIPS binaries,
+ decode and execute instructions, and emulate system calls.
+\end_layout
+
 \begin_layout Section
 ELF-Formatted MIPS Little-Endian Executable Loader
+\end_layout
+
+\begin_layout Standard
+The Executable and Linkable Format (ELF) is a standard binary file format
+ for Unix and Unix-like (such as Linux) systems.
+ Each ELF file is made up of one ELF header, followed by file data.
+ The file data can include:
+\end_layout
+
+\begin_layout Itemize
+Program header table, describing zero or more segments
+\end_layout
+
+\begin_layout Itemize
+Section header table, describing zero or more sections
+\end_layout
+
+\begin_layout Itemize
+Data referred to by entries in the program header table or section header
+ table
+\end_layout
+
+\begin_layout Standard
+The segments contain information that is necessary for runtime execution
+ of the file, while sections contain important data for linking and relocation.
+ Each byte in the entire file is taken by no more than one section at a
+ time, but there can be orphan bytes, which are not covered by a section.
+ In the normal case of a Unix executable one or more sections are enclosed
+ in one segment.
+\end_layout
+
+\begin_layout Standard
+In Flexim, the tasks of loading and parsing of ELF files are done through
+ the classes 
+\family typewriter
+ELFReader
+\family default
+ and 
+\family typewriter
+ELF32Binary
+\family default
+ and a few supporting code elements.
+ Each process in Flexim is associated with one 
+\family typewriter
+ELF32Binary
+\family default
+ object.
 \end_layout
 
 \begin_layout Section
@@ -796,6 +849,11 @@ In Flexim, there are two kinds of instructions, i.e., static instructions
  A static instruction represents a decoded instruction that fetched from
  memory, and a dynamic instruction represents a dynamically-scheduled instructio
 n.
+ 
+\end_layout
+
+\begin_layout Standard
+Below are the details of the implemented instructions.
 \end_layout
 
 \begin_layout Subsection
@@ -804,22 +862,12 @@ Basic Instructions
 
 \begin_layout Enumerate
 nop.
-\begin_inset listings
-lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
-inline false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
+ It does nothing.
 \end_layout
 
 \begin_layout Enumerate
 syscall.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -837,6 +885,7 @@ thread.syscall(thread.intRegs[2]);
 
 \begin_layout Enumerate
 sll.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -854,6 +903,7 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << this[SA];
 
 \begin_layout Enumerate
 sllv.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -872,6 +922,7 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << bits(thread.intRegs[this[
 
 \begin_layout Enumerate
 sra.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -889,6 +940,7 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]] >> this[SA];
 
 \begin_layout Enumerate
 srav.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -911,6 +963,7 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]]
 
 \begin_layout Enumerate
 srl.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -928,6 +981,7 @@ thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RT]] >> this[SA];
 
 \begin_layout Enumerate
 srlv.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -957,7 +1011,7 @@ Common operations found in the implementation of branching operations.
 \begin_inset Newline newline
 \end_inset
 
-Displacement calculation:
+The displacement calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -970,7 +1024,7 @@ this.displacement = sext(this[OFFSET] << 2, 16);
 
 \end_inset
 
-Branching function: 
+And the branching function is shown as below: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -988,6 +1042,7 @@ thread.nnpc = thread.npc + this.displacement;
 
 \begin_layout Enumerate
 b.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1005,6 +1060,7 @@ this.branch(thread);
 
 \begin_layout Enumerate
 bal.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1027,6 +1083,7 @@ this.branch(thread);
 
 \begin_layout Enumerate
 beq.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1055,6 +1112,7 @@ if(cast(int) thread.intRegs[this[RS]] == cast(int) thread.intRegs[this[RT]])
 
 \begin_layout Enumerate
 beqz.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1082,6 +1140,7 @@ if(cast(int) thread.intRegs[this[RS]] == 0) {
 
 \begin_layout Enumerate
 bgez.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1109,6 +1168,7 @@ if(cast(int) thread.intRegs[this[RS]] >= 0) {
 
 \begin_layout Enumerate
 bgezal.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1141,6 +1201,7 @@ if(cast(int) thread.intRegs[this[RS]] >= 0) {
 
 \begin_layout Enumerate
 bgtz.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1168,6 +1229,7 @@ if(cast(int) thread.intRegs[this[RS]] > 0) {
 
 \begin_layout Enumerate
 blez.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1195,6 +1257,7 @@ if(cast(int) thread.intRegs[this[RS]] <= 0) {
 
 \begin_layout Enumerate
 bltz.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1222,6 +1285,7 @@ if(cast(int) thread.intRegs[this[RS]] < 0) {
 
 \begin_layout Enumerate
 bltzal.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1254,6 +1318,7 @@ if(cast(int) thread.intRegs[this[RS]] < 0) {
 
 \begin_layout Enumerate
 bne.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1282,6 +1347,7 @@ if(cast(int) thread.intRegs[this[RS]] != cast(int) thread.intRegs[this[RT]])
 
 \begin_layout Enumerate
 bnez.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1309,6 +1375,7 @@ if(cast(int) thread.intRegs[this[RS]] != 0) {
 
 \begin_layout Enumerate
 bc1f.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1350,6 +1417,7 @@ if(cond) {
 
 \begin_layout Enumerate
 bc1t.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1391,6 +1459,7 @@ if(cond) {
 
 \begin_layout Enumerate
 bc1fl.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1452,6 +1521,7 @@ else {
 
 \begin_layout Enumerate
 bc1tl.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1520,7 +1590,7 @@ Common operations found in the implementation of jumping operations.
 \begin_inset Newline newline
 \end_inset
 
-Abstract definition of target PC calculation:
+The abstract definition of target PC calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1533,7 +1603,7 @@ abstract uint targetPc(Thread thread);
 
 \end_inset
 
-Jumping function: 
+And the jumping function is shown as below: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1554,7 +1624,7 @@ j.
 \begin_inset Newline newline
 \end_inset
 
-Target PC calculation:
+Its target PC calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1567,7 +1637,7 @@ return mbits(thread.npc, 32, 28) | this.target;
 
 \end_inset
 
-Execution: 
+Its execution logic is shown as below: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1588,7 +1658,7 @@ jal.
 \begin_inset Newline newline
 \end_inset
 
-Target PC calculation:
+Its target PC calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1601,7 +1671,7 @@ return mbits(thread.npc, 32, 28) | this.target;
 
 \end_inset
 
-Execution: 
+Its execution logic is shown as below: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1627,7 +1697,7 @@ jalr.
 \begin_inset Newline newline
 \end_inset
 
-Target PC calculation:
+Its target PC calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1640,7 +1710,7 @@ return thread.intRegs[this[RS]];
 
 \end_inset
 
-Execution: 
+Its execution logic is shown as below: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1666,7 +1736,7 @@ jr.
 \begin_inset Newline newline
 \end_inset
 
-Target PC calculation:
+Its target PC calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1679,7 +1749,7 @@ return thread.intRegs[this[RS]];
 
 \end_inset
 
-Execution: 
+Its execution logic is shown as below: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1701,6 +1771,7 @@ Floating Point Arithmetic Instructions
 
 \begin_layout Enumerate
 add_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1741,6 +1812,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 sub_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1781,6 +1853,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 mul_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1821,6 +1894,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 div_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1861,6 +1935,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 sqrt_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1898,6 +1973,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 abs_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1935,6 +2011,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 neg_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1972,6 +2049,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 mov_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2003,6 +2081,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 add_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2043,6 +2122,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 sub_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2083,6 +2163,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 mul_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2123,6 +2204,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 div_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2164,6 +2246,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 sqrt_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2201,6 +2284,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 abs_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2238,6 +2322,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 neg_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2275,6 +2360,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 mov_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2307,6 +2393,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_d_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2339,6 +2426,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_w_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2371,6 +2459,7 @@ thread.floatRegs.setUint(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_l_s.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2403,6 +2492,7 @@ thread.floatRegs.setUlong(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_s_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2435,6 +2525,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_w_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2467,6 +2558,7 @@ thread.floatRegs.setUint(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_l_d.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2499,6 +2591,7 @@ thread.floatRegs.setUlong(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_s_w.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2531,6 +2624,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_d_w.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2562,6 +2656,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_s_l.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2593,6 +2688,7 @@ thread.floatRegs.setFloat(fd, this[FD]);
 
 \begin_layout Enumerate
 cvt_d_l.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2626,6 +2722,7 @@ thread.floatRegs.setDouble(fd, this[FD]);
 c_<cond>_d type instructions, which include c_f_d, c_un_d, c_eq_d, c_ueq_d,
  c_olt_d, c_ult_d, c_ole_d, c_ule_d, c_sf_d, c_ngle_d, c_seq_d, c_ngl_d,
  c_lt_d, c_nge_d, c_le_d and c_ngt_d.
+ The execution logic of this type of instructions is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2772,6 +2869,7 @@ thread.miscRegs.fcsr = fcsr;
 c_<cond>_s type instructions, which include c_f_s, c_un_s, c_eq_s, c_ueq_s,
  c_olt_s, c_ult_s, c_ole_s, c_ule_s, c_sf_s, c_ngle_s, c_seq_s, c_ngl_s,
  c_lt_s, c_nge_s, c_le_s and c_ngt_s.
+ The execution logic of this type of instructions is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2916,6 +3014,7 @@ thread.miscRegs.fcsr = fcsr;
 
 \begin_layout Enumerate
 mfc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2938,6 +3037,7 @@ thread.intRegs[this[RT]] = fs;
 
 \begin_layout Enumerate
 cfc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2988,6 +3088,7 @@ if(this[FS] == 31) {
 
 \begin_layout Enumerate
 mtc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3010,6 +3111,7 @@ thread.floatRegs.setUint(rt, this[FS]);
 
 \begin_layout Enumerate
 ctc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3053,7 +3155,7 @@ Common operations found in the implementation of integer arithmetic operations.
 \begin_inset Newline newline
 \end_inset
 
-imm.
+Its immmediate value is calculated as:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3066,7 +3168,7 @@ this.imm = cast(short) machInst[INTIMM];
 
 \end_inset
 
-zextImm.
+Its zero-extended immediate value is calculated as:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3079,7 +3181,7 @@ this.zextImm = 0x0000FFFF & machInst[INTIMM];
 
 \end_inset
 
-sextImm.
+Its sign-extended immediate value is calculated as:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3097,6 +3199,7 @@ this.sextImm = sext(machInst[INTIMM], 16);
 
 \begin_layout Enumerate
 add.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3124,6 +3227,7 @@ logging.warn(LogCategory.INSTRUCTION, "Add: overflow trap not implemented.");
 
 \begin_layout Enumerate
 addi.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3146,6 +3250,7 @@ logging.warn(LogCategory.INSTRUCTION, "Addi: overflow trap not implemented.");
 
 \begin_layout Enumerate
 addiu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3163,6 +3268,7 @@ thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] + this.sextImm;
 
 \begin_layout Enumerate
 addu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3185,6 +3291,7 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
 
 \begin_layout Enumerate
 sub.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3212,6 +3319,7 @@ logging.warn(LogCategory.INSTRUCTION, "Sub: overflow trap not implemented.");
 
 \begin_layout Enumerate
 subu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3234,6 +3342,7 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
 
 \begin_layout Enumerate
 and.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3251,6 +3360,7 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RS]] & thread.intRegs[this[RT]];
 
 \begin_layout Enumerate
 andi.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3268,6 +3378,7 @@ thread.intRegs[this[RT]] = thread.intRegs[this[RS]] & this.zextImm;
 
 \begin_layout Enumerate
 nor.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3285,6 +3396,7 @@ thread.intRegs[this[RD]] = ~(thread.intRegs[this[RS]] | thread.intRegs[this[RT]]
 
 \begin_layout Enumerate
 or.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3302,6 +3414,7 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RS]] | thread.intRegs[this[RT]];
 
 \begin_layout Enumerate
 ori.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3319,6 +3432,7 @@ thread.intRegs[this[RT]] = thread.intRegs[this[RS]] | this.zextImm;
 
 \begin_layout Enumerate
 xor.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3336,6 +3450,7 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RS]] ^ thread.intRegs[this[RT]];
 
 \begin_layout Enumerate
 xori.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3353,6 +3468,7 @@ thread.intRegs[this[RT]] = thread.intRegs[this[RS]] ^ this.zextImm;
 
 \begin_layout Enumerate
 slt.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3375,6 +3491,7 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
 
 \begin_layout Enumerate
 slti.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3393,6 +3510,7 @@ thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] < this.sextImm
 
 \begin_layout Enumerate
 sltiu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3411,6 +3529,7 @@ thread.intRegs[this[RT]] = cast(uint) thread.intRegs[this[RS]] < this.zextImm
 
 \begin_layout Enumerate
 sltu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3433,6 +3552,7 @@ thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RS]]
 
 \begin_layout Enumerate
 lui.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3450,6 +3570,7 @@ thread.intRegs[this[RT]] = this.imm << 16;
 
 \begin_layout Enumerate
 divu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3538,6 +3659,7 @@ thread.miscRegs.hi = hi;
 
 \begin_layout Enumerate
 div.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3626,6 +3748,7 @@ thread.miscRegs.hi = hi;
 
 \begin_layout Enumerate
 mflo.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3643,6 +3766,7 @@ thread.intRegs[this[RD]] = thread.miscRegs.lo;
 
 \begin_layout Enumerate
 mfhi.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3660,6 +3784,7 @@ thread.intRegs[this[RD]] = thread.miscRegs.hi;
 
 \begin_layout Enumerate
 mtlo.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3677,6 +3802,7 @@ thread.miscRegs.lo = thread.intRegs[this[RD]];
 
 \begin_layout Enumerate
 mthi.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3694,6 +3820,7 @@ thread.miscRegs.hi = thread.intRegs[this[RD]];
 
 \begin_layout Enumerate
 mult.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3767,6 +3894,7 @@ thread.miscRegs.hi = hi;
 
 \begin_layout Enumerate
 multu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3847,7 +3975,7 @@ Common operations found in the implementation of memory access operations.
 \begin_inset Newline newline
 \end_inset
 
-displacement calculation.
+Its displacement value is calculated as:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3860,7 +3988,7 @@ this.displacement = sext(machInst[OFFSET], 16);
 
 \end_inset
 
-basic effective address calculation.
+And its effective address is calculated as (overridable):
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3878,6 +4006,7 @@ return thread.intRegs[this[RS]] + this.displacement;
 
 \begin_layout Enumerate
 lb.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3905,6 +4034,7 @@ thread.intRegs[this[RT]] = mem;
 
 \begin_layout Enumerate
 lbu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3932,6 +4062,7 @@ thread.intRegs[this[RT]] = mem;
 
 \begin_layout Enumerate
 lh.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3959,6 +4090,7 @@ thread.intRegs[this[RT]] = mem;
 
 \begin_layout Enumerate
 lhu.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3986,6 +4118,7 @@ thread.intRegs[this[RT]] = mem;
 
 \begin_layout Enumerate
 lw.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4016,7 +4149,7 @@ lwl.
 \begin_inset Newline newline
 \end_inset
 
-overriden effective address calculation.
+Its overriden effective address calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4034,7 +4167,7 @@ return addr & ~3;
 
 \end_inset
 
-
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4114,7 +4247,7 @@ lwr.
 \begin_inset Newline newline
 \end_inset
 
-overriden effective address calculation.
+Its overriden effective address calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4132,7 +4265,7 @@ return addr & ~3;
 
 \end_inset
 
-
+Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4214,6 +4347,7 @@ thread.intRegs[this[RT]] = rt;
 
 \begin_layout Enumerate
 ll.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4241,6 +4375,7 @@ thread.intRegs[this[RT]] = mem;
 
 \begin_layout Enumerate
 lwc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4268,6 +4403,7 @@ thread.floatRegs.setUint(mem, this[FT]);
 
 \begin_layout Enumerate
 ldc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4295,6 +4431,7 @@ thread.floatRegs.setUlong(mem, this[FT]);
 
 \begin_layout Enumerate
 sb.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4317,6 +4454,7 @@ thread.mem.writeByte(this.ea(thread), mem);
 
 \begin_layout Enumerate
 sh.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4339,6 +4477,7 @@ thread.mem.writeHalfWord(this.ea(thread), mem);
 
 \begin_layout Enumerate
 sw.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4364,7 +4503,7 @@ swl.
 \begin_inset Newline newline
 \end_inset
 
-overriden effective address calculation.
+Its overriden effective address calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4382,7 +4521,7 @@ return addr & ~3;
 
 \end_inset
 
-
+Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4468,7 +4607,7 @@ swr.
 \begin_inset Newline newline
 \end_inset
 
-overriden effective address calculation.
+Its overriden effective address calculation is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4486,7 +4625,7 @@ return addr & ~3;
 
 \end_inset
 
-
+Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4563,6 +4702,7 @@ thread.mem.writeWord(ea, mem);
 
 \begin_layout Enumerate
 sc.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4590,6 +4730,7 @@ thread.intRegs[this[RT]] = 1;
 
 \begin_layout Enumerate
 swc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4612,6 +4753,7 @@ thread.mem.writeWord(this.ea(thread), ft);
 
 \begin_layout Enumerate
 sdc1.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4643,6 +4785,7 @@ h benchmark suite, and mst and em3d from the Olden benchmark suite.
 
 \begin_layout Enumerate
 exit.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4666,6 +4809,7 @@ return 1;
 
 \begin_layout Enumerate
 read.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4736,6 +4880,7 @@ return ret;
 
 \begin_layout Enumerate
 write.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4796,6 +4941,7 @@ return ret;
 
 \begin_layout Enumerate
 open.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4942,6 +5088,7 @@ return fd;
 
 \begin_layout Enumerate
 close.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4969,6 +5116,7 @@ return ret;
 
 \begin_layout Enumerate
 lseek.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5010,6 +5158,7 @@ return ret;
 
 \begin_layout Enumerate
 getpid.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5027,6 +5176,7 @@ return thread.process.pid;
 
 \begin_layout Enumerate
 getuid.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5044,6 +5194,7 @@ return thread.process.uid;
 
 \begin_layout Enumerate
 brk.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5161,6 +5312,7 @@ return thread.process.brk;
 
 \begin_layout Enumerate
 getgid.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5178,6 +5330,7 @@ return thread.process.gid;
 
 \begin_layout Enumerate
 geteuid.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5195,6 +5348,7 @@ return thread.process.euid;
 
 \begin_layout Enumerate
 getegid.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5212,6 +5366,7 @@ return thread.process.egid;
 
 \begin_layout Enumerate
 fstat.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5269,6 +5424,7 @@ return ret;
 
 \begin_layout Enumerate
 uname.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5296,6 +5452,7 @@ return 0;
 
 \begin_layout Enumerate
 _llseek.
+ Its execution logic is shown as below:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5417,301 +5574,227 @@ return ret;
 Performance Simulation
 \end_layout
 
-\begin_layout Section
-Processor Frontend
-\end_layout
-
-\begin_layout Subsection
-Branch Prediction
-\end_layout
-
-\begin_layout Subsection
-The Fetch Stage
-\end_layout
-
-\begin_layout Subsection
-The Decode Stage
+\begin_layout Standard
+Performance simulation encompasses the detailed simulation of out-of-order
+ processor cores and multi-level memory hierarchies.
 \end_layout
 
 \begin_layout Section
-Processor Backend
+Processor
 \end_layout
 
 \begin_layout Standard
-A classic five-stage out-of-order issue processor core is modeled after
- the SimpleScalar implementation.
- Methods in class OoOThread implementing the pipeline stages are outlined
- below.
+Flexim supports the mix of SMT and CMP simulation.
+ Some processor structures are shared among threads within a processor core,
+ and others are private to each thread.
+\end_layout
+
+\begin_layout Subsection
+Cycle-Accurate Modeling of Pipeline Structures
 \end_layout
 
 \begin_layout Standard
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="3">
-<features>
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Method Name
+Flexim explicitly models the Reorder Buffer (
+\family typewriter
+ReorderBuffer
+\family default
+), the Issue Queue (
+\family typewriter
+IssueQueue
+\family default
+), the Load/Store Queue (
+\family typewriter
+LoadStoreQueue
+\family default
+), separate integer, floating-point and miscellaneous register files, register
+ renaming, and the associated rename table.
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Insts Transfer between Queues
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Comments
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-commit()
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-RUU 
-\begin_inset Formula $\longrightarrow$
-\end_inset
-
- <committed>
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Retiring insts, EAs 
-\begin_inset Formula $\dashrightarrow$
-\end_inset
-
- LSQ
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-writeback()
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-EventQ 
-\begin_inset Formula $\dashrightarrow$
-\end_inset
-
- ReadyQ
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Resolving reg deps
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-refreshLsq()
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-LSQ 
-\begin_inset Formula $\longrightarrow$
-\end_inset
-
- ReadyQ
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Resolving mem deps
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-issue()
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ReadyQ 
-\begin_inset Formula $\longrightarrow$
-\end_inset
-
- EventQ
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Accessing FUs and data caches
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
+\begin_layout Standard
+The reorder buffer is modeled as a FIFO buffer.
+ Its entries are pushed during instruction 
+\family typewriter
 dispatch()
+\family default
+ and are popped during instruction 
+\family typewriter
+commit()
+\family default
+.
+ 
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-FetchQ 
-\begin_inset Formula $\longrightarrow$
-\end_inset
-
- RUU 
-\begin_inset Formula $+$
-\end_inset
-
- LSQ 
-\begin_inset Formula $+$
-\end_inset
-
- ReadyQ
+\begin_layout Standard
+The issue queue is modeled as an array of issue queue entries.
+ Each issue queue entry (
+\family typewriter
+IssueQueueEntry
+\family default
+) can be in one of two states: either free(
+\family typewriter
+IssueQueueEntryState.FREE
+\family default
+) or already allocated(
+\family typewriter
+IssueQueueEntry.ALLOC
+\family default
+).
+ Its entries are allocated at instruction 
+\family typewriter
+dispatch()
+\family default
+ and are released at 
+\family typewriter
+issue()
+\family default
+ and on branch mispredictions on 
+\family typewriter
+recoverReorderBuffer()
+\family default
+.
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Resolving reg deps
+\begin_layout Standard
+The integer, floating point and miscellaneous physical register files are
+ modeled separately as 
+\family typewriter
+intRegFile
+\family default
+, 
+\family typewriter
+fpRegFile
+\family default
+ and 
+\family typewriter
+miscRegFile
+\family default
+, respectively.
+ All of them contain an array of physical registers(
+\family typewriter
+PhysicalRegister
+\family default
+).
+ Each of the physical registers can be in one of four states: 
 \end_layout
 
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fetch()
+\begin_layout Enumerate
+the register is free (
+\family typewriter
+PhysicalRegisterState.FREE
+\family default
+),
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ICache 
-\begin_inset Formula $\longrightarrow$
-\end_inset
-
- FetchQ
+\begin_layout Enumerate
+the register has been allocated to an instruction but has not yet been written
+ to (
+\family typewriter
+PhysicalRegisterState.ALLOC
+\family default
+),
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Fetching and decoding insts
+\begin_layout Enumerate
+the register is allocated to an instruction and the value has been written
+ (
+\family typewriter
+PhysicalRegisterState.W
+\family default
+B),
 \end_layout
 
-\end_inset
-</cell>
-</row>
-</lyxtabular>
+\begin_layout Enumerate
+the register is in the architectural state (
+\family typewriter
+PhysicalRegisterState.ARCH
+\family default
+).
+\end_layout
 
-\end_inset
+\begin_layout Standard
+Physical registers are allocated at the 
+\family typewriter
+dispatch()
+\family default
+ stage, and deallocated at 
+\family typewriter
+commit()
+\family default
+ and during branch mispredictions in 
+\family typewriter
+recoverReorderBuffer()
+\family default
+.
+\end_layout
 
-
+\begin_layout Standard
+The integer, floating point and miscellaneous rename tables are modeled
+ separately.
+ They maintain the current mappings of each architectural register to a
+ physical register.
 \end_layout
 
 \begin_layout Subsection
-Register Renaming
+Details of the Processor model and Implementation
 \end_layout
 
-\begin_layout Subsection
-The Dispatch Stage
+\begin_layout Standard
+Threads within a core maintain separate program counters, but share the
+ fetch unit and icache.
+ Threads within a core share the available bandwidth in the front end including
+ fetch, decode and rename.
+ The time slice based fetch policy is implemented for the moment, more advanced
+ policies such as icount is left for future work.
+ Separate branch predictors are implemented per thread.
 \end_layout
 
-\begin_layout Subsection
-The Writeback Stage
+\begin_layout Standard
+Each thread maintains its own rename table because it has its own set of
+ architectural registers.
+ After renaming, instructions from all threads are dispatched into the shared
+ issue queue.
 \end_layout
 
-\begin_layout Subsection
-The Commit Stage
+\begin_layout Standard
+In the issue queue, instructions from all the threads participate in the
+ instruction 
+\family typewriter
+wakeup()
+\family default
+ process and compete for the issue bandwidth in 
+\family typewriter
+selection()
+\family default
+.
+ Instructions that are selected for issue continue to perform register file
+ accesses.
+ All the physical register files are shared among the threads.
+ After register file accesses are done, instructions begin execution on
+ the functional units, which are also shared among the threads.
+\end_layout
+
+\begin_layout Standard
+Loads and stores access the shared dcache among the threads within a core.
+ In order to maintain the correct orderings of memory accesses, the load/store
+ queue (
+\family typewriter
+LoadStoreQueue
+\family default
+) is used.
+ Separate load/store queue is maintained per thread, so that an unresolved
+ address from one thread does not prevent loads in other threads from issuing.
+\end_layout
+
+\begin_layout Standard
+After execution, instructions write back to the register files.
+ Commitment (or retirement) is done in order for each thread out of the
+ re-order buffers (
+\family typewriter
+ReorderBuffer
+\family default
+s).
+ Separate reorder buffers are maintained per thread.
+ 
 \end_layout
 
 \begin_layout Section
@@ -5722,12 +5805,2436 @@ Memory Hierarchy
 Internal Cache Structure and Cache Coherence
 \end_layout
 
+\begin_layout Standard
+A two-level cache hierarchy is modeled for the moment.
+ Cache coherence is enforced with the directory-based MESI protocol between
+ the private level one caches owned by each core and the level two cache
+ that shared among cores.
+\end_layout
+
+\begin_layout Standard
+Besides the data, tag, and state, a cache block has a corresponding directory
+ entry that contains the owner and sharers information of the block.
+ The geometry parameters of each cache in the memory hierarchy are configured
+ via XML files.
+ The cache subblock granularity is currently not supported but planned for
+ future work.
+ The LRU cache replacement policy is implemented for the moment, the implementat
+ions of more advanced policies are left as future work.
+\end_layout
+
+\begin_layout Standard
+The details of the directory-based MESI protocols are described as below.
+\end_layout
+
+\begin_layout Enumerate
+
+\family typewriter
+findAndLock(addr, isBlocking, isRead, isRetry, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint set, way, tag;
+\end_layout
+
+\begin_layout Plain Layout
+
+MESIState state;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+bool hit = this.cache.findBlock(addr, set, way, tag, state, true);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint dumbTag;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(!hit) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  way = this.cache.replaceBlock(set);
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache.getBlock(set, way, dumbTag, state);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+DirLock dirLock = this.cache.dir.dirLocks[set];
+\end_layout
+
+\begin_layout Plain Layout
+
+if(!dirLock.lock()) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  if(isBlocking) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    onCompletedCallback(true, set, way, state, tag, dirLock);
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  else {
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.retry({this.findAndLock(addr, isBlocking, isRead, true, onCompletedCallba
+ck);});
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache[set][way].transientTag = tag;
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  if(!hit && state != MESIState.INVALID) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+      {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.evict(set, way, 
+\end_layout
+
+\begin_layout Plain Layout
+
+          (bool hasError)
+\end_layout
+
+\begin_layout Plain Layout
+
+          {
+\end_layout
+
+\begin_layout Plain Layout
+
+            uint dumbTag;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\end_layout
+
+\begin_layout Plain Layout
+
+            if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.stat.evictions++;
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.cache.getBlock(set, way, dumbTag, state);
+\end_layout
+
+\begin_layout Plain Layout
+
+              onCompletedCallback(false, set, way, state, tag, dirLock);
+\end_layout
+
+\begin_layout Plain Layout
+
+            }
+\end_layout
+
+\begin_layout Plain Layout
+
+            else {
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.cache.getBlock(set, way, dumbTag, state);
+\end_layout
+
+\begin_layout Plain Layout
+
+              dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+              onCompletedCallback(true, set, way, state, tag, dirLock);
+\end_layout
+
+\begin_layout Plain Layout
+
+            }
+\end_layout
+
+\begin_layout Plain Layout
+
+          });
+\end_layout
+
+\begin_layout Plain Layout
+
+      }, this.hitLatency);
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  else {      
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+      {
+\end_layout
+
+\begin_layout Plain Layout
+
+        onCompletedCallback(false, set, way, state, tag, dirLock);
+\end_layout
+
+\begin_layout Plain Layout
+
+      },
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.hitLatency);
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family typewriter
+load(addr, isRetry, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.findAndLock(addr, false, true, isRetry,
+\end_layout
+
+\begin_layout Plain Layout
+
+  (bool hasError, uint set, uint way, MESIState state, uint tag, DirLock
+ dirLock)
+\end_layout
+
+\begin_layout Plain Layout
+
+  {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if(!isReadHit(state)) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.readRequest(this.next, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+        (bool hasError, bool isShared) 
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+          if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+            this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED
+\end_layout
+
+\begin_layout Plain Layout
+
+              : MESIState.EXCLUSIVE);
+\end_layout
+
+\begin_layout Plain Layout
+
+            this.cache.accessBlock(set, way);
+\end_layout
+
+\begin_layout Plain Layout
+
+            dirLock.unlock();               
+\end_layout
+
+\begin_layout Plain Layout
+
+            onCompletedCallback();
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+          else {
+\end_layout
+
+\begin_layout Plain Layout
+
+            dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+            this.retry({this.load(addr, true, onCompletedCallback);});
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+        });
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+      else {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.cache.accessBlock(set, way); 
+\end_layout
+
+\begin_layout Plain Layout
+
+        dirLock.unlock();         
+\end_layout
+
+\begin_layout Plain Layout
+
+        onCompletedCallback();
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    else {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.retry({this.load(addr, true, onCompletedCallback);});
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  });
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family typewriter
+store(addr, isRetry, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.findAndLock(addr, false, false, isRetry, 
+\end_layout
+
+\begin_layout Plain Layout
+
+  (bool hasError, uint set, uint way, MESIState state, uint tag, DirLock
+ dirLock)
+\end_layout
+
+\begin_layout Plain Layout
+
+  {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if(!isWriteHit(state)) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.writeRequest(this.next, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+          (bool hasError)
+\end_layout
+
+\begin_layout Plain Layout
+
+          {
+\end_layout
+
+\begin_layout Plain Layout
+
+            if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.cache.accessBlock(set, way);
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
+\end_layout
+
+\begin_layout Plain Layout
+
+              dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+              onCompletedCallback();
+\end_layout
+
+\begin_layout Plain Layout
+
+            }
+\end_layout
+
+\begin_layout Plain Layout
+
+            else {
+\end_layout
+
+\begin_layout Plain Layout
+
+              dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.retry({this.store(addr, true, onCompletedCallback);});
+\end_layout
+
+\begin_layout Plain Layout
+
+            }
+\end_layout
+
+\begin_layout Plain Layout
+
+          });
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+      else {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.cache.accessBlock(set, way);
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
+\end_layout
+
+\begin_layout Plain Layout
+
+        dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+        onCompletedCallback();
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    else {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.retry({this.store(addr, true, onCompletedCallback);});
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  });
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family typewriter
+evict(set, way, onCompletedCallback)
+\family default
+.
+ 
+\begin_inset Newline newline
+\end_inset
+
+Constant-latency (2) on-chip interconnect is assumed here.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint tag;
+\end_layout
+
+\begin_layout Plain Layout
+
+MESIState state;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+this.cache.getBlock(set, way, tag, state);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+uint srcSet = set;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint srcWay = way;
+\end_layout
+
+\begin_layout Plain Layout
+
+uint srcTag = tag;
+\end_layout
+
+\begin_layout Plain Layout
+
+CoherentCacheNode target = this.next;
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+this.invalidate(null, set, way, 
+\end_layout
+
+\begin_layout Plain Layout
+
+  {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(state == MESIState.INVALID) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      onCompletedCallback(false);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    else if(state == MESIState.MODIFIED) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+          target.evictReceive(this, srcTag, true, 
+\end_layout
+
+\begin_layout Plain Layout
+
+            (bool hasError)
+\end_layout
+
+\begin_layout Plain Layout
+
+            {
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+                {
+\end_layout
+
+\begin_layout Plain Layout
+
+                  this.evictReplyReceive(hasError, srcSet, srcWay, onCompletedCal
+lback);
+\end_layout
+
+\begin_layout Plain Layout
+
+                }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+            });
+\end_layout
+
+\begin_layout Plain Layout
+
+        }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    else {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+          target.evictReceive(this, srcTag, false, 
+\end_layout
+
+\begin_layout Plain Layout
+
+            (bool hasError)
+\end_layout
+
+\begin_layout Plain Layout
+
+            {
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+                {
+\end_layout
+
+\begin_layout Plain Layout
+
+                  this.evictReplyReceive(hasError, srcSet, srcWay, onCompletedCal
+lback);
+\end_layout
+
+\begin_layout Plain Layout
+
+                }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+            });
+\end_layout
+
+\begin_layout Plain Layout
+
+        }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  });
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+evictReceive(source, addr, isWriteback, onReceivedReplyCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.findAndLock(addr, false, false, false, 
+\end_layout
+
+\begin_layout Plain Layout
+
+      (bool hasError, uint set, uint way, MESIState state, uint tag, DirLock
+ dirLock)
+\end_layout
+
+\begin_layout Plain Layout
+
+      {       
+\end_layout
+
+\begin_layout Plain Layout
+
+        if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+          if(!isWriteback) {
+\end_layout
+
+\begin_layout Plain Layout
+
+            this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+          else {
+\end_layout
+
+\begin_layout Plain Layout
+
+            this.invalidate(source, set, way, 
+\end_layout
+
+\begin_layout Plain Layout
+
+              {
+\end_layout
+
+\begin_layout Plain Layout
+
+                if(state == MESIState.SHARED) {
+\end_layout
+
+\begin_layout Plain Layout
+
+                  this.writeRequest(this.next, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+                    (bool hasError)
+\end_layout
+
+\begin_layout Plain Layout
+
+                    {
+\end_layout
+
+\begin_layout Plain Layout
+
+                      this.evictWritebackFinish(
+\end_layout
+
+\begin_layout Plain Layout
+
+                        source, hasError, set, way, tag, dirLock, onReceiveReply
+Callback);
+\end_layout
+
+\begin_layout Plain Layout
+
+                    });
+\end_layout
+
+\begin_layout Plain Layout
+
+                }
+\end_layout
+
+\begin_layout Plain Layout
+
+                else {
+\end_layout
+
+\begin_layout Plain Layout
+
+                  this.evictWritebackFinish(
+\end_layout
+
+\begin_layout Plain Layout
+
+                    source, false, set, way, tag, dirLock, onReceiveReplyCallbac
+k);
+\end_layout
+
+\begin_layout Plain Layout
+
+                }
+\end_layout
+
+\begin_layout Plain Layout
+
+              });
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+        }
+\end_layout
+
+\begin_layout Plain Layout
+
+        else {
+\end_layout
+
+\begin_layout Plain Layout
+
+          onReceiveReplyCallback(true);
+\end_layout
+
+\begin_layout Plain Layout
+
+        }
+\end_layout
+
+\begin_layout Plain Layout
+
+      });
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+evictWritebackFinish(source, hasError, set, way, tag, dirLock, onReceivedReplyCa
+llback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache.accessBlock(set, way);
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+  onReceiveReplyCallback(true);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+evictProcess(source, set, way, dirLock, onReceivedReplyCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+\end_layout
+
+\begin_layout Plain Layout
+
+dirEntry.unsetSharer(source);
+\end_layout
+
+\begin_layout Plain Layout
+
+if(dirEntry.owner == source) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirEntry.owner = null;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+onReceiveReplyCallback(false);
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+evictReplyReceive(hasError, srcSet, srcWay, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+  {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.cache.setBlock(srcSet, srcWay, 0, MESIState.INVALID);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    onCompletedCallback(hasError);
+\end_layout
+
+\begin_layout Plain Layout
+
+  }, 2);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family typewriter
+readRequest(target, addr, onCompletedCallback)
+\family default
+.
+\begin_inset Newline newline
+\end_inset
+
+Cconstant-latency (2) on-chip interconnect is assumed here.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+  {
+\end_layout
+
+\begin_layout Plain Layout
+
+    target.readRequestReceive(this, addr, onCompletedCallback);
+\end_layout
+
+\begin_layout Plain Layout
+
+  }, 2);
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+readRequestReceive(source, addr, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.findAndLock(addr, this.next == source, true, false,
+\end_layout
+
+\begin_layout Plain Layout
+
+  (bool hasError, uint set, uint way, MESIState state, uint tag, DirLock
+ dirLock)
+\end_layout
+
+\begin_layout Plain Layout
+
+  {       
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if(source.next == this) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.readRequestUpdown(source, set, way, tag, state, dirLock, onCompleted
+Callback);
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+      else {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.readRequestDownup(set, way, tag, dirLock, onCompletedCallback);
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    else {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+          onCompletedCallback(true, false);
+\end_layout
+
+\begin_layout Plain Layout
+
+        }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  });
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+
+\family default
+r
+\family typewriter
+eadRequestUpdown(source, set, way, tag, state, dirLock, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint pending = 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+if(state != MESIState.INVALID) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  if(dirEntry.owner !is null && dirEntry.owner != source) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    pending++;
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.readRequest(dirEntry.owner, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+      (bool hasError, bool isShared)
+\end_layout
+
+\begin_layout Plain Layout
+
+      {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.readRequestUpdownFinish(source, set, way, dirLock, pending,
+ onCompletedCallback);
+\end_layout
+
+\begin_layout Plain Layout
+
+      });
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.readRequestUpdownFinish(source, set, way, dirLock, pending, onCompletedCal
+lback);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.readRequest(this.next, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+    (bool hasError, bool isShared)
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED : MESIState.E
+XCLUSIVE);
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.readRequestUpdownFinish(source, set, way, dirLock, pending,
+ onCompletedCallback);
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+      else {
+\end_layout
+
+\begin_layout Plain Layout
+
+        dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+        this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+          {
+\end_layout
+
+\begin_layout Plain Layout
+
+            onCompletedCallback(true, false);
+\end_layout
+
+\begin_layout Plain Layout
+
+          }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    });
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+readRequestUpdownFinish(source, set, way, dirLock, ref pending, onCompletedCallb
+ack)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pending--;
+\end_layout
+
+\begin_layout Plain Layout
+
+if(pending == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+\end_layout
+
+\begin_layout Plain Layout
+
+  if(dirEntry.owner !is null && dirEntry.owner != source) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    dirEntry.owner = null;
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirEntry.setSharer(source);
+\end_layout
+
+\begin_layout Plain Layout
+
+  if(!dirEntry.isShared) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    dirEntry.owner = source;
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache.accessBlock(set, way);
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+      onCompletedCallback(false, dirEntry.isShared);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+readRequestDownup(set, way, tag, dirLock, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint pending = 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+\end_layout
+
+\begin_layout Plain Layout
+
+if(dirEntry.owner !is null) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  pending++;
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.readRequest(dirEntry.owner, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+    (bool hasError, bool isShared)
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.readRequestDownUpFinish(set, way, tag, dirLock, pending, onCompletedCa
+llback);
+\end_layout
+
+\begin_layout Plain Layout
+
+    });
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+this.readRequestDownUpFinish(set, way, tag, dirLock, pending, onCompletedCallback
+);
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+readRequestDownUpFinish(set, way, tag, dirLock, ref pending, onCompletedCallback
+)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pending--;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if(pending == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirEntry.owner = null;
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache.setBlock(set, way, tag, MESIState.SHARED);
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache.accessBlock(set, way);
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+      onCompletedCallback(false, false);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family typewriter
+writeRequest(target, addr, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+  {
+\end_layout
+
+\begin_layout Plain Layout
+
+    target.writeRequestReceive(this, addr, onCompletedCallback);
+\end_layout
+
+\begin_layout Plain Layout
+
+  }, 2);
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+writeRequestReceive(source, addr, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+this.findAndLock(addr, this.next == source, false, false,
+\end_layout
+
+\begin_layout Plain Layout
+
+  (bool hasError, uint set, uint way, MESIState state, uint tag, DirLock
+ dirLock)
+\end_layout
+
+\begin_layout Plain Layout
+
+  {       
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.invalidate(source, set, way, 
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+          if(source.next == this) {
+\end_layout
+
+\begin_layout Plain Layout
+
+            if(state == MESIState.MODIFIED || state == MESIState.EXCLUSIVE)
+ {
+\end_layout
+
+\begin_layout Plain Layout
+
+              writeRequestUpdownFinish(
+\end_layout
+
+\begin_layout Plain Layout
+
+                source, false, set, way, tag, state, dirLock, onCompletedCallbac
+k);
+\end_layout
+
+\begin_layout Plain Layout
+
+            }
+\end_layout
+
+\begin_layout Plain Layout
+
+            else {
+\end_layout
+
+\begin_layout Plain Layout
+
+              this.writeRequest(this.next, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+                (bool hasError)
+\end_layout
+
+\begin_layout Plain Layout
+
+                {
+\end_layout
+
+\begin_layout Plain Layout
+
+                  writeRequestUpdownFinish(
+\end_layout
+
+\begin_layout Plain Layout
+
+                    source, hasError, set, way, tag, state, dirLock, onCompleted
+Callback);
+\end_layout
+
+\begin_layout Plain Layout
+
+                });
+\end_layout
+
+\begin_layout Plain Layout
+
+            }
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+          else {
+\end_layout
+
+\begin_layout Plain Layout
+
+            this.cache.setBlock(set, way, 0, MESIState.INVALID);
+\end_layout
+
+\begin_layout Plain Layout
+
+            dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+            this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+              {
+\end_layout
+
+\begin_layout Plain Layout
+
+                onCompletedCallback(false);
+\end_layout
+
+\begin_layout Plain Layout
+
+              }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+        });
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    else {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+          onCompletedCallback(true);
+\end_layout
+
+\begin_layout Plain Layout
+
+        }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  });
+\end_layout
+
+\end_inset
+
+
+\family typewriter
+
+\begin_inset Newline newline
+\end_inset
+
+writeRequestUpdownFinish(source, hasError, set, way, tag, state, dirLock,
+ onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if(!hasError) {
+\end_layout
+
+\begin_layout Plain Layout
+
+  DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirEntry.setSharer(source);
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirEntry.owner = source;
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.cache.accessBlock(set, way);
+\end_layout
+
+\begin_layout Plain Layout
+
+  if(state != MESIState.MODIFIED) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.cache.setBlock(set, way, tag, MESIState.EXCLUSIVE);
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+      onCompletedCallback(false);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }, 2);                  
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+else {
+\end_layout
+
+\begin_layout Plain Layout
+
+  dirLock.unlock();
+\end_layout
+
+\begin_layout Plain Layout
+
+  this.schedule(
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+      onCompletedCallback(true);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }, 2);
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\family typewriter
+invalidate(except, set, way, onCompletedCallback)
+\family default
+.
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint tag;
+\end_layout
+
+\begin_layout Plain Layout
+
+    MESIState state;
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.cache.getBlock(set, way, tag, state);
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    uint pending = 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    CoherentCacheNode[] sharersToRemove;
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    foreach(sharer; dirEntry.sharers) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if(sharer != except) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        sharersToRemove ~= sharer;
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    foreach(sharer; sharersToRemove) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      dirEntry.unsetSharer(sharer);
+\end_layout
+
+\begin_layout Plain Layout
+
+      if(dirEntry.owner == sharer) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        dirEntry.owner = null;
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+      
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.writeRequest(sharer, tag,
+\end_layout
+
+\begin_layout Plain Layout
+
+        (bool hasError)
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+          pending--;
+\end_layout
+
+\begin_layout Plain Layout
+
+          
+\end_layout
+
+\begin_layout Plain Layout
+
+          if(pending == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+            onCompletedCallback();
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+        });
+\end_layout
+
+\begin_layout Plain Layout
+
+      pending++;
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    pending--;
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(pending == 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      onCompletedCallback();
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 On-Chip Interconnect
 \end_layout
 
+\begin_layout Standard
+Currently, constant-latency on-chip interconnect is modeled, the cycle-accurate
+ simulation of on-chip interconnect is left as future work.
+\end_layout
+
 \begin_layout Subsection
 Interface to External DRAM Simulators
+\end_layout
+
+\begin_layout Standard
+Currently, constant-latency DRAM access is modeled, the cycle-accurate simulatio
+n of on-chip interconnect is left as future work.
+ The integration of DRAMSim with Flexim is planned.
 \end_layout
 
 \begin_layout Chapter
@@ -5736,52 +8243,640 @@ Supporting Infrastructure
 
 \begin_layout Standard
 There are various supporting modules aside the aforementioned main components
- to advocate the reusability of the simulator, in which the ELF program
- loader component is used to load statically compiled MIPS32 little-endian
- executable into the simulator, the event queue component is used extensively
- to event driven the simulator per cycle, and the logging component supports
- configurable logging functionalities that can facilitate development and
- even be useful after release.
+ to maintain the Flexim's reusability.
+ 
 \end_layout
 
 \begin_layout Section
 Eventing and Callback Mechanisms
 \end_layout
 
+\begin_layout Standard
+In flexim, cycle-accurate simulation is driven by event signals per cycle.
+ Generally speaking, an event can be any piece of code that is scheduled
+ to execute at the specified time.
+ This piece of code can be represented as delegates in the D language.
+ The delegate-based event queue (
+\family typewriter
+DelegateEventQueue
+\family default
+) is illustrated as below:
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+class DelegateEventQueue: EventProcessor {
+\end_layout
+
+\begin_layout Plain Layout
+
+  this() {
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+      
+\end_layout
+
+\begin_layout Plain Layout
+
+  void processEvents() {
+\end_layout
+
+\begin_layout Plain Layout
+
+    if(currentCycle in this.events) {
+\end_layout
+
+\begin_layout Plain Layout
+
+      foreach(event; this.events[currentCycle]) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        event();
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.events.remove(currentCycle);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  void schedule(void delegate() event, ulong delay = 0) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    this.events[currentCycle + delay] ~= event;
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  void delegate()[][ulong] events;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The delegate-based callback mechanism is used extensively in the implementation
+ of the MESI cache coherence protocol.
+ This way, the code is clean and readable.
+\end_layout
+
 \begin_layout Section
 Categorized Logging Mechanism
+\end_layout
+
+\begin_layout Standard
+The logging component supports configurable logging functionalities that
+ can facilitate development and even be useful after release.
+ The code skeleton of the Logger class is shown as below:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+class Logger {
+\end_layout
+
+\begin_layout Plain Layout
+
+  static this() {
+\end_layout
+
+\begin_layout Plain Layout
+
+    singleInstance = new Logger();
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  bool enabled(LogCategory category) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    return category in this.logSwitches && this.logSwitches[category];
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  string message(string caption, string text) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    return format("[%d] 
+\backslash
+t%s%s", currentCycle, 
+\end_layout
+
+\begin_layout Plain Layout
+
+      caption.endsWith("info") ? "" : "[" ~ caption ~ "] ", text);
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  void infof(LogCategory, T...)(LogCategory category, T args) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    debug {
+\end_layout
+
+\begin_layout Plain Layout
+
+      this.info(category, format(args));
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  void info(LogCategory category, string text) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    debug {
+\end_layout
+
+\begin_layout Plain Layout
+
+      if(this.enabled(category)) {
+\end_layout
+
+\begin_layout Plain Layout
+
+        stdout.writeln(this.message(category ~ "|" ~ "info", text));
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+...
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  bool[LogCategory] logSwitches;
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  static Logger singleInstance;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
 XML-Based Input/Output for Configurations and Statistics
 \end_layout
 
+\begin_layout Standard
+Extensible Markup Language (XML) is a standard and pervasive mechanism for
+ representing structural data in a machine-readable and human-friendly way.
+ Here XML-based configuration specification and statistics output are provided.
+ For example, the following code shows how to serialize and deserialize
+ a cache configuration using the provided XML I/O support:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) { 
+\end_layout
+
+\begin_layout Plain Layout
+
+  override XMLConfig save(CacheConfig cacheConfig) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    XMLConfig xmlConfig = new XMLConfig("CacheConfig");
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["name"] = cacheConfig.name;
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["level"] = to!(string)(cacheConfig.level);
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["numSets"] = to!(string)(cacheConfig.numSets);
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["assoc"] = to!(string)(cacheConfig.assoc);
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["blockSize"] = to!(string)(cacheConfig.blockSize);
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["hitLatency"] = to!(string)(cacheConfig.hitLatency);
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["missLatency"] = to!(string)(cacheConfig.missLatency);
+\end_layout
+
+\begin_layout Plain Layout
+
+    xmlConfig["policy"] = to!(string)(cacheConfig.policy);
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    return xmlConfig;
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  override CacheConfig load(XMLConfig xmlConfig) {
+\end_layout
+
+\begin_layout Plain Layout
+
+    string name = xmlConfig["name"];
+\end_layout
+
+\begin_layout Plain Layout
+
+    uint level = to!(uint)(xmlConfig["level"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+    uint numSets = to!(uint)(xmlConfig["numSets"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+    uint assoc = to!(uint)(xmlConfig["assoc"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+    uint blockSize = to!(uint)(xmlConfig["blockSize"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+    uint hitLatency = to!(uint)(xmlConfig["hitLatency"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+    uint missLatency = to!(uint)(xmlConfig["missLatency"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+    CacheReplacementPolicy policy = cast(CacheReplacementPolicy) (
+\end_layout
+
+\begin_layout Plain Layout
+
+      xmlConfig["policy"]);
+\end_layout
+
+\begin_layout Plain Layout
+
+      
+\end_layout
+
+\begin_layout Plain Layout
+
+    CacheConfig cacheConfig = new CacheConfig(
+\end_layout
+
+\begin_layout Plain Layout
+
+      name, level, numSets, assoc, blockSize, hitLatency, missLatency, policy);
+\end_layout
+
+\begin_layout Plain Layout
+
+    
+\end_layout
+
+\begin_layout Plain Layout
+
+    return cacheConfig;
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  static this() {
+\end_layout
+
+\begin_layout Plain Layout
+
+    singleInstance = new CacheConfigXMLSerializer();
+\end_layout
+
+\begin_layout Plain Layout
+
+  }
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  static CacheConfigXMLSerializer singleInstance;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Plotting and Table Generation for Experiments
 \end_layout
 
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
 \begin_layout Chapter
-Evaluation
+Evaluation, Limitations and Future Work
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
 \end_layout
 
 \begin_layout Section
 Benchmark Evaluation
 \end_layout
 
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
 \begin_layout Subsection
 Criteria
 \end_layout
 
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
 \begin_layout Subsection
 Results
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
 \end_layout
 
 \begin_layout Section
 Comparison to Other Simulators
 \end_layout
 
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
 \begin_layout Subsection
 Results
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Section
+Limitations and Future Work
+\end_layout
+
+\begin_layout Standard
+Here are some of the limitations of Flexim.
+ This list is not intended to be comprehensive, but rather aims to provide
+ the user with an initial understanding of the capabilities of the Flexim
+ simulation environment.
+ These capabilities are subject to change in future releases.
+\end_layout
+
+\begin_layout Itemize
+Only statically compiled MIPS32 binaries are suported by Flexim.
+ Multi-ISA support and loading support of dynamically compiled programs
+ are remained as future work.
+\end_layout
+
+\begin_layout Itemize
+The explicit modeling of Miss Status Holding Registers (MSHRs) is not implemente
+d and left as future work.
+\end_layout
+
+\begin_layout Itemize
+Cycle-accurate on-chip interconnect and dram controller modeling is not
+ implemented and left as future work.
 \end_layout
 
 \end_body
