@@ -447,8 +447,8 @@ abstract class StaticInst {
 			return (cast(Nop)this) !is null;
 		}
 		
-		RegisterDependency[] ideps;
-		RegisterDependency[] odeps;
+		RegisterDependency[] iDeps;
+		RegisterDependency[] oDeps;
 
 	protected:		
 		void machInst(MachInst value) {

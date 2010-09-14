@@ -113,14 +113,14 @@ class CPUSimulator : Simulator {
 		SimulationConfig simulationConfig = simulation.config;
 		
 		for(uint i = 0; i < simulationConfig.processorConfig.numCores; i++) {
-			Core core = new Core(this.processor, i);
+			Core core = new CoreImpl(this.processor, i);
 				
 			for(uint j = 0; j < simulationConfig.processorConfig.numThreads; j++) {
 				ContextConfig context = simulationConfig.processorConfig.contexts[i * simulationConfig.processorConfig.numThreads + j];
 				
 				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 
-				Thread thread = new Thread(core, simulation, i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
+				Thread thread = new ThreadImpl(core, simulation, i * simulationConfig.processorConfig.numThreads + j, format("%d", j), process);
 				
 				core.threads ~= thread;
 				

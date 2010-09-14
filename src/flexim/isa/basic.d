@@ -30,7 +30,7 @@ class Syscall: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, 2);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, 2);
 		}
 
 		override void execute(Thread thread) {
@@ -45,8 +45,8 @@ class Sll: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -61,9 +61,9 @@ class Sllv: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -78,8 +78,8 @@ class Sra: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -94,9 +94,9 @@ class Srav: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -111,8 +111,8 @@ class Srl: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {
@@ -127,9 +127,9 @@ class Srlv: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
 		override void execute(Thread thread) {

@@ -44,7 +44,7 @@ class MemoryOp: StaticInst {
 			this.setupEaDeps();
 			
 			this.eaOdeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.EA);
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.EA);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.EA);
 			
 			this.setupMemDeps();
 		}
@@ -52,11 +52,11 @@ class MemoryOp: StaticInst {
 		abstract void setupEaDeps();
 		abstract void setupMemDeps();
 		
-		RegisterDependency[] eaIdeps;
-		RegisterDependency[] eaOdeps;
+		alias iDeps eaIdeps;
+		alias oDeps eaOdeps;
 		
-		RegisterDependency[] memIdeps;
-		RegisterDependency[] memOdeps;
+		RegisterDependency[] memIDeps;
+		RegisterDependency[] memODeps;
 
 	private:
 		void displacement(int value) {
@@ -77,7 +77,7 @@ class Lb: MemoryOp {
 		}
 
 		override void setupMemDeps() {			
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -98,7 +98,7 @@ class Lbu: MemoryOp {
 		}
 
 		override void setupMemDeps() {			
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -119,7 +119,7 @@ class Lh: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -140,7 +140,7 @@ class Lhu: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -161,7 +161,7 @@ class Lw: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -182,8 +182,8 @@ class Lwl: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -221,8 +221,8 @@ class Lwr: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -260,7 +260,7 @@ class Ll: MemoryOp {
 	}
 
 	override void setupMemDeps() {
-		this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+		this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 	}
 
 	override void execute(Thread thread) {		
@@ -281,7 +281,7 @@ class Lwc1: MemoryOp {
 		}
 	
 		override void setupMemDeps() {
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {			
@@ -302,7 +302,7 @@ class Ldc1: MemoryOp {
 		}
 	
 		override void setupMemDeps() {
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {			
@@ -323,7 +323,7 @@ class Sb: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -343,7 +343,7 @@ class Sh: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -363,7 +363,7 @@ class Sw: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -383,7 +383,7 @@ class Swl: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -422,7 +422,7 @@ class Swr: MemoryOp {
 		}
 
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
 		override uint ea(Thread thread) {
@@ -461,7 +461,7 @@ class Sc: MemoryOp {
 		}
 	
 		override void setupMemDeps() {
-			this.memOdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 	
 		override void execute(Thread thread) {
@@ -482,7 +482,7 @@ class Swc1: MemoryOp {
 		}
 	
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {			
@@ -502,7 +502,7 @@ class Sdc1: MemoryOp {
 		}
 	
 		override void setupMemDeps() {
-			this.memIdeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
 		override void execute(Thread thread) {		

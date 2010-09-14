@@ -43,8 +43,8 @@ void main(string[] args) {
 	//string experimentName = "WCETBench-fir-1x1";
 	//string experimentName = "WCETBench-fir-2x1";
 	//string experimentName = "Olden_Custom1-em3d_original-1x1";
-	//string experimentName = "Olden_Custom1-mst_original-1x1";
-	string experimentName = "Olden_Custom1-mst_original-2x1";
+	string experimentName = "Olden_Custom1-mst_original-1x1";
+	//string experimentName = "Olden_Custom1-mst_original-2x1";
 	
 	getopt(args, "experiment", &experimentName);
 	

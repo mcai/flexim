@@ -102,10 +102,12 @@ class Queue(EntryT) {
 	}
 
 	void popFront() {
+		//logging.infof(LogCategory.DEBUG, "%s.popFront()", this.name);
 		this.entries.popFront();
 	}
 	
 	void popBack() {
+		//logging.infof(LogCategory.DEBUG, "%s.popBack()", this.name);
 		this.entries.popBack();
 	}
 
@@ -128,6 +130,7 @@ class Queue(EntryT) {
 	}
 	
 	void removeAt(uint index) {
+		//logging.infof(LogCategory.DEBUG, "%s.removeAt(%d)", this.name, index);
 		assert(index >= 0 && index < this.size);
 		this.entries = this.entries.remove(index);
 	}
@@ -137,8 +140,8 @@ class Queue(EntryT) {
 	}
 
 	void opOpAssign(string op, EntryT)(EntryT entry)
-		if(op == "~")
-	{
+		if(op == "~") {
+		//logging.infof(LogCategory.DEBUG, "%s ~= %s", this.name, entry);
 		if(this.size >= this.capacity) {
 			logging.fatalf(LogCategory.MISC, "%s", this);
 		}
@@ -151,6 +154,7 @@ class Queue(EntryT) {
 	}
 	
 	void opIndexAssign(EntryT value, uint index) {
+		//logging.infof(LogCategory.DEBUG, "%s[%d] = %s", this.name, index, value);
 		this.entries[index] = value;
 	}
 	
@@ -166,19 +170,12 @@ class Queue(EntryT) {
 	}
 	
 	void clear() {
+		//logging.infof(LogCategory.DEBUG, "%s.clear()", this.name);
 		this.entries.clear();
 	}
-
+	
 	override string toString() {
-		string str;
-
-		str ~= format("%s [size: %d, capacity: %d]\n", this.name, this.size, this.capacity);
-
-		foreach(i, entry; this) {
-			str ~= format("  %2d: %s\n", i, to!(string)(entry));
-		}
-
-		return str;
+		return format("%s[capacity=%d, size=%d]", this.name, this.capacity, this.size);
 	}
 
 	string name;

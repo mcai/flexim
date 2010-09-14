@@ -37,8 +37,8 @@ class Mfc1: CP1Control {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {			
@@ -54,8 +54,8 @@ class Cfc1: CP1Control {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {			
@@ -77,8 +77,8 @@ class Mtc1: CP1Control {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 		}
 
 		override void execute(Thread thread) {
@@ -94,8 +94,8 @@ class Ctc1: CP1Control {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {

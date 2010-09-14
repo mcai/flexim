@@ -37,9 +37,9 @@ abstract class FloatBinaryOp: FloatOp {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
@@ -50,8 +50,8 @@ abstract class FloatUnaryOp: FloatOp {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
@@ -308,8 +308,8 @@ abstract class FloatConvertOp: FloatOp {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
@@ -460,10 +460,10 @@ abstract class FloatCompareOp: StaticInst {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 }
 

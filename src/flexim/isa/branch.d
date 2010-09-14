@@ -64,7 +64,7 @@ class Bal: Branch {
 		}
 		
 		override void setupDeps() {
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override void execute(Thread thread) {
@@ -80,8 +80,8 @@ class Beq: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -98,7 +98,7 @@ class Beqz: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -115,7 +115,7 @@ class Bgez: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -132,8 +132,8 @@ class Bgezal: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override void execute(Thread thread) {
@@ -151,7 +151,7 @@ class Bgtz: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -168,7 +168,7 @@ class Blez: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -185,7 +185,7 @@ class Bltz: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -202,8 +202,8 @@ class Bltzal: Branch {
 		}
 		
 		override void setupDeps() {			
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override void execute(Thread thread) {
@@ -221,8 +221,8 @@ class Bne: Branch {
 		}
 		
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
 		override void execute(Thread thread) {
@@ -239,7 +239,7 @@ class Bnez: Branch {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -256,7 +256,7 @@ class Bc1f: Branch {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -276,7 +276,7 @@ class Bc1t: Branch {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -296,7 +296,7 @@ class Bc1fl: Branch {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -320,7 +320,7 @@ class Bc1tl: Branch {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
 		override void execute(Thread thread) {
@@ -377,7 +377,7 @@ class Jal: Jump {
 		}
 
 		override void setupDeps() {
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
 		override uint targetPc(Thread thread) {
@@ -397,8 +397,8 @@ class Jalr: Jump {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-			this.odeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 		
 		override uint targetPc(Thread thread) {
@@ -418,7 +418,7 @@ class Jr: Jump {
 		}
 
 		override void setupDeps() {
-			this.ideps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override uint targetPc(Thread thread) {
