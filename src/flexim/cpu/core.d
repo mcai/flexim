@@ -910,8 +910,8 @@ class ThreadImpl: Thread {
 			
 			this.lastCommitCycle = Simulator.singleInstance.currentCycle;
 			
-			logging.infof(LogCategory.DEBUG, "t%s one instruction committed (dynamicInst=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, 
-				reorderBufferEntry.dynamicInst);
+			//logging.infof(LogCategory.DEBUG, "t%s one instruction committed (dynamicInst=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, 
+			//	reorderBufferEntry.dynamicInst);
 		}
 	}
 	
