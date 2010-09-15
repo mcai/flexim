@@ -106,18 +106,31 @@ class FunctionalUnitPool {
 		Simulator.singleInstance.addEventProcessor(this.eventQueue);
 	}
 	
-	bool acquire(FunctionalUnitType type, void delegate() onCompletedCallback) {
+	FunctionalUnit findFree(FunctionalUnitType type) {
 		foreach(entity; this.entities) {
 			if(entity.type == type && !entity.busy) {
-				entity.acquire(onCompletedCallback);
-				return true;
+				return entity;
 			}
 		}
-		return false;
+		return null;
+	}
+	
+	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry rs) onCompletedCallback2) {
+		FunctionalUnitType type = reorderBufferEntry.dynamicInst.staticInst.fuType;
+		FunctionalUnit fu = this.findFree(type);
+		
+		if(fu !is null) {
+			fu.acquire({onCompletedCallback2(reorderBufferEntry);});
+		}
+		else {
+			this.eventQueue.schedule(
+				{
+					this.acquire(reorderBufferEntry, onCompletedCallback2);
+				}, 10);
+		}
 	}
 
 	FunctionalUnit[] entities;
-	
 	DelegateEventQueue eventQueue;
 }
 
@@ -210,6 +223,10 @@ class DecodeBufferEntry {
 	ulong id;
 	DynamicInst dynamicInst;
 	
+	override string toString() {
+		return format("DecodeBufferEntry[id=%d, dynamicInst=%s]", this.id, this.dynamicInst);
+	}
+	
 	static this() {
 		currentId = 0;
 	}
@@ -252,39 +269,28 @@ class ReorderBufferEntry {
 		return true;
 	}
 	
-	bool isDispatched() {
-		return this.isReady || this.isWaiting;
-	}
-	
-	bool isWaiting() {
-		return this.dynamicInst.thread.core.waitingQueue.canFind(this);
-	}
-	
-	bool isReady() {
-		return this.dynamicInst.thread.core.readyQueue.canFind(this);
-	}
-	
 	bool isInLoadStoreQueue() {
 		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry is null;
 	}
 	
-	bool isEffectiveAddressComputation() {
+	bool isEAComputation() {
 		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry !is null;
-	}	
+	}
 	
 	override string toString() {
-		//return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEffectiveAddressComputation=%s, effectiveAddress=0x%x, isCompleted=%s)",
-		//	this.id, this.dynamicInst, this.isEffectiveAddressComputation, this.effectiveAddress, this.isCompleted);
-		return format("ReorderBufferEntry(id=%d, isEffectiveAddressComputation=%s, isCompleted=%s)",
-			this.id, this.isEffectiveAddressComputation, this.isCompleted);
+		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s)",
+			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted);
 	}
 	
 	ulong id;
 	DynamicInst dynamicInst;
-	uint effectiveAddress;
+	uint ea;
 	
 	ReorderBufferEntry loadStoreQueueEntry;
 	
+	bool isDispatched;
+	bool isInReadyQueue;
+	bool isIssued;
 	bool isCompleted;
 	
 	RegisterDependency[] iDeps, oDeps;
@@ -694,7 +700,7 @@ class ThreadImpl: Thread {
 				if(dynamicInst.staticInst.isMem) {					
 					ReorderBufferEntry loadStoreQueueEntry = new ReorderBufferEntry(dynamicInst, 
 						(cast(MemoryOp) dynamicInst.staticInst).memIDeps, (cast(MemoryOp) dynamicInst.staticInst).memODeps);
-					loadStoreQueueEntry.effectiveAddress = (cast(MemoryOp) dynamicInst.staticInst).ea(this);
+					loadStoreQueueEntry.ea = (cast(MemoryOp) dynamicInst.staticInst).ea(this);
 					
 					dispatchBufferEntry.loadStoreQueueEntry = loadStoreQueueEntry; 
 					
@@ -717,23 +723,30 @@ class ThreadImpl: Thread {
 		}
 	}
 	
-	override void dispatch() {		
+	override void dispatch() {
 		foreach(dispatchBufferEntry; this.reorderBuffer) {
-			if(dispatchBufferEntry.allOperandsReady) {
-				this.core.readyQueue ~= dispatchBufferEntry;
-			}
-			else {
-				this.core.waitingQueue ~= dispatchBufferEntry;
+			if(!dispatchBufferEntry.isDispatched && !dispatchBufferEntry.isCompleted) {
+				if(dispatchBufferEntry.allOperandsReady) {
+					this.core.readyQueue ~= dispatchBufferEntry;
+					dispatchBufferEntry.isInReadyQueue = true;
+				}
+				else {
+					this.core.waitingQueue ~= dispatchBufferEntry;
+				}
+				dispatchBufferEntry.isDispatched = true;
 			}
 			
 			if(dispatchBufferEntry.loadStoreQueueEntry !is null) {
 				ReorderBufferEntry loadStoreQueueEntry = dispatchBufferEntry.loadStoreQueueEntry;
-				
-				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore && loadStoreQueueEntry.allOperandsReady) {
-					this.core.readyQueue ~= loadStoreQueueEntry;
-				}
-				else {
-					this.core.waitingQueue ~= loadStoreQueueEntry;
+				if(!loadStoreQueueEntry.isDispatched && !loadStoreQueueEntry.isCompleted) {
+					if(loadStoreQueueEntry.dynamicInst.staticInst.isStore && loadStoreQueueEntry.allOperandsReady) {
+						this.core.readyQueue ~= loadStoreQueueEntry;
+						loadStoreQueueEntry.isInReadyQueue = true;
+					}
+					else {
+						this.core.waitingQueue ~= loadStoreQueueEntry;
+					}
+					loadStoreQueueEntry.isDispatched = true;
 				}
 			}
 		}
@@ -759,18 +772,17 @@ class ThreadImpl: Thread {
 			this.core.waitingQueue ~= waitingQueueEntry;
 		}
 		
-		ReorderBufferEntry[] toReadyQueue;
-		
 		while(!this.core.readyQueue.empty) {
 			ReorderBufferEntry readyQueueEntry = this.core.readyQueue.front;
 			
 			if(readyQueueEntry.isInLoadStoreQueue && readyQueueEntry.dynamicInst.staticInst.isStore) {
-				this.core.seqD.store(this.core.mmu.translate(readyQueueEntry.effectiveAddress), false, {});
-				
+				this.core.seqD.store(this.core.mmu.translate(readyQueueEntry.ea), false, {});
+
+				readyQueueEntry.isIssued = true;
 				readyQueueEntry.isCompleted = true;
 			}
 			else if(readyQueueEntry.isInLoadStoreQueue && readyQueueEntry.dynamicInst.staticInst.isLoad) {
-				this.core.seqD.load(this.core.mmu.translate(readyQueueEntry.effectiveAddress), false, readyQueueEntry,
+				this.core.seqD.load(this.core.mmu.translate(readyQueueEntry.ea), false, readyQueueEntry,
 					(ReorderBufferEntry readyQueueEntry)
 					{
 						foreach(i, oDep; readyQueueEntry.oDeps) {
@@ -780,31 +792,74 @@ class ThreadImpl: Thread {
 						
 						readyQueueEntry.isCompleted = true;
 					});
+				readyQueueEntry.isIssued = true;
 			}
 			else {
-				if(!this.core.fuPool.acquire(readyQueueEntry.dynamicInst.staticInst.fuType, 
-					{
-						foreach(i, oDep; readyQueueEntry.oDeps) {
-							PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
-							regFile[readyQueueEntry.physRegs[i]].state = PhysicalRegisterState.WB;
-						}
-						
-						readyQueueEntry.isCompleted = true;
-					}))
-				{
-					toReadyQueue ~= readyQueueEntry;
+				if(readyQueueEntry.dynamicInst.staticInst.fuType != FunctionalUnitType.NONE) {
+					this.core.fuPool.acquire(readyQueueEntry,
+						(ReorderBufferEntry readyQueueEntry)
+						{
+							foreach(i, oDep; readyQueueEntry.oDeps) {
+								PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
+								regFile[readyQueueEntry.physRegs[i]].state = PhysicalRegisterState.WB;
+							}
+							
+							readyQueueEntry.isCompleted = true;
+						});
+					readyQueueEntry.isIssued = true;
+				}
+				else {
+					readyQueueEntry.isIssued = true;
+					readyQueueEntry.isCompleted = true;
 				}
 			}
 			
 			this.core.readyQueue.popFront();
 		}
-		
-		foreach(readyQueueEntry; toReadyQueue) {
-			this.core.readyQueue ~= readyQueueEntry;
-		}
 	}
 	
 	override void commit() {
+		if(Simulator.singleInstance.currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {
+			logging.warnf(LogCategory.SIMULATOR, 
+				"decodeBuffer.full(size)=%s(%d), " ~
+				"core.readyQueue.size=%d, " ~
+				"core.waitingQueue.size=%d, " ~
+				"reorderBuffer.full(size)=%s(%d), " ~
+				"loadStoreQueue.full(size)=%s(%d)",
+				this.decodeBuffer.full, this.decodeBuffer.size, 
+				this.core.readyQueue.size,
+				this.core.waitingQueue.size,
+				this.reorderBuffer.full, this.reorderBuffer.size,
+				this.loadStoreQueue.full, this.loadStoreQueue.size);
+			
+			writefln("Printing the content of decodeBuffer");
+			foreach(i, entry; this.decodeBuffer) {
+				writefln("[%d] %s", i, entry);
+			}
+			
+			writefln("Printing the content of core.readyQueue");
+			foreach(i, entry; this.core.readyQueue) {
+				writefln("[%d] %s", i, entry);
+			}
+			
+			writefln("Printing the content of core.waitingQueue");
+			foreach(i, entry; this.core.waitingQueue) {
+				writefln("[%d] %s", i, entry);
+			}
+			
+			writefln("Printing the content of reorderBuffer");
+			foreach(i, entry; this.reorderBuffer) {
+				writefln("[%d] %s", i, entry);
+			}
+			
+			writefln("Printing the content of loadStoreQueue");
+			foreach(i, entry; this.loadStoreQueue) {
+				writefln("[%d] %s", i, entry);
+			}
+			
+			logging.fatalf(LogCategory.SIMULATOR, "No instruction committed for %d cycles.", COMMIT_TIMEOUT);
+		}
+		
 		while(!this.reorderBuffer.empty) {
 			ReorderBufferEntry reorderBufferEntry = this.reorderBuffer.front;
 			
@@ -812,7 +867,7 @@ class ThreadImpl: Thread {
 				break;
 			}
 			
-			if(reorderBufferEntry.isEffectiveAddressComputation) {
+			if(reorderBufferEntry.isEAComputation) {
 				ReorderBufferEntry loadStoreQueueEntry = this.loadStoreQueue.front;
 				
 				if(!loadStoreQueueEntry.isCompleted) {
@@ -837,6 +892,8 @@ class ThreadImpl: Thread {
 			this.reorderBuffer.popFront();
 
 			this.stat.totalInsts++;
+			
+			this.lastCommitCycle = Simulator.singleInstance.currentCycle;
 			
 			logging.infof(LogCategory.DEBUG, "t%s one instruction committed (dynamicInst=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, 
 				reorderBufferEntry.dynamicInst);
