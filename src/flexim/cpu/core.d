@@ -159,7 +159,7 @@ class PhysicalRegister {
 
 class PhysicalRegisterFile {
 	this(Core core) {
-		this(1024, core);
+		this(128, core);
 	}
 	
 	this(uint capacity, Core core) {
@@ -259,14 +259,24 @@ class ReorderBufferEntry {
 		return regFile[this.srcPhysRegs[opNum]].isReady;
 	}
 	
-	bool allOperandsReady() {		
-		/*foreach(i, iDep; this.iDeps) {
+	bool allOperandsReady() {
+		foreach(i, iDep; this.iDeps) {
 			if(!this.operandReady(i)) {
 				return false;
 			}
-		}*/ //TODO
+		}
 		
 		return true;
+	}
+	
+	string operandsReadyToString() {
+		string str = "\n";
+	
+		foreach(i, iDep; this.iDeps) {
+			str ~= format("[%s] idep=%s, isReady=%s\n", i, iDep, this.operandReady(i));
+		}
+		
+		return str;
 	}
 	
 	bool isInLoadStoreQueue() {
@@ -278,8 +288,9 @@ class ReorderBufferEntry {
 	}
 	
 	override string toString() {
-		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s)",
-			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted);
+		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s) %s",
+			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted,
+				this.operandsReadyToString);
 	}
 	
 	ulong id;
@@ -495,6 +506,20 @@ abstract class Thread {
 		simulation.stat.processorStat.threadStats ~= this.stat;
 		
 		this.state = ThreadState.Active;
+		
+		for(uint i = 0; i < NumIntRegs; i++) {
+			this.core.intRegFile[i].state = PhysicalRegisterState.ARCH;
+		}
+		
+		for(uint i = 0; i < NumFloatRegs; i++) {
+			this.core.fpRegFile[i].state = PhysicalRegisterState.ARCH;
+		}
+		
+		for(uint i = 0; i < NumMiscRegs; i++) {
+			this.core.miscRegFile[i].state = PhysicalRegisterState.ARCH;
+		}
+		
+		//////////////
 		
 		for(uint i = 0; i < NumIntRegs; i++) {
 			this.renameTables[RegisterDependencyType.INT][i] = i;
@@ -815,6 +840,7 @@ class ThreadImpl: Thread {
 			}
 			
 			this.core.readyQueue.popFront();
+			readyQueueEntry.isInReadyQueue = false;
 		}
 	}
 	

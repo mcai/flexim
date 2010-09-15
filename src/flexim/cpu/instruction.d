@@ -340,16 +340,20 @@ abstract class ISA {
 	StaticInst[uint] decodedInsts;
 }
 
-enum RegisterDependencyType {
-	INT,
-	FP,
-	MISC
+enum RegisterDependencyType: string {
+	INT = "INT",
+	FP = "FP",
+	MISC = "MISC"
 }
 
 class RegisterDependency {
 	this(RegisterDependencyType type, uint num) {
 		this.type = type;
 		this.num = num;
+	}
+	
+	override string toString() {
+		return format("RegisterDependency[type=%s, num=%d]", this.type, this.num);
 	}
 	
 	RegisterDependencyType type;

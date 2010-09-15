@@ -1,18 +1,18 @@
 <?xml version="1.0"?>
 <ExperimentStat title="WCETBench-fir-1x1" cwd="../stats/experiments">
-   <SimulationStat title="WCETBench-fir-1x1" cwd="../stats/experiments" duration="3361">
+   <SimulationStat title="WCETBench-fir-1x1" cwd="../stats/experiments" duration="1254">
       <ProcessorStat>
-         <ThreadStat totalInsts="2688">
+         <ThreadStat totalInsts="2686">
          </ThreadStat>
       </ProcessorStat>
       <MemorySystemStat numCaches="3">
          <CacheStat hits="67" noRetryWrites="0" noRetryAccesses="115" writeHits="0" evictions="0" nonblockingReads="115" reads="115" blockingReads="0" name="l1I-0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="67" nonblockingWrites="0" blockingWrites="0" noRetryReads="115" noRetryHits="67" readRetries="0" accesses="115" noRetryReadHits="67">
          </CacheStat>
-         <CacheStat hits="2340673" noRetryWrites="928" noRetryAccesses="12260" writeHits="116872" evictions="0" nonblockingReads="2223814" reads="2223814" blockingReads="0" name="l1D-0" writeRetries="0" writes="116885" noRetryWriteHits="915" readHits="2223801" nonblockingWrites="116885" blockingWrites="0" noRetryReads="11332" noRetryHits="12234" readRetries="0" accesses="2340699" noRetryReadHits="11319">
+         <CacheStat hits="6405" noRetryWrites="93" noRetryAccesses="661" writeHits="5043" evictions="0" nonblockingReads="1404" reads="1404" blockingReads="0" name="l1D-0" writeRetries="0" writes="5054" noRetryWriteHits="82" readHits="1362" nonblockingWrites="5054" blockingWrites="0" noRetryReads="568" noRetryHits="636" readRetries="0" accesses="6458" noRetryReadHits="554">
          </CacheStat>
-         <CacheStat hits="0" noRetryWrites="12" noRetryAccesses="73" writeHits="0" evictions="0" nonblockingReads="61" reads="61" blockingReads="0" name="l2" writeRetries="0" writes="12" noRetryWriteHits="0" readHits="0" nonblockingWrites="12" blockingWrites="0" noRetryReads="61" noRetryHits="0" readRetries="0" accesses="73" noRetryReadHits="0">
+         <CacheStat hits="0" noRetryWrites="11" noRetryAccesses="72" writeHits="0" evictions="0" nonblockingReads="61" reads="61" blockingReads="0" name="l2" writeRetries="0" writes="11" noRetryWriteHits="0" readHits="0" nonblockingWrites="11" blockingWrites="0" noRetryReads="61" noRetryHits="0" readRetries="0" accesses="72" noRetryReadHits="0">
          </CacheStat>
-         <MemoryStat writes="12" reads="61" accesses="73">
+         <MemoryStat writes="11" reads="61" accesses="72">
          </MemoryStat>
       </MemorySystemStat>
    </SimulationStat>
