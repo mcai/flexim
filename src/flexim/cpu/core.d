@@ -317,13 +317,13 @@ class ReorderBufferEntry {
 	static ulong currentId;
 }
 
-class ReadyQueue: List!(ReorderBufferEntry) { //Queue!(ReorderBufferEntry) {
+class ReadyQueue: Queue!(ReorderBufferEntry) {
 	this() {
 		this(32);
 	}
 	
 	this(uint capacity) {
-		//super("readyQueue", capacity);
+		super("readyQueue", capacity);
 	}
 }
 
@@ -508,28 +508,17 @@ abstract class Thread {
 		this.state = ThreadState.Active;
 		
 		for(uint i = 0; i < NumIntRegs; i++) {
-			this.core.intRegFile[i].state = PhysicalRegisterState.ARCH;
-		}
-		
-		for(uint i = 0; i < NumFloatRegs; i++) {
-			this.core.fpRegFile[i].state = PhysicalRegisterState.ARCH;
-		}
-		
-		for(uint i = 0; i < NumMiscRegs; i++) {
-			this.core.miscRegFile[i].state = PhysicalRegisterState.ARCH;
-		}
-		
-		//////////////
-		
-		for(uint i = 0; i < NumIntRegs; i++) {
+			this.core.intRegFile[this.num * NumIntRegs + i].state = PhysicalRegisterState.ARCH;
 			this.renameTables[RegisterDependencyType.INT][i] = i;
 		}
 		
 		for(uint i = 0; i < NumFloatRegs; i++) {
+			this.core.fpRegFile[this.num * NumFloatRegs + i].state = PhysicalRegisterState.ARCH;
 			this.renameTables[RegisterDependencyType.FP][i] = i;
 		}
 		
 		for(uint i = 0; i < NumMiscRegs; i++) {
+			this.core.miscRegFile[this.num * NumMiscRegs + i].state = PhysicalRegisterState.ARCH;
 			this.renameTables[RegisterDependencyType.MISC][i] = i;
 		}
 		

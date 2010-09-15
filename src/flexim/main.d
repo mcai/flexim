@@ -40,10 +40,10 @@ void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
 	
-	string experimentName = "WCETBench-fir-1x1";
+	//string experimentName = "WCETBench-fir-1x1";
 	//string experimentName = "WCETBench-fir-2x1";
 	//string experimentName = "Olden_Custom1-em3d_original-1x1";
-	//string experimentName = "Olden_Custom1-mst_original-1x1";
+	string experimentName = "Olden_Custom1-mst_original-1x1";
 	//string experimentName = "Olden_Custom1-mst_original-2x1";
 	
 	getopt(args, "experiment", &experimentName);
