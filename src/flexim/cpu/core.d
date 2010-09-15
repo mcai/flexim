@@ -53,101 +53,72 @@ import core.stdc.errno;
  */
 
 class FunctionalUnit {
-	this(FunctionalUnitCategory master, FunctionalUnitType fuType, uint opLat, uint issueLat) {
-		this.master = master;
-		this.fuType = fuType;
+	this(FunctionalUnitPool pool, FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) {
+		this.pool = pool;
+		this.type = type;
+		this.quantity = quantity;
 		this.opLat = opLat;
 		this.issueLat = issueLat;
+		
+		this.busy = false;
 	}
 
 	override string toString() {
-		return format("%s[master=%s, fuType=%s, opLat=%d, issueLat=%d]", "FunctionalUnit", this.master.name, to!(string)(this.fuType), this.opLat, this.issueLat);
+		return format("%s[type=%s, quantity=%d, opLat=%d, issueLat=%d, busy=%d]", "FunctionalUnit",
+			to!(string)(this.type), this.opLat, this.issueLat, this.busy);
+	}
+	
+	void acquire(void delegate() onCompletedCallback) {	
+		this.pool.eventQueue.schedule(
+			{
+				this.busy = false;
+				
+				if(onCompletedCallback !is null) {
+					onCompletedCallback();
+				}
+			}, this.issueLat + this.opLat);
+		this.busy = true;
 	}
 
-	FunctionalUnitCategory master;
-
-	FunctionalUnitType fuType;
+	FunctionalUnitPool pool;
+	FunctionalUnitType type;
+	uint quantity;
 	uint opLat;
 	uint issueLat;
-}
-
-class FunctionalUnitCategory {
-	this(string name, uint quantity, uint busy) {
-		this.name = name;
-		this.quantity = quantity;
-		this.busy = busy;
-	}
-
-	override string toString() {
-		return format("%s[name=%s, quantity=%d, busy=%d]", "FunctionalUnitCategory", this.name, this.quantity, this.busy);
-	}
-
-	string name;
-	uint quantity;
-	uint busy;
-
-	FunctionalUnit[] entities;
+	bool busy;
 }
 
 class FunctionalUnitPool {
 	this() {		
-		FunctionalUnitCategory categoryIntegerAlu =
-			new FunctionalUnitCategory("integer-ALU", 4, 0);
-		categoryIntegerAlu.entities ~=
-			new FunctionalUnit(categoryIntegerAlu, FunctionalUnitType.IntALU, 1, 1);
-			
-		FunctionalUnitCategory categoryIntegerMultDiv =
-			new FunctionalUnitCategory("integer-MULT/DIV", 1, 0);
-		categoryIntegerMultDiv.entities ~=
-			new FunctionalUnit(categoryIntegerMultDiv, FunctionalUnitType.IntMULT, 3, 1);
-		categoryIntegerMultDiv.entities ~=
-			new FunctionalUnit(categoryIntegerMultDiv, FunctionalUnitType.IntDIV, 20, 19);
-			
-		FunctionalUnitCategory categoryMemoryPort =
-			new FunctionalUnitCategory("memory-port", 2, 0);
-		categoryMemoryPort.entities ~=
-			new FunctionalUnit(categoryMemoryPort, FunctionalUnitType.RdPort, 1, 1);
-		categoryMemoryPort.entities ~=
-			new FunctionalUnit(categoryMemoryPort, FunctionalUnitType.WrPort, 1, 1);
-			
-		FunctionalUnitCategory categoryFPAdder =
-			new FunctionalUnitCategory("FP-adder", 4, 0);
-		categoryFPAdder.entities ~=
-			new FunctionalUnit(categoryFPAdder, FunctionalUnitType.FloatADD, 2, 1);
-		categoryFPAdder.entities ~=
-			new FunctionalUnit(categoryFPAdder, FunctionalUnitType.FloatCMP, 2, 1);
-		categoryFPAdder.entities ~=
-			new FunctionalUnit(categoryFPAdder, FunctionalUnitType.FloatCVT, 2, 1);
-				
-		FunctionalUnitCategory categoryFPMultDiv =
-			new FunctionalUnitCategory("FP-MULT/DIV", 1, 0);
-		categoryFPMultDiv.entities ~=
-			new FunctionalUnit(categoryFPMultDiv, FunctionalUnitType.FloatMULT, 4, 1);
-		categoryFPMultDiv.entities ~=
-			new FunctionalUnit(categoryFPMultDiv, FunctionalUnitType.FloatDIV, 12, 12);
-		categoryFPMultDiv.entities ~=
-			new FunctionalUnit(categoryFPMultDiv, FunctionalUnitType.FloatSQRT, 24, 24);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntALU, 4, 1, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntMULT, 1, 3, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntDIV, 1, 20, 19);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.RdPort, 2, 1, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.WrPort, 2, 1, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatADD, 4, 2, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCMP, 4, 2, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCVT, 4, 2, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatMULT, 1, 4, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatDIV, 1, 12, 12);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatSQRT, 1, 24, 24);
 		
-		this.categories ~= categoryIntegerAlu;
-		this.categories ~= categoryIntegerMultDiv;
-		this.categories ~= categoryMemoryPort;
-		this.categories ~= categoryFPAdder;
-		this.categories ~= categoryFPMultDiv;
+		this.eventQueue = new DelegateEventQueue();
+		Simulator.singleInstance.addEventProcessor(this.eventQueue);
 	}
 	
-	FunctionalUnit getFree(FunctionalUnitType fuType) {		
-		foreach(cat; this.categories) {
-			foreach(entity; cat.entities) {
-				if(!entity.master.busy) {
-					return entity;
-				}
+	bool acquire(FunctionalUnitType type, void delegate() onCompletedCallback) {
+		foreach(entity; this.entities) {
+			if(entity.type == type && !entity.busy) {
+				entity.acquire(onCompletedCallback);
+				return true;
 			}
 		}
-		
-		return null;
+		return false;
 	}
+
+	FunctionalUnit[] entities;
 	
-	FunctionalUnitCategory[] categories;
+	DelegateEventQueue eventQueue;
 }
 
 enum PhysicalRegisterState: string {
@@ -257,25 +228,22 @@ class DecodeBuffer: Queue!(DecodeBufferEntry) {
 }
 
 class ReorderBufferEntry {
-	this(DynamicInst dynamicInst) {
+	this(DynamicInst dynamicInst, RegisterDependency[] iDeps, RegisterDependency[] oDeps) {
 		this.id = currentId++;
 		this.dynamicInst = dynamicInst;
+		this.iDeps = iDeps;
+		this.oDeps = oDeps;
 		
 		this.isCompleted = false;
 	}
 	
-	bool operandReady(RegisterDependency[] iDeps, uint opNum) {		
-		PhysicalRegisterFile regFile = this.dynamicInst.thread.core.getPhysicalRegisterFile(iDeps[opNum].type);
-		assert(opNum in this.srcPhysRegs, format("opNum=%d, this.srcPhysRegs.length=%d", opNum, this.srcPhysRegs.length));
+	bool operandReady(uint opNum) {		
+		PhysicalRegisterFile regFile = this.dynamicInst.thread.core.getPhysicalRegisterFile(this.iDeps[opNum].type);
 		return regFile[this.srcPhysRegs[opNum]].isReady;
 	}
 	
-	bool operandReady(uint opNum) {
-		return this.operandReady(this.dynamicInst.staticInst.iDeps, opNum);
-	}
-	
-	bool allOperandsReady() {
-		/*foreach(i, iDep; this.dynamicInst.staticInst.iDeps) {
+	bool allOperandsReady() {		
+		/*foreach(i, iDep; this.iDeps) {
 			if(!this.operandReady(i)) {
 				return false;
 			}
@@ -300,6 +268,10 @@ class ReorderBufferEntry {
 		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry is null;
 	}
 	
+	bool isEffectiveAddressComputation() {
+		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry !is null;
+	}	
+	
 	override string toString() {
 		//return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEffectiveAddressComputation=%s, effectiveAddress=0x%x, isCompleted=%s)",
 		//	this.id, this.dynamicInst, this.isEffectiveAddressComputation, this.effectiveAddress, this.isCompleted);
@@ -309,12 +281,13 @@ class ReorderBufferEntry {
 	
 	ulong id;
 	DynamicInst dynamicInst;
-	bool isEffectiveAddressComputation;
 	uint effectiveAddress;
 	
 	ReorderBufferEntry loadStoreQueueEntry;
 	
 	bool isCompleted;
+	
+	RegisterDependency[] iDeps, oDeps;
 
 	uint[uint] oldPhysRegs;
 	uint[uint] physRegs;
@@ -327,13 +300,13 @@ class ReorderBufferEntry {
 	static ulong currentId;
 }
 
-class ReadyQueue: Queue!(ReorderBufferEntry) {
+class ReadyQueue: List!(ReorderBufferEntry) { //Queue!(ReorderBufferEntry) {
 	this() {
 		this(32);
 	}
 	
 	this(uint capacity) {
-		super("readyQueue", capacity);
+		//super("readyQueue", capacity);
 	}
 }
 
@@ -420,16 +393,6 @@ abstract class Core {
 		
 		this.readyQueue = new ReadyQueue();
 		this.waitingQueue = new WaitingQueue();
-	}
-	
-	void releaseFunctionalUnits() {
-		logging.infof(LogCategory.DEBUG, "releaseFunctionalUnits()");
-		
-		foreach(category; this.fuPool.categories) {
-			if(category.busy > 0) {
-				category.busy--;
-			}
-		}
 	}
 	
 	abstract void run();
@@ -712,13 +675,13 @@ class ThreadImpl: Thread {
 			DynamicInst dynamicInst = decodeBufferEntry.dynamicInst;
 			
 			if(!dynamicInst.staticInst.isNop) {
-				ReorderBufferEntry dispatchBufferEntry = new ReorderBufferEntry(dynamicInst);
+				ReorderBufferEntry dispatchBufferEntry = new ReorderBufferEntry(dynamicInst, dynamicInst.staticInst.iDeps, dynamicInst.staticInst.oDeps);
 				
-				foreach(i, iDep; dynamicInst.staticInst.iDeps) {
+				foreach(i, iDep; dispatchBufferEntry.iDeps) {
 					dispatchBufferEntry.srcPhysRegs[i] = this.renameTables[iDep.type][iDep.num];
 				}
 				
-				foreach(i, oDep; dynamicInst.staticInst.oDeps) {
+				foreach(i, oDep; dispatchBufferEntry.oDeps) {
 					PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
 					dispatchBufferEntry.oldPhysRegs[i] = this.renameTables[oDep.type][oDep.num];
 					dispatchBufferEntry.physRegs[i] = regFile.alloc();
@@ -728,20 +691,18 @@ class ThreadImpl: Thread {
 				this.reorderBuffer ~= dispatchBufferEntry;
 				
 				
-				if(dynamicInst.staticInst.isMem) {
-					dispatchBufferEntry.isEffectiveAddressComputation = true;
-					
-					ReorderBufferEntry loadStoreQueueEntry = new ReorderBufferEntry(dynamicInst);
-					loadStoreQueueEntry.isEffectiveAddressComputation = false;
+				if(dynamicInst.staticInst.isMem) {					
+					ReorderBufferEntry loadStoreQueueEntry = new ReorderBufferEntry(dynamicInst, 
+						(cast(MemoryOp) dynamicInst.staticInst).memIDeps, (cast(MemoryOp) dynamicInst.staticInst).memODeps);
 					loadStoreQueueEntry.effectiveAddress = (cast(MemoryOp) dynamicInst.staticInst).ea(this);
 					
 					dispatchBufferEntry.loadStoreQueueEntry = loadStoreQueueEntry; 
 					
-					foreach(i, iDep; (cast(MemoryOp) dynamicInst.staticInst).memIDeps) {
+					foreach(i, iDep; loadStoreQueueEntry.iDeps) {
 						loadStoreQueueEntry.srcPhysRegs[i] = this.renameTables[iDep.type][iDep.num];
 					}
 					
-					foreach(i, oDep; (cast(MemoryOp) dynamicInst.staticInst).memODeps) {
+					foreach(i, oDep; loadStoreQueueEntry.oDeps) {
 						PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
 						loadStoreQueueEntry.oldPhysRegs[i] = this.renameTables[oDep.type][oDep.num]; //TODO: is it correct?
 						loadStoreQueueEntry.physRegs[i] = regFile.alloc();
@@ -798,6 +759,8 @@ class ThreadImpl: Thread {
 			this.core.waitingQueue ~= waitingQueueEntry;
 		}
 		
+		ReorderBufferEntry[] toReadyQueue;
+		
 		while(!this.core.readyQueue.empty) {
 			ReorderBufferEntry readyQueueEntry = this.core.readyQueue.front;
 			
@@ -810,7 +773,7 @@ class ThreadImpl: Thread {
 				this.core.seqD.load(this.core.mmu.translate(readyQueueEntry.effectiveAddress), false, readyQueueEntry,
 					(ReorderBufferEntry readyQueueEntry)
 					{
-						foreach(i, oDep; readyQueueEntry.dynamicInst.staticInst.oDeps) {
+						foreach(i, oDep; readyQueueEntry.oDeps) {
 							PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
 							regFile[readyQueueEntry.physRegs[i]].state = PhysicalRegisterState.WB;
 						}
@@ -819,16 +782,25 @@ class ThreadImpl: Thread {
 					});
 			}
 			else {
-				//TODO: functional unit access				
-				foreach(i, oDep; readyQueueEntry.dynamicInst.staticInst.oDeps) {
-					PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
-					regFile[readyQueueEntry.physRegs[i]].state = PhysicalRegisterState.WB;
+				if(!this.core.fuPool.acquire(readyQueueEntry.dynamicInst.staticInst.fuType, 
+					{
+						foreach(i, oDep; readyQueueEntry.oDeps) {
+							PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
+							regFile[readyQueueEntry.physRegs[i]].state = PhysicalRegisterState.WB;
+						}
+						
+						readyQueueEntry.isCompleted = true;
+					}))
+				{
+					toReadyQueue ~= readyQueueEntry;
 				}
-				
-				readyQueueEntry.isCompleted = true;
 			}
 			
 			this.core.readyQueue.popFront();
+		}
+		
+		foreach(readyQueueEntry; toReadyQueue) {
+			this.core.readyQueue ~= readyQueueEntry;
 		}
 	}
 	
@@ -847,7 +819,7 @@ class ThreadImpl: Thread {
 					break;
 				}
 				
-				foreach(i, oDep; (cast(MemoryOp) loadStoreQueueEntry.dynamicInst.staticInst).memODeps) {
+				foreach(i, oDep; loadStoreQueueEntry.oDeps) {
 					PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
 					regFile[loadStoreQueueEntry.oldPhysRegs[i]].state = PhysicalRegisterState.FREE;
 					regFile[loadStoreQueueEntry.physRegs[i]].state = PhysicalRegisterState.ARCH;
@@ -856,7 +828,7 @@ class ThreadImpl: Thread {
 				this.loadStoreQueue.popFront();
 			}
 			
-			foreach(i, oDep; reorderBufferEntry.dynamicInst.staticInst.oDeps) {
+			foreach(i, oDep; reorderBufferEntry.oDeps) {
 				PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
 				regFile[reorderBufferEntry.oldPhysRegs[i]].state = PhysicalRegisterState.FREE;
 				regFile[reorderBufferEntry.physRegs[i]].state = PhysicalRegisterState.ARCH;
