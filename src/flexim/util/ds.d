@@ -26,31 +26,9 @@ import flexim.all;
 class List(EntryT) {
 	this() {
 	}
-	
-	void add(EntryT entry) {
-		this.pendingEntries ~= entry;
-	}
-	
-	void remove(EntryT entry) {
-		uint indexToRemove = this.pendingEntries.indexOf(entry);
-		this.pendingEntries = this.pendingEntries.remove(indexToRemove);
-	}
-
-	EntryT[] pendingEntries;
-}
-
-class Queue(EntryT) {
-	this(string name, uint capacity) {
-		this.name = name;
-		this.capacity = capacity;
-	}
 
 	bool empty() {
 		return this.entries.empty;
-	}
-
-	bool full() {
-		return this.size >= this.capacity;
 	}
 
 	uint size() {
@@ -102,12 +80,10 @@ class Queue(EntryT) {
 	}
 
 	void popFront() {
-		//logging.infof(LogCategory.DEBUG, "%s.popFront()", this.name);
 		this.entries.popFront();
 	}
 	
 	void popBack() {
-		//logging.infof(LogCategory.DEBUG, "%s.popBack()", this.name);
 		this.entries.popBack();
 	}
 
@@ -130,22 +106,11 @@ class Queue(EntryT) {
 	}
 	
 	void removeAt(uint index) {
-		//logging.infof(LogCategory.DEBUG, "%s.removeAt(%d)", this.name, index);
-		assert(index >= 0 && index < this.size);
 		this.entries = this.entries.remove(index);
 	}
 	
 	void remove(EntryT value) {
 		this.removeAt(this.indexOf(value));
-	}
-
-	void opOpAssign(string op, EntryT)(EntryT entry)
-		if(op == "~") {
-		//logging.infof(LogCategory.DEBUG, "%s ~= %s", this.name, entry);
-		if(this.size >= this.capacity) {
-			logging.fatalf(LogCategory.MISC, "%s", this);
-		}
-		this.entries ~= entry;
 	}
 	
 	EntryT opIndex(uint index) {
@@ -154,7 +119,6 @@ class Queue(EntryT) {
 	}
 	
 	void opIndexAssign(EntryT value, uint index) {
-		//logging.infof(LogCategory.DEBUG, "%s[%d] = %s", this.name, index, value);
 		this.entries[index] = value;
 	}
 	
@@ -170,8 +134,42 @@ class Queue(EntryT) {
 	}
 	
 	void clear() {
-		//logging.infof(LogCategory.DEBUG, "%s.clear()", this.name);
 		this.entries.clear();
+	}
+
+	void opOpAssign(string op, EntryT)(EntryT entry)
+		if(op == "~") {
+		this.entries ~= entry;
+	}
+	
+	override string toString() {
+		return format("List[size=%d]", this.size);
+	}
+
+	EntryT[] entries;
+}
+
+class Queue(EntryT): List!(EntryT) {
+	this(string name, uint capacity) {
+		this.name = name;
+		this.capacity = capacity;
+	}
+
+	bool full() {
+		return this.size >= this.capacity;
+	}
+
+	void opOpAssign(string op, EntryT)(EntryT entry)
+		if(op == "~") {
+		if(this.size >= this.capacity) {
+			logging.fatalf(LogCategory.MISC, "%s", this);
+		}
+		this.entries ~= entry;
+	}
+	
+	override void removeAt(uint index) {
+		assert(index >= 0 && index < this.size);
+		super.removeAt(index);
 	}
 	
 	override string toString() {
@@ -179,10 +177,7 @@ class Queue(EntryT) {
 	}
 
 	string name;
-
 	uint capacity;
-
-	EntryT[] entries;
 }
 
 class DelayedQueue(EntryT): Queue!(EntryT), EventProcessor {
