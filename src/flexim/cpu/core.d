@@ -257,11 +257,11 @@ class ReorderBufferEntry {
 	}
 	
 	bool isWaiting() {
-		return this.dynamicInst.thread.core.waitingQueue.indexOf(this) != -1;
+		return this.dynamicInst.thread.core.waitingQueue.canFind(this);
 	}
 	
 	bool isReady() {
-		return this.dynamicInst.thread.core.readyQueue.indexOf(this) != -1;
+		return this.dynamicInst.thread.core.readyQueue.canFind(this);
 	}
 	
 	bool isInLoadStoreQueue() {

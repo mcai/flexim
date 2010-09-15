@@ -30,8 +30,8 @@ class DirEntry {
 	}
 
 	void setSharer(CoherentCacheNode node) {
-		assert(node !is null);		
-        if(!canFind(this.sharers, node)) {			
+		assert(node !is null);
+		if(!this.sharers.canFind(node)) {			
 			this.sharers ~= node;
         }
 	}

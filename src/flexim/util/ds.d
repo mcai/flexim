@@ -132,14 +132,18 @@ class List(EntryT) {
 		
 		return this[(index + 1) % this.size];
 	}
-	
-	void clear() {
-		this.entries.clear();
-	}
 
 	void opOpAssign(string op, EntryT)(EntryT entry)
 		if(op == "~") {
 		this.entries ~= entry;
+	}
+	
+	bool canFind(EntryT entry) {
+		return this.entries.canFind(entry);
+	}
+	
+	void clear() {
+		this.entries.clear();
 	}
 	
 	override string toString() {
