@@ -12,11 +12,11 @@
  * 
  * Flexim is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
+ * along with Flexim.	If not, see <http ://www.gnu.org/licenses/>.
  */
 
 module flexim.cpu.core;
@@ -115,7 +115,7 @@ class FunctionalUnitPool {
 		return null;
 	}
 	
-	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry rs) onCompletedCallback2) {
+	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry reorderBufferEntry) onCompletedCallback2) {
 		FunctionalUnitType type = reorderBufferEntry.dynamicInst.staticInst.fuType;
 		FunctionalUnit fu = this.findFree(type);
 		
@@ -231,6 +231,12 @@ class DecodeBufferEntry {
 		currentId = 0;
 	}
 	
+	uint npc, nnpc, predNpc, predNnpc;
+	bool isSpeculative;
+	bool isRecoverInst;
+	uint stackRecoverIndex;
+	BpredUpdate dirUpdate;
+	
 	static ulong currentId;
 }
 
@@ -309,6 +315,12 @@ class ReorderBufferEntry {
 	uint[uint] oldPhysRegs;
 	uint[uint] physRegs;
 	uint[uint] srcPhysRegs;
+	
+	uint npc, nnpc, predNpc, predNnpc;
+	bool isSpeculative;
+	bool isRecoverInst;
+	uint stackRecoverIndex;
+	BpredUpdate dirUpdate;
 	
 	static this() {
 		currentId = 0;
@@ -496,6 +508,8 @@ abstract class Thread {
 		
 		this.syscallEmul = new SyscallEmul();
 
+		this.bpred = new CombinedBpred();
+
 		this.clearArchRegs();
 
 		this.process.load(this);
@@ -509,22 +523,27 @@ abstract class Thread {
 		
 		for(uint i = 0; i < NumIntRegs; i++) {
 			this.core.intRegFile[this.num * NumIntRegs + i].state = PhysicalRegisterState.ARCH;
-			this.renameTables[RegisterDependencyType.INT][i] = i;
+			this.renameTables[RegisterDependencyType.INT][i] = this.num * NumIntRegs + i;
 		}
 		
 		for(uint i = 0; i < NumFloatRegs; i++) {
 			this.core.fpRegFile[this.num * NumFloatRegs + i].state = PhysicalRegisterState.ARCH;
-			this.renameTables[RegisterDependencyType.FP][i] = i;
+			this.renameTables[RegisterDependencyType.FP][i] = this.num * NumFloatRegs + i;
 		}
 		
 		for(uint i = 0; i < NumMiscRegs; i++) {
 			this.core.miscRegFile[this.num * NumMiscRegs + i].state = PhysicalRegisterState.ARCH;
-			this.renameTables[RegisterDependencyType.MISC][i] = i;
+			this.renameTables[RegisterDependencyType.MISC][i] = this.num * NumMiscRegs + i;
 		}
 		
 		this.decodeBuffer = new DecodeBuffer();
 		this.reorderBuffer = new ReorderBuffer();
 		this.loadStoreQueue = new LoadStoreQueue();
+		
+		this.fetchNpc = this.npc;
+		this.fetchNnpc = this.nnpc;
+		
+		this.isSpeculative = false;
 	}
 	
 	abstract void fetch();
@@ -536,6 +555,8 @@ abstract class Thread {
 	abstract void issue();
 	
 	abstract void commit();
+	
+	abstract void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry);
 
 	uint getSyscallArg(int i) {
 		assert(i < 6);
@@ -593,6 +614,9 @@ abstract class Thread {
 	SyscallEmul syscallEmul;
 
 	uint pc, npc, nnpc;
+	uint fetchPc, fetchNpc, fetchNnpc;
+	
+	Bpred bpred;
 	
 	uint[uint][RegisterDependencyType] renameTables;
 	
@@ -606,6 +630,8 @@ abstract class Thread {
 	DecodeBuffer decodeBuffer;
 	ReorderBuffer reorderBuffer;
 	LoadStoreQueue loadStoreQueue;
+	
+	bool isSpeculative;
 	
 	static const uint COMMIT_TIMEOUT = 1000000;
 }
@@ -672,17 +698,63 @@ class ThreadImpl: Thread {
 			this.fetchStalled = true;
 		}
 		
-		while(!this.decodeBuffer.full && !this.fetchStalled && aligned(this.npc, this.core.seqI.blockSize) == blockToFetch) {		
+		bool done = false;
+		
+		while(!done && !this.decodeBuffer.full && !this.fetchStalled) {
+			if(this.fetchNpc != this.fetchPc + uint.sizeof) {
+				done = true;
+			}
+			
+			if(aligned(this.npc, this.core.seqI.blockSize) == blockToFetch) {
+				done = true;
+			}
+				
+			this.fetchPc = this.fetchNpc;
+			this.fetchNpc = this.fetchNnpc;			
+				
+			StaticInst staticInst = this.isa.decode(this.fetchPc, this.mem);
+			DynamicInst dynamicInst = new DynamicInst(this, this.fetchPc, staticInst);
+				
+			this.npc = this.fetchNpc;
+				
 			this.pc = this.npc;
 			this.npc = this.nnpc;
-		    this.nnpc += uint.sizeof;
-		    
-			StaticInst staticInst = this.isa.decode(this.pc, this.mem);
-		    DynamicInst dynamicInst = new DynamicInst(this, this.pc, staticInst);
+			this.nnpc += uint.sizeof;
+				
 			dynamicInst.execute();
-		    
-		    DecodeBufferEntry decodeBufferEntry = new DecodeBufferEntry(dynamicInst);
-		    this.decodeBuffer ~= decodeBufferEntry;
+				
+			this.fetchNpc = this.npc;
+			this.fetchNnpc = this.nnpc;
+			
+			uint stackRecoverIndex;
+			BpredUpdate dirUpdate = new BpredUpdate();
+			
+			uint dest = this.bpred.lookup(
+				this.fetchPc,
+				0,
+				staticInst,
+				dirUpdate,
+				stackRecoverIndex);
+	
+			this.fetchNnpc = dest <= 1 ? this.fetchNpc + uint.sizeof : dest;
+				
+			DecodeBufferEntry decodeBufferEntry = new DecodeBufferEntry(dynamicInst);
+			decodeBufferEntry.npc = this.npc;
+			decodeBufferEntry.nnpc = this.nnpc;
+			decodeBufferEntry.predNpc = this.fetchNpc;
+			decodeBufferEntry.predNnpc = this.fetchNnpc;
+			decodeBufferEntry.stackRecoverIndex = stackRecoverIndex;
+			decodeBufferEntry.dirUpdate = dirUpdate;
+			decodeBufferEntry.isSpeculative = this.isSpeculative;
+			
+			if(!this.isSpeculative) {
+				if(this.npc != this.fetchNpc) {
+					this.isSpeculative = true;
+					decodeBufferEntry.isRecoverInst = true;
+				}
+			}
+			
+			this.decodeBuffer ~= decodeBufferEntry;
 		}
 	}
 	
@@ -696,6 +768,15 @@ class ThreadImpl: Thread {
 			
 			if(!dynamicInst.staticInst.isNop) {
 				ReorderBufferEntry dispatchBufferEntry = new ReorderBufferEntry(dynamicInst, dynamicInst.staticInst.iDeps, dynamicInst.staticInst.oDeps);
+				dispatchBufferEntry.npc = decodeBufferEntry.npc;
+				dispatchBufferEntry.nnpc = decodeBufferEntry.nnpc;
+				dispatchBufferEntry.predNpc = decodeBufferEntry.predNpc;
+				dispatchBufferEntry.predNnpc = decodeBufferEntry.predNnpc;
+				dispatchBufferEntry.stackRecoverIndex = decodeBufferEntry.stackRecoverIndex;
+				dispatchBufferEntry.dirUpdate = decodeBufferEntry.dirUpdate;
+				dispatchBufferEntry.isSpeculative = decodeBufferEntry.isSpeculative;
+				dispatchBufferEntry.isRecoverInst = decodeBufferEntry.isRecoverInst;
+				
 				
 				foreach(i, iDep; dispatchBufferEntry.iDeps) {
 					dispatchBufferEntry.srcPhysRegs[i] = this.renameTables[iDep.type][iDep.num];
@@ -714,6 +795,16 @@ class ThreadImpl: Thread {
 				if(dynamicInst.staticInst.isMem) {					
 					ReorderBufferEntry loadStoreQueueEntry = new ReorderBufferEntry(dynamicInst, 
 						(cast(MemoryOp) dynamicInst.staticInst).memIDeps, (cast(MemoryOp) dynamicInst.staticInst).memODeps);
+					
+					loadStoreQueueEntry.npc = decodeBufferEntry.npc;
+					loadStoreQueueEntry.nnpc = decodeBufferEntry.nnpc;
+					loadStoreQueueEntry.predNpc = decodeBufferEntry.predNpc;
+					loadStoreQueueEntry.predNnpc = decodeBufferEntry.predNnpc;
+					loadStoreQueueEntry.stackRecoverIndex = 0;
+					loadStoreQueueEntry.dirUpdate = null;
+					loadStoreQueueEntry.isSpeculative = decodeBufferEntry.isSpeculative;
+					loadStoreQueueEntry.isRecoverInst = false;
+					
 					loadStoreQueueEntry.ea = (cast(MemoryOp) dynamicInst.staticInst).ea(this);
 					
 					dispatchBufferEntry.loadStoreQueueEntry = loadStoreQueueEntry; 
@@ -882,6 +973,17 @@ class ThreadImpl: Thread {
 				break;
 			}
 			
+			if(reorderBufferEntry.isRecoverInst) {
+				this.bpred.recover(reorderBufferEntry.dynamicInst.pc, reorderBufferEntry.stackRecoverIndex);
+				
+				this.isSpeculative = false;
+
+				this.fetchNpc = this.npc;
+				this.fetchNnpc = this.nnpc;
+				
+				this.recoverReorderBuffer(reorderBufferEntry);
+			}
+			
 			if(reorderBufferEntry.isEAComputation) {
 				ReorderBufferEntry loadStoreQueueEntry = this.loadStoreQueue.front;
 				
@@ -904,6 +1006,18 @@ class ThreadImpl: Thread {
 				regFile[reorderBufferEntry.physRegs[i]].state = PhysicalRegisterState.ARCH;
 			}
 			
+			if(reorderBufferEntry.dynamicInst.staticInst.isControl) {
+				this.bpred.update(
+					reorderBufferEntry.dynamicInst.pc,
+					reorderBufferEntry.nnpc,
+					reorderBufferEntry.nnpc != (reorderBufferEntry.npc + uint.sizeof),
+					reorderBufferEntry.predNnpc != (reorderBufferEntry.npc + uint.sizeof),
+					reorderBufferEntry.predNnpc == reorderBufferEntry.nnpc,
+					reorderBufferEntry.dynamicInst.staticInst,
+					reorderBufferEntry.dirUpdate
+				);
+			}
+			
 			this.reorderBuffer.popFront();
 
 			this.stat.totalInsts++;
@@ -912,6 +1026,33 @@ class ThreadImpl: Thread {
 			
 			//logging.infof(LogCategory.DEBUG, "t%s one instruction committed (dynamicInst=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, 
 			//	reorderBufferEntry.dynamicInst);
+		}
+	}
+	
+	override void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry) {
+		ReorderBufferEntry[] toSquash;
+		
+		while(!this.reorderBuffer.empty) {
+			ReorderBufferEntry reorderBufferEntry = this.reorderBuffer.back;
+			
+			if(reorderBufferEntry == branchReorderBufferEntry) {
+				break;
+			}
+			
+			if(reorderBufferEntry.isEAComputation) {
+				this.loadStoreQueue.remove(reorderBufferEntry);
+			}
+			
+			foreach(i, oDep; reorderBufferEntry.dynamicInst.staticInst.oDeps) {
+				PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
+				regFile[reorderBufferEntry.physRegs[i]].state = PhysicalRegisterState.FREE;
+				
+				this.renameTables[oDep.type][oDep.num] = reorderBufferEntry.oldPhysRegs[i];
+			}
+			
+			reorderBufferEntry.physRegs.clear();
+			
+			this.reorderBuffer.popBack();
 		}
 	}
 	
