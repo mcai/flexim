@@ -67,6 +67,7 @@ struct utsname {
 
 /* 1 */
 uint exit_impl(SyscallDesc desc, Thread thread) {
+	writeln("exiting...");
 	thread.halt(thread.getSyscallArg(0) & 0xff);
 	return 1;
 }
@@ -146,7 +147,7 @@ uint lseek_impl(SyscallDesc desc, Thread thread) {
 	int whence = thread.getSyscallArg(2);
 	
 	off_t ret = lseek(fildes, offset, whence);
-	return ret;
+	return cast(uint) ret;
 }
 
 /* 20 */

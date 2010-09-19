@@ -1,0 +1,340 @@
+/*
+ * flexim/cpu/ooo/common.d
+ * 
+ * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
+ * 
+ * This file is part of the Flexim multicore architectural simulator.
+ * 
+ * Flexim is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Flexim is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Flexim.	If not, see <http ://www.gnu.org/licenses/>.
+ */
+
+module flexim.cpu.ooo.common;
+
+import flexim.all;
+
+import core.stdc.errno;
+
+/* 
+ * functional execution logic
+ *
+ * this.pc = this.npc;
+ * this.npc = this.nnpc;
+ * this.nnpc += uint.sizeof;
+ * 	
+ * StaticInst staticInst = this.isa.decode(this.pc, this.mem);
+ * DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
+ * uop.execute();
+ */
+
+/*
+ * core:
+ * 	functionalUnitPool
+ * 	dispatchBuffer
+ * 	intRegs, floatRegs, miscRegs
+ * 	(eventQueue, readyQueue, waitingQueue)
+ * 
+ * thread:
+ * 	decodeBuffer
+ * 	reorderBuffer
+ * 	(loadStoreQueue)
+ * 
+ * instruction lifecycle: decodeBuffer -> dispatchBuffer -> reorderBuffer
+ */
+
+class FunctionalUnit {
+	this(FunctionalUnitPool pool, FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) {
+		this.pool = pool;
+		this.type = type;
+		this.quantity = quantity;
+		this.opLat = opLat;
+		this.issueLat = issueLat;
+		
+		this.busy = false;
+	}
+
+	override string toString() {
+		return format("%s[type=%s, quantity=%d, opLat=%d, issueLat=%d, busy=%d]", "FunctionalUnit",
+			to!(string)(this.type), this.opLat, this.issueLat, this.busy);
+	}
+	
+	void acquire(void delegate() onCompletedCallback) {	
+		this.pool.eventQueue.schedule(
+			{
+				this.busy = false;
+				
+				if(onCompletedCallback !is null) {
+					onCompletedCallback();
+				}
+			}, this.issueLat + this.opLat);
+		this.busy = true;
+	}
+
+	FunctionalUnitPool pool;
+	FunctionalUnitType type;
+	uint quantity;
+	uint opLat;
+	uint issueLat;
+	bool busy;
+}
+
+class FunctionalUnitPool {
+	this() {		
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntALU, 4, 1, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntMULT, 1, 3, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntDIV, 1, 20, 19);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.RdPort, 2, 1, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.WrPort, 2, 1, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatADD, 4, 2, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCMP, 4, 2, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCVT, 4, 2, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatMULT, 1, 4, 1);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatDIV, 1, 12, 12);
+		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatSQRT, 1, 24, 24);
+		
+		this.eventQueue = new DelegateEventQueue();
+		Simulator.singleInstance.addEventProcessor(this.eventQueue);
+	}
+	
+	FunctionalUnit findFree(FunctionalUnitType type) {
+		foreach(entity; this.entities) {
+			if(entity.type == type && !entity.busy) {
+				return entity;
+			}
+		}
+		return null;
+	}
+	
+	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry reorderBufferEntry) onCompletedCallback2) {
+		FunctionalUnitType type = reorderBufferEntry.dynamicInst.staticInst.fuType;
+		FunctionalUnit fu = this.findFree(type);
+		
+		if(fu !is null) {
+			fu.acquire({onCompletedCallback2(reorderBufferEntry);});
+		}
+		else {
+			this.eventQueue.schedule(
+				{
+					this.acquire(reorderBufferEntry, onCompletedCallback2);
+				}, 10);
+		}
+	}
+
+	FunctionalUnit[] entities;
+	DelegateEventQueue eventQueue;
+}
+
+enum PhysicalRegisterState: string {
+	FREE = "FREE",
+	ALLOC = "ALLOC",
+	WB = "WB",
+	ARCH = "ARCH"
+}
+
+class PhysicalRegister {
+	this() {
+		this.state = PhysicalRegisterState.FREE;
+	}
+	
+	bool isReady() {
+		return this.state == PhysicalRegisterState.WB || this.state == PhysicalRegisterState.ARCH;
+	}
+	
+	override string toString() {
+		return format("PhysicalRegister[state=%s]", this.state);
+	}
+	
+	PhysicalRegisterState state;
+}
+
+class PhysicalRegisterFile {
+	this(Core core, uint capacity = 128) {
+		this.core = core;
+		this.capacity = capacity;
+		
+		this.entries = new PhysicalRegister[this.capacity];
+		for(uint i = 0; i < this.capacity; i++) {
+			this.entries[i] = new PhysicalRegister();
+		}
+	}
+	
+	PhysicalRegister findFree() {
+		foreach(entry; this.entries) {
+			if(entry.state == PhysicalRegisterState.FREE) {
+				return entry;
+			}
+		}
+
+		return null;
+	}
+	
+	uint alloc() {
+		PhysicalRegister freeReg = this.findFree();
+		assert(freeReg !is null); //TODO
+		freeReg.state = PhysicalRegisterState.ALLOC;
+		return this.entries.indexOf(freeReg);
+	}
+	
+	PhysicalRegister opIndex(uint index) {
+		assert(index >= 0 && index <= this.entries.length, format("%d", index));
+		return this.entries[index];
+	}
+	
+	void opIndexAssign(PhysicalRegister value, uint index) {
+		assert(index >= 0 && index <= this.entries.length, format("%d", index));
+		this.entries[index] = value;
+	}
+	
+	override string toString() {
+		return format("PhysicalRegisterFile[capacity=%d, core=%s, entries.length=%d]", this.capacity, this.core, this.entries.length);
+	}
+
+	Core core;
+	uint capacity;
+	PhysicalRegister[] entries;
+}
+
+enum PhysicalRegisterType: string {
+	NONE = "NONE",
+	INT = "INT",
+	FP = "FP"
+}
+
+class DecodeBufferEntry {
+	this(DynamicInst dynamicInst) {
+		this.id = currentId++;
+		this.dynamicInst = dynamicInst;
+	}
+	
+	ulong id;
+	DynamicInst dynamicInst;
+	
+	override string toString() {
+		return format("DecodeBufferEntry[id=%d, dynamicInst=%s]", this.id, this.dynamicInst);
+	}
+	
+	static this() {
+		currentId = 0;
+	}
+	
+	uint npc, nnpc, predNpc, predNnpc;
+	bool isSpeculative;
+	bool isRecoverInst;
+	uint stackRecoverIndex;
+	BpredUpdate dirUpdate;
+	
+	static ulong currentId;
+}
+
+class DecodeBuffer: Queue!(DecodeBufferEntry) {
+	this(uint capacity = 4) {
+		super("decodeBuffer", capacity);
+	}
+}
+
+class ReorderBufferEntry {
+	this(DynamicInst dynamicInst, RegisterDependency[] iDeps, RegisterDependency[] oDeps) {
+		this.id = currentId++;
+		this.dynamicInst = dynamicInst;
+		this.iDeps = iDeps;
+		this.oDeps = oDeps;
+	}
+	
+	bool operandReady(uint opNum) {		
+		PhysicalRegisterFile regFile = this.dynamicInst.thread.core.getPhysicalRegisterFile(this.iDeps[opNum].type);
+		return regFile[this.srcPhysRegs[opNum]].isReady;
+	}
+	
+	bool allOperandsReady() {
+		foreach(i, iDep; this.iDeps) {
+			if(!this.operandReady(i)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	bool isInLoadStoreQueue() {
+		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry is null;
+	}
+	
+	bool isEAComputation() {
+		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry !is null;
+	}
+	
+	override string toString() {
+		string operandsReadyToString() {
+			string str = "\n";
+		
+			foreach(i, iDep; this.iDeps) {
+				str ~= format("[%s] idep=%s, isReady=%s\n", i, iDep, this.operandReady(i));
+			}
+			
+			return str;
+		}
+		
+		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s) %s",
+			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted,
+				operandsReadyToString);
+	}
+	
+	ulong id;
+	
+	DynamicInst dynamicInst;
+	
+	RegisterDependency[] iDeps, oDeps;
+	uint[uint] oldPhysRegs, physRegs, srcPhysRegs;
+	
+	bool isDispatched, isInReadyQueue, isIssued, isCompleted;
+	
+	ReorderBufferEntry loadStoreQueueEntry;
+	uint ea;
+	
+	uint npc, nnpc, predNpc, predNnpc;
+	
+	bool isSpeculative;
+	bool isRecoverInst;
+	uint stackRecoverIndex;
+	BpredUpdate dirUpdate;
+	
+	static this() {
+		currentId = 0;
+	}
+	
+	static ulong currentId;
+}
+
+class ReadyQueue: List!(ReorderBufferEntry) {
+	this() {
+		super("readyQueue");
+	}
+}
+
+class WaitingQueue: List!(ReorderBufferEntry) {
+	this() {
+		super("waitingQueue");
+	}
+}
+
+class ReorderBuffer: Queue!(ReorderBufferEntry) {
+	this(uint capacity = 96) {
+		super("reorderBuffer", capacity);
+	}
+}
+
+class LoadStoreQueue: Queue!(ReorderBufferEntry) {
+	this(uint capacity = 32) {
+		super("loadStoreQueue", capacity);
+	}
+}

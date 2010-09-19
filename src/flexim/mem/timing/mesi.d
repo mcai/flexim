@@ -77,7 +77,7 @@ class CoherentCache: CoherentCacheNode {
 		if(!isRetry) {
 			this.stat.noRetryAccesses++;
 			if(hit) {
-				this.stat.noRetryHits++;					
+				this.stat.noRetryHits++;
 			}
 			if(isRead) {
 				this.stat.noRetryReads++;

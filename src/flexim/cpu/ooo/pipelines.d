@@ -1,5 +1,5 @@
 /*
- * flexim/cpu/core.d
+ * flexim/cpu/ooo/pipelines.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,355 +19,11 @@
  * along with Flexim.	If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.cpu.core;
+module flexim.cpu.ooo.pipelines;
 
 import flexim.all;
 
 import core.stdc.errno;
-
-/* 
- * functional execution logic
- *
- * this.pc = this.npc;
- * this.npc = this.nnpc;
- * this.nnpc += uint.sizeof;
- * 	
- * StaticInst staticInst = this.isa.decode(this.pc, this.mem);
- * DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
- * uop.execute();
- */
-
-/*
- * core:
- * 	functionalUnitPool
- * 	dispatchBuffer
- * 	intRegs, floatRegs, miscRegs
- * 	(eventQueue, readyQueue, waitingQueue)
- * 
- * thread:
- * 	decodeBuffer
- * 	reorderBuffer
- * 	(loadStoreQueue)
- * 
- * instruction lifecycle: decodeBuffer -> dispatchBuffer -> reorderBuffer
- */
-
-class FunctionalUnit {
-	this(FunctionalUnitPool pool, FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) {
-		this.pool = pool;
-		this.type = type;
-		this.quantity = quantity;
-		this.opLat = opLat;
-		this.issueLat = issueLat;
-		
-		this.busy = false;
-	}
-
-	override string toString() {
-		return format("%s[type=%s, quantity=%d, opLat=%d, issueLat=%d, busy=%d]", "FunctionalUnit",
-			to!(string)(this.type), this.opLat, this.issueLat, this.busy);
-	}
-	
-	void acquire(void delegate() onCompletedCallback) {	
-		this.pool.eventQueue.schedule(
-			{
-				this.busy = false;
-				
-				if(onCompletedCallback !is null) {
-					onCompletedCallback();
-				}
-			}, this.issueLat + this.opLat);
-		this.busy = true;
-	}
-
-	FunctionalUnitPool pool;
-	FunctionalUnitType type;
-	uint quantity;
-	uint opLat;
-	uint issueLat;
-	bool busy;
-}
-
-class FunctionalUnitPool {
-	this() {		
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntALU, 4, 1, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntMULT, 1, 3, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntDIV, 1, 20, 19);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.RdPort, 2, 1, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.WrPort, 2, 1, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatADD, 4, 2, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCMP, 4, 2, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCVT, 4, 2, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatMULT, 1, 4, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatDIV, 1, 12, 12);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatSQRT, 1, 24, 24);
-		
-		this.eventQueue = new DelegateEventQueue();
-		Simulator.singleInstance.addEventProcessor(this.eventQueue);
-	}
-	
-	FunctionalUnit findFree(FunctionalUnitType type) {
-		foreach(entity; this.entities) {
-			if(entity.type == type && !entity.busy) {
-				return entity;
-			}
-		}
-		return null;
-	}
-	
-	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry reorderBufferEntry) onCompletedCallback2) {
-		FunctionalUnitType type = reorderBufferEntry.dynamicInst.staticInst.fuType;
-		FunctionalUnit fu = this.findFree(type);
-		
-		if(fu !is null) {
-			fu.acquire({onCompletedCallback2(reorderBufferEntry);});
-		}
-		else {
-			this.eventQueue.schedule(
-				{
-					this.acquire(reorderBufferEntry, onCompletedCallback2);
-				}, 10);
-		}
-	}
-
-	FunctionalUnit[] entities;
-	DelegateEventQueue eventQueue;
-}
-
-enum PhysicalRegisterState: string {
-	FREE = "FREE",
-	ALLOC = "ALLOC",
-	WB = "WB",
-	ARCH = "ARCH"
-}
-
-class PhysicalRegister {
-	this() {
-		this.state = PhysicalRegisterState.FREE;
-	}
-	
-	bool isReady() {
-		return this.state == PhysicalRegisterState.WB || this.state == PhysicalRegisterState.ARCH;
-	}
-	
-	override string toString() {
-		return format("PhysicalRegister[state=%s]", this.state);
-	}
-	
-	PhysicalRegisterState state;
-}
-
-class PhysicalRegisterFile {
-	this(Core core) {
-		this(128, core);
-	}
-	
-	this(uint capacity, Core core) {
-		this.capacity = capacity;
-		this.core = core;
-		
-		this.entries = new PhysicalRegister[this.capacity];
-		for(uint i = 0; i < this.capacity; i++) {
-			this.entries[i] = new PhysicalRegister();
-		}
-	}
-	
-	PhysicalRegister findFree() {
-		foreach(entry; this.entries) {
-			if(entry.state == PhysicalRegisterState.FREE) {
-				return entry;
-			}
-		}
-
-		return null;
-	}
-	
-	uint alloc() {
-		PhysicalRegister freeReg = this.findFree();
-		assert(freeReg !is null);
-		freeReg.state = PhysicalRegisterState.ALLOC;
-		return this.entries.indexOf(freeReg);
-	}
-	
-	PhysicalRegister opIndex(uint index) {
-		assert(index >= 0 && index <= this.entries.length, format("%d", index));
-		return this.entries[index];
-	}
-	
-	void opIndexAssign(PhysicalRegister value, uint index) {
-		assert(index >= 0 && index <= this.entries.length, format("%d", index));
-		this.entries[index] = value;
-	}
-	
-	override string toString() {
-		return format("PhysicalRegisterFile[capacity=%d, core=%s, entries.length=%d]", this.capacity, this.core, this.entries.length);
-	}
-	
-	uint capacity;
-	Core core;
-	PhysicalRegister[] entries;
-}
-
-enum PhysicalRegisterType: string {
-	NONE = "NONE",
-	INT = "INT",
-	FP = "FP"
-}
-
-class DecodeBufferEntry {
-	this(DynamicInst dynamicInst) {
-		this.id = currentId++;
-		this.dynamicInst = dynamicInst;
-	}
-	
-	ulong id;
-	DynamicInst dynamicInst;
-	
-	override string toString() {
-		return format("DecodeBufferEntry[id=%d, dynamicInst=%s]", this.id, this.dynamicInst);
-	}
-	
-	static this() {
-		currentId = 0;
-	}
-	
-	uint npc, nnpc, predNpc, predNnpc;
-	bool isSpeculative;
-	bool isRecoverInst;
-	uint stackRecoverIndex;
-	BpredUpdate dirUpdate;
-	
-	static ulong currentId;
-}
-
-class DecodeBuffer: Queue!(DecodeBufferEntry) {
-	this() {
-		this(4);
-	}
-	
-	this(uint capacity) {
-		super("decodeBuffer", capacity);
-	}
-}
-
-class ReorderBufferEntry {
-	this(DynamicInst dynamicInst, RegisterDependency[] iDeps, RegisterDependency[] oDeps) {
-		this.id = currentId++;
-		this.dynamicInst = dynamicInst;
-		this.iDeps = iDeps;
-		this.oDeps = oDeps;
-		
-		this.isCompleted = false;
-	}
-	
-	bool operandReady(uint opNum) {		
-		PhysicalRegisterFile regFile = this.dynamicInst.thread.core.getPhysicalRegisterFile(this.iDeps[opNum].type);
-		return regFile[this.srcPhysRegs[opNum]].isReady;
-	}
-	
-	bool allOperandsReady() {
-		foreach(i, iDep; this.iDeps) {
-			if(!this.operandReady(i)) {
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
-	string operandsReadyToString() {
-		string str = "\n";
-	
-		foreach(i, iDep; this.iDeps) {
-			str ~= format("[%s] idep=%s, isReady=%s\n", i, iDep, this.operandReady(i));
-		}
-		
-		return str;
-	}
-	
-	bool isInLoadStoreQueue() {
-		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry is null;
-	}
-	
-	bool isEAComputation() {
-		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry !is null;
-	}
-	
-	override string toString() {
-		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s) %s",
-			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted,
-				this.operandsReadyToString);
-	}
-	
-	ulong id;
-	DynamicInst dynamicInst;
-	uint ea;
-	
-	ReorderBufferEntry loadStoreQueueEntry;
-	
-	bool isDispatched;
-	bool isInReadyQueue;
-	bool isIssued;
-	bool isCompleted;
-	
-	RegisterDependency[] iDeps, oDeps;
-
-	uint[uint] oldPhysRegs;
-	uint[uint] physRegs;
-	uint[uint] srcPhysRegs;
-	
-	uint npc, nnpc, predNpc, predNnpc;
-	bool isSpeculative;
-	bool isRecoverInst;
-	uint stackRecoverIndex;
-	BpredUpdate dirUpdate;
-	
-	static this() {
-		currentId = 0;
-	}
-	
-	static ulong currentId;
-}
-
-class ReadyQueue: Queue!(ReorderBufferEntry) {
-	this() {
-		this(32);
-	}
-	
-	this(uint capacity) {
-		super("readyQueue", capacity);
-	}
-}
-
-class WaitingQueue: Queue!(ReorderBufferEntry) {
-	this() {
-		this(32);
-	}
-	
-	this(uint capacity) {
-		super("waitingQueue", capacity);
-	}
-}
-
-class ReorderBuffer: Queue!(ReorderBufferEntry) {
-	this() {
-		this(8);
-	}
-	
-	this(uint capacity) {
-		super("reorderBuffer", capacity);
-	}
-}
-
-class LoadStoreQueue: Queue!(ReorderBufferEntry) {
-	this() {
-		this(4);
-	}
-	
-	this(uint capacity) {
-		super("loadStoreQueue", capacity);
-	}
-}
 
 class Processor {
 	public:
@@ -378,8 +34,6 @@ class Processor {
 		this(CPUSimulator simulator, string name) {
 			this.simulator = simulator;
 			this.name = name;
-			
-			this.mem = new Memory();
 			
 			this.activeThreadCount = 0;
 		}
@@ -393,8 +47,6 @@ class Processor {
 				core.run();
 			}
 		}
-		
-		Memory mem;
 
 		CPUSimulator simulator;
 		string name;
@@ -403,7 +55,7 @@ class Processor {
 		int activeThreadCount;
 }
 
-abstract class Core {	
+class Core {	
 	this(Processor processor, uint num) {
 		this.processor = processor;
 		this.num = num;
@@ -422,9 +74,47 @@ abstract class Core {
 		
 		this.readyQueue = new ReadyQueue();
 		this.waitingQueue = new WaitingQueue();
+		
+		this.mem = new Memory();
 	}
 	
-	abstract void run();
+	void fetch() {
+		foreach(thread; this.threads) {
+			thread.fetch();
+		}
+	}
+	
+	void registerRename() {
+		foreach(thread; this.threads) {
+			thread.registerRename();
+		}
+	}
+	
+	void dispatch() {
+		foreach(thread; this.threads) {
+			thread.dispatch();
+		}
+	}
+	
+	void issue() {
+		foreach(thread; this.threads) {
+			thread.issue();
+		}
+	}
+	
+	void commit() {
+		foreach(thread; this.threads) {
+			thread.commit();
+		}
+	}
+	
+	void run() {
+			this.fetch();
+			this.registerRename();
+			this.dispatch();
+			this.issue();
+			this.commit();
+	}
 	
 	PhysicalRegisterFile getPhysicalRegisterFile(RegisterDependencyType type) {
 		if(type == RegisterDependencyType.INT) {
@@ -462,10 +152,6 @@ abstract class Core {
 		return this.processor.simulator.memorySystem.mmu;
 	}
 	
-	Memory mem() {
-		return this.processor.mem;
-	}
-	
 	uint fetchWidth() {
 		return this.decodeWidth * this.fetchSpeed;
 	}
@@ -473,6 +159,8 @@ abstract class Core {
 	uint num;
 	Processor processor;
 	Thread[] threads;
+	
+	Memory mem;
 	
 	uint fetchSpeed;
 	uint decodeWidth;
@@ -496,13 +184,11 @@ enum ThreadState: string {
 	Halted = "Halted"
 }
 
-abstract class Thread {
-	this(Core core, Simulation simulation, uint num, string name, Process process) {
+class Thread {
+	this(Core core, Simulation simulation, uint num, Process process) {
 		this.core = core;
 		
 		this.num = num;
-		
-		this.name = name;
 		
 		this.process = process;
 		
@@ -546,146 +232,7 @@ abstract class Thread {
 		this.isSpeculative = false;
 	}
 	
-	abstract void fetch();
-	
-	abstract void registerRename();
-	
-	abstract void dispatch();
-	
-	abstract void issue();
-	
-	abstract void commit();
-	
-	abstract void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry);
-
-	uint getSyscallArg(int i) {
-		assert(i < 6);
-		return this.intRegs[FirstArgumentReg + i];
-	}
-
-	void setSyscallArg(int i, uint val) {
-		assert(i < 6);
-		this.intRegs[FirstArgumentReg + i] = val;
-	}
-
-	void setSyscallReturn(uint return_value) {
-		this.intRegs[ReturnValueReg] = return_value;
-		this.intRegs[SyscallSuccessReg] = return_value == cast(uint) -EINVAL ? 1 : 0;
-	}
-
-	void syscall(uint callnum) {
-		this.syscallEmul.syscall(callnum, this);
-	}
-
-	void clearArchRegs() {
-		this.pc = 0;
-		this.npc = 0;
-		this.nnpc = 0;
-		
-		this.intRegs = new IntRegisterFile();
-		this.floatRegs = new FloatRegisterFile();
-		this.miscRegs = new MiscRegisterFile();
-	}
-	
-	void halt(int exitCode) {
-		logging.infof(LogCategory.SIMULATOR, "target called exit(%d)", exitCode);
-		this.state = ThreadState.Halted;
-		this.core.processor.activeThreadCount--;
-	}
-	
-	Memory mem() {
-		return this.core.processor.mem;
-	}
-	
-	ISA isa() {
-		return this.core.isa;
-	}
-	
-	uint num;
-	string name;
-
-	Core core;
-	
-	IntRegisterFile intRegs;
-	FloatRegisterFile floatRegs;
-	MiscRegisterFile miscRegs;
-	
-	Process process;
-	SyscallEmul syscallEmul;
-
-	uint pc, npc, nnpc;
-	uint fetchPc, fetchNpc, fetchNnpc;
-	
-	Bpred bpred;
-	
-	uint[uint][RegisterDependencyType] renameTables;
-	
-	uint commitWidth;
-	ulong lastCommitCycle;
-	
-	ThreadState state;
-	
-	ThreadStat stat;
-	
-	DecodeBuffer decodeBuffer;
-	ReorderBuffer reorderBuffer;
-	LoadStoreQueue loadStoreQueue;
-	
-	bool isSpeculative;
-	
-	static const uint COMMIT_TIMEOUT = 1000000;
-}
-
-class CoreImpl: Core {	
-	this(Processor processor, uint num) {
-		super(processor, num);
-	}
-	
 	void fetch() {
-		foreach(thread; this.threads) {
-			thread.fetch();
-		}
-	}
-	
-	void registerRename() {
-		foreach(thread; this.threads) {
-			thread.registerRename();
-		}
-	}
-	
-	void dispatch() {
-		foreach(thread; this.threads) {
-			thread.dispatch();
-		}
-	}
-	
-	void issue() {
-		foreach(thread; this.threads) {
-			thread.issue();
-		}
-	}
-	
-	void commit() {
-		foreach(thread; this.threads) {
-			thread.commit();
-		}
-	}
-	
-	override void run() {
-		this.fetch();
-		this.registerRename();
-		this.dispatch();
-		this.issue();
-		this.commit();
-	}
-}
-
-class ThreadImpl: Thread {
-	this(Core core, Simulation simulation, uint num, string name, Process process) {
-		super(core, simulation, num, name, process);
-	}
-	
-	override void fetch() {
 		uint blockToFetch = aligned(this.npc, this.core.seqI.blockSize);
 		if(blockToFetch != this.lastFetchedBlock) {
 			this.lastFetchedBlock = blockToFetch;
@@ -712,7 +259,7 @@ class ThreadImpl: Thread {
 			this.fetchPc = this.fetchNpc;
 			this.fetchNpc = this.fetchNnpc;			
 				
-			StaticInst staticInst = this.isa.decode(this.fetchPc, this.mem);
+			StaticInst staticInst = this.core.isa.decode(this.fetchPc, this.mem);
 			DynamicInst dynamicInst = new DynamicInst(this, this.fetchPc, staticInst);
 				
 			this.npc = this.fetchNpc;
@@ -758,7 +305,7 @@ class ThreadImpl: Thread {
 		}
 	}
 	
-	override void registerRename() {
+	void registerRename() {
 		while(!this.decodeBuffer.empty && !this.reorderBuffer.full && !this.loadStoreQueue.full) {
 			DecodeBufferEntry decodeBufferEntry = this.decodeBuffer.front;
 			
@@ -828,7 +375,7 @@ class ThreadImpl: Thread {
 		}
 	}
 	
-	override void dispatch() {
+	void dispatch() {
 		foreach(dispatchBufferEntry; this.reorderBuffer) {
 			if(!dispatchBufferEntry.isDispatched && !dispatchBufferEntry.isCompleted) {
 				if(dispatchBufferEntry.allOperandsReady) {
@@ -857,7 +404,7 @@ class ThreadImpl: Thread {
 		}
 	}
 	
-	override void issue() {
+	void issue() {
 		ReorderBufferEntry[] toWaitingQueue;
 		
 		while(!this.core.waitingQueue.empty) {
@@ -924,7 +471,7 @@ class ThreadImpl: Thread {
 		}
 	}
 	
-	override void commit() {
+	void commit() {
 		if(Simulator.singleInstance.currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {
 			logging.warnf(LogCategory.SIMULATOR, 
 				"decodeBuffer.full(size)=%s(%d), " ~
@@ -1029,7 +576,7 @@ class ThreadImpl: Thread {
 		}
 	}
 	
-	override void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry) {
+	void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry) {
 		ReorderBufferEntry[] toSquash;
 		
 		while(!this.reorderBuffer.empty) {
@@ -1055,7 +602,86 @@ class ThreadImpl: Thread {
 			this.reorderBuffer.popBack();
 		}
 	}
+
+	uint getSyscallArg(int i) {
+		assert(i < 6);
+		return this.intRegs[FirstArgumentReg + i];
+	}
+
+	void setSyscallArg(int i, uint val) {
+		assert(i < 6);
+		this.intRegs[FirstArgumentReg + i] = val;
+	}
+
+	void setSyscallReturn(uint return_value) {
+		this.intRegs[ReturnValueReg] = return_value;
+		this.intRegs[SyscallSuccessReg] = return_value == cast(uint) -EINVAL ? 1 : 0;
+	}
+
+	void syscall(uint callnum) {
+		this.syscallEmul.syscall(callnum, this);
+	}
+
+	void clearArchRegs() {
+		this.pc = 0;
+		this.npc = 0;
+		this.nnpc = 0;
+		
+		this.intRegs = new IntRegisterFile();
+		this.floatRegs = new FloatRegisterFile();
+		this.miscRegs = new MiscRegisterFile();
+	}
+	
+	void halt(int exitCode) {
+		if(this.state != ThreadState.Halted) {
+			logging.infof(LogCategory.SIMULATOR, "target called exit(%d)", exitCode);
+			this.state = ThreadState.Halted;
+			this.core.processor.activeThreadCount--;
+			
+			assert(0); //TODO: should stop thread from running!!
+		}
+		else {
+			assert(0);
+		}
+	}
+	
+	Memory mem() {
+		return this.core.mem;
+	}
+	
+	uint num;
+
+	Core core;
+	
+	IntRegisterFile intRegs;
+	FloatRegisterFile floatRegs;
+	MiscRegisterFile miscRegs;
+	
+	Process process;
+	SyscallEmul syscallEmul;
+
+	uint pc, npc, nnpc;
+	uint fetchPc, fetchNpc, fetchNnpc;
 	
 	bool fetchStalled;
 	uint lastFetchedBlock;
+	
+	Bpred bpred;
+	
+	uint[uint][RegisterDependencyType] renameTables;
+	
+	uint commitWidth;
+	ulong lastCommitCycle;
+	
+	ThreadState state;
+	
+	ThreadStat stat;
+	
+	DecodeBuffer decodeBuffer;
+	ReorderBuffer reorderBuffer;
+	LoadStoreQueue loadStoreQueue;
+	
+	bool isSpeculative;
+	
+	static const uint COMMIT_TIMEOUT = 1000000;
 }

@@ -1,0 +1,782 @@
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass paper
+\begin_preamble
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{moreverb}
+\usepackage{multirow}
+\usepackage{makeidx}
+\usepackage{array}
+\usepackage{longtable}
+
+
+\renewcommand{\baselinestretch}{1}
+\end_preamble
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing onehalf
+\use_hyperref true
+\pdf_bookmarks false
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks true
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 2
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Flexim
+\begin_inset Formula $^{DIC}$
+\end_inset
+
+: A Simulation Platform to Evaluate General-Purpose Multicore Processors
+ for Data Intensive Workloads
+\end_layout
+
+\begin_layout Author
+Min Cai, Zhimin Gu
+\end_layout
+
+\begin_layout Institution
+Beijing Institute of Technology, Beijing 100081, P.R.China
+\end_layout
+
+\begin_layout Abstract
+We have found no “best overall platform”, as the choice depends too much
+ on the specific application, programming experience, available design/implement
+ation time, and funds.
+ Therefore, we have included a list of guidelines to help making an educated
+ choice.
+ Similarly, we have presented guidelines for application porting and optimizatio
+n on these multicores, focusing on memory and data optimizations.
+ But, if algorithm parameters like 
+\color red
+memory access irregularity and low arithmetic intensity
+\color inherit
+ cannot be improved, the algorithm is simply 
+\color red
+multi-core unfriendly
+\color inherit
+.
+ Ultimately, hardware developments continue to increase performance conditionall
+y, and the penalties for misbehavior are getting steeper.
+ Only if software can be made to fit, HPC can continue to profit from next-gener
+ation multi-cores.
+ 
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+xx
+\end_layout
+
+\begin_layout Standard
+The rest of this technical report is structured as follows.
+ xx
+\end_layout
+
+\begin_layout Section
+Functional Simulation
+\end_layout
+
+\begin_layout Standard
+xx
+\end_layout
+
+\begin_layout Section
+Performance Simulation
+\end_layout
+
+\begin_layout Standard
+xx
+\end_layout
+
+\begin_layout Section
+Supporting Infrastructure
+\end_layout
+
+\begin_layout Standard
+xx
+\end_layout
+
+\begin_layout Section
+Evaluation, Limitations and Future Work
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Subsection
+Benchmark Evaluation
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Subsubsection
+Criteria
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Subsubsection
+Results
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Subsection
+Comparison to Other Simulators
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Subsubsection
+Results
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Subsection
+Limitations and Future Work
+\end_layout
+
+\begin_layout Standard
+xx
+\end_layout
+
+\begin_layout Section
+\start_of_appendix
+Installation Instructions
+\end_layout
+
+\begin_layout Subsection
+System Requirements
+\end_layout
+
+\begin_layout Enumerate
+Make sure that you have a Ubuntu 10.04 Linux machine.
+ Other popular Linux distributions may work as well if you are lucky enough.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Make sure that you have the latest DMD 2.0 compiler installed.
+ If not, go to this page and download "dmd D 2.0 compiler 1-click install
+ for Ubuntu": 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://www.digitalmars.com/d/download.html"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+How to Build and Run Flexim
+\end_layout
+
+\begin_layout Enumerate
+Unpack the zip or tar file containing the Flexim source.
+ 
+\end_layout
+
+\begin_layout Enumerate
+In the main directory of the distribution, you can 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+build Flexim using the command: '
+\family typewriter
+make
+\family default
+';
+\end_layout
+
+\begin_layout Itemize
+remove all the built files using the command: '
+\family typewriter
+make clean
+\family default
+'.
+ 
+\end_layout
+
+\begin_layout Standard
+By default, the flexim binary is placed in the bin/ folder.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Download and unpack cross-compiler-mipsel.tar.bz2 from 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://github.com/mcai/flexim/downloads/"
+
+\end_inset
+
+.
+ Use it to compile MIPS32 LE programs to be simulated by Flexim.
+ 
+\end_layout
+
+\begin_layout Enumerate
+In the subdirectory build/, you can start simulation with the default simulation
+ configuration using the command: 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+./flexim
+\family default
+_dic
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+./flexim_dic --experiment=<experiment-name>
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Benchmarks and experiments are specified in the subdirectory configs/benchmarks
+/ and configs/experiments/, respectively.
+\end_layout
+
+\begin_layout Enumerate
+You can find configuration and statistics files in the configs/ and stats/
+ subdirectories, respectively.
+ Some sample XML files are provided for your reference.
+\end_layout
+
+\begin_layout Enumerate
+Useful tip: As with all other open source projects, you can learn more by
+ digging into the Flexim source code.
+\end_layout
+
+\begin_layout Section
+Development Progress
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Main Category
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Current Progress
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Functional Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Performance Simulation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Supporting Infrastructure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "75col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features>
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

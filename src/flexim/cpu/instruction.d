@@ -216,7 +216,7 @@ const BitField CACHE_OP = {"CACHE_OP", 20, 16};
 string disassemble(MachInst machInst, uint pc, Thread thread) {
 	string buf;
 
-	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.isa.decodeMachInst(machInst).getName());
+	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.core.isa.decodeMachInst(machInst).getName());
 
 	if(machInst.data == 0x00000000) {
 		return buf;

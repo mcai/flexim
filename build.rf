@@ -1,7 +1,8 @@
 src/flexim/all.d
 src/flexim/cpu/bpred.d
-src/flexim/cpu/core.d
 src/flexim/cpu/instruction.d
+src/flexim/cpu/ooo/common.d
+src/flexim/cpu/ooo/pipelines.d
 src/flexim/cpu/registers.d
 src/flexim/io/logging.d
 src/flexim/io/xml.d

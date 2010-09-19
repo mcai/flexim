@@ -24,7 +24,8 @@ module flexim.util.ds;
 import flexim.all;
 
 class List(EntryT) {
-	this() {
+	this(string name) {
+		this.name = name;
 	}
 
 	bool empty() {
@@ -147,15 +148,16 @@ class List(EntryT) {
 	}
 	
 	override string toString() {
-		return format("List[size=%d]", this.size);
+		return format("%s[size=%d]", this.name, this.size);
 	}
 
+	string name;
 	EntryT[] entries;
 }
 
 class Queue(EntryT): List!(EntryT) {
 	this(string name, uint capacity) {
-		this.name = name;
+		super(name);
 		this.capacity = capacity;
 	}
 
@@ -180,7 +182,6 @@ class Queue(EntryT): List!(EntryT) {
 		return format("%s[capacity=%d, size=%d]", this.name, this.capacity, this.size);
 	}
 
-	string name;
 	uint capacity;
 }
 

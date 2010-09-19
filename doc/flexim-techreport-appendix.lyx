@@ -2,7 +2,7 @@
 \lyxformat 345
 \begin_document
 \begin_header
-\textclass report
+\textclass paper
 \begin_preamble
 \usepackage{graphicx}
 \usepackage{color}
@@ -31,8 +31,8 @@
 \paperfontsize default
 \spacing onehalf
 \use_hyperref true
-\pdf_bookmarks false
-\pdf_bookmarksnumbered false
+\pdf_bookmarks true
+\pdf_bookmarksnumbered true
 \pdf_bookmarksopen false
 \pdf_bookmarksopenlevel 1
 \pdf_breaklinks false
@@ -68,144 +68,128 @@
 \begin_body
 
 \begin_layout Title
-The Flexim User Guide
-\begin_inset Newline newline
-\end_inset
-
-
-\size footnotesize
-(
-\color red
-Pre-release, Documentation-in-Progress
-\color inherit
-)
+Appendix to Flexim Technical Report
 \end_layout
 
-\begin_layout Author
-Min Cai <
-\begin_inset CommandInset href
-LatexCommand href
-target "itecgo@163.com"
-type "mailto:"
-
-\end_inset
-
->
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-Beijing Institute of Technology
-\begin_inset Newline newline
-\end_inset
-
-Beijing, China
+\begin_layout Section
+Installation Instructions
 \end_layout
 
-\begin_layout Standard
-\begin_inset CommandInset toc
-LatexCommand tableofcontents
-
-\end_inset
-
-
+\begin_layout Subsection
+System Requirements
 \end_layout
 
-\begin_layout Chapter
-Introduction
-\end_layout
-
-\begin_layout Standard
-Welcome to Flexim! Flexim is an open-source, modular and highly configurable
- architectural simulator for evaluating emerging multicore processors.
- It can run statically compiled MIPS32 Little-Endian (LE) programs.
+\begin_layout Enumerate
+Make sure that you have a Ubuntu 10.04 Linux machine.
+ Other popular Linux distributions may work as well if you are lucky enough.
  
 \end_layout
 
-\begin_layout Standard
-For the latest Flexim code, please visit the project's website on Github:
- 
+\begin_layout Enumerate
+Make sure that you have the latest DMD 2.0 compiler installed.
+ If not, go to this page and download "dmd D 2.0 compiler 1-click install
+ for Ubuntu": 
 \begin_inset CommandInset href
 LatexCommand href
-target "http://github.com/mcai/flexim"
+target "http://www.digitalmars.com/d/download.html"
 
 \end_inset
 
 .
- 
 \end_layout
 
-\begin_layout Section
-Key Features
+\begin_layout Subsection
+How to Build and Run Flexim
 \end_layout
 
 \begin_layout Enumerate
-Architectural
+Unpack the zip or tar file containing the Flexim source.
+ 
+\end_layout
+
+\begin_layout Enumerate
+In the main directory of the distribution, you can 
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-Simulation of a classic five-stage superscalar pipeline with out-of-order
- execution.
- 
+build Flexim using the command: '
+\family typewriter
+make
+\family default
+';
 \end_layout
 
 \begin_layout Itemize
-Multi-level memory hierarchy with the directory-based MESI cache coherence
- protocol.
+remove all the built files using the command: '
+\family typewriter
+make clean
+\family default
+'.
  
 \end_layout
 
-\begin_layout Itemize
-Support for Syscall-emulation mode simulation (i.e., application only, no
- need to boot an OS).
- 
-\end_layout
-
-\begin_layout Itemize
-Correct execution of several state-of-the-art benchmark suites, e.g., wcet_bench,
- Olden and CPU2006.
+\begin_layout Standard
+By default, the flexim binary is placed in the bin/ folder.
  
 \end_layout
 
 \end_deeper
 \begin_layout Enumerate
-Non-architectural
-\end_layout
+Download and unpack cross-compiler-mipsel.tar.bz2 from 
+\begin_inset CommandInset href
+LatexCommand href
+target "http://github.com/mcai/flexim/downloads/"
 
-\begin_deeper
-\begin_layout Itemize
-Developed from scratch in the object-oriented system programming language
- D 2.0.
- Great efforts are made to advocate software engineering practices in the
- simulator construction.
+\end_inset
+
+.
+ Use it to compile MIPS32 LE programs to be simulated by Flexim.
  
 \end_layout
 
-\begin_layout Itemize
-A powerful infrastructure that provides common functionalities such as eventing,
- logging and XML I/O.
- 
+\begin_layout Enumerate
+In the subdirectory build/, you can start simulation with the default simulation
+ configuration using the command: 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+./flexim
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+./flexim --experiment=<experiment-name>
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Benchmarks and experiments are specified in the subdirectory configs/benchmarks
+/ and configs/experiments/, respectively.
 \end_layout
 
-\begin_layout Itemize
-Pervasive use of XML-based I/O for architectural, workload and experiment
- configurations and statistics.
- 
+\begin_layout Enumerate
+You can find configuration and statistics files in the configs/ and stats/
+ subdirectories, respectively.
+ Some sample XML files are provided for your reference.
 \end_layout
 
-\begin_layout Itemize
-Easy to use.
- No scripting.
- Only required are a statically compiled simulator executable and a few
- XML files.
- 
+\begin_layout Enumerate
+Useful tip: As with all other open source projects, you can learn more by
+ digging into the Flexim source code.
 \end_layout
 
-\end_deeper
 \begin_layout Section
 Development Progress
 \end_layout
@@ -415,7 +399,7 @@ Processor core
 \begin_inset Text
 
 \begin_layout Plain Layout
-Being rewritten; almost complete
+OK
 \end_layout
 
 \end_inset
@@ -455,7 +439,7 @@ Cache coherence
 \begin_inset Text
 
 \begin_layout Plain Layout
-Being rewritten; almost complete
+OK
 \end_layout
 
 \end_inset
@@ -475,7 +459,9 @@ On-chip interconnect
 \begin_inset Text
 
 \begin_layout Plain Layout
-Planned
+Fixed-latency; Perf.
+ Sim.
+ Planned
 \end_layout
 
 \end_inset
@@ -486,7 +472,7 @@ Planned
 \begin_inset Text
 
 \begin_layout Plain Layout
-Interface to external DRAM simulators
+DRAM controller
 \end_layout
 
 \end_inset
@@ -495,7 +481,9 @@ Interface to external DRAM simulators
 \begin_inset Text
 
 \begin_layout Plain Layout
-To be planned
+Fixed-latency; Perf.
+ Sim.
+ Planned
 \end_layout
 
 \end_inset
@@ -651,209 +639,7 @@ Planned
 \end_layout
 
 \begin_layout Section
-System Requirements
-\end_layout
-
-\begin_layout Enumerate
-Make sure that you have a Ubuntu 10.04 Linux machine.
- Other popular Linux distributions may work as well if you are lucky enough.
- 
-\end_layout
-
-\begin_layout Enumerate
-Make sure that you have the latest DMD 2.0 compiler installed.
- If not, go to this page and download "dmd D 2.0 compiler 1-click install
- for Ubuntu": 
-\begin_inset CommandInset href
-LatexCommand href
-target "http://www.digitalmars.com/d/download.html"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Section
-How to Build and Run Flexim
-\end_layout
-
-\begin_layout Enumerate
-Unpack the zip or tar file containing the Flexim source.
- 
-\end_layout
-
-\begin_layout Enumerate
-In the main directory of the distribution, you can 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-build Flexim using the command: '
-\family typewriter
-make
-\family default
-';
-\end_layout
-
-\begin_layout Itemize
-remove all the built files using the command: '
-\family typewriter
-make clean
-\family default
-'.
- 
-\end_layout
-
-\begin_layout Standard
-By default, the flexim binary is placed in the bin/ folder.
- 
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-Download and unpack cross-compiler-mipsel.tar.bz2 from 
-\begin_inset CommandInset href
-LatexCommand href
-target "http://github.com/mcai/flexim/downloads/"
-
-\end_inset
-
-.
- Use it to compile MIPS32 LE programs to be simulated by Flexim.
- 
-\end_layout
-
-\begin_layout Enumerate
-In the subdirectory build/, you can start simulation with the default simulation
- configuration using the command: 
-\begin_inset Quotes eld
-\end_inset
-
-
-\family typewriter
-./flexim
-\family default
-
-\begin_inset Quotes erd
-\end_inset
-
- or 
-\begin_inset Quotes eld
-\end_inset
-
-
-\family typewriter
-./flexim --experiment=<experiment-name>
-\family default
-
-\begin_inset Quotes erd
-\end_inset
-
-.
- Benchmarks and experiments are specified in the subdirectory configs/benchmarks
-/ and configs/experiments/, respectively.
-\end_layout
-
-\begin_layout Enumerate
-You can find configuration and statistics files in the configs/ and stats/
- subdirectories, respectively.
- Some sample XML files are provided for your reference.
-\end_layout
-
-\begin_layout Enumerate
-Useful tip: As with all other open source projects, you can learn more by
- digging into the Flexim source code.
-\end_layout
-
-\begin_layout Section
-The Structure of the File
-\end_layout
-
-\begin_layout Standard
-The whole development of the Flexim simulator encompasses three main categories
- of functionalities: functional simulation, performance simulation and the
- supporting infrastructure.
- Chapter 2 focuses on functional simulation.
- Chapter 3 elaborates on performance simulation.
- Chapter 4 focuses on the supporting infrastructure.
- And Chapter 5 provides the evaluation, limitations and future work of Flexim.
-\end_layout
-
-\begin_layout Chapter
-Functional Simulation
-\end_layout
-
-\begin_layout Standard
-Functional simulation encompasses the abilities to load and parse MIPS binaries,
- decode and execute instructions, and emulate system calls.
-\end_layout
-
-\begin_layout Section
-ELF-Formatted MIPS Little-Endian Executable Loader
-\end_layout
-
-\begin_layout Standard
-The Executable and Linkable Format (ELF) is a standard binary file format
- for Unix and Unix-like (such as Linux) systems.
- Each ELF file is made up of one ELF header, followed by file data.
- The file data can include:
-\end_layout
-
-\begin_layout Itemize
-Program header table, describing zero or more segments
-\end_layout
-
-\begin_layout Itemize
-Section header table, describing zero or more sections
-\end_layout
-
-\begin_layout Itemize
-Data referred to by entries in the program header table or section header
- table
-\end_layout
-
-\begin_layout Standard
-The segments contain information that is necessary for runtime execution
- of the file, while sections contain important data for linking and relocation.
- Each byte in the entire file is taken by no more than one section at a
- time, but there can be orphan bytes, which are not covered by a section.
- In the normal case of a Unix executable one or more sections are enclosed
- in one segment.
-\end_layout
-
-\begin_layout Standard
-In Flexim, the tasks of loading and parsing of ELF files are done through
- the classes 
-\family typewriter
-ELFReader
-\family default
- and 
-\family typewriter
-ELF32Binary
-\family default
- and a few supporting code elements.
- Each process in Flexim is associated with one 
-\family typewriter
-ELF32Binary
-\family default
- object.
-\end_layout
-
-\begin_layout Section
-Instruction Decoding and Execution
-\end_layout
-
-\begin_layout Standard
-In Flexim, there are two kinds of instructions, i.e., static instructions
- and dynamic instructions.
- A static instruction represents a decoded instruction that fetched from
- memory, and a dynamic instruction represents a dynamically-scheduled instructio
-n.
- 
-\end_layout
-
-\begin_layout Standard
-Below are the details of the implemented instructions.
+Implemented MIPS32 Instructions
 \end_layout
 
 \begin_layout Subsection
@@ -861,13 +647,21 @@ Basic Instructions
 \end_layout
 
 \begin_layout Enumerate
-nop.
+
+\family typewriter
+nop
+\family default
+ (No operation).
  It does nothing.
 \end_layout
 
 \begin_layout Enumerate
-syscall.
- Its execution logic is shown as below:
+
+\family typewriter
+syscall
+\family default
+ (Sysctem call).
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -884,8 +678,17 @@ thread.syscall(thread.intRegs[2]);
 \end_layout
 
 \begin_layout Enumerate
-sll.
- Its execution logic is shown as below:
+
+\family typewriter
+sll
+\family default
+ (Shift Word Left Logical).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{s}\ll_{SA}5$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -902,8 +705,17 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << this[SA];
 \end_layout
 
 \begin_layout Enumerate
-sllv.
- Its execution logic is shown as below:
+
+\family typewriter
+sllv
+\family default
+ (Shift Word Left Logical Variable).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}\ll R_{T_{4:0}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -921,8 +733,17 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << bits(thread.intRegs[this[
 \end_layout
 
 \begin_layout Enumerate
-sra.
- Its execution logic is shown as below:
+
+\family typewriter
+sra
+\family default
+ (Shift Word Right Arithmetic).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}^{\pm}\gg_{SA}5$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -939,8 +760,17 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]] >> this[SA];
 \end_layout
 
 \begin_layout Enumerate
-srav.
- Its execution logic is shown as below:
+
+\family typewriter
+srav
+\family default
+ (Shift Word Right Arithmetic Variable).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{s}^{\pm}\gg R_{T_{4:0}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -962,8 +792,17 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]]
 \end_layout
 
 \begin_layout Enumerate
-srl.
- Its execution logic is shown as below:
+
+\family typewriter
+srl
+\family default
+ (Shift Word Right Logical).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{s}^{\textrm{Ø}}\gg_{SA}5$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -980,8 +819,17 @@ thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RT]] >> this[SA];
 \end_layout
 
 \begin_layout Enumerate
-srlv.
- Its execution logic is shown as below:
+
+\family typewriter
+srlv
+\family default
+ (Shift Word Right Logical Variable).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{s}^{\textrm{Ø}}\gg R_{T_{4:0}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1041,8 +889,17 @@ thread.nnpc = thread.npc + this.displacement;
 \end_layout
 
 \begin_layout Enumerate
-b.
- Its execution logic is shown as below:
+
+\family typewriter
+b
+\family default
+ (Branch).
+ Meaning: 
+\begin_inset Formula $PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1059,8 +916,17 @@ this.branch(thread);
 \end_layout
 
 \begin_layout Enumerate
-bal.
- Its execution logic is shown as below:
+
+\family typewriter
+bal
+\family default
+ (Branch and Link).
+ Meaning: 
+\begin_inset Formula $R_{A}=PC+8,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1082,8 +948,17 @@ this.branch(thread);
 \end_layout
 
 \begin_layout Enumerate
-beq.
- Its execution logic is shown as below:
+
+\family typewriter
+beq
+\family default
+ (Branch on Equal).
+ Meaning: 
+\begin_inset Formula $_{IF}\; R_{s}=R_{T},\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation:  
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1111,8 +986,17 @@ if(cast(int) thread.intRegs[this[RS]] == cast(int) thread.intRegs[this[RT]])
 \end_layout
 
 \begin_layout Enumerate
-beqz.
- Its execution logic is shown as below:
+
+\family typewriter
+beqz
+\family default
+ (Branch on Equal to Zero).
+ Meaning: 
+\begin_inset Formula $_{IF}\; R_{S}=0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1139,8 +1023,17 @@ if(cast(int) thread.intRegs[this[RS]] == 0) {
 \end_layout
 
 \begin_layout Enumerate
-bgez.
- Its execution logic is shown as below:
+
+\family typewriter
+bgez
+\family default
+ (Branch on Greater Than or Equal to Zero).
+ Meaning: 
+\begin_inset Formula $_{IF}\; R_{S}\geq0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1167,8 +1060,17 @@ if(cast(int) thread.intRegs[this[RS]] >= 0) {
 \end_layout
 
 \begin_layout Enumerate
-bgezal.
- Its execution logic is shown as below:
+
+\family typewriter
+bgezal
+\family default
+ (Branch on Greater Than or Equal to Zero and Link).
+ Meaning: 
+\begin_inset Formula $R_{A}=PC+8;\;_{IF}\; R_{S}\geq0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1200,8 +1102,17 @@ if(cast(int) thread.intRegs[this[RS]] >= 0) {
 \end_layout
 
 \begin_layout Enumerate
-bgtz.
- Its execution logic is shown as below:
+
+\family typewriter
+bgtz
+\family default
+ (Branch on Greater Than Zero).
+ Meaning: 
+\begin_inset Formula $IF\; R_{S}>0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1228,8 +1139,17 @@ if(cast(int) thread.intRegs[this[RS]] > 0) {
 \end_layout
 
 \begin_layout Enumerate
-blez.
- Its execution logic is shown as below:
+
+\family typewriter
+blez
+\family default
+ (Branch on Less Than or Equal to Zero).
+ Meaning: 
+\begin_inset Formula $IF\; R_{S}\leq0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1256,8 +1176,17 @@ if(cast(int) thread.intRegs[this[RS]] <= 0) {
 \end_layout
 
 \begin_layout Enumerate
-bltz.
- Its execution logic is shown as below:
+
+\family typewriter
+bltz
+\family default
+ (Branch on Less Than Zero).
+ Meaning: 
+\begin_inset Formula $IF\; R_{S}<0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1284,8 +1213,17 @@ if(cast(int) thread.intRegs[this[RS]] < 0) {
 \end_layout
 
 \begin_layout Enumerate
-bltzal.
- Its execution logic is shown as below:
+
+\family typewriter
+bltzal
+\family default
+ (Branch on Less Than Zero and Link).
+ Meaning: 
+\begin_inset Formula $R_{A}=PC+8;\;_{IF}\; R_{S}<0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1317,8 +1255,17 @@ if(cast(int) thread.intRegs[this[RS]] < 0) {
 \end_layout
 
 \begin_layout Enumerate
-bne.
- Its execution logic is shown as below:
+
+\family typewriter
+bne
+\family default
+ (Branch on Not Equal).
+ Meaning: 
+\begin_inset Formula $_{IF}\; R_{S}\neq R_{T},\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1346,8 +1293,17 @@ if(cast(int) thread.intRegs[this[RS]] != cast(int) thread.intRegs[this[RT]])
 \end_layout
 
 \begin_layout Enumerate
-bnez.
- Its execution logic is shown as below:
+
+\family typewriter
+bnez
+\family default
+(Branch on Not Equal to Zero).
+ Meaning: 
+\begin_inset Formula $_{IF}\; R_{S}\neq0,\; PC+=_{OFF}18^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1374,8 +1330,13 @@ if(cast(int) thread.intRegs[this[RS]] != 0) {
 \end_layout
 
 \begin_layout Enumerate
-bc1f.
- Its execution logic is shown as below:
+
+\family typewriter
+bc1f
+\family default
+ (Branch on FP False).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1416,8 +1377,13 @@ if(cond) {
 \end_layout
 
 \begin_layout Enumerate
-bc1t.
- Its execution logic is shown as below:
+
+\family typewriter
+bc1t
+\family default
+ (Branch on FP True).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1458,8 +1424,13 @@ if(cond) {
 \end_layout
 
 \begin_layout Enumerate
-bc1fl.
- Its execution logic is shown as below:
+
+\family typewriter
+bc1fl
+\family default
+ (Branch on FP False Likely).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1520,8 +1491,13 @@ else {
 \end_layout
 
 \begin_layout Enumerate
-bc1tl.
- Its execution logic is shown as below:
+
+\family typewriter
+bc1tl
+\family default
+ (Branch on FP True Likely).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1620,7 +1596,17 @@ thread.nnpc = addr;
 \end_layout
 
 \begin_layout Enumerate
-j.
+
+\family typewriter
+j
+\family default
+ (Jump).
+ Meaning: 
+\begin_inset Formula $PC=PC_{31:28}::_{ADDR}28^{\textrm{Ø}}$
+\end_inset
+
+.
+ 
 \begin_inset Newline newline
 \end_inset
 
@@ -1637,7 +1623,7 @@ return mbits(thread.npc, 32, 28) | this.target;
 
 \end_inset
 
-Its execution logic is shown as below: 
+Implementation:  
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1654,7 +1640,17 @@ this.jump(thread, this.targetPc(thread));
 \end_layout
 
 \begin_layout Enumerate
-jal.
+
+\family typewriter
+jal
+\family default
+ (Jump and Link).
+ Meaning: 
+\begin_inset Formula $R_{A}=PC+8;\; PC=PC_{31:28}::_{ADDR}28^{\textrm{Ø}}$
+\end_inset
+
+.
+ 
 \begin_inset Newline newline
 \end_inset
 
@@ -1671,7 +1667,7 @@ return mbits(thread.npc, 32, 28) | this.target;
 
 \end_inset
 
-Its execution logic is shown as below: 
+Implementation:  
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1693,7 +1689,17 @@ this.jump(thread, this.targetPc(thread));
 \end_layout
 
 \begin_layout Enumerate
-jalr.
+
+\family typewriter
+jalr
+\family default
+ (Jump and Link Register).
+ Meaning: 
+\begin_inset Formula $R_{D}=PC+8;\; PC=R_{S}$
+\end_inset
+
+.
+ 
 \begin_inset Newline newline
 \end_inset
 
@@ -1710,7 +1716,7 @@ return thread.intRegs[this[RS]];
 
 \end_inset
 
-Its execution logic is shown as below: 
+Implementation:  
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1732,7 +1738,17 @@ this.jump(thread, this.targetPc(thread));
 \end_layout
 
 \begin_layout Enumerate
-jr.
+
+\family typewriter
+jr
+\family default
+ (Jump Register).
+ Meaning: 
+\begin_inset Formula $PC=R_{S}$
+\end_inset
+
+.
+ 
 \begin_inset Newline newline
 \end_inset
 
@@ -1749,7 +1765,7 @@ return thread.intRegs[this[RS]];
 
 \end_inset
 
-Its execution logic is shown as below: 
+Implementation:  
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1770,8 +1786,13 @@ Floating Point Arithmetic Instructions
 \end_layout
 
 \begin_layout Enumerate
-add_d.
- Its execution logic is shown as below:
+
+\family typewriter
+add_d
+\family default
+ (Add Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1811,8 +1832,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-sub_d.
- Its execution logic is shown as below:
+
+\family typewriter
+sub_d
+\family default
+ (Subtract Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1852,8 +1878,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-mul_d.
- Its execution logic is shown as below:
+
+\family typewriter
+mul_d
+\family default
+ (Multiply Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1893,8 +1924,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-div_d.
- Its execution logic is shown as below:
+
+\family typewriter
+div_d
+\family default
+ (Divide Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1934,8 +1970,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-sqrt_d.
- Its execution logic is shown as below:
+
+\family typewriter
+sqrt_d
+\family default
+ (Square Root Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -1972,8 +2013,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-abs_d.
- Its execution logic is shown as below:
+
+\family typewriter
+abs_d
+\family default
+ (Absolute Value Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2010,8 +2056,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-neg_d.
- Its execution logic is shown as below:
+
+\family typewriter
+neg_d
+\family default
+ (Negate Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2048,8 +2099,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-mov_d.
- Its execution logic is shown as below:
+
+\family typewriter
+mov_d
+\family default
+ (Move Register Double).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2080,8 +2136,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-add_s.
- Its execution logic is shown as below:
+
+\family typewriter
+add_s
+\family default
+ (Add Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2121,8 +2182,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-sub_s.
- Its execution logic is shown as below:
+
+\family typewriter
+sub_s
+\family default
+ (Subtract Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2162,8 +2228,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-mul_s.
- Its execution logic is shown as below:
+
+\family typewriter
+mul_s
+\family default
+ (Multiply Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2203,8 +2274,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-div_s.
- Its execution logic is shown as below:
+
+\family typewriter
+div_s
+\family default
+ (Divide Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2245,8 +2321,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-sqrt_s.
- Its execution logic is shown as below:
+
+\family typewriter
+sqrt_s
+\family default
+ (Square Root Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2283,8 +2364,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-abs_s.
- Its execution logic is shown as below:
+
+\family typewriter
+abs_s
+\family default
+ (Absolute Value Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2321,8 +2407,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-neg_s.
- Its execution logic is shown as below:
+
+\family typewriter
+neg_s
+\family default
+ (Negate Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2359,8 +2450,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-mov_s.
- Its execution logic is shown as below:
+
+\family typewriter
+mov_s
+\family default
+ (Move Register Single).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2392,8 +2488,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_d_s.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_d_s
+\family default
+ (Convert from single floating point to double floating point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2425,8 +2526,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_w_s.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_w_s
+\family default
+ (Convert from single floating point to 32-bit fixed point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2458,8 +2564,13 @@ thread.floatRegs.setUint(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_l_s.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_l_s
+\family default
+ (Convert from single floating point to longword fixed point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2491,8 +2602,13 @@ thread.floatRegs.setUlong(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_s_d.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_s_d
+\family default
+ (Convert from double floating point to single floating point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2524,8 +2640,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_w_d.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_w_d
+\family default
+ (Convert from double floating point to 32-bit fixed point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2557,8 +2678,13 @@ thread.floatRegs.setUint(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_l_d.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_l_d
+\family default
+ (Convert from double floating point to longword fixed point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2590,8 +2716,13 @@ thread.floatRegs.setUlong(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_s_w.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_s_w
+\family default
+ (Convert from 32-bit fixed point to single floating point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2623,8 +2754,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_d_w.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_d_w
+\family default
+ (Convert from 32-bit fixed point to double floating point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2655,8 +2791,13 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_s_l.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_s_l
+\family default
+ (Convert from longword fixed point to single floating point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2687,8 +2828,13 @@ thread.floatRegs.setFloat(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-cvt_d_l.
- Its execution logic is shown as below:
+
+\family typewriter
+cvt_d_l
+\family default
+ (Convert from longword fixed point to double floating point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2719,10 +2865,77 @@ thread.floatRegs.setDouble(fd, this[FD]);
 \end_layout
 
 \begin_layout Enumerate
-c_<cond>_d type instructions, which include c_f_d, c_un_d, c_eq_d, c_ueq_d,
- c_olt_d, c_ult_d, c_ole_d, c_ule_d, c_sf_d, c_ngle_d, c_seq_d, c_ngl_d,
- c_lt_d, c_nge_d, c_le_d and c_ngt_d.
- The execution logic of this type of instructions is shown as below:
+
+\family typewriter
+c_<cond>_d
+\family default
+ (Floating Point compare double) type instructions, which include 
+\family typewriter
+c_f_d
+\family default
+, 
+\family typewriter
+c_un_d
+\family default
+, 
+\family typewriter
+c_eq_d
+\family default
+, 
+\family typewriter
+c_ueq_d
+\family default
+, 
+\family typewriter
+c_olt_d
+\family default
+, 
+\family typewriter
+c_ult_d
+\family default
+, 
+\family typewriter
+c_ole_d
+\family default
+, 
+\family typewriter
+c_ule_d
+\family default
+, 
+\family typewriter
+c_sf_d
+\family default
+, 
+\family typewriter
+c_ngle_d
+\family default
+, 
+\family typewriter
+c_seq_d
+\family default
+, 
+\family typewriter
+c_ngl_d
+\family default
+, 
+\family typewriter
+c_lt_d
+\family default
+, 
+\family typewriter
+c_nge_d
+\family default
+, 
+\family typewriter
+c_le_d
+\family default
+ and 
+\family typewriter
+c_ngt_d
+\family default
+.
+ Meaning: .
+ Implementation:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -2866,10 +3079,77 @@ thread.miscRegs.fcsr = fcsr;
 \end_layout
 
 \begin_layout Enumerate
-c_<cond>_s type instructions, which include c_f_s, c_un_s, c_eq_s, c_ueq_s,
- c_olt_s, c_ult_s, c_ole_s, c_ule_s, c_sf_s, c_ngle_s, c_seq_s, c_ngl_s,
- c_lt_s, c_nge_s, c_le_s and c_ngt_s.
- The execution logic of this type of instructions is shown as below:
+
+\family typewriter
+c_<cond>_s
+\family default
+ (Floating Point compare single) type instructions, which include 
+\family typewriter
+c_f_s
+\family default
+, 
+\family typewriter
+c_un_s
+\family default
+, 
+\family typewriter
+c_eq_s
+\family default
+, 
+\family typewriter
+c_ueq_s
+\family default
+, 
+\family typewriter
+c_olt_s
+\family default
+, 
+\family typewriter
+c_ult_s
+\family default
+, 
+\family typewriter
+c_ole_s
+\family default
+, 
+\family typewriter
+c_ule_s
+\family default
+, 
+\family typewriter
+c_sf_s
+\family default
+, 
+\family typewriter
+c_ngle_s
+\family default
+, 
+\family typewriter
+c_seq_s
+\family default
+, 
+\family typewriter
+c_ngl_s
+\family default
+, 
+\family typewriter
+c_lt_s
+\family default
+, 
+\family typewriter
+c_nge_s
+\family default
+, 
+\family typewriter
+c_le_s
+\family default
+ and 
+\family typewriter
+c_ngt_s
+\family default
+.
+ Meaning: .
+ Implementation:
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3013,8 +3293,13 @@ thread.miscRegs.fcsr = fcsr;
 \end_layout
 
 \begin_layout Enumerate
-mfc1.
- Its execution logic is shown as below:
+
+\family typewriter
+mfc1
+\family default
+ (Move Word From Floating Point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3036,8 +3321,13 @@ thread.intRegs[this[RT]] = fs;
 \end_layout
 
 \begin_layout Enumerate
-cfc1.
- Its execution logic is shown as below:
+
+\family typewriter
+cfc1
+\family default
+ (Move Control Word From Floating Point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3087,8 +3377,13 @@ if(this[FS] == 31) {
 \end_layout
 
 \begin_layout Enumerate
-mtc1.
- Its execution logic is shown as below:
+
+\family typewriter
+mtc1
+\family default
+ (Move Word To Floating Point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3110,8 +3405,13 @@ thread.floatRegs.setUint(rt, this[FS]);
 \end_layout
 
 \begin_layout Enumerate
-ctc1.
- Its execution logic is shown as below:
+
+\family typewriter
+ctc1
+\family default
+ (Move Control Word To Floating Point).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3198,8 +3498,18 @@ this.sextImm = sext(machInst[INTIMM], 16);
 \end_layout
 
 \begin_layout Enumerate
-add.
- Its execution logic is shown as below:
+
+\family typewriter
+add
+\family default
+ (Add Word).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{s}+R_{T}$
+\end_inset
+
+.
+ Overflow trap.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3226,8 +3536,18 @@ logging.warn(LogCategory.INSTRUCTION, "Add: overflow trap not implemented.");
 \end_layout
 
 \begin_layout Enumerate
-addi.
- Its execution logic is shown as below:
+
+\family typewriter
+addi
+\family default
+ (Add Immediate Word).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}+_{const}16^{\pm}$
+\end_inset
+
+.
+ Overflow trap.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3249,8 +3569,17 @@ logging.warn(LogCategory.INSTRUCTION, "Addi: overflow trap not implemented.");
 \end_layout
 
 \begin_layout Enumerate
-addiu.
- Its execution logic is shown as below:
+
+\family typewriter
+addiu
+\family default
+ (Add Immediate Unsigned Word).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}+_{const}16^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3267,8 +3596,17 @@ thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] + this.sextImm;
 \end_layout
 
 \begin_layout Enumerate
-addu.
- Its execution logic is shown as below:
+
+\family typewriter
+addu
+\family default
+ (Add Unsigned Word).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{s}+R_{T}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3290,8 +3628,18 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
 \end_layout
 
 \begin_layout Enumerate
-sub.
- Its execution logic is shown as below:
+
+\family typewriter
+sub
+\family default
+ (Subtract Word).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}-R_{T}$
+\end_inset
+
+.
+ Overflow trap.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3318,8 +3666,17 @@ logging.warn(LogCategory.INSTRUCTION, "Sub: overflow trap not implemented.");
 \end_layout
 
 \begin_layout Enumerate
-subu.
- Its execution logic is shown as below:
+
+\family typewriter
+subu
+\family default
+ (Subtract Unsigned Word).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}-R_{T}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3341,8 +3698,17 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
 \end_layout
 
 \begin_layout Enumerate
-and.
- Its execution logic is shown as below:
+
+\family typewriter
+and
+\family default
+ (And).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{s}\&R_{T}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3359,8 +3725,17 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RS]] & thread.intRegs[this[RT]];
 \end_layout
 
 \begin_layout Enumerate
-andi.
- Its execution logic is shown as below:
+
+\family typewriter
+andi
+\family default
+ (And Immediate).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}\&_{const}16^{\textrm{Ø}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3377,8 +3752,17 @@ thread.intRegs[this[RT]] = thread.intRegs[this[RS]] & this.zextImm;
 \end_layout
 
 \begin_layout Enumerate
-nor.
- Its execution logic is shown as below:
+
+\family typewriter
+nor
+\family default
+ (Nor).
+ Meaning: 
+\begin_inset Formula $R_{D}=\sim(R_{S}|R_{T})$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3395,8 +3779,17 @@ thread.intRegs[this[RD]] = ~(thread.intRegs[this[RS]] | thread.intRegs[this[RT]]
 \end_layout
 
 \begin_layout Enumerate
-or.
- Its execution logic is shown as below:
+
+\family typewriter
+or
+\family default
+ (Or).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}|R_{T}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3413,8 +3806,17 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RS]] | thread.intRegs[this[RT]];
 \end_layout
 
 \begin_layout Enumerate
-ori.
- Its execution logic is shown as below:
+
+\family typewriter
+ori
+\family default
+ (Or Immediate).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}|_{const}16^{\textrm{Ø}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3431,8 +3833,17 @@ thread.intRegs[this[RT]] = thread.intRegs[this[RS]] | this.zextImm;
 \end_layout
 
 \begin_layout Enumerate
-xor.
- Its execution logic is shown as below:
+
+\family typewriter
+xor
+\family default
+ (Exclusive Or).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}\oplus R_{T}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3449,8 +3860,17 @@ thread.intRegs[this[RD]] = thread.intRegs[this[RS]] ^ thread.intRegs[this[RT]];
 \end_layout
 
 \begin_layout Enumerate
-xori.
- Its execution logic is shown as below:
+
+\family typewriter
+xori
+\family default
+ (Exclusive Or Immediate).
+ Meaning: 
+\begin_inset Formula $R_{D}=R_{S}\oplus_{const}16^{\textrm{Ø}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3467,8 +3887,17 @@ thread.intRegs[this[RT]] = thread.intRegs[this[RS]] ^ this.zextImm;
 \end_layout
 
 \begin_layout Enumerate
-slt.
- Its execution logic is shown as below:
+
+\family typewriter
+slt
+\family default
+ (Set on Less Than).
+ Meaning: 
+\begin_inset Formula $R_{D}=(R_{S}^{\pm}<R_{T}^{\pm})?1:0$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3490,8 +3919,17 @@ thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]]
 \end_layout
 
 \begin_layout Enumerate
-slti.
- Its execution logic is shown as below:
+
+\family typewriter
+slti
+\family default
+ (Set on Less Than Immediate).
+ Meaning: 
+\begin_inset Formula $R_{D}=(R_{S}^{\pm}<_{const}16^{\pm})?1:0$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3509,8 +3947,17 @@ thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] < this.sextImm
 \end_layout
 
 \begin_layout Enumerate
-sltiu.
- Its execution logic is shown as below:
+
+\family typewriter
+sltiu
+\family default
+ (Set on Less Than Immediate Unsigned).
+ Meaning: 
+\begin_inset Formula $R_{D}=(R_{S}^{\textrm{Ø}}<_{const}16^{\textrm{Ø}})?1:0$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3528,8 +3975,17 @@ thread.intRegs[this[RT]] = cast(uint) thread.intRegs[this[RS]] < this.zextImm
 \end_layout
 
 \begin_layout Enumerate
-sltu.
- Its execution logic is shown as below:
+
+\family typewriter
+sltu
+\family default
+ (Set on Less Than Unsigned).
+ Meaning: 
+\begin_inset Formula $R_{D}=(R_{S}^{\textrm{Ø}}<R_{T}^{\textrm{Ø}})?1:0$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3551,8 +4007,17 @@ thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RS]]
 \end_layout
 
 \begin_layout Enumerate
-lui.
- Its execution logic is shown as below:
+
+\family typewriter
+lui
+\family default
+ (Load Upper Immediate).
+ Meaning: 
+\begin_inset Formula $R_{D}=_{const}16\ll16$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3569,8 +4034,17 @@ thread.intRegs[this[RT]] = this.imm << 16;
 \end_layout
 
 \begin_layout Enumerate
-divu.
- Its execution logic is shown as below:
+
+\family typewriter
+divu
+\family default
+ (Divide Unsigned Word).
+ Meaning: 
+\begin_inset Formula $L_{O}=R_{S}^{\textrm{Ø}}/R_{T}^{Ø};\; H_{I}=R_{S}^{Ø}\; mod\; R_{T}^{Ø}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3658,8 +4132,17 @@ thread.miscRegs.hi = hi;
 \end_layout
 
 \begin_layout Enumerate
-div.
- Its execution logic is shown as below:
+
+\family typewriter
+div
+\family default
+ (Divide Word).
+ Meaning: 
+\begin_inset Formula $L_{O}=R_{S}^{\pm}/R_{T}^{\pm};\; H_{I}=R_{S}^{\pm}\; mod\; R_{T}^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3747,8 +4230,17 @@ thread.miscRegs.hi = hi;
 \end_layout
 
 \begin_layout Enumerate
-mflo.
- Its execution logic is shown as below:
+
+\family typewriter
+mflo
+\family default
+ (Move From LO).
+ Meaning: 
+\begin_inset Formula $R_{D}=L_{O}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3765,8 +4257,17 @@ thread.intRegs[this[RD]] = thread.miscRegs.lo;
 \end_layout
 
 \begin_layout Enumerate
-mfhi.
- Its execution logic is shown as below:
+
+\family typewriter
+mfhi
+\family default
+ (Move From HI).
+ Meaning: 
+\begin_inset Formula $R_{D}=H_{I}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3783,8 +4284,17 @@ thread.intRegs[this[RD]] = thread.miscRegs.hi;
 \end_layout
 
 \begin_layout Enumerate
-mtlo.
- Its execution logic is shown as below:
+
+\family typewriter
+mtlo
+\family default
+ (Move To LO).
+ Meaning: 
+\begin_inset Formula $L_{O}=R_{D}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3801,8 +4311,17 @@ thread.miscRegs.lo = thread.intRegs[this[RD]];
 \end_layout
 
 \begin_layout Enumerate
-mthi.
- Its execution logic is shown as below:
+
+\family typewriter
+mthi
+\family default
+ (Move To HI).
+ Meaning: 
+\begin_inset Formula $H_{I}=R_{D}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3819,8 +4338,17 @@ thread.miscRegs.hi = thread.intRegs[this[RD]];
 \end_layout
 
 \begin_layout Enumerate
-mult.
- Its execution logic is shown as below:
+
+\family typewriter
+mult
+\family default
+ (Multiply Word).
+ Meaning: 
+\begin_inset Formula $A_{CC}=R_{S}^{\pm}\times R_{T}^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -3893,8 +4421,17 @@ thread.miscRegs.hi = hi;
 \end_layout
 
 \begin_layout Enumerate
-multu.
- Its execution logic is shown as below:
+
+\family typewriter
+multu
+\family default
+ (Multiply Unsigned Word).
+ Meaning: 
+\begin_inset Formula $A_{CC}=R_{S}^{\textrm{Ø}}\times R_{T}^{\textrm{Ø}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4005,8 +4542,17 @@ return thread.intRegs[this[RS]] + this.displacement;
 \end_layout
 
 \begin_layout Enumerate
-lb.
- Its execution logic is shown as below:
+
+\family typewriter
+lb
+\family default
+ (Load Byte).
+ Meaning: 
+\begin_inset Formula $R_{T}=_{MEM}8(R_{S}+_{OFF}16^{\pm})^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4033,8 +4579,17 @@ thread.intRegs[this[RT]] = mem;
 \end_layout
 
 \begin_layout Enumerate
-lbu.
- Its execution logic is shown as below:
+
+\family typewriter
+lbu
+\family default
+ (Load Byte Unsigned).
+ Meaning: 
+\begin_inset Formula $R_{T}=_{MEM}8(R_{S}+_{OFF}16^{\pm})^{\textrm{Ø}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4061,8 +4616,17 @@ thread.intRegs[this[RT]] = mem;
 \end_layout
 
 \begin_layout Enumerate
-lh.
- Its execution logic is shown as below:
+
+\family typewriter
+lh
+\family default
+ (Load Halfword).
+ Meaning: 
+\begin_inset Formula $R_{T}=_{MEM}16(R_{S}+_{OFF}16^{\pm})^{\pm}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4089,8 +4653,17 @@ thread.intRegs[this[RT]] = mem;
 \end_layout
 
 \begin_layout Enumerate
-lhu.
- Its execution logic is shown as below:
+
+\family typewriter
+lhu
+\family default
+ (Load Halfword Unsigned).
+ Meaning: 
+\begin_inset Formula $R_{T}=_{MEM}16(R_{S}+_{OFF}16^{\pm})^{\textrm{Ø}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4117,8 +4690,17 @@ thread.intRegs[this[RT]] = mem;
 \end_layout
 
 \begin_layout Enumerate
-lw.
- Its execution logic is shown as below:
+
+\family typewriter
+lw
+\family default
+ (Load Word).
+ Meaning: 
+\begin_inset Formula $R_{T}=_{MEM}32(R_{S}+_{OFF}16^{\pm})$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4145,7 +4727,11 @@ thread.intRegs[this[RT]] = mem;
 \end_layout
 
 \begin_layout Enumerate
-lwl.
+
+\family typewriter
+lwl
+\family default
+ (Load Word Left).
 \begin_inset Newline newline
 \end_inset
 
@@ -4167,7 +4753,12 @@ return addr & ~3;
 
 \end_inset
 
- Its execution logic is shown as below:
+Meaning: 
+\begin_inset Formula $R_{T}=LoadWordLeft(R_{S}+_{OFF}16^{\pm})$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4243,7 +4834,11 @@ thread.intRegs[this[RT]] = rt;
 \end_layout
 
 \begin_layout Enumerate
-lwr.
+
+\family typewriter
+lwr
+\family default
+ (Load Word Right).
 \begin_inset Newline newline
 \end_inset
 
@@ -4265,7 +4860,12 @@ return addr & ~3;
 
 \end_inset
 
-Its execution logic is shown as below:
+Meaning: 
+\begin_inset Formula $R_{T}=LoadWordRight(R_{S}+_{OFF}16^{\pm})$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4346,8 +4946,17 @@ thread.intRegs[this[RT]] = rt;
 \end_layout
 
 \begin_layout Enumerate
-ll.
- Its execution logic is shown as below:
+
+\family typewriter
+ll
+\family default
+ (Load Linked Word).
+ Meaning: 
+\begin_inset Formula $R_{T}=_{MEM}32(R_{S}+_{OFF}16^{\pm});\; LINK$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4374,8 +4983,13 @@ thread.intRegs[this[RT]] = mem;
 \end_layout
 
 \begin_layout Enumerate
-lwc1.
- Its execution logic is shown as below:
+
+\family typewriter
+lwc1
+\family default
+ (Load Word to Coprocessor-1).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4402,8 +5016,13 @@ thread.floatRegs.setUint(mem, this[FT]);
 \end_layout
 
 \begin_layout Enumerate
-ldc1.
- Its execution logic is shown as below:
+
+\family typewriter
+ldc1
+\family default
+ (Load Doubleword to Coprocessor-1).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4430,8 +5049,17 @@ thread.floatRegs.setUlong(mem, this[FT]);
 \end_layout
 
 \begin_layout Enumerate
-sb.
- Its execution logic is shown as below:
+
+\family typewriter
+sb
+\family default
+ (Store Byte).
+ Meaning: 
+\begin_inset Formula $_{MEM}8(R_{T}+_{OFF}16^{\pm})=R_{S_{7:0}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4453,8 +5081,17 @@ thread.mem.writeByte(this.ea(thread), mem);
 \end_layout
 
 \begin_layout Enumerate
-sh.
- Its execution logic is shown as below:
+
+\family typewriter
+sh
+\family default
+ (Store Halfword).
+ Meaning: 
+\begin_inset Formula $_{MEM}16(R_{T}+_{OFF}16^{\pm})=R_{S_{15:0}}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4476,8 +5113,17 @@ thread.mem.writeHalfWord(this.ea(thread), mem);
 \end_layout
 
 \begin_layout Enumerate
-sw.
- Its execution logic is shown as below:
+
+\family typewriter
+sw
+\family default
+ (Store Word).
+ Meaning: 
+\begin_inset Formula $_{MEM}32(R_{T}+_{OFF}16^{\pm})=R_{S}$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4499,7 +5145,11 @@ thread.mem.writeWord(this.ea(thread), mem);
 \end_layout
 
 \begin_layout Enumerate
-swl.
+
+\family typewriter
+swl
+\family default
+ (Store Word Left).
 \begin_inset Newline newline
 \end_inset
 
@@ -4521,7 +5171,12 @@ return addr & ~3;
 
 \end_inset
 
-Its execution logic is shown as below:
+Meaning: 
+\begin_inset Formula $StoreWordLeft(R_{T}+_{OFF}16^{\pm},R_{S})$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4603,7 +5258,11 @@ thread.mem.writeWord(ea, mem);
 \end_layout
 
 \begin_layout Enumerate
-swr.
+
+\family typewriter
+swr
+\family default
+ (Store Word Right).
 \begin_inset Newline newline
 \end_inset
 
@@ -4625,7 +5284,12 @@ return addr & ~3;
 
 \end_inset
 
-Its execution logic is shown as below:
+Meaning: 
+\begin_inset Formula $StoreWordRight(R_{T}+_{OFF}16^{\pm},R_{S})$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4701,8 +5365,17 @@ thread.mem.writeWord(ea, mem);
 \end_layout
 
 \begin_layout Enumerate
-sc.
- Its execution logic is shown as below:
+
+\family typewriter
+sc
+\family default
+ (Store Conditional Word).
+ Meaning: 
+\begin_inset Formula $_{MEM}32(R_{S}+_{OFF}16^{\pm})=R_{T};\; R_{T}=1$
+\end_inset
+
+.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4729,8 +5402,13 @@ thread.intRegs[this[RT]] = 1;
 \end_layout
 
 \begin_layout Enumerate
-swc1.
- Its execution logic is shown as below:
+
+\family typewriter
+swc1
+\family default
+ (Store Word from Coprocessor-1).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4752,8 +5430,13 @@ thread.mem.writeWord(this.ea(thread), ft);
 \end_layout
 
 \begin_layout Enumerate
-sdc1.
- Its execution logic is shown as below:
+
+\family typewriter
+sdc1
+\family default
+ (Store Doubleword from Coprocessor-1).
+ Meaning: .
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4775,17 +5458,14 @@ thread.mem.writeDoubleWord(this.ea(thread), ft);
 \end_layout
 
 \begin_layout Section
-System Call Emulation
-\end_layout
-
-\begin_layout Standard
-A few system calls are emulated for the correct execution of the whole wcet_benc
-h benchmark suite, and mst and em3d from the Olden benchmark suite.
+Implemented System Calls
 \end_layout
 
 \begin_layout Enumerate
 exit.
- Its execution logic is shown as below:
+ Syscall number: 1.
+ Meaning: terminate the current process.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4809,7 +5489,8 @@ return 1;
 
 \begin_layout Enumerate
 read.
- Its execution logic is shown as below:
+ Syscall number: 3; Meaning: read from a file descriptor.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4880,7 +5561,8 @@ return ret;
 
 \begin_layout Enumerate
 write.
- Its execution logic is shown as below:
+ Syscall number: 4; Meaning: write to a file descriptor.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -4941,7 +5623,8 @@ return ret;
 
 \begin_layout Enumerate
 open.
- Its execution logic is shown as below:
+ Syscall number: 5, Meaning: open a file or device.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5088,7 +5771,8 @@ return fd;
 
 \begin_layout Enumerate
 close.
- Its execution logic is shown as below:
+ Syscall number: 6; Meaning: close a file descriptor.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5116,7 +5800,8 @@ return ret;
 
 \begin_layout Enumerate
 lseek.
- Its execution logic is shown as below:
+ Syscall number: 19; Meaning: reposition read/write file offset.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5158,7 +5843,9 @@ return ret;
 
 \begin_layout Enumerate
 getpid.
- Its execution logic is shown as below:
+ Syscall number: 20.
+ Meaning: get process identification.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5176,7 +5863,9 @@ return thread.process.pid;
 
 \begin_layout Enumerate
 getuid.
- Its execution logic is shown as below:
+ Syscall number: 24.
+ Meaning: get real user ID.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5194,7 +5883,10 @@ return thread.process.uid;
 
 \begin_layout Enumerate
 brk.
- Its execution logic is shown as below:
+ Syscall number: 45.
+ Meaning: change the amount of space allocated for the calling process's
+ data segment.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5312,7 +6004,9 @@ return thread.process.brk;
 
 \begin_layout Enumerate
 getgid.
- Its execution logic is shown as below:
+ Syscall number: 47.
+ Meaning: get real group ID.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5330,7 +6024,9 @@ return thread.process.gid;
 
 \begin_layout Enumerate
 geteuid.
- Its execution logic is shown as below:
+ Syscall number: 49.
+ Meaning: get effective user ID.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5348,7 +6044,9 @@ return thread.process.euid;
 
 \begin_layout Enumerate
 getegid.
- Its execution logic is shown as below:
+ Syscall number: 50.
+ Meaning: get effective group ID.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5366,7 +6064,9 @@ return thread.process.egid;
 
 \begin_layout Enumerate
 fstat.
- Its execution logic is shown as below:
+ Syscall number: 28.
+ Meaning: get file status.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5424,7 +6124,9 @@ return ret;
 
 \begin_layout Enumerate
 uname.
- Its execution logic is shown as below:
+ Syscall number: 122.
+ Meaning: get name and information about current Linux kernel.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5452,7 +6154,9 @@ return 0;
 
 \begin_layout Enumerate
 _llseek.
- Its execution logic is shown as below:
+ Syscall number: 140.
+ Meaning: move extended read/write file pointer.
+ Implementation: 
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -5570,269 +6274,41 @@ return ret;
 
 \end_layout
 
-\begin_layout Chapter
-Performance Simulation
+\begin_layout Section
+Implementation of Key OoO Pipeline Structures and Pipeline Stages
+\end_layout
+
+\begin_layout Subsection
+Structures
 \end_layout
 
 \begin_layout Standard
-Performance simulation encompasses the detailed simulation of out-of-order
- processor cores and multi-level memory hierarchies.
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
+\end_layout
+
+\begin_layout Subsection
+Pipeline Stages
+\end_layout
+
+\begin_layout Standard
+
+\size footnotesize
+\color red
+(Pre-release, Documentation-in-Progress)
 \end_layout
 
 \begin_layout Section
-Processor
+Implementation of the directory-based MESI Cache Coherence Protocol
 \end_layout
 
 \begin_layout Standard
-Flexim supports the mix of SMT and CMP simulation.
- Some processor structures are shared among threads within a processor core,
- and others are private to each thread.
-\end_layout
-
-\begin_layout Subsection
-Cycle-Accurate Modeling of Pipeline Structures
-\end_layout
-
-\begin_layout Standard
-Flexim explicitly models the Reorder Buffer (
-\family typewriter
-ReorderBuffer
-\family default
-), the Issue Queue (
-\family typewriter
-IssueQueue
-\family default
-), the Load/Store Queue (
-\family typewriter
-LoadStoreQueue
-\family default
-), separate integer, floating-point and miscellaneous register files, register
- renaming, and the associated rename table.
-\end_layout
-
-\begin_layout Standard
-The reorder buffer is modeled as a FIFO buffer.
- Its entries are pushed during instruction 
-\family typewriter
-dispatch()
-\family default
- and are popped during instruction 
-\family typewriter
-commit()
-\family default
-.
- 
-\end_layout
-
-\begin_layout Standard
-The issue queue is modeled as an array of issue queue entries.
- Each issue queue entry (
-\family typewriter
-IssueQueueEntry
-\family default
-) can be in one of two states: either free(
-\family typewriter
-IssueQueueEntryState.FREE
-\family default
-) or already allocated(
-\family typewriter
-IssueQueueEntry.ALLOC
-\family default
-).
- Its entries are allocated at instruction 
-\family typewriter
-dispatch()
-\family default
- and are released at 
-\family typewriter
-issue()
-\family default
- and on branch mispredictions on 
-\family typewriter
-recoverReorderBuffer()
-\family default
-.
-\end_layout
-
-\begin_layout Standard
-The integer, floating point and miscellaneous physical register files are
- modeled separately as 
-\family typewriter
-intRegFile
-\family default
-, 
-\family typewriter
-fpRegFile
-\family default
- and 
-\family typewriter
-miscRegFile
-\family default
-, respectively.
- All of them contain an array of physical registers(
-\family typewriter
-PhysicalRegister
-\family default
-).
- Each of the physical registers can be in one of four states: 
+The implementation of the directory-based MESI protocols are as follows.
 \end_layout
 
 \begin_layout Enumerate
-the register is free (
-\family typewriter
-PhysicalRegisterState.FREE
-\family default
-),
-\end_layout
-
-\begin_layout Enumerate
-the register has been allocated to an instruction but has not yet been written
- to (
-\family typewriter
-PhysicalRegisterState.ALLOC
-\family default
-),
-\end_layout
-
-\begin_layout Enumerate
-the register is allocated to an instruction and the value has been written
- (
-\family typewriter
-PhysicalRegisterState.W
-\family default
-B),
-\end_layout
-
-\begin_layout Enumerate
-the register is in the architectural state (
-\family typewriter
-PhysicalRegisterState.ARCH
-\family default
-).
-\end_layout
-
-\begin_layout Standard
-Physical registers are allocated at the 
-\family typewriter
-dispatch()
-\family default
- stage, and deallocated at 
-\family typewriter
-commit()
-\family default
- and during branch mispredictions in 
-\family typewriter
-recoverReorderBuffer()
-\family default
-.
-\end_layout
-
-\begin_layout Standard
-The integer, floating point and miscellaneous rename tables are modeled
- separately.
- They maintain the current mappings of each architectural register to a
- physical register.
-\end_layout
-
-\begin_layout Subsection
-Details of the Processor model and Implementation
-\end_layout
-
-\begin_layout Standard
-Threads within a core maintain separate program counters, but share the
- fetch unit and icache.
- Threads within a core share the available bandwidth in the front end including
- fetch, decode and rename.
- The time slice based fetch policy is implemented for the moment, more advanced
- policies such as icount is left for future work.
- Separate branch predictors are implemented per thread.
-\end_layout
-
-\begin_layout Standard
-Each thread maintains its own rename table because it has its own set of
- architectural registers.
- After renaming, instructions from all threads are dispatched into the shared
- issue queue.
-\end_layout
-
-\begin_layout Standard
-In the issue queue, instructions from all the threads participate in the
- instruction 
-\family typewriter
-wakeup()
-\family default
- process and compete for the issue bandwidth in 
-\family typewriter
-selection()
-\family default
-.
- Instructions that are selected for issue continue to perform register file
- accesses.
- All the physical register files are shared among the threads.
- After register file accesses are done, instructions begin execution on
- the functional units, which are also shared among the threads.
-\end_layout
-
-\begin_layout Standard
-Loads and stores access the shared dcache among the threads within a core.
- In order to maintain the correct orderings of memory accesses, the load/store
- queue (
-\family typewriter
-LoadStoreQueue
-\family default
-) is used.
- Separate load/store queue is maintained per thread, so that an unresolved
- address from one thread does not prevent loads in other threads from issuing.
-\end_layout
-
-\begin_layout Standard
-After execution, instructions write back to the register files.
- Commitment (or retirement) is done in order for each thread out of the
- re-order buffers (
-\family typewriter
-ReorderBuffer
-\family default
-s).
- Separate reorder buffers are maintained per thread.
- 
-\end_layout
-
-\begin_layout Section
-Memory Hierarchy
-\end_layout
-
-\begin_layout Subsection
-Internal Cache Structure and Cache Coherence
-\end_layout
-
-\begin_layout Standard
-A two-level cache hierarchy is modeled for the moment.
- Cache coherence is enforced with the directory-based MESI protocol between
- the private level one caches owned by each core and the level two cache
- that shared among cores.
-\end_layout
-
-\begin_layout Standard
-Besides the data, tag, and state, a cache block has a corresponding directory
- entry that contains the owner and sharers information of the block.
- The geometry parameters of each cache in the memory hierarchy are configured
- via XML files.
- The cache subblock granularity is currently not supported but planned for
- future work.
- The LRU cache replacement policy is implemented for the moment, the implementat
-ions of more advanced policies are left as future work.
-\end_layout
-
-\begin_layout Standard
-The details of the directory-based MESI protocols are described as below.
-\end_layout
-
-\begin_layout Enumerate
-
-\family typewriter
-findAndLock(addr, isBlocking, isRead, isRetry, onCompletedCallback)
-\family default
-.
 \begin_inset listings
 lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
 inline false
@@ -8216,667 +8692,6 @@ uint tag;
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection
-On-Chip Interconnect
-\end_layout
-
-\begin_layout Standard
-Currently, constant-latency on-chip interconnect is modeled, the cycle-accurate
- simulation of on-chip interconnect is left as future work.
-\end_layout
-
-\begin_layout Subsection
-Interface to External DRAM Simulators
-\end_layout
-
-\begin_layout Standard
-Currently, constant-latency DRAM access is modeled, the cycle-accurate simulatio
-n of on-chip interconnect is left as future work.
- The integration of DRAMSim with Flexim is planned.
-\end_layout
-
-\begin_layout Chapter
-Supporting Infrastructure
-\end_layout
-
-\begin_layout Standard
-There are various supporting modules aside the aforementioned main components
- to maintain the Flexim's reusability.
- 
-\end_layout
-
-\begin_layout Section
-Eventing and Callback Mechanisms
-\end_layout
-
-\begin_layout Standard
-In flexim, cycle-accurate simulation is driven by event signals per cycle.
- Generally speaking, an event can be any piece of code that is scheduled
- to execute at the specified time.
- This piece of code can be represented as delegates in the D language.
- The delegate-based event queue (
-\family typewriter
-DelegateEventQueue
-\family default
-) is illustrated as below:
-\begin_inset listings
-lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
-inline false
-status open
-
-\begin_layout Plain Layout
-
-class DelegateEventQueue: EventProcessor {
-\end_layout
-
-\begin_layout Plain Layout
-
-  this() {
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-      
-\end_layout
-
-\begin_layout Plain Layout
-
-  void processEvents() {
-\end_layout
-
-\begin_layout Plain Layout
-
-    if(currentCycle in this.events) {
-\end_layout
-
-\begin_layout Plain Layout
-
-      foreach(event; this.events[currentCycle]) {
-\end_layout
-
-\begin_layout Plain Layout
-
-        event();
-\end_layout
-
-\begin_layout Plain Layout
-
-      }
-\end_layout
-
-\begin_layout Plain Layout
-
-      this.events.remove(currentCycle);
-\end_layout
-
-\begin_layout Plain Layout
-
-    }
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  void schedule(void delegate() event, ulong delay = 0) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    this.events[currentCycle + delay] ~= event;
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  void delegate()[][ulong] events;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The delegate-based callback mechanism is used extensively in the implementation
- of the MESI cache coherence protocol.
- This way, the code is clean and readable.
-\end_layout
-
-\begin_layout Section
-Categorized Logging Mechanism
-\end_layout
-
-\begin_layout Standard
-The logging component supports configurable logging functionalities that
- can facilitate development and even be useful after release.
- The code skeleton of the Logger class is shown as below:
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
-inline false
-status open
-
-\begin_layout Plain Layout
-
-class Logger {
-\end_layout
-
-\begin_layout Plain Layout
-
-  static this() {
-\end_layout
-
-\begin_layout Plain Layout
-
-    singleInstance = new Logger();
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  bool enabled(LogCategory category) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    return category in this.logSwitches && this.logSwitches[category];
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  string message(string caption, string text) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    return format("[%d] 
-\backslash
-t%s%s", currentCycle, 
-\end_layout
-
-\begin_layout Plain Layout
-
-      caption.endsWith("info") ? "" : "[" ~ caption ~ "] ", text);
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  void infof(LogCategory, T...)(LogCategory category, T args) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    debug {
-\end_layout
-
-\begin_layout Plain Layout
-
-      this.info(category, format(args));
-\end_layout
-
-\begin_layout Plain Layout
-
-    }
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  void info(LogCategory category, string text) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    debug {
-\end_layout
-
-\begin_layout Plain Layout
-
-      if(this.enabled(category)) {
-\end_layout
-
-\begin_layout Plain Layout
-
-        stdout.writeln(this.message(category ~ "|" ~ "info", text));
-\end_layout
-
-\begin_layout Plain Layout
-
-      }
-\end_layout
-
-\begin_layout Plain Layout
-
-    }
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-...
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  bool[LogCategory] logSwitches;
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  static Logger singleInstance;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-XML-Based Input/Output for Configurations and Statistics
-\end_layout
-
-\begin_layout Standard
-Extensible Markup Language (XML) is a standard and pervasive mechanism for
- representing structural data in a machine-readable and human-friendly way.
- Here XML-based configuration specification and statistics output are provided.
- For example, the following code shows how to serialize and deserialize
- a cache configuration using the provided XML I/O support:
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
-inline false
-status open
-
-\begin_layout Plain Layout
-
-class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) { 
-\end_layout
-
-\begin_layout Plain Layout
-
-  override XMLConfig save(CacheConfig cacheConfig) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    XMLConfig xmlConfig = new XMLConfig("CacheConfig");
-\end_layout
-
-\begin_layout Plain Layout
-
-    
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["name"] = cacheConfig.name;
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["level"] = to!(string)(cacheConfig.level);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["numSets"] = to!(string)(cacheConfig.numSets);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["assoc"] = to!(string)(cacheConfig.assoc);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["blockSize"] = to!(string)(cacheConfig.blockSize);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["hitLatency"] = to!(string)(cacheConfig.hitLatency);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["missLatency"] = to!(string)(cacheConfig.missLatency);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["policy"] = to!(string)(cacheConfig.policy);
-\end_layout
-
-\begin_layout Plain Layout
-
-    
-\end_layout
-
-\begin_layout Plain Layout
-
-    return xmlConfig;
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  override CacheConfig load(XMLConfig xmlConfig) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    string name = xmlConfig["name"];
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint level = to!(uint)(xmlConfig["level"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint numSets = to!(uint)(xmlConfig["numSets"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint assoc = to!(uint)(xmlConfig["assoc"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint blockSize = to!(uint)(xmlConfig["blockSize"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint hitLatency = to!(uint)(xmlConfig["hitLatency"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint missLatency = to!(uint)(xmlConfig["missLatency"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    CacheReplacementPolicy policy = cast(CacheReplacementPolicy) (
-\end_layout
-
-\begin_layout Plain Layout
-
-      xmlConfig["policy"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-      
-\end_layout
-
-\begin_layout Plain Layout
-
-    CacheConfig cacheConfig = new CacheConfig(
-\end_layout
-
-\begin_layout Plain Layout
-
-      name, level, numSets, assoc, blockSize, hitLatency, missLatency, policy);
-\end_layout
-
-\begin_layout Plain Layout
-
-    
-\end_layout
-
-\begin_layout Plain Layout
-
-    return cacheConfig;
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  static this() {
-\end_layout
-
-\begin_layout Plain Layout
-
-    singleInstance = new CacheConfigXMLSerializer();
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  static CacheConfigXMLSerializer singleInstance;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Plotting and Table Generation for Experiments
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Chapter
-Evaluation, Limitations and Future Work
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Section
-Benchmark Evaluation
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsection
-Criteria
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsection
-Results
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Section
-Comparison to Other Simulators
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsection
-Results
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Section
-Limitations and Future Work
-\end_layout
-
-\begin_layout Standard
-Here are some of the limitations of Flexim.
- This list is not intended to be comprehensive, but rather aims to provide
- the user with an initial understanding of the capabilities of the Flexim
- simulation environment.
- These capabilities are subject to change in future releases.
-\end_layout
-
-\begin_layout Itemize
-Only statically compiled MIPS32 binaries are suported by Flexim.
- Multi-ISA support and loading support of dynamically compiled programs
- are remained as future work.
-\end_layout
-
-\begin_layout Itemize
-The explicit modeling of Miss Status Holding Registers (MSHRs) is not implemente
-d and left as future work.
-\end_layout
-
-\begin_layout Itemize
-Cycle-accurate on-chip interconnect and dram controller modeling is not
- implemented and left as future work.
 \end_layout
 
 \end_body

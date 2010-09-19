@@ -259,14 +259,8 @@ class Cache {
 		uint set = this.set(addr);
 
 		foreach(way, blk; this[set]) {
-			if(blk.tag == tag && blk.state != MESIState.INVALID) {
+			if((blk.tag == tag && blk.state != MESIState.INVALID) || (checkTransientTag && blk.transientTag == tag && this.dir.dirLocks[set].locked))  {
 				return blk;
-			}
-			if(checkTransientTag) {
-				if(blk.transientTag == tag
-					&& this.dir.dirLocks[set].locked) {
-					return blk;
-				}
 			}
 		}
 
@@ -279,18 +273,9 @@ class Cache {
 				
 		CacheBlock blkFound = this.blockOf(addr, checkTransientTag);
 		
-		if(blkFound !is null) {
-			way = blkFound.way;
-			state = blkFound.state;
-			
-			return true;
-		}
-		else {
-			way = 0;
-			state = MESIState.INVALID;
-			
-			return false;
-		}
+		way = blkFound !is null ? blkFound.way : 0;
+		state = blkFound !is null ? blkFound.state : MESIState.INVALID;
+		return blkFound !is null;
 	}
 
 	void setBlock(uint set, uint way, uint tag, MESIState state) {

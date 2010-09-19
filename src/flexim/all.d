@@ -32,9 +32,11 @@ public import std.string;
 public import std.typecons;
 
 public import flexim.cpu.bpred;
-public import flexim.cpu.core;
 public import flexim.cpu.instruction;
 public import flexim.cpu.registers;
+
+public import flexim.cpu.ooo.common;
+public import flexim.cpu.ooo.pipelines;
 
 public import flexim.io.logging;
 public import flexim.io.xml;
