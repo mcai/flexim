@@ -23,48 +23,16 @@ module flexim.cpu.ooo.common;
 
 import flexim.all;
 
-import core.stdc.errno;
-
-/* 
- * functional execution logic
- *
- * this.pc = this.npc;
- * this.npc = this.nnpc;
- * this.nnpc += uint.sizeof;
- * 	
- * StaticInst staticInst = this.isa.decode(this.pc, this.mem);
- * DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
- * uop.execute();
- */
-
-/*
- * core:
- * 	functionalUnitPool
- * 	dispatchBuffer
- * 	intRegs, floatRegs, miscRegs
- * 	(eventQueue, readyQueue, waitingQueue)
- * 
- * thread:
- * 	decodeBuffer
- * 	reorderBuffer
- * 	(loadStoreQueue)
- * 
- * instruction lifecycle: decodeBuffer -> dispatchBuffer -> reorderBuffer
- */
-
 class FunctionalUnit {
-	this(FunctionalUnitPool pool, FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) {
+	this(FunctionalUnitPool pool, FunctionalUnitType type, uint opLat, uint issueLat) {
 		this.pool = pool;
 		this.type = type;
-		this.quantity = quantity;
 		this.opLat = opLat;
 		this.issueLat = issueLat;
-		
-		this.busy = false;
 	}
 
 	override string toString() {
-		return format("%s[type=%s, quantity=%d, opLat=%d, issueLat=%d, busy=%d]", "FunctionalUnit",
+		return format("%s[type=%s, opLat=%d, issueLat=%d, busy=%d]", "FunctionalUnit",
 			to!(string)(this.type), this.opLat, this.issueLat, this.busy);
 	}
 	
@@ -82,7 +50,6 @@ class FunctionalUnit {
 
 	FunctionalUnitPool pool;
 	FunctionalUnitType type;
-	uint quantity;
 	uint opLat;
 	uint issueLat;
 	bool busy;
@@ -90,25 +57,32 @@ class FunctionalUnit {
 
 class FunctionalUnitPool {
 	this() {		
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntALU, 4, 1, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntMULT, 1, 3, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.IntDIV, 1, 20, 19);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.RdPort, 2, 1, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.WrPort, 2, 1, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatADD, 4, 2, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCMP, 4, 2, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatCVT, 4, 2, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatMULT, 1, 4, 1);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatDIV, 1, 12, 12);
-		this.entities ~= new FunctionalUnit(this, FunctionalUnitType.FloatSQRT, 1, 24, 24);
+		this.add(FunctionalUnitType.IntALU, 4, 1, 1);
+		this.add(FunctionalUnitType.IntMULT, 1, 3, 1);
+		this.add(FunctionalUnitType.IntDIV, 1, 20, 19);
+		this.add(FunctionalUnitType.RdPort, 2, 1, 1);
+		this.add(FunctionalUnitType.WrPort, 2, 1, 1);
+		this.add(FunctionalUnitType.FloatADD, 4, 2, 1);
+		this.add(FunctionalUnitType.FloatCMP, 4, 2, 1);
+		this.add(FunctionalUnitType.FloatCVT, 4, 2, 1);
+		this.add(FunctionalUnitType.FloatMULT, 1, 4, 1);
+		this.add(FunctionalUnitType.FloatDIV, 1, 12, 12);
+		this.add(FunctionalUnitType.FloatSQRT, 1, 24, 24);
 		
 		this.eventQueue = new DelegateEventQueue();
 		Simulator.singleInstance.addEventProcessor(this.eventQueue);
 	}
 	
+	void add(FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) {
+		this.entities[type] = new FunctionalUnit[quantity];
+		for(uint i = 0; i < quantity; i++) {
+			this.entities[type][i] = new FunctionalUnit(this, type, opLat, issueLat);
+		}
+	}
+	
 	FunctionalUnit findFree(FunctionalUnitType type) {
-		foreach(entity; this.entities) {
-			if(entity.type == type && !entity.busy) {
+		foreach(entity; this.entities[type]) {
+			if(!entity.busy) {
 				return entity;
 			}
 		}
@@ -130,7 +104,7 @@ class FunctionalUnitPool {
 		}
 	}
 
-	FunctionalUnit[] entities;
+	FunctionalUnit[][FunctionalUnitType] entities;
 	DelegateEventQueue eventQueue;
 }
 
@@ -178,11 +152,11 @@ class PhysicalRegisterFile {
 		return null;
 	}
 	
-	uint alloc() {
+	PhysicalRegister alloc() {
 		PhysicalRegister freeReg = this.findFree();
 		assert(freeReg !is null); //TODO
 		freeReg.state = PhysicalRegisterState.ALLOC;
-		return this.entries.indexOf(freeReg);
+		return freeReg;
 	}
 	
 	PhysicalRegister opIndex(uint index) {
@@ -250,9 +224,8 @@ class ReorderBufferEntry {
 		this.oDeps = oDeps;
 	}
 	
-	bool operandReady(uint opNum) {		
-		PhysicalRegisterFile regFile = this.dynamicInst.thread.core.getPhysicalRegisterFile(this.iDeps[opNum].type);
-		return regFile[this.srcPhysRegs[opNum]].isReady;
+	bool operandReady(uint opNum) {
+		return this.srcPhysRegs[opNum].isReady;
 	}
 	
 	bool allOperandsReady() {
@@ -294,7 +267,7 @@ class ReorderBufferEntry {
 	DynamicInst dynamicInst;
 	
 	RegisterDependency[] iDeps, oDeps;
-	uint[uint] oldPhysRegs, physRegs, srcPhysRegs;
+	PhysicalRegister[uint] oldPhysRegs, physRegs, srcPhysRegs;
 	
 	bool isDispatched, isInReadyQueue, isIssued, isCompleted;
 	

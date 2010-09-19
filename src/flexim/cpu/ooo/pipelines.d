@@ -25,6 +25,33 @@ import flexim.all;
 
 import core.stdc.errno;
 
+/* 
+ * functional execution logic
+ *
+ * this.pc = this.npc;
+ * this.npc = this.nnpc;
+ * this.nnpc += uint.sizeof;
+ * 	
+ * StaticInst staticInst = this.isa.decode(this.pc, this.mem);
+ * DynamicInst uop = new DynamicInst(this, this.pc, staticInst);
+ * uop.execute();
+ */
+
+/*
+ * core:
+ * 	functionalUnitPool
+ * 	dispatchBuffer
+ * 	intRegs, floatRegs, miscRegs
+ * 	(eventQueue, readyQueue, waitingQueue)
+ * 
+ * thread:
+ * 	decodeBuffer
+ * 	reorderBuffer
+ * 	(loadStoreQueue)
+ * 
+ * instruction lifecycle: decodeBuffer -> dispatchBuffer -> reorderBuffer
+ */
+
 class Processor {
 	public:
 		this(CPUSimulator simulator) {
@@ -208,18 +235,21 @@ class Thread {
 		this.state = ThreadState.Active;
 		
 		for(uint i = 0; i < NumIntRegs; i++) {
-			this.core.intRegFile[this.num * NumIntRegs + i].state = PhysicalRegisterState.ARCH;
-			this.renameTables[RegisterDependencyType.INT][i] = this.num * NumIntRegs + i;
+			PhysicalRegister physReg = this.core.intRegFile[this.num * NumIntRegs + i];
+			physReg.state = PhysicalRegisterState.ARCH;
+			this.renameTables[RegisterDependencyType.INT][i] = physReg;
 		}
 		
 		for(uint i = 0; i < NumFloatRegs; i++) {
-			this.core.fpRegFile[this.num * NumFloatRegs + i].state = PhysicalRegisterState.ARCH;
-			this.renameTables[RegisterDependencyType.FP][i] = this.num * NumFloatRegs + i;
+			PhysicalRegister physReg = this.core.intRegFile[this.num * NumFloatRegs + i];
+			physReg.state = PhysicalRegisterState.ARCH;
+			this.renameTables[RegisterDependencyType.FP][i] = physReg;
 		}
 		
 		for(uint i = 0; i < NumMiscRegs; i++) {
-			this.core.miscRegFile[this.num * NumMiscRegs + i].state = PhysicalRegisterState.ARCH;
-			this.renameTables[RegisterDependencyType.MISC][i] = this.num * NumMiscRegs + i;
+			PhysicalRegister physReg = this.core.intRegFile[this.num * NumMiscRegs + i];
+			physReg.state = PhysicalRegisterState.ARCH;
+			this.renameTables[RegisterDependencyType.MISC][i] = physReg;
 		}
 		
 		this.decodeBuffer = new DecodeBuffer();
@@ -438,8 +468,7 @@ class Thread {
 					(ReorderBufferEntry readyQueueEntry)
 					{
 						foreach(i, oDep; readyQueueEntry.oDeps) {
-							PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
-							regFile[readyQueueEntry.physRegs[i]].state = PhysicalRegisterState.WB;
+							readyQueueEntry.physRegs[i].state = PhysicalRegisterState.WB;
 						}
 						
 						readyQueueEntry.isCompleted = true;
@@ -452,8 +481,7 @@ class Thread {
 						(ReorderBufferEntry readyQueueEntry)
 						{
 							foreach(i, oDep; readyQueueEntry.oDeps) {
-								PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
-								regFile[readyQueueEntry.physRegs[i]].state = PhysicalRegisterState.WB;
+								readyQueueEntry.physRegs[i].state = PhysicalRegisterState.WB;
 							}
 							
 							readyQueueEntry.isCompleted = true;
@@ -539,18 +567,16 @@ class Thread {
 				}
 				
 				foreach(i, oDep; loadStoreQueueEntry.oDeps) {
-					PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
-					regFile[loadStoreQueueEntry.oldPhysRegs[i]].state = PhysicalRegisterState.FREE;
-					regFile[loadStoreQueueEntry.physRegs[i]].state = PhysicalRegisterState.ARCH;
+					loadStoreQueueEntry.oldPhysRegs[i].state = PhysicalRegisterState.FREE;
+					loadStoreQueueEntry.physRegs[i].state = PhysicalRegisterState.ARCH;
 				}
 				
 				this.loadStoreQueue.popFront();
 			}
 			
 			foreach(i, oDep; reorderBufferEntry.oDeps) {
-				PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
-				regFile[reorderBufferEntry.oldPhysRegs[i]].state = PhysicalRegisterState.FREE;
-				regFile[reorderBufferEntry.physRegs[i]].state = PhysicalRegisterState.ARCH;
+				reorderBufferEntry.oldPhysRegs[i].state = PhysicalRegisterState.FREE;
+				reorderBufferEntry.physRegs[i].state = PhysicalRegisterState.ARCH;
 			}
 			
 			if(reorderBufferEntry.dynamicInst.staticInst.isControl) {
@@ -591,9 +617,7 @@ class Thread {
 			}
 			
 			foreach(i, oDep; reorderBufferEntry.dynamicInst.staticInst.oDeps) {
-				PhysicalRegisterFile regFile = this.core.getPhysicalRegisterFile(oDep.type);
-				regFile[reorderBufferEntry.physRegs[i]].state = PhysicalRegisterState.FREE;
-				
+				reorderBufferEntry.physRegs[i].state = PhysicalRegisterState.FREE;
 				this.renameTables[oDep.type][oDep.num] = reorderBufferEntry.oldPhysRegs[i];
 			}
 			
@@ -668,7 +692,7 @@ class Thread {
 	
 	Bpred bpred;
 	
-	uint[uint][RegisterDependencyType] renameTables;
+	PhysicalRegister[uint][RegisterDependencyType] renameTables;
 	
 	uint commitWidth;
 	ulong lastCommitCycle;
