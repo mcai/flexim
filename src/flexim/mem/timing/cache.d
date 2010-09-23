@@ -38,15 +38,8 @@ class DirEntry {
 
 	void unsetSharer(CoherentCacheNode node) {
 		assert(node !is null);
-		if(canFind(this.sharers, node)) {	
-			uint indexFound;	
-			foreach(i, sharer; this.sharers) {
-				if(sharer == node) {
-					indexFound = i;
-					break;
-				}
-			}
-			this.sharers = this.sharers.remove(indexFound);
+		if(canFind(this.sharers, node)) {
+			this.sharers = this.sharers.remove(this.sharers.indexOf(node));
 		}
 	}
 
@@ -169,14 +162,16 @@ class CacheBlock {
 		this.set = set;
 		this.way = way;
 		
-		this.state = MESIState.INVALID;
 		this.tag = 0;
 		this.transientTag = 0;
+		this.state = MESIState.INVALID;
+		
 		this.lastAccess = 0;
 	}
 
 	override string toString() {
-		return format("CacheBlock[set=%s, way=%d, tag=%d, state=%s]", to!(string)(this.set), this.way, this.tag, to!(string)(this.state));
+		return format("CacheBlock[set=%s, way=%d, tag=%d, transientTag=%d, state=%s]",
+			to!(string)(this.set), this.way, this.tag, this.transientTag, to!(string)(this.state));
 	}
 
 	CacheSet set;
@@ -229,6 +224,11 @@ class CacheSet {
 		}
 		return result;
 	}
+	
+	CacheBlock firstOf(T)(T pred) {
+		auto res = filter!(pred)(this.blks);
+		return !res.empty ? res.front : null;
+	}
 
 	override string toString() {
 		return format("CacheSet[assoc=%d]", this.assoc);
@@ -259,7 +259,8 @@ class Cache {
 		uint set = this.set(addr);
 
 		foreach(way, blk; this[set]) {
-			if((blk.tag == tag && blk.state != MESIState.INVALID) || (checkTransientTag && blk.transientTag == tag && this.dir.dirLocks[set].locked))  {
+			if((blk.tag == tag && blk.state != MESIState.INVALID) ||
+				(checkTransientTag && blk.transientTag == tag && this.dir.dirLocks[set].locked))  {
 				return blk;
 			}
 		}

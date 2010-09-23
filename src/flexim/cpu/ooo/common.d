@@ -81,12 +81,8 @@ class FunctionalUnitPool {
 	}
 	
 	FunctionalUnit findFree(FunctionalUnitType type) {
-		foreach(entity; this.entities[type]) {
-			if(!entity.busy) {
-				return entity;
-			}
-		}
-		return null;
+		auto res = filter!((FunctionalUnit fu){return !fu.busy;})(this.entities[type]);
+		return !res.empty ? res.front: null;
 	}
 	
 	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry reorderBufferEntry) onCompletedCallback2) {
@@ -143,13 +139,8 @@ class PhysicalRegisterFile {
 	}
 	
 	PhysicalRegister findFree() {
-		foreach(entry; this.entries) {
-			if(entry.state == PhysicalRegisterState.FREE) {
-				return entry;
-			}
-		}
-
-		return null;
+		auto res = filter!((PhysicalRegister physReg){return physReg.state == PhysicalRegisterState.FREE;})(this.entries);
+		return !res.empty ? res.front : null;
 	}
 	
 	PhysicalRegister alloc() {
@@ -178,10 +169,27 @@ class PhysicalRegisterFile {
 	PhysicalRegister[] entries;
 }
 
-enum PhysicalRegisterType: string {
-	NONE = "NONE",
-	INT = "INT",
-	FP = "FP"
+class RegisterRenameTable {
+	this() {
+	}
+	
+	PhysicalRegister opIndex(RegisterDependency dep) {
+		return this.entries[dep.type][dep.num];
+	}
+	
+	PhysicalRegister opIndex(RegisterDependencyType type, uint num) {
+		return this.entries[type][num];
+	}
+	
+	void opIndexAssign(PhysicalRegister physReg, RegisterDependency dep) {
+		this.entries[dep.type][dep.num] = physReg;
+	}
+	
+	void opIndexAssign(PhysicalRegister physReg, RegisterDependencyType type, uint num) {
+		this.entries[type][num] = physReg;
+	}
+	
+	PhysicalRegister[uint][RegisterDependencyType] entries;
 }
 
 class DecodeBufferEntry {
@@ -190,22 +198,22 @@ class DecodeBufferEntry {
 		this.dynamicInst = dynamicInst;
 	}
 	
-	ulong id;
-	DynamicInst dynamicInst;
-	
 	override string toString() {
 		return format("DecodeBufferEntry[id=%d, dynamicInst=%s]", this.id, this.dynamicInst);
 	}
 	
-	static this() {
-		currentId = 0;
-	}
-	
+	ulong id;
 	uint npc, nnpc, predNpc, predNnpc;
+	DynamicInst dynamicInst;
+	
 	bool isSpeculative;
 	bool isRecoverInst;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
+	
+	static this() {
+		currentId = 0;
+	}
 	
 	static ulong currentId;
 }
@@ -224,18 +232,8 @@ class ReorderBufferEntry {
 		this.oDeps = oDeps;
 	}
 	
-	bool operandReady(uint opNum) {
-		return this.srcPhysRegs[opNum].isReady;
-	}
-	
 	bool allOperandsReady() {
-		foreach(i, iDep; this.iDeps) {
-			if(!this.operandReady(i)) {
-				return false;
-			}
-		}
-		
-		return true;
+		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(this.iDeps).empty;
 	}
 	
 	bool isInLoadStoreQueue() {
@@ -251,7 +249,7 @@ class ReorderBufferEntry {
 			string str = "\n";
 		
 			foreach(i, iDep; this.iDeps) {
-				str ~= format("[%s] idep=%s, isReady=%s\n", i, iDep, this.operandReady(i));
+				str ~= format("[%s] idep=%s, isReady=%s\n", i, iDep, this.srcPhysRegs[iDep].isReady);
 			}
 			
 			return str;
@@ -263,18 +261,16 @@ class ReorderBufferEntry {
 	}
 	
 	ulong id;
-	
+	uint npc, nnpc, predNpc, predNnpc;
 	DynamicInst dynamicInst;
 	
 	RegisterDependency[] iDeps, oDeps;
-	PhysicalRegister[uint] oldPhysRegs, physRegs, srcPhysRegs;
+	PhysicalRegister[RegisterDependency] oldPhysRegs, physRegs, srcPhysRegs;
 	
 	bool isDispatched, isInReadyQueue, isIssued, isCompleted;
 	
 	ReorderBufferEntry loadStoreQueueEntry;
 	uint ea;
-	
-	uint npc, nnpc, predNpc, predNnpc;
 	
 	bool isSpeculative;
 	bool isRecoverInst;

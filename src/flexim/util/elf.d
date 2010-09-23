@@ -338,214 +338,212 @@ struct Elf32_Rela {
 }
 
 class ELF32Binary {
-	public:
-		this() {
+	this() {
+	}
+	
+	void parse(string executable) {
+		this.parse(new ELFReader(FileBuffer(executable)));
+	}
+
+	void printElfHeader() {
+		ubyte[] m = this.ehdr.e_ident;
+
+		writefln("  Magic:\t%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11],
+				m[12], m[13], m[14], m[15]);
+		writefln("  Class:\t\t\t\t%s", classStrings[m[EI_CLASS]]);
+		writefln("  Data:\t\t\t\t\t%s", dataStrings[m[EI_DATA]]);
+		writefln("  Version:\t\t\t\t%s", versionStrings[m[EI_VERSION]]);
+		writefln("  Type:\t\t\t\t\t%s", objectTypeStr(this.ehdr.e_type));
+		writefln("  Machine:\t\t\t\t%s", machineStrings[this.ehdr.e_machine]);
+		writefln("  Version:\t\t\t\t0x%x", this.ehdr.e_version);
+		writefln("  Entry point address:\t\t\t0x%x", this.ehdr.e_entry);
+		writefln("  Start of program headers:\t\t%s (bytes into the file)", this.ehdr.e_phoff);
+		writefln("  Start of section headers:\t\t%s (bytes into the file)", this.ehdr.e_shoff);
+		writefln("  Flags:\t\t\t\t0x%x", this.ehdr.e_flags);
+		writefln("  Size of this header:\t\t\t%s (bytes)", this.ehdr.e_ehsize);
+		writefln("  Size of program headers:\t\t%s (bytes)", this.ehdr.e_phentsize);
+		writefln("  Number of program headers:\t\t%s", this.ehdr.e_phnum);
+		writefln("  Size of section headers:\t\t%s (bytes)", this.ehdr.e_shentsize);
+		writefln("  Number of section headers:\t\t%s", this.ehdr.e_shnum);
+		writefln("  Section header string table index:\t%s", this.ehdr.e_shstrndx);
+	}
+
+	void printProgramHeader(uint n, Elf32_Phdr phdr) {
+		writefln("Program header %d", n);
+		writefln("  Type:\t\t\t\t%s", segmentTypeStr(phdr.p_type));
+		writefln("  Offset:\t\t\t0x%x", phdr.p_offset);
+		writefln("  Virtual address:\t\t0x%x", phdr.p_vaddr);
+		writefln("  Physical address:\t\t0x%x", phdr.p_paddr);
+		writefln("  Size in file:\t\t\t%d (in bytes)", phdr.p_filesz);
+		writefln("  Size in memory:\t\t%d (in bytes)", phdr.p_offset);
+		writefln("  Flags:\t\t\t0x%x", phdr.p_flags);
+		writefln("  Alignment:\t\t\t%d", phdr.p_align);
+	}
+
+	void printProgramHeaders() {
+		writefln("Program Headers: %d", this.phdrs.length);
+		foreach(idx, phdr; this.phdrs)
+			printProgramHeader(idx, phdr);
+	}
+
+	void printSectionHeader(uint n, Elf32_Shdr shdr) {
+		writefln("Section header %d: %s", n, this.getSectionName(shdr));
+		writefln("  Type:\t\t\t\t%s", sectionTypeStr(shdr.sh_type));
+		writefln("  Flags:\t\t\t0x%x", shdr.sh_flags);
+		writefln("  Memory address:\t\t0x%x", shdr.sh_addr);
+		writefln("  File offset:\t\t\t%d", shdr.sh_offset);
+		writefln("  Size:\t\t\t\t%d (in bytes)", shdr.sh_size);
+		writefln("  Linked section:\t\t%d", shdr.sh_link);
+		writefln("  Info:\t\t\t\t%d", shdr.sh_info);
+		writefln("  Alignment:\t\t\t%d", shdr.sh_addralign);
+		writefln("  Entry size:\t\t\t%d (in bytes)", shdr.sh_entsize);
+	}
+
+	void printSectionHeaders() {
+		writefln("Section Headers: %d", this.shdrs.length);
+		foreach(idx, shdr; this.shdrs)
+			printSectionHeader(idx, shdr);
+	}
+	
+	string getSectionName(Elf32_Shdr shdr) {
+		return to!(string)(this.shstr + shdr.sh_name);
+	}
+
+	T* ptr(T)(uint offset) {
+		return cast(T*) (this.bitslab + offset);
+	}
+
+	T[] ptrArray(T)(uint offset, uint len) {
+		return (cast(T*) (this.bitslab + offset))[0 .. len];
+	}
+
+	void parse(ELFReader reader) {
+		void[] data;
+		reader.getAll(data);
+		this.slabsize = data.length;
+		this.bitslab = data.ptr;
+
+		/* Read header */
+		this.ehdr = *(cast(Elf32_Ehdr*) bitslab);
+
+		assert(this.ehdr.e_type == ET_EXEC, "Not an executable file");
+		assert(this.ehdr.e_ident[0 .. 4] == cast(ubyte[]) "\x7fELF", "Not a valid ELF Object file");
+
+		uint elfversion = this.ehdr.e_ident[EI_VERSION];
+		if(elfversion == EV_NONE || elfversion > EV_CURRENT) {
+			throw new Exception("Invalid specification version.");
+		} else if(elfversion > DDL_ELFVERSION_SUPP) {
+			throw new Exception("This version of the specification is still to be implemented.");
 		}
+
+		assert(this.ehdr.e_ident[EI_CLASS] == ELFCLASS32, "Only 32 bit binary is supported.");
+		assert(this.ehdr.e_ident[EI_DATA] == ELFDATA2LSB, "Only little-endian binary is supported..");
+		assert(this.ehdr.e_machine == EM_MIPS, "Only MIPS binary is supported.");
 		
-		void parse(string executable) {
-			this.parse(new ELFReader(FileBuffer(executable)));
-		}
+		/* Read section headers */
+		this.shdrs = ptrArray!(Elf32_Shdr)(this.ehdr.e_shoff, this.ehdr.e_shnum);
 
-		void printElfHeader() {
-			ubyte[] m = this.ehdr.e_ident;
+		foreach(shdr; this.shdrs) {
+			switch(shdr.sh_type) {
+				case SHT_NULL:
+				break;
 
-			writefln("  Magic:\t%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11],
-					m[12], m[13], m[14], m[15]);
-			writefln("  Class:\t\t\t\t%s", classStrings[m[EI_CLASS]]);
-			writefln("  Data:\t\t\t\t\t%s", dataStrings[m[EI_DATA]]);
-			writefln("  Version:\t\t\t\t%s", versionStrings[m[EI_VERSION]]);
-			writefln("  Type:\t\t\t\t\t%s", objectTypeStr(this.ehdr.e_type));
-			writefln("  Machine:\t\t\t\t%s", machineStrings[this.ehdr.e_machine]);
-			writefln("  Version:\t\t\t\t0x%x", this.ehdr.e_version);
-			writefln("  Entry point address:\t\t\t0x%x", this.ehdr.e_entry);
-			writefln("  Start of program headers:\t\t%s (bytes into the file)", this.ehdr.e_phoff);
-			writefln("  Start of section headers:\t\t%s (bytes into the file)", this.ehdr.e_shoff);
-			writefln("  Flags:\t\t\t\t0x%x", this.ehdr.e_flags);
-			writefln("  Size of this header:\t\t\t%s (bytes)", this.ehdr.e_ehsize);
-			writefln("  Size of program headers:\t\t%s (bytes)", this.ehdr.e_phentsize);
-			writefln("  Number of program headers:\t\t%s", this.ehdr.e_phnum);
-			writefln("  Size of section headers:\t\t%s (bytes)", this.ehdr.e_shentsize);
-			writefln("  Number of section headers:\t\t%s", this.ehdr.e_shnum);
-			writefln("  Section header string table index:\t%s", this.ehdr.e_shstrndx);
-		}
+				case SHT_PROGBITS:
+				break;
 
-		void printProgramHeader(uint n, Elf32_Phdr phdr) {
-			writefln("Program header %d", n);
-			writefln("  Type:\t\t\t\t%s", segmentTypeStr(phdr.p_type));
-			writefln("  Offset:\t\t\t0x%x", phdr.p_offset);
-			writefln("  Virtual address:\t\t0x%x", phdr.p_vaddr);
-			writefln("  Physical address:\t\t0x%x", phdr.p_paddr);
-			writefln("  Size in file:\t\t\t%d (in bytes)", phdr.p_filesz);
-			writefln("  Size in memory:\t\t%d (in bytes)", phdr.p_offset);
-			writefln("  Flags:\t\t\t0x%x", phdr.p_flags);
-			writefln("  Alignment:\t\t\t%d", phdr.p_align);
-		}
+				case SHT_SYMTAB:
+				case SHT_HASH:
+				break;
 
-		void printProgramHeaders() {
-			writefln("Program Headers: %d", this.phdrs.length);
-			foreach(idx, phdr; this.phdrs)
-				printProgramHeader(idx, phdr);
-		}
+				case SHT_DYNAMIC:
+				case SHT_DYNSYM:
+					logging.fatal(LogCategory.ELF, "dynamic linking is not supported");
+				break;
 
-		void printSectionHeader(uint n, Elf32_Shdr shdr) {
-			writefln("Section header %d: %s", n, this.getSectionName(shdr));
-			writefln("  Type:\t\t\t\t%s", sectionTypeStr(shdr.sh_type));
-			writefln("  Flags:\t\t\t0x%x", shdr.sh_flags);
-			writefln("  Memory address:\t\t0x%x", shdr.sh_addr);
-			writefln("  File offset:\t\t\t%d", shdr.sh_offset);
-			writefln("  Size:\t\t\t\t%d (in bytes)", shdr.sh_size);
-			writefln("  Linked section:\t\t%d", shdr.sh_link);
-			writefln("  Info:\t\t\t\t%d", shdr.sh_info);
-			writefln("  Alignment:\t\t\t%d", shdr.sh_addralign);
-			writefln("  Entry size:\t\t\t%d (in bytes)", shdr.sh_entsize);
-		}
+				case SHT_STRTAB:
+				break;
 
-		void printSectionHeaders() {
-			writefln("Section Headers: %d", this.shdrs.length);
-			foreach(idx, shdr; this.shdrs)
-				printSectionHeader(idx, shdr);
-		}
-		
-		string getSectionName(Elf32_Shdr shdr) {
-			return to!(string)(this.shstr + shdr.sh_name);
-		}
+				case SHT_RELA:
+					Elf32_Rela[] relaSet = ptrArray!(Elf32_Rela)(shdr.sh_offset, shdr.sh_size);
+					foreach(rela; relaSet) {
+					}
+				break;
 
-		T* ptr(T)(uint offset) {
-			return cast(T*) (this.bitslab + offset);
-		}
+				case SHT_NOTE:
+				break;
 
-		T[] ptrArray(T)(uint offset, uint len) {
-			return (cast(T*) (this.bitslab + offset))[0 .. len];
-		}
+				case SHT_NOBITS:
+				break;
 
-	private:
-		void parse(ELFReader reader) {
-			void[] data;
-			reader.getAll(data);
-			this.slabsize = data.length;
-			this.bitslab = data.ptr;
+				case SHT_REL:
+					Elf32_Rel[] relSet = ptrArray!(Elf32_Rel)(shdr.sh_offset, shdr.sh_size);
+					foreach(rela; relSet) {
+					}
+				break;
 
-			/* Read header */
-			this.ehdr = *(cast(Elf32_Ehdr*) bitslab);
+				case SHT_SHLIB:
+				break;
 
-			assert(this.ehdr.e_type == ET_EXEC, "Not an executable file");
-			assert(this.ehdr.e_ident[0 .. 4] == cast(ubyte[]) "\x7fELF", "Not a valid ELF Object file");
-
-			uint elfversion = this.ehdr.e_ident[EI_VERSION];
-			if(elfversion == EV_NONE || elfversion > EV_CURRENT) {
-				throw new Exception("Invalid specification version.");
-			} else if(elfversion > DDL_ELFVERSION_SUPP) {
-				throw new Exception("This version of the specification is still to be implemented.");
+				default:
+				break;
 			}
-
-			assert(this.ehdr.e_ident[EI_CLASS] == ELFCLASS32, "Only 32 bit binary is supported.");
-			assert(this.ehdr.e_ident[EI_DATA] == ELFDATA2LSB, "Only little-endian binary is supported..");
-			assert(this.ehdr.e_machine == EM_MIPS, "Only MIPS binary is supported.");
-			
-			/* Read section headers */
-			this.shdrs = ptrArray!(Elf32_Shdr)(this.ehdr.e_shoff, this.ehdr.e_shnum);
-
-			foreach(shdr; this.shdrs) {
-				switch(shdr.sh_type) {
-					case SHT_NULL:
-					break;
-
-					case SHT_PROGBITS:
-					break;
-
-					case SHT_SYMTAB:
-					case SHT_HASH:
-					break;
-
-					case SHT_DYNAMIC:
-					case SHT_DYNSYM:
-						logging.fatal(LogCategory.ELF, "dynamic linking is not supported");
-					break;
-
-					case SHT_STRTAB:
-					break;
-
-					case SHT_RELA:
-						Elf32_Rela[] relaSet = ptrArray!(Elf32_Rela)(shdr.sh_offset, shdr.sh_size);
-						foreach(rela; relaSet) {
-						}
-					break;
-
-					case SHT_NOTE:
-					break;
-
-					case SHT_NOBITS:
-					break;
-
-					case SHT_REL:
-						Elf32_Rel[] relSet = ptrArray!(Elf32_Rel)(shdr.sh_offset, shdr.sh_size);
-						foreach(rela; relSet) {
-						}
-					break;
-
-					case SHT_SHLIB:
-					break;
-
-					default:
-					break;
-				}
-			}
-
-			Elf32_Shdr shstr_shdr = this.shdrs[this.ehdr.e_shstrndx];
-			this.shstr = this.ptr!(char)(shstr_shdr.sh_offset);
-
-			this.phdrs = ptrArray!(Elf32_Phdr)(this.ehdr.e_phoff, this.ehdr.e_phnum);
 		}
 
-		string sectionTypeStr(uint n) {
-			if(n <= SHT_DYNSYM) {
-				return sectionTypes[n];
-			} else if(n >= SHT_LOPROC && n <= SHT_HIPROC) {
-				return "[SHT_LOPROC..SHT_HIPROC]";
-			} else if(n >= SHT_LOUSER && n <= SHT_HIUSER) {
-				return "[SHT_LOUSER..SHT_HIUSER]";
-			}
-			return "";
+		Elf32_Shdr shstr_shdr = this.shdrs[this.ehdr.e_shstrndx];
+		this.shstr = this.ptr!(char)(shstr_shdr.sh_offset);
+
+		this.phdrs = ptrArray!(Elf32_Phdr)(this.ehdr.e_phoff, this.ehdr.e_phnum);
+	}
+
+	string sectionTypeStr(uint n) {
+		if(n <= SHT_DYNSYM) {
+			return sectionTypes[n];
+		} else if(n >= SHT_LOPROC && n <= SHT_HIPROC) {
+			return "[SHT_LOPROC..SHT_HIPROC]";
+		} else if(n >= SHT_LOUSER && n <= SHT_HIUSER) {
+			return "[SHT_LOUSER..SHT_HIUSER]";
 		}
+		return "";
+	}
 
-		string segmentTypeStr(uint n) {
-			if(n <= PT_SHLIB) {
-				return segmentTypes[n];
-			} else if(n >= PT_LOPROC && n <= PT_HIPROC) {
-				return "[PT_LOPROC..PT_HIPROC]";
-			}
-			return "";
+	string segmentTypeStr(uint n) {
+		if(n <= PT_SHLIB) {
+			return segmentTypes[n];
+		} else if(n >= PT_LOPROC && n <= PT_HIPROC) {
+			return "[PT_LOPROC..PT_HIPROC]";
 		}
+		return "";
+	}
 
-		string objectTypeStr(uint n) {
-			if(n <= ET_CORE) {
-				return objectTypes[n];
-			} else if(n >= ET_LOPROC && n <= ET_HIPROC) {
-				return "[ET_LOPROC..ET_HIPROC]";
-			}
-			return "";
+	string objectTypeStr(uint n) {
+		if(n <= ET_CORE) {
+			return objectTypes[n];
+		} else if(n >= ET_LOPROC && n <= ET_HIPROC) {
+			return "[ET_LOPROC..ET_HIPROC]";
 		}
-		
-		static const string[] sectionTypes = ["SHT_NULL", "SHT_PROGBITS", "SHT_SYMTAB", "SHT_STRTAB", "SHT_RELA", "SHT_HASH", "SHT_DYNAMIC", "SHT_NOTE", "SHT_NOBITS", "SHT_REL", "SHT_SHLIB", "SHT_DYNSYM"];
+		return "";
+	}
+	
+	static const string[] sectionTypes = ["SHT_NULL", "SHT_PROGBITS", "SHT_SYMTAB", "SHT_STRTAB", "SHT_RELA", "SHT_HASH", "SHT_DYNAMIC", "SHT_NOTE", "SHT_NOBITS", "SHT_REL", "SHT_SHLIB", "SHT_DYNSYM"];
 
-		static const string[] segmentTypes = ["PT_NULL", "PT_LOAD", "PT_DYNAMIC", "PT_INTERP", "PT_NOTE", "PT_SHLIB", "PT_PHDR"];
+	static const string[] segmentTypes = ["PT_NULL", "PT_LOAD", "PT_DYNAMIC", "PT_INTERP", "PT_NOTE", "PT_SHLIB", "PT_PHDR"];
 
-		static const string[] objectTypes = ["ET_NONE", "ET_REL (Relocatable)", "ET_EXEC (Executable)", "ET_DYN (Dynamic)", "ET_CORE"];
+	static const string[] objectTypes = ["ET_NONE", "ET_REL (Relocatable)", "ET_EXEC (Executable)", "ET_DYN (Dynamic)", "ET_CORE"];
 
-		static const string[] classStrings = ["ELFCLASSNONE", "ELFCLASS32", "ELFCLASS64"];
+	static const string[] classStrings = ["ELFCLASSNONE", "ELFCLASS32", "ELFCLASS64"];
 
-		static const string[] dataStrings = ["ELFDATANONE (Invalid)", "2's complement, little endian", "ELFDATA2MSB"];
+	static const string[] dataStrings = ["ELFDATANONE (Invalid)", "2's complement, little endian", "ELFDATA2MSB"];
 
-		static const string[] versionStrings = ["0", "1 (current)"];
+	static const string[] versionStrings = ["0", "1 (current)"];
 
-		static const string[] machineStrings = ["EM_NONE", "EM_M32", "EM_SPARC", "EM_386 (Intel 80386)", "EM_68K", "EM_88K", "EM_486", "EM_860", "EM_MIPS"];
-		
-		char* shstr;
+	static const string[] machineStrings = ["EM_NONE", "EM_M32", "EM_SPARC", "EM_386 (Intel 80386)", "EM_68K", "EM_88K", "EM_486", "EM_860", "EM_MIPS"];
+	
+	char* shstr;
 
-		void* bitslab;
-		uint slabsize;
-
-		mixin Property!(Elf32_Ehdr, "ehdr");
-		mixin Property!(Elf32_Shdr[], "shdrs");
-		mixin Property!(Elf32_Phdr[], "phdrs");
+	void* bitslab;
+	uint slabsize;
+	
+	Elf32_Ehdr ehdr;
+	Elf32_Shdr[] shdrs;
+	Elf32_Phdr[] phdrs;
 }

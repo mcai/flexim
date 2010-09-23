@@ -216,7 +216,7 @@ const BitField CACHE_OP = {"CACHE_OP", 20, 16};
 string disassemble(MachInst machInst, uint pc, Thread thread) {
 	string buf;
 
-	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.core.isa.decodeMachInst(machInst).getName());
+	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.core.isa.decodeMachInst(machInst).mnemonic);
 
 	if(machInst.data == 0x00000000) {
 		return buf;
@@ -377,26 +377,6 @@ abstract class StaticInst {
 		
 		abstract void setupDeps();
 		
-		MachInst machInst() {
-			return this.m_machInst;
-		}
-		
-		string mnemonic() {
-			return this.m_mnemonic;
-		}
-		
-		StaticInstFlag flags() {
-			return this.m_flags;
-		}
-		
-		FunctionalUnitType fuType() {
-			return this.m_fuType;
-		}
-
-		string getName() {
-			return this.mnemonic;
-		}
-
 		abstract void execute(Thread thread);
 
 		uint opIndex(BitField field) {
@@ -453,28 +433,11 @@ abstract class StaticInst {
 		
 		RegisterDependency[] iDeps;
 		RegisterDependency[] oDeps;
-
-	protected:		
-		void machInst(MachInst value) {
-			this.m_machInst = value;
-		}
 		
-		void mnemonic(string value) {
-			this.m_mnemonic = value;
-		}
-		
-		void flags(StaticInstFlag value) {
-			this.m_flags = value;
-		}
-		
-		void fuType(FunctionalUnitType value) {
-			this.m_fuType = value;
-		}
-		
-		MachInst m_machInst;
-		string m_mnemonic;
-		StaticInstFlag m_flags;
-		FunctionalUnitType m_fuType;
+		MachInst machInst;
+		string mnemonic;
+		StaticInstFlag flags;
+		FunctionalUnitType fuType;
 }
 
 class DynamicInst {

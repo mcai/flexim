@@ -127,19 +127,16 @@ class Process {
 			/*write argc to stack*/
 			thread.mem.writeWord(stack_ptr, this.argc);
 			thread.setSyscallArg(0, this.argc);
-			stack_ptr += 4;
+			stack_ptr += uint.sizeof;
 
 			/*skip stack_ptr past argv pointer array*/
 			argAddr = stack_ptr;
 			thread.setSyscallArg(1, argAddr);
-			stack_ptr += (this.argc + 1) * 4;
+			stack_ptr += (this.argc + 1) * uint.sizeof;
 
 			/*skip env pointer array*/
 			envAddr = stack_ptr;
-			foreach(i, e; this.env) {
-				stack_ptr += 4;
-			}
-			stack_ptr += 4;
+			stack_ptr += this.env.length * uint.sizeof + uint.sizeof;
 
 			/*write argv to stack*/
 			foreach(i, arg; this.argv) {
@@ -161,7 +158,7 @@ class Process {
 			/*0 already at the end argv pointer array*/
 
 			/*stack overflow*/
-			if(stack_ptr + 4 >= STACK_BASE) {
+			if(stack_ptr + uint.sizeof >= STACK_BASE) {
 				logging.fatal(LogCategory.PROCESS, "Environment overflow. Need to increase MAX_ENVIRON.");
 			}
 
@@ -179,7 +176,6 @@ class Process {
 
 		bool load(Thread thread) {
 			ELF32Binary binary = new ELF32Binary();
-
 			binary.parse(this.args[0]);
 
 			this.loadInternal(thread, binary);
@@ -197,42 +193,18 @@ class Process {
 
 			return full ~ filename;
 		}
-
-		mixin Property!(string, "cwd", PROTECTED, PUBLIC, PRIVATE);
-
-		mixin Property!(string[], "args");
-
-		mixin Property!(int, "argc");
-
-		mixin Property!(char*[], "argv");
-
-		mixin Property!(char*[], "env");
-
-		mixin Property!(char*, "prog_fname");
-
-		mixin Property!(uint, "brk");
-
-		mixin Property!(uint, "mmap_brk");
-
-		mixin Property!(uint, "prog_entry");
-
-		// Id of the owner of the process
-		mixin Property!(uint, "uid");
-
-		mixin Property!(uint, "euid");
-
-		mixin Property!(uint, "gid");
-
-		mixin Property!(uint, "egid");
-
-		// pid of the process and it's parent
-		mixin Property!(uint, "pid");
-
-		mixin Property!(uint, "ppid");
-
-		mixin Property!(uint, "argvp");
-
-		// file descriptor remapping support
-		static const int MAX_FD = 256; // max legal fd value
-		FdMap fd_map[MAX_FD + 1];
+		
+		string cwd;
+		string[] args;
+		int argc;
+		char*[] argv;
+		char*[] env;
+		char* prog_fname;
+		
+		uint brk, mmap_brk;
+		uint prog_entry;
+		
+		uint uid, euid, gid, egid, pid, ppid;
+		
+		uint argvp;
 }
