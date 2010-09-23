@@ -3,18 +3,6 @@
 \begin_document
 \begin_header
 \textclass paper
-\begin_preamble
-\usepackage{graphicx}
-\usepackage{color}
-\usepackage{moreverb}
-\usepackage{multirow}
-\usepackage{makeidx}
-\usepackage{array}
-\usepackage{longtable}
-
-
-\renewcommand{\baselinestretch}{1}
-\end_preamble
 \use_default_options true
 \language english
 \inputencoding auto
@@ -28,12 +16,12 @@
 \font_tt_scale 100
 
 \graphics default
-\paperfontsize default
+\paperfontsize 12
 \spacing onehalf
 \use_hyperref true
 \pdf_bookmarks true
 \pdf_bookmarksnumbered true
-\pdf_bookmarksopen false
+\pdf_bookmarksopen true
 \pdf_bookmarksopenlevel 1
 \pdf_breaklinks false
 \pdf_pdfborder false
@@ -52,7 +40,7 @@
 \rightmargin 2cm
 \bottommargin 2cm
 \secnumdepth 3
-\tocdepth 2
+\tocdepth 3
 \paragraph_separation indent
 \defskip medskip
 \quotes_language english
@@ -68,37 +56,44 @@
 \begin_body
 
 \begin_layout Title
-Flexim: An Evolvable Simulator to Evaluate Multicore Processors
+Flexim: A Decoupled Approach to Cycle-Accurate Simulation of Multicore Processor
+s
 \end_layout
 
 \begin_layout Author
-Min Cai, Zhimin Gu
-\end_layout
-
-\begin_layout Institution
-Beijing Institute of Technology, Beijing 100081, P.R.China
+Min Cai
 \end_layout
 
 \begin_layout Abstract
-Architectural simulators are critical for successful multicore processor
- research nowadays.
- Most of the existing simulators are written in C or C++ for speed consideration
-s, and the modeled computer structures and functionalities are intermixed,
- which are very difficult to maintain and evolve.
- Many simulators come and go with short longevity, because they can not
- fulfill the needs of studying fast-paced evolving computer architectures.
- In this paper, we take a modern approach and treat the evolvability of
- the simulator as a first-class citizen when we are constructing our Flexim
- simulator.
+Good cycle-accurate simulators are critical for conducting successful multicore
+ processor architecture research nowadays.
+ However, most of the existing simulators are written in C or C++ for speed
+ considerations and the modeled computer structures and functionalities
+ are too complicated to be implemented in a clear yet efficient way.
+ The resulting unreadable code makes the simulator hard to use and extend.
+ As a niche market, other not-so-realistic simulators are mostly used for
+ educational and visualization purposes that they are written in traditional
+ object-oriented languages such as Java or C#, which omit many machine details
+ that are necessary for architectural study.
+ There is a permanent need of balancing speed and elegance while simulating
+ multicore architectures.
  
 \end_layout
 
 \begin_layout Abstract
-Flexim's functionalities are clearly partitioned into three categories:
- functional simulation, performance smulation and supporting infrastructure.
- It models a five-stage out-of-order issue processor core, directory-based
- two-level coherent cache hierarchy, and interfaces to external interconnection
- and DRAM controller simulators.
+In this report, we present Flexim, which exploits the idea of separation
+ of structural and behavioral modeling of architectural components, and
+ apply interface-based hierarchical modularity and cycle-accurate callback-based
+ eventing to structural modeling and behavioral modeling, respectively.
+ Flexim remodels the core functionalities of the classic SimpleScalar simulator
+ and extends it to enable extensible timing simulation of out-of-order cores
+ and multi-level cache hierarchies of multicore processors.
+ Simulation results of a few popular benchmarks are shown for illustrative
+ purposes.
+\end_layout
+
+\begin_layout Keywords
+Cycle-accurate simulator, multicore processor architecture
 \end_layout
 
 \begin_layout Section
@@ -106,1171 +101,829 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-Flexim
+Decades of technology advances and architectural innovation in microprocessors
+ has led to complex multicore designs that combine multiple physical processing
+ cores on a single chip.
+ Such design consists of three major parts: the microprocessor core, the
+ cache hierarchy and the interconnection network.
+ The design and implementation of the microprocessor core and the cache
+ hierarchy are highly coupled and interrelated.
+ And the interconnection network provides a fast and efficient transmission
+ media that glues together all the computing and storage resources on the
+ chip.
+\end_layout
+
+\begin_layout Standard
+In order to evaluate the impact on the overall performance of any design
+ improvement on any of the three major parts, many cycle-accurate simulators
+ are created to model the three major parts and their integration in a system
+ working as a whole.
+ Yet many of architectural simulators come and go with a short lifecycle,
+ because they are unable to satisfy the stringent yet fluid needs of innovating
+ new computer architectures.
+\end_layout
+
+\begin_layout Standard
+Most of the existing simulators are written in C or C++ for speed considerations
+ and the modeled computer structures and functionalities are too complicated
+ to be implemented in a clear yet efficient way.
+ The resulting unreadable code makes the simulator hard to use and extend.
+ As a niche market, other not-so-realistic simulators are mostly used for
+ educational and visualization purposes that they are written in traditional
+ object-oriented languages such as Java or C#, which omit many machine details
+ that are necessary for architectural study.
+ There is a permanent need of balancing speed and elegance while simulating
+ multicore architectures.
+ 
+\end_layout
+
+\begin_layout Standard
+In this work, we present Flexim, which exploits interface-based hierarchical
+ modularity and cycle-accurate callback-based event-driven capabilities
+ to remodel the core functionalities of the classic SimpleScalar simulator
+ and extends it to enable detailed simulation of out-of-order cores and
+ multi-level cache hierarchies of multicore processors.
+ Table 1 
+\color red
+[]
+\color inherit
+ summarizes the main parameterizable options of Flexim, broken down according
+ to the presented components classification.
+\end_layout
+
+\begin_layout Standard
+The main contribution of this report is highlighted as below:
+\end_layout
+
+\begin_layout Enumerate
+To our knowledge, the proposed Flexim simulator is the first object-oriented
+ architectural simulator written in the modern systems programming language
+ D in the world.
+ Having good software engineering practice in mind, a few D language features
+ are utilized extensively to improve the simulator's code readability, maintaina
+bility and run-time reconfigurability.
+\end_layout
+
+\begin_layout Enumerate
+The idea of separation of structural and behavioral modeling of architectural
+ components is adopted extensively during the construction of the Flexim
+ simulator to make creating reliable simulator modules much easier than
+ before.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Interface-based hierarchical modularity is used for enabling the construction
+ of replaceable and composable implementations to greatly ease the users'
+ burden during the design and implementation process of new architectural
+ improvements.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Cycle-accurate callback-based eventing is used for modeling the behavioral
+ facet of simulation to clarify the interaction between the execution-driven
+ simulator and the timing simulation modules.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+The rest of this technical report is structured as follows.
+ Section 2 provides an overview of existing processor simulators and their
+ comparative features.
+ Section 3 describes Flexim with significant development details.
+ Section 4 discusses the provisioning of modular and event-driven simulation
+ of out-of-order cores and cache hierarchies.
+ Simulation results from some popular benchmark suites are shown in section
+ 5.
+ Finally, section 6 concludes the report.
+\end_layout
+
+\begin_layout Section
+Related Work
+\end_layout
+
+\begin_layout Standard
+Multiple simulation environments, aimed for computer architecture research,
+ have been developed.
+ The most widely used simulator during the recent years has been SimpleScalar
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Austin2002"
+
+\end_inset
+
+, which serves as the basis of some Flexim functional simulation modules.
+ It models an out-of-order superscalar processor.
+ Lots of extensions have been applied to SimpleScalar to model certain aspects
+ of superscalar processors in a more accurate manner.
+ For example, the HotLeakage simulator [] quantifies leakage energy consumption.
+ However, SimpleScalar is quite difficult to extend to model new parallel
+ microarchitectures without significantly changing its structure.
+ In spite of this fact, three SimpleScalar extensions to support multithreading
+ and/or multicore have been implemented in the SSMT [], M-Sim [] and Multi2Sim
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Ubal2007multi2sim"
+
+\end_inset
+
+ simulators.
+ While SSMT and M-Sim are useful to implement designs based on simultaneous
+ multithreaded processors, Multi2sim provides detailed simulation of multicore
+ multithreaded processors in x86 ISA.
+\end_layout
+
+\begin_layout Standard
+SimpleScalar is an 
+\shape italic
+application-only
+\shape default
+ tool, that is, a simulator that executes directly an application and simulate
+ its execution by providing a simplistic and fictitious underlying operation
+ system via system call emulation.
+ Such tools are characterized by not supporting the architecture-specific
+ privileged instruction set, since applications are not allowed to execute
+ it.
+ However, application-only simulators have the advantage of isolating the
+ application execution, so statistics are not affected by the simulation
+ of a real operating system.
+ The proposed simulator Flexim can be classified as an application-only
+ simulator, too.
+\end_layout
+
+\begin_layout Standard
+In contrast to the application-only simulators, a set of so-called 
+\shape italic
+full-system
+\shape default
+ simulators are available.
+ In such environments, an unmodified operating system is booted over the
+ simulator and applications run at the same time over the simulated operating
+ system.
+ Thus, the entire instruction set and the interfacing with functional models
+ of many I/O devices need be implemented, but no emulation of system calls
+ is required.
+ Although this model provides higher simulation power, it involves a huge
+ computational overhead and sometimes unnecessary simulation accuracy.
+\end_layout
+
+\begin_layout Standard
+Simics 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Magnusson2002"
+
+\end_inset
+
+ is an example of full-system functional simulator which is commonly used
+ for multi-processor systems simulation although it is not freely available.
+ Simics provides a powerful set of APIs that a variety of its extensions
+ have been created for specific purposes in this research area.
+ GEMS 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Martin2005"
+
+\end_inset
+
+ is a popular Simics extension which provides timing simulation capabilities
+ to model the architectural details of multiprocessors such as instruction
+ fetch and decode, branch prediction, dynamic instruction scheduling and
+ execution and speculative memory hierarchy access.
+ GEMS also provides a specification language for defining cache coherence
+ protocols.
+ However, any simulator based on Simics, like GEMS, must boot and run an
+ operating system, so high computational load is increased with each extension.
+\end_layout
+
+\begin_layout Standard
+GEMS provides an important feature of processor simulators which is called
+ 
+\shape italic
+timing first simulation
+\shape default
+.
+ In this scheme, for example, one timing simulation module traces the state
+ of the processor pipeline while instructions traverse it, and another timing
+ simulation module traces the state of the caches while requests traverses
+ them.
+ In the pipeline case, the functional module is only called to actually
+ execute the instructions when they reach the commit stage, so the correct
+ execution paths are always guaranteed by a previously developed robust
+ simulator.
+ The timing-first approach confers efficiency, robustness, and the possibility
+ of creating a series of simulators gradually with more and more details
+ and accuracy.
+\end_layout
+
+\begin_layout Standard
+And the last well-known simulator that we mention here is M5 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Binkert2006"
+
+\end_inset
+
+ .
+ This simulator provides support for simple one-CPU functional CPU, out-of-order
+ SMT-capable CPUs, multiprocessors and coherence caches.
+ It integrates the full-system and application-only simulation modes.
+\end_layout
+
+\begin_layout Standard
+As summary, Flexim has been developed integrating the most significant character
+istics of important simulators, such as separation of functional and timing
+ simulation, SMT and multiprocessor support and directory-based cache coherence.
+ Table 2 gathers Flexim's main features and marks the differences from existing
+ simulators.
+ Additional features of Flexim are detailed in further sections.
+\end_layout
+
+\begin_layout Section
+Basic Simulator Description
+\end_layout
+
+\begin_layout Standard
+This section details the main implementation issues that lead to a final
+ simulation environment, and exposes some tips to bring it into use with
+ workloads that created from the combination of some popular benchmarks.
+ These aspects are addressed by showing some usage scenarios, describing
+ briefly the process of loading an ELF MIPS32 executable into a running
+ process's virtual memory, and analyzing the simulator structure that divided
+ by functional and detailed simulation.
+\end_layout
+
+\begin_layout Subsection
+Simulator and Workloads Compilation
+\end_layout
+
+\begin_layout Standard
+Flexim is written in the systems programming language D, so in order to
+ compile Flexim code, you need to obtain the latest DMD 2.0 compiler from
+ DigitalMars' website
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-For the latest Flexim code, please visit the project's website on Github:
- 
 \begin_inset CommandInset href
 LatexCommand href
-target "http://github.com/mcai/flexim"
+target "http://www.digitalmars.com/d/download.html"
 
 \end_inset
 
 .
- 
 \end_layout
 
 \end_inset
 
- is an open-source, modular and highly configurable architectural simulator
- for evaluating emerging multicore processors.
- Based on the past experience and guided by a few key software engineering
- concepts, it is developed from scratch in the object-oriented D system
- programing language to obtain good maintainability, reusability and modularity
- of the simulator code, and advocates further extensions via plugins.
- It can run statically compiled MIPS32 Little-Endian (LE) programs.
+, and follows the provided instructions to install the compiler.
+ The latest Flexim code can be downloaded at the project's website on Github
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset href
+LatexCommand href
+target "http://github.com/mcai/flexim/"
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+, as a compressed tar file, and has been tested on x86 and x64 machine architect
+ures, with Linux OS.
+ The following commands should be entered in a command terminal to compile
+ it:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+tar xzf mcai-flexim-<checkout_version>.tar.gz
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+cd mcai-flexim-<checkout_version>
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+make
+\end_layout
+
+\begin_layout Standard
+Flexim simulates final executable files, statically compiled for the MIPS32
+ Little Endian architecture, so a cross-compiler is also required to compile
+ your own program sources.
+ There is a workable MIPS32 cross-compiler (cross-compiler-mipsel.tar.bz2)
+ available on the Flexim's project website on Github
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset CommandInset href
+LatexCommand href
+target "http://github.com/mcai/flexim/downloads/"
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Dynamic linking is not supported, so executables must be compiled statically.
+ A command line to compile a program composed by a single source file named
+ program.c could be:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+mipsel-linux-gcc program.c -Wall -o program.mipsel32 -static
+\end_layout
+
+\begin_layout Standard
+Executables usually have an approximate minimum size of 4MB, since all libraries
+ are linked with it.
+ For programs that use the math library or 
+\family typewriter
+pthread
+\family default
+ library, simply include 
+\family typewriter
+-lm
+\family default
+ or 
+\family typewriter
+-lpthread
+\family default
+ into the command line.
+ Sample Makefiles for a few benchmarks are provided within the Flexim distributi
+on.
 \end_layout
 
 \begin_layout Subsection
-Key Features
+Executable File Loader
 \end_layout
 
-\begin_layout Enumerate
-Architectural
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Simulation of a classic five-stage superscalar pipeline with out-of-order
+\begin_layout Standard
+In a simulation environment, program loading is the process in which an
+ executable file is mapped into different virtual memory regions of a new
+ software context, and its register file and stack are initialized to start
  execution.
- 
-\end_layout
-
-\begin_layout Itemize
-Multi-level memory hierarchy with the directory-based MESI cache coherence
- protocol.
- 
-\end_layout
-
-\begin_layout Itemize
-Support for Syscall-emulation mode simulation (i.e., application only, no
- need to boot an OS).
- 
-\end_layout
-
-\begin_layout Itemize
-Correct execution of several state-of-the-art benchmark suites, e.g., wcet_bench,
- Olden and CPU2006.
- 
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-Non-architectural
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Developed from scratch in the object-oriented system programming language
- D 2.0.
- Great efforts are made to advocate software engineering practices in the
- simulator construction.
- 
-\end_layout
-
-\begin_layout Itemize
-A powerful infrastructure that provides common functionalities such as eventing,
- logging and XML I/O.
- 
-\end_layout
-
-\begin_layout Itemize
-Pervasive use of XML-based I/O for architectural, workload and experiment
- configurations and statistics.
- 
-\end_layout
-
-\begin_layout Itemize
-Easy to use.
- No scripting.
- Only required are a statically compiled simulator executable and a few
- XML files.
- 
-\end_layout
-
-\end_deeper
-\begin_layout Standard
-The whole development of the Flexim simulator encompasses three main categories
- of functionalities: functional simulation, performance simulation and the
- supporting infrastructure.
- 
+ In a real machine, the operating system is in charge of these housework.
+ However, Flexim, as other widely used application-only simulators (e.g.,
+ SimpleScalar), is not aimed at supporting the simulation of an OS, but
+ only the execution of target applications.
+ For this reason, program loading must be managed by the simulator during
+ the initialization.
 \end_layout
 
 \begin_layout Standard
-The rest of this technical report is structured as follows.
- Section 2 focuses on functional simulation.
- Section 3 elaborates on performance simulation.
- Section 4 focuses on the supporting infrastructure.
- And Section 5 provides the evaluation, limitations and future work of Flexim.
+The executable files output by 
+\family typewriter
+gcc
+\family default
+ follow the ELF (Executable and Linkable Format) specification.
+ This format is aimed for shared libraries, core dumps and object code,
+ including executable files.
+ An ELF file is made up of an ELF header, a set of arguments and a set of
+ sections.
+ Typically, one or more sections are enclosed in a segment.
+ ELF sections are identified by a name and contain useful data for program
+ loading or debugging.
+ They are labeled with a set of flags that indicate its type and the way
+ they have to be handled during the program loading.
 \end_layout
 
-\begin_layout Section
+\begin_layout Standard
+Flexim embodies the needed classes and methods to list the executable file
+ sections and access their contents.
+ The loader module sweeps all of them and extracts their main attributes:
+ starting address, size, flags and content.
+ When the flags of a section indicate that it is 
+\family typewriter
+loadable
+\family default
+, its contents are copied into memory after the corresponding fixed starting
+ address.
+\end_layout
+
+\begin_layout Standard
+The next step of the program loading process is to initialize the process
+ stack.
+ The stack is a memory region with a dynamically variable length, starting
+ at the virtual address 
+\family typewriter
+0xc0000000
+\family default
+ and growing toward lower memory addresses.
+ The aim of the program stack is to store function local variables and parameter
+s.
+ During the program execution, the stack pointer (register $sp) is managed
+ by the own program code.
+ In contrast, when the program starts, it expects some data in it.
+ This fact can be observed by looking at the standard header of the main
+ function in a C program:
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+int main(int argc, char **argv, char **envp);
+\end_layout
+
+\begin_layout Standard
+When the main function starts, three parameters are expected starting at
+ the memory location specified by the stack pointer.
+ At address [$sp], an integer value represents the number of arguments passed
+ through the command line.
+ At [$sp+4], an integer value indicates the memory address corresponding
+ to a sequence of argc pointers, which at the same time represent each a
+ null-terminated sequence of characters (program arguments).
+\end_layout
+
+\begin_layout Standard
+Finally, at address [$sp +8], another memory address points to an array
+ of strings (i.e., pointers to char sequences).
+ These strings represent the environment variables, accessible through envp[0],
+ envp[1]...
+ inside the C program, or by calls to getenv functions.
+ Notice that there is no integer value indicating the number of defined
+ environment variables, so the end of the envp array is denoted with a final
+ null pointer.
+\end_layout
+
+\begin_layout Standard
+Taking this stack configuration into account, the program loader must write
+ program arguments, environment variables and
+\family typewriter
+ main
+\family default
+ function arguments into the simulated memory.
+\end_layout
+
+\begin_layout Standard
+The last step is the initialization of the register file.
+ This includes the [$sp] register, which has been progressively updated
+ during the stack initialization, and the PC and NPC registers.
+ The initial value of the register PC is specified in the ELF header of
+ the executable file as the program entry point.
+ Register NPC is not explicitly defined in the MIPS32 architecture, but
+ it is used internally by the simulator to ease the branch delay slot management.
+\end_layout
+
+\begin_layout Subsection
 Functional Simulation
 \end_layout
 
 \begin_layout Standard
-Functional simulation encompasses the abilities to load and parse MIPS binaries,
- decode and execute instructions, and emulate system calls.
-\end_layout
-
-\begin_layout Subsection
-ELF-Formatted MIPS Little-Endian Executable Loader
-\end_layout
-
-\begin_layout Standard
-The Executable and Linkable Format (ELF) is a standard binary file format
- for Unix and Unix-like (such as Linux) systems.
- Each ELF file is made up of one ELF header, followed by file data.
- The file data can include:
-\end_layout
-
-\begin_layout Itemize
-Program header table, describing zero or more segments
-\end_layout
-
-\begin_layout Itemize
-Section header table, describing zero or more sections
-\end_layout
-
-\begin_layout Itemize
-Data referred to by entries in the program header table or section header
- table
+The functional simulation engine provides an interface to the rest of the
+ simulator and implements functionalities such as creating or destroying
+ software contexts, performing program loading, enumerating existing contexts,
+ consulting their status, executing a new instruction.
 \end_layout
 
 \begin_layout Standard
-The segments contain information that is necessary for runtime execution
- of the file, while sections contain important data for linking and relocation.
- Each byte in the entire file is taken by no more than one section at a
- time, but there can be orphan bytes, which are not covered by a section.
- In the normal case of a Unix executable one or more sections are enclosed
- in one segment.
-\end_layout
+The supported machine architecture is MIPS32 Little Endian.
+ The main reasons for choosing the MIPS32 instruction set 
+\begin_inset Foot
+status collapsed
 
-\begin_layout Standard
-In Flexim, the tasks of loading and parsing of ELF files are done through
- the classes 
+\begin_layout Plain Layout
+The MIPS32 instructions that are not used by the 
 \family typewriter
-ELFReader
+gcc
+\family default
+ compiler are excluded from this implementation.
+ Also instructions belonging to the privileged instruction set are not implement
+ed.
+\end_layout
+
+\end_inset
+
+ is the availability of an easy-to-understand architecture specification
+ and the simple and systematic identification of machine instructions, motivated
+ by a fixed instruction size and an instruction decomposition in instruction
+ fields.
+\end_layout
+
+\begin_layout Standard
+As a remark, the difference between the terms 
+\family typewriter
+context
 \family default
  and 
 \family typewriter
-ELF32Binary
+thread
 \family default
- and a few supporting code elements.
- Each process in Flexim is associated with one 
+ should be clarified.
+ A 
 \family typewriter
-ELF32Binary
+context
 \family default
- object.
-\end_layout
-
-\begin_layout Subsection
-Instruction Decoding and Execution
-\end_layout
-
-\begin_layout Standard
-In Flexim, there are two kinds of instructions, i.e., static instructions
- and dynamic instructions.
- A static instruction represents a decoded instruction that fetched from
- memory, and a dynamic instruction represents a dynamically-scheduled instructio
-n.
+ is used in this work as a software entity, defined by the status of a virtual
+ memory image and a logical file.
+ In contrast, a 
+\family typewriter
+thread
+\family default
+ is used as a processor hardware entity, and can comprise a physical register
+ file, a set of physical memory pages, a set of entries in the pipeline
+ queues, etc.
+ The simulator kernel only handles contexts, and does not know of architecture
+ specific hardware, such as threads or cores.
  
+\color red
+[work should be done here]
 \end_layout
 
 \begin_layout Standard
-Below are the details of types of the implemented MIPS32 instructions.
+Since Flexim simulates target applications, the underlying operating system
+ services (such as program loading or system calls) are performed internally
+ by the simulator.
+ This is done by modifying the memory and logical registers status so that
+ the application sees the result of the system call.
 \end_layout
 
 \begin_layout Subsection
-System Call Emulation
+Detailed Simulation
 \end_layout
 
 \begin_layout Standard
-System calls are the services that provided by the Linux kernel.
- To simulate MIPS32 LE/Linux applications, a few system calls are emulated
- for the correct execution of the whole wcet_bench benchmark suite, and
- mst and em3d from the Olden benchmark suite.
+The Flexim detailed simulator uses the functional engine to perform an execution
+-driven simulation: during each cycle, a sequence of calls update the existing
+ contexts states.
+ The detailed simulator analyzes the nature of the recently executed machine
+ instructions and accounts the operation latencies incurred by hardware
+ structures.
+\end_layout
+
+\begin_layout Standard
+The branch predictor implementation is based on Marss86.
+ Caches and TLBs are implemented, including the MESI cache coherence protocol.
+ Current interconnection network is a constant-latency simplification.
+ MMU (Memory Management Unit) is provided to map virtual address spaces
+ of contexts into a single physical memory space.
+ Physical addresses are then used to index caches or branch predictors,
+ without including the context identifier across modules.
+\end_layout
+
+\begin_layout Standard
+The out-of-order pipeline modeling module defines and manages a few processor
+ structures such as decode buffers, reorder buffers, load store queues and
+ functional units.
+ And the pipeline stages defines the behavior of the configured multithreaded
+ multicore processor.
+\end_layout
+
+\begin_layout Standard
+Configuration specification and statistics output for the simulated entities
+ such as cores, threads and caches are implemented via XML-formatted I/O,
+ which is easy to use and machine-readable.
 \end_layout
 
 \begin_layout Section
-Performance Simulation
-\end_layout
-
-\begin_layout Standard
-Performance simulation encompasses the detailed simulation of out-of-order
- processor cores and multi-level memory hierarchies.
+Decoupled and Event-Driven Cycle-Accurate Simulation
 \end_layout
 
 \begin_layout Subsection
-Processor
+Concept 1: Interface-Based Separation of Structural and Behavioral Modeling
 \end_layout
 
 \begin_layout Standard
-As shown in Fig.
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:pipeline_arch"
-
-\end_inset
-
-, the simulated out-of-order pipeline is divided into five stages: fetch,
- decode/rename, issue, execute, and commit.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename processor.eps
-	display false
-	scale 30
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-Overview of the Simulated Out-of-Order Processor Pipeline
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:pipeline_arch"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-Cycle-Accurate Modeling of Pipeline Structures
-\end_layout
-
-\begin_layout Standard
-Flexim supports the mix of SMT and CMP simulation.
- Some processor structures are shared among threads within a processor core,
- and others are private to each thread.
-\end_layout
-
-\begin_layout Standard
-Flexim explicitly models the Reorder Buffer (
-\family typewriter
-ReorderBuffer
-\family default
-), the Issue Queue (
-\family typewriter
-IssueQueue
-\family default
-), the Load/Store Queue (
-\family typewriter
-LoadStoreQueue
-\family default
-), separate integer, floating-point and miscellaneous register files, register
- renaming, and the associated rename table.
-\end_layout
-
-\begin_layout Standard
-The reorder buffer is modeled as a FIFO buffer.
- Its entries are pushed during instruction 
-\family typewriter
-dispatch()
-\family default
- and are popped during instruction 
-\family typewriter
-commit()
-\family default
-.
+The modeling of computer architecture can be classified into two types of
+ modelings: structural modeling and behavioral modeling.
+ Structural modeling refers to the modeling of static structural elements
+ such as the internal structure of caches, whereas behavioral modeling refers
+ to the modeling of dynamic behavioral elements such as the cache replacement
+ policies and cache coherence protocols.
  
 \end_layout
 
 \begin_layout Standard
-The issue queue is modeled as an array of issue queue entries.
- Each issue queue entry (
-\family typewriter
-IssueQueueEntry
-\family default
-) can be in one of two states: either free(
-\family typewriter
-IssueQueueEntryState.FREE
-\family default
-) or already allocated(
-\family typewriter
-IssueQueueEntry.ALLOC
-\family default
-).
- Its entries are allocated at instruction 
-\family typewriter
-dispatch()
-\family default
- and are released at 
-\family typewriter
-issue()
-\family default
- and on branch mispredictions on 
-\family typewriter
-recoverReorderBuffer()
-\family default
-.
+The complexity of multicore components and their interactions make it very
+ hard to model the structural and behavioral aspects of modeling separately.
+ Existing simulators written in traditional C or C++ programming languages
+ inevitably makes the structural modeling elements are scattered among behaviora
+l modeling elements.
+ In other words, the structural modeling elements are entangled which means
+ that its code is intermixed with code that implements behavioral modeling
+ elements.
 \end_layout
 
 \begin_layout Standard
-The integer, floating point and miscellaneous physical register files are
- modeled separately as 
-\family typewriter
-intRegFile
-\family default
-, 
-\family typewriter
-fpRegFile
-\family default
- and 
-\family typewriter
-miscRegFile
-\family default
-, respectively.
- All of them contain an array of physical registers(
-\family typewriter
-PhysicalRegister
-\family default
-).
- Each of the physical registers can be in one of four states: 
-\end_layout
-
-\begin_layout Enumerate
-the register is free (
-\family typewriter
-PhysicalRegisterState.FREE
-\family default
-),
-\end_layout
-
-\begin_layout Enumerate
-the register has been allocated to an instruction but has not yet been written
- to (
-\family typewriter
-PhysicalRegisterState.ALLOC
-\family default
-),
-\end_layout
-
-\begin_layout Enumerate
-the register is allocated to an instruction and the value has been written
- (
-\family typewriter
-PhysicalRegisterState.W
-\family default
-B),
-\end_layout
-
-\begin_layout Enumerate
-the register is in the architectural state (
-\family typewriter
-PhysicalRegisterState.ARCH
-\family default
-).
-\end_layout
-
-\begin_layout Standard
-Physical registers are allocated at the 
-\family typewriter
-dispatch()
-\family default
- stage, and deallocated at 
-\family typewriter
-commit()
-\family default
- and during branch mispredictions in 
-\family typewriter
-recoverReorderBuffer()
-\family default
-.
-\end_layout
-
-\begin_layout Standard
-The integer, floating point and miscellaneous rename tables are modeled
- separately.
- They maintain the current mappings of each architectural register to a
- physical register.
-\end_layout
-
-\begin_layout Subsubsection
-Details of the Processor model and Implementation
-\end_layout
-
-\begin_layout Standard
-Threads within a core maintain separate program counters, but share the
- fetch unit and icache.
- Threads within a core share the available bandwidth in the front end including
- fetch, decode and rename.
- The time slice based fetch policy is implemented for the moment, more advanced
- policies such as icount is left for future work.
- Separate branch predictors are implemented per thread.
-\end_layout
-
-\begin_layout Standard
-Each thread maintains its own rename table because it has its own set of
- architectural registers.
- After renaming, instructions from all threads are dispatched into the shared
- issue queue.
-\end_layout
-
-\begin_layout Standard
-In the issue queue, instructions from all the threads participate in the
- instruction 
-\family typewriter
-wakeup()
-\family default
- process and compete for the issue bandwidth in 
-\family typewriter
-selection()
-\family default
-.
- Instructions that are selected for issue continue to perform register file
- accesses.
- All the physical register files are shared among the threads.
- After register file accesses are done, instructions begin execution on
- the functional units, which are also shared among the threads.
-\end_layout
-
-\begin_layout Standard
-Loads and stores access the shared dcache among the threads within a core.
- In order to maintain the correct orderings of memory accesses, the load/store
- queue (
-\family typewriter
-LoadStoreQueue
-\family default
-) is used.
- Separate load/store queue is maintained per thread, so that an unresolved
- address from one thread does not prevent loads in other threads from issuing.
-\end_layout
-
-\begin_layout Standard
-After execution, instructions write back to the register files.
- Commitment (or retirement) is done in order for each thread out of the
- re-order buffers (
-\family typewriter
-ReorderBuffer
-\family default
-s).
- Separate reorder buffers are maintained per thread.
- 
+In order to solve the aforementioned problem of scattering and tangling
+ of structural and behavioral aspects of architectural modeling, we use
+ interface-based design methodology to abstract the implementation of structural
+ elements, and use interfaces in place of concrete implementations of structural
+ elements in the implementation of behavioral elements.
 \end_layout
 
 \begin_layout Subsection
-Memory Hierarchy
+Concept 2: Cycle-Accurate Callback-Based Eventing
+\end_layout
+
+\begin_layout Standard
+As explained above, most Flexim modules implement an execution-driven simulation
+, as SimpleScalar does.
+ In such a model, function calls that activate some processor component
+ (e.g., a cache or predictor) have an interface that receives a set of parameters
+ and returns the latency needed to complete the access.
+ Nevertheless, there are some situations where this latency is not a determinist
+ic value and cannot be obtained in the instant when the function call is
+ performed.
+ Instead, it must be simulated cycle by cycle.
+\end_layout
+
+\begin_layout Standard
+This is the case of interconnects and caches.
+ In a generic topology, the delay of a message transference cannot be determined
+ when the message is injected, because it depends on the dynamic network
+ state.
+ In addition, this state depends on future message transferences, so it
+ cannot be computed unless advancing the simulation.
+\end_layout
+
+\begin_layout Standard
+Because a cache access in a multithread-multicore environment may cause
+ coherence messages transmitted across interconnection networks, the cache
+ access latency cannot be estimated prior to the network access.
+ In addition, the cache access latency can be affected by the internal state
+ of accessed cache blocks, which is dynamically changed by cache writes
+ and invalidates.
+ Thus, the cache module is also implemented with an event-driven model.
+ When the execution-driven simulator performs a cache access, it passes
+ the handle of a callback method that specifies the action to be performed
+ when the cache system completes the servicing of the cache access request.
+\end_layout
+
+\begin_layout Subsection
+Simulating Out-of-Order Cores
 \end_layout
 
 \begin_layout Subsubsection
-Internal Cache Structure and Cache Coherence
+Structural Modeling
 \end_layout
 
-\begin_layout Standard
-A two-level cache hierarchy is modeled for the moment.
- Cache coherence is enforced with the directory-based MESI protocol between
- the private level one caches owned by each core and the level two cache
- that shared among cores.
+\begin_layout Paragraph
+Physical Register File.
 \end_layout
 
-\begin_layout Standard
-Besides the data, tag, and state, a cache block has a corresponding directory
- entry that contains the owner and sharers information of the block.
- The geometry parameters of each cache in the memory hierarchy are configured
- via XML files.
- The cache subblock granularity is currently not supported but planned for
- future work.
- The LRU cache replacement policy is implemented for the moment, the implementat
-ions of more advanced policies are left as future work.
+\begin_layout Subparagraph
+Physical Register.
+\end_layout
+
+\begin_layout Paragraph
+Functional Unit Pool.
+\end_layout
+
+\begin_layout Subparagraph
+Functional Unit.
+\end_layout
+
+\begin_layout Paragraph
+Branch Predictors.
+\end_layout
+
+\begin_layout Paragraph
+Decode Buffer.
+\end_layout
+
+\begin_layout Subparagraph
+Decode Buffer Entry.
+\end_layout
+
+\begin_layout Paragraph
+Reorder Buffers.
+\end_layout
+
+\begin_layout Subparagraph
+Reorder Buffer Entry.
+\end_layout
+
+\begin_layout Paragraph
+Load Store Queues.
 \end_layout
 
 \begin_layout Subsubsection
-On-Chip Interconnect
+Behavioral Modeling
 \end_layout
 
-\begin_layout Standard
-Currently, constant-latency on-chip interconnect is modeled, the cycle-accurate
- simulation of on-chip interconnect is left as future work.
+\begin_layout Paragraph
+Physical Register Allocation and Deallocation.
+\end_layout
+
+\begin_layout Paragraph
+Functional Unit Acquisition and Release.
+\end_layout
+
+\begin_layout Paragraph
+The Five Pipeline Stages.
+\end_layout
+
+\begin_layout Enumerate
+Fetch
+\end_layout
+
+\begin_layout Enumerate
+Decode & Rename
+\end_layout
+
+\begin_layout Enumerate
+Dispatch
+\end_layout
+
+\begin_layout Enumerate
+Issue
+\end_layout
+
+\begin_layout Enumerate
+Commit
+\end_layout
+
+\begin_layout Subsection
+Simulating Multi-Level Cache Hierarchies
 \end_layout
 
 \begin_layout Subsubsection
-Interface to External DRAM Simulators
+Structural Modeling
 \end_layout
 
-\begin_layout Standard
-Currently, constant-latency DRAM access is modeled, the cycle-accurate simulatio
-n of on-chip interconnect is left as future work.
- The integration of DRAMSim with Flexim is planned.
+\begin_layout Paragraph
+Directory.
+\end_layout
+
+\begin_layout Subparagraph
+Directory Entry.
+\end_layout
+
+\begin_layout Paragraph
+Cache.
+\end_layout
+
+\begin_layout Subparagraph
+Cache Block.
+\end_layout
+
+\begin_layout Subparagraph
+Cache Set.
+\end_layout
+
+\begin_layout Subsubsection
+Behavioral Modeling
+\end_layout
+
+\begin_layout Paragraph
+Cache Replacement (LRU as an Example).
+\end_layout
+
+\begin_layout Paragraph
+Cache Coherence (Directory Based MESI as an Example).
 \end_layout
 
 \begin_layout Section
-Supporting Infrastructure
-\end_layout
-
-\begin_layout Standard
-There are various supporting modules aside the aforementioned main components
- to maintain the Flexim's reusability.
- 
-\end_layout
-
-\begin_layout Subsection
-Eventing and Callback Mechanisms
-\end_layout
-
-\begin_layout Standard
-In flexim, cycle-accurate simulation is driven by event signals per cycle.
- Generally speaking, an event can be any piece of code that is scheduled
- to execute at the specified time.
- This piece of code can be represented as a delegate in the D language.
- The delegate-based event queue (
-\family typewriter
-DelegateEventQueue
-\family default
-) is illustrated as below:
-\begin_inset listings
-lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
-inline false
-status open
-
-\begin_layout Plain Layout
-
-class DelegateEventQueue: EventProcessor {
-\end_layout
-
-\begin_layout Plain Layout
-
-  this() {
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-      
-\end_layout
-
-\begin_layout Plain Layout
-
-  void processEvents() {
-\end_layout
-
-\begin_layout Plain Layout
-
-    if(currentCycle in this.events) {
-\end_layout
-
-\begin_layout Plain Layout
-
-      foreach(event; this.events[currentCycle]) {
-\end_layout
-
-\begin_layout Plain Layout
-
-        event();
-\end_layout
-
-\begin_layout Plain Layout
-
-      }
-\end_layout
-
-\begin_layout Plain Layout
-
-      this.events.remove(currentCycle);
-\end_layout
-
-\begin_layout Plain Layout
-
-    }
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  void schedule(void delegate() event, ulong delay = 0) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    this.events[currentCycle + delay] ~= event;
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  void delegate()[][ulong] events;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The delegate-based callback mechanism is used extensively in the implementation
- of the MESI cache coherence protocol.
- This way, the code is clean and readable.
-\end_layout
-
-\begin_layout Subsection
-Categorized Logging Mechanism
-\end_layout
-
-\begin_layout Standard
-The logging component supports configurable logging functionalities that
- can facilitate development and even be useful after release.
- The code skeleton of the Logger class is shown as below:
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
-inline false
-status open
-
-\begin_layout Plain Layout
-
-class Logger {
-\end_layout
-
-\begin_layout Plain Layout
-
-  static this() {
-\end_layout
-
-\begin_layout Plain Layout
-
-    singleInstance = new Logger();
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  bool enabled(LogCategory category) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    return category in this.logSwitches && this.logSwitches[category];
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  string message(string caption, string text) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    return format("[%d] 
-\backslash
-t%s%s", currentCycle, 
-\end_layout
-
-\begin_layout Plain Layout
-
-      caption.endsWith("info") ? "" : "[" ~ caption ~ "] ", text);
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  void infof(LogCategory, T...)(LogCategory category, T args) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    debug {
-\end_layout
-
-\begin_layout Plain Layout
-
-      this.info(category, format(args));
-\end_layout
-
-\begin_layout Plain Layout
-
-    }
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  void info(LogCategory category, string text) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    debug {
-\end_layout
-
-\begin_layout Plain Layout
-
-      if(this.enabled(category)) {
-\end_layout
-
-\begin_layout Plain Layout
-
-        stdout.writeln(this.message(category ~ "|" ~ "info", text));
-\end_layout
-
-\begin_layout Plain Layout
-
-      }
-\end_layout
-
-\begin_layout Plain Layout
-
-    }
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-...
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  bool[LogCategory] logSwitches;
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  static Logger singleInstance;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-XML-Based Input/Output for Configurations and Statistics
-\end_layout
-
-\begin_layout Standard
-Extensible Markup Language (XML) is a standard and pervasive mechanism for
- representing structural data in a machine-readable and human-friendly way.
- Here XML-based configuration specification and statistics output are provided.
- For example, the following code shows how to serialize and deserialize
- a cache configuration using the provided XML I/O support:
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-lstparams "basicstyle={\footnotesize\ttfamily},frame=single,language=Java"
-inline false
-status open
-
-\begin_layout Plain Layout
-
-class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) { 
-\end_layout
-
-\begin_layout Plain Layout
-
-  override XMLConfig save(CacheConfig cacheConfig) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    XMLConfig xmlConfig = new XMLConfig("CacheConfig");
-\end_layout
-
-\begin_layout Plain Layout
-
-    
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["name"] = cacheConfig.name;
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["level"] = to!(string)(cacheConfig.level);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["numSets"] = to!(string)(cacheConfig.numSets);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["assoc"] = to!(string)(cacheConfig.assoc);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["blockSize"] = to!(string)(cacheConfig.blockSize);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["hitLatency"] = to!(string)(cacheConfig.hitLatency);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["missLatency"] = to!(string)(cacheConfig.missLatency);
-\end_layout
-
-\begin_layout Plain Layout
-
-    xmlConfig["policy"] = to!(string)(cacheConfig.policy);
-\end_layout
-
-\begin_layout Plain Layout
-
-    
-\end_layout
-
-\begin_layout Plain Layout
-
-    return xmlConfig;
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  override CacheConfig load(XMLConfig xmlConfig) {
-\end_layout
-
-\begin_layout Plain Layout
-
-    string name = xmlConfig["name"];
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint level = to!(uint)(xmlConfig["level"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint numSets = to!(uint)(xmlConfig["numSets"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint assoc = to!(uint)(xmlConfig["assoc"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint blockSize = to!(uint)(xmlConfig["blockSize"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint hitLatency = to!(uint)(xmlConfig["hitLatency"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    uint missLatency = to!(uint)(xmlConfig["missLatency"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-    CacheReplacementPolicy policy = cast(CacheReplacementPolicy) (
-\end_layout
-
-\begin_layout Plain Layout
-
-      xmlConfig["policy"]);
-\end_layout
-
-\begin_layout Plain Layout
-
-      
-\end_layout
-
-\begin_layout Plain Layout
-
-    CacheConfig cacheConfig = new CacheConfig(
-\end_layout
-
-\begin_layout Plain Layout
-
-      name, level, numSets, assoc, blockSize, hitLatency, missLatency, policy);
-\end_layout
-
-\begin_layout Plain Layout
-
-    
-\end_layout
-
-\begin_layout Plain Layout
-
-    return cacheConfig;
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  static this() {
-\end_layout
-
-\begin_layout Plain Layout
-
-    singleInstance = new CacheConfigXMLSerializer();
-\end_layout
-
-\begin_layout Plain Layout
-
-  }
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\end_layout
-
-\begin_layout Plain Layout
-
-  static CacheConfigXMLSerializer singleInstance;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Plotting and Table Generation for Experiments
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Section
-Evaluation, Limitations and Future Work
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsection
-Benchmark Evaluation
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsubsection
-Criteria
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsubsection
 Results
 \end_layout
 
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsection
-Comparison to Other Simulators
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsubsection
-Results
-\end_layout
-
-\begin_layout Standard
-
-\size footnotesize
-\color red
-(Pre-release, Documentation-in-Progress)
-\end_layout
-
-\begin_layout Subsection
-Limitations and Future Work
-\end_layout
-
-\begin_layout Standard
-Here are some of the limitations of Flexim.
- This list is not intended to be comprehensive, but rather aims to provide
- the user with an initial understanding of the capabilities of the Flexim
- simulation environment.
- These capabilities are subject to change in future releases.
+\begin_layout Section
+Conclusion
 \end_layout
 
 \begin_layout Itemize
-Only statically compiled MIPS32 binaries are supported by Flexim.
- Multi-ISA support and loading support of dynamically compiled programs
- are remained as future work.
+Further works
 \end_layout
 
+\begin_deeper
 \begin_layout Itemize
-The explicit modeling of Miss Status Holding Registers (MSHRs) is not implemente
-d and left as future work.
+Functional simulation: parallel workload support
 \end_layout
 
-\begin_layout Itemize
-Cycle-accurate on-chip interconnect and dram controller modeling is not
- implemented and left as future work.
+\end_deeper
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "/home/itecgo/research/refs_classfied/default"
+options "plain"
+
+\end_inset
+
+
 \end_layout
 
 \end_body
