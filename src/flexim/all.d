@@ -31,6 +31,32 @@ public import std.stdio;
 public import std.string;
 public import std.typecons;
 
+public import glade.Glade;
+
+public import glib.RandG;
+
+public import gobject.Value;
+
+public import gtk.AboutDialog;
+public import gtk.Builder;
+public import gtk.Button;
+public import gtk.CellRendererText;
+public import gtk.CheckButton;
+public import gtk.Label;
+public import gtk.ListStore;
+public import gtk.Main;
+public import gtk.MainWindow;
+public import gtk.MessageDialog;
+public import gtk.ScrolledWindow;
+public import gtk.TreeIter;
+public import gtk.TreePath;
+public import gtk.TreeModel;
+public import gtk.TreeView;
+public import gtk.TreeViewColumn;
+public import gtk.VBox;
+public import gtk.Widget;
+public import gtk.Window;
+
 public import flexim.cpu.bpred;
 public import flexim.cpu.instruction;
 public import flexim.cpu.registers;

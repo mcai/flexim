@@ -1,0 +1,36 @@
+GtkD is the Digital Mars D programing language OO wrapper for Gtk+.
+GtkD is release on the LGPL license with additional exceptions.
+
+Please view COPYING for GtkD's license.
+
+Requirements:
+-------------
+- Linux, Windows(2000, XP), or Mac
+- Gtk libs
+- dmd, gdc or ldc installation
+  (on your home directory on linux or the root directory on windows)
+optional:
+- OpenGL libs (mesa is fine on linux)
+- GtkGLext
+
+Who are you?
+------------
+
+If you want to write some wicked cool D and Gtk+ apps, grab the gtkD release 
+archive at dsource.org/projects/gtkd.
+
+If you want to tweak the automatic wrapper or help with it, use subversion...
+http://svn.dsource.org/projects/gtkd/trunk
+
+Installation:
+-------------
+The installation depends on the setup of your development environment.
+This means that to release your project you must include the gtkD lib
+on your deliverable or statically link to gtkD - please pay attention
+to the license.
+
+Compile the lib and the test programs:
+--------------------------------------
+To compile gtkD, please refer to the README of your choice.
+
+We HIGHLY recommend following README_DSSS and using dsss to compile.

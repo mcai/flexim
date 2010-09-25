@@ -5,6 +5,9 @@ DC = dmd
 # DCFLAGS = -w -wi
 # DCFLAGS = -release -O
 DCFLAGS = -debug -gc -w -wi
+
+DCFLAGS += -I/home/itecgo/Flexim2/refs/gtkD_trunk/src -L-Llib -L-ldl -L-lgtkd -L-lgtkdgl -L-lgtkdsv
+
 TARGET = build/$(EXECUTABLE)
 
 all: $(TARGET)
