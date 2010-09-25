@@ -187,7 +187,67 @@ Cycle-accurate callback-based eventing is used for modeling the behavioral
  simulator and the timing simulation modules.
 \end_layout
 
+\begin_layout Enumerate
+A common infrastructure that supports logging, eventing and XML-based IO
+ for configuration specification and statitistcs output that fits the needs
+ required by the experimentation process as illustrated in Fig.
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Simulation-Workflow"
+
+\end_inset
+
+.
+\end_layout
+
 \end_deeper
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename simulation_workflow.pdf
+	scale 38
+	BoundingBox 200bp 100bp 500bp 600bp
+	clip
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Simulation Workflow
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Simulation-Workflow"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 The rest of this technical report is structured as follows.
  Section 2 provides an overview of existing processor simulators and their
@@ -589,6 +649,72 @@ The last step is the initialization of the register file.
 \end_layout
 
 \begin_layout Subsection
+Functional Simulation and Detailed Simulation
+\end_layout
+
+\begin_layout Standard
+The relationship between Flexim modules used for functional simulation and
+ detailed simulation are illustrated in Fig.
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:functional_vs_timing_sinmulation"
+
+\end_inset
+
+.
+ The simulated workload and the system call emulation module provides the
+ input instruction stream to be executed by the functional simulation module.
+ And the functional simulation module feeds the execution flow information
+ to the timing simulation module, and the timing simulation module provides
+ feedback containing the requested timing information of instructions and
+ memory requests.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename simulated_component_interaction.pdf
+	scale 63
+	BoundingBox 75bp 210bp 725bp 450bp
+	clip
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+The relationship between workload, functional simulation and timing simulation.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:functional_vs_timing_sinmulation"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
 Functional Simulation
 \end_layout
 
@@ -661,7 +787,7 @@ Since Flexim simulates target applications, the underlying operating system
  the application sees the result of the system call.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Detailed Simulation
 \end_layout
 
@@ -686,7 +812,7 @@ The branch predictor implementation is based on Marss86.
 
 \begin_layout Standard
 The out-of-order pipeline modeling module defines and manages a few processor
- structures such as decode buffers, reorder buffers, load store queues and
+ structures such as decode buffers, reorder buffers, load/store queues and
  functional units.
  And the pipeline stages defines the behavior of the configured multithreaded
  multicore processor.
@@ -699,7 +825,71 @@ Configuration specification and statistics output for the simulated entities
 \end_layout
 
 \begin_layout Section
-Decoupled and Event-Driven Cycle-Accurate Simulation
+Decoupled and Event-Driven Cycle-Accurate Simulation of Multicore Architectures
+\end_layout
+
+\begin_layout Standard
+As shown in Fig.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Simulated-Multicore-Architecture"
+
+\end_inset
+
+, our simulated baseline multicore system design consists of two OoO cores,
+ a two-level cache hierarchy and a fixed-latency point-to-point on-chip
+ interconnect.
+ Both cache levels are lockup-free and store the state of outstanding requests
+ via callbacks.
+ Each of the private first-level split caches are currently implemented
+ as write-back, but should be write-through with a coalescing store buffer.
+ The shared second-level cache is write-back and maintains inclusion with
+ respect to the first-level cache.
+ Each cache maintains a on-chip directory.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename simulated_multicore_arch.pdf
+	scale 63
+	BoundingBox 28bp 242bp 570bp 580bp
+	clip
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Overview of the Simulated Multicore System
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:fig:Simulated-Multicore-Architecture"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -778,59 +968,61 @@ Simulating Out-of-Order Cores
 \end_layout
 
 \begin_layout Subsubsection
-Structural Modeling
-\end_layout
-
-\begin_layout Paragraph
-Physical Register File.
-\end_layout
-
-\begin_layout Subparagraph
-Physical Register.
-\end_layout
-
-\begin_layout Paragraph
-Functional Unit Pool.
-\end_layout
-
-\begin_layout Subparagraph
-Functional Unit.
-\end_layout
-
-\begin_layout Paragraph
-Branch Predictors.
-\end_layout
-
-\begin_layout Paragraph
-Decode Buffer.
-\end_layout
-
-\begin_layout Subparagraph
-Decode Buffer Entry.
-\end_layout
-
-\begin_layout Paragraph
-Reorder Buffers.
-\end_layout
-
-\begin_layout Subparagraph
-Reorder Buffer Entry.
-\end_layout
-
-\begin_layout Paragraph
-Load Store Queues.
-\end_layout
-
-\begin_layout Subsubsection
 Behavioral Modeling
 \end_layout
 
-\begin_layout Paragraph
-Physical Register Allocation and Deallocation.
+\begin_layout Standard
+Flexim supports the mix of SMT and CMP simulation.
+ As shown in Fig.
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:pipeline_arch"
+
+\end_inset
+
+, the simulated out-of-order pipeline is divided into five stages: 
+\family typewriter
+fetch
+\family default
+, 
+\family typewriter
+decode/rename/dispatch
+\family default
+, 
+\family typewriter
+issue
+\family default
+, 
+\family typewriter
+execute
+\family default
+, and 
+\family typewriter
+commit
+\family default
+.
+ The buffers between pipeline stages such as decode buffer (
+\family typewriter
+DecodeBuffer
+\family default
+), reorder buffer (
+\family typewriter
+ReorderBuffer
+\family default
+) and load/store queue (
+\family typewriter
+LoadStoreQueue
+\family default
+) are explicitly modeled.
 \end_layout
 
-\begin_layout Paragraph
-Functional Unit Acquisition and Release.
+\begin_layout Standard
+A set of parameters are provided to specify how the pipeline stages are
+ organized in a multithreaded design.
+ Stages can be shared among threads or private per thread.
+ Moreover, when a stage is shared, there must be an algorithm which schedules
+ a thread each cycle on the stage.
+ The modeled pipe stages are described briefly as below.
 \end_layout
 
 \begin_layout Paragraph
@@ -838,27 +1030,129 @@ The Five Pipeline Stages.
 \end_layout
 
 \begin_layout Enumerate
-Fetch
+Fetch.
+ The 
+\family typewriter
+fetch
+\family default
+ stage takes instructions from the L1 instruction cache and places them
+ into a decode buffer.
+ 
 \end_layout
 
 \begin_layout Enumerate
-Decode & Rename
+Decode, Rename & Dispatch.
+ The 
+\family typewriter
+decode/rename/dispatch
+\family default
+ stage takes instruction from a decode buffer, decodes them, maps architectural
+ register dependencies (
+\family typewriter
+RegisterDependency
+\family default
+) into allocated physical registers (
+\family typewriter
+PhysicalRegister
+\family default
+), assigns them a reorder buffer entry and places them into a ready queue
+ (
+\family typewriter
+ReadyQueue
+\family default
+) or a waiting queue (
+\family typewriter
+WaitingQueue
+\family default
+) depending on whether their input operands are available or not.
 \end_layout
 
 \begin_layout Enumerate
-Dispatch
+Issue.
+ Then, the 
+\family typewriter
+issue
+\family default
+ stage consumes the instructions from the ready queue and sends them to
+ the corresponding functional units, and the data cache is accessed for
+ memory instructions.
 \end_layout
 
 \begin_layout Enumerate
-Issue
+Execute.
+ During the 
+\family typewriter
+execute
+\family default
+ stage, the functional units operate and write their results into the register
+ file.
+ This stage is implicitly modeled in Flexim.
 \end_layout
 
 \begin_layout Enumerate
-Commit
+Commit.
+ Finally, the 
+\family typewriter
+commit
+\family default
+ stage retires instructions from the reorder buffer in the program order.
+ 
 \end_layout
 
-\begin_layout Subsection
-Simulating Multi-Level Cache Hierarchies
+\begin_layout Standard
+This architecture is analogous to the one modeled by the SimpleScalar tool
+ set, but uses a decode buffer, a reorder buffer and a few physical register
+ files to replace an integrated 
+\family typewriter
+Register Update Unit
+\family default
+ (RUU).
+ In the current implementation, the functional unit pool, physical register
+ files, ready queue, waiting queue are shared among threads in a processor
+ core; and the decode buffer, reorder buffer, and load/store queue are private
+ per thread.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename processor.eps
+	display false
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Overview of the Simulated Out-of-Order Processor Pipeline
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:pipeline_arch"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
@@ -866,23 +1160,284 @@ Structural Modeling
 \end_layout
 
 \begin_layout Paragraph
-Directory.
+Physical Register File and Rename Table.
 \end_layout
 
-\begin_layout Subparagraph
-Directory Entry.
+\begin_layout Standard
+The integer, floating point and miscellaneous physical register files (
+\family typewriter
+PhysicalRegisterFile
+\family default
+) are modeled separately.
+ All of them contain an array of physical registers (
+\family typewriter
+PhysicalRegister
+\family default
+s).
+ Each of the physical registers can be in one of four states:
+\end_layout
+
+\begin_layout Enumerate
+the physical register is free (
+\family typewriter
+PhysicalRegisterState.FREE
+\family default
+);
+\end_layout
+
+\begin_layout Enumerate
+the physical register has been allocated to an instruction but has not been
+ written to (
+\family typewriter
+PhysicalRegisterState.ALLOC
+\family default
+);
+\end_layout
+
+\begin_layout Enumerate
+the physical register has been allocated to an instruction and the value
+ has been written (
+\family typewriter
+PhysicalRegisterState.WB
+\family default
+);
+\end_layout
+
+\begin_layout Enumerate
+the physical register is in the architectural state (
+\family typewriter
+PhysicalRegisterState.ARCH
+\family default
+).
+\end_layout
+
+\begin_layout Standard
+Physical registers are allocated during instruction dispatch, and deallocated
+ during instruction commit and reorder buffer recovery when branch misprediction
+ is detected.
+\end_layout
+
+\begin_layout Standard
+The integer, floating point and miscellaneous rename tables are modeled
+ separately.
+ They maintain the current mappings of each architectural register to a
+ physical register.
+ Each thread maintains its own rename table because it has its own set of
+ architectural registers.
+\end_layout
+
+\begin_layout Paragraph
+Functional Unit Pool.
+\end_layout
+
+\begin_layout Standard
+The functional unit pool (
+\family typewriter
+FunctionalUnitPool
+\family default
+) is a collection of various categories of functional units (
+\family typewriter
+FunctionalUnit
+\family default
+s).
+ Each category has a few number of functional units (specified by 
+\family typewriter
+quantity
+\family default
+), and has a fixed issue latency (
+\family typewriter
+issueLat
+\family default
+) and execution latency (
+\family typewriter
+execLat
+\family default
+).
+ Each of the functional units can be one of two states (indicated by 
+\family typewriter
+busy
+\family default
+):
+\end_layout
+
+\begin_layout Enumerate
+the functional unit is free (
+\family typewriter
+busy
+\family default
+ is set to false);
+\end_layout
+
+\begin_layout Enumerate
+the functional unit has been allocated to execute an instruction (
+\family typewriter
+busy
+\family default
+ is set to true).
+\end_layout
+
+\begin_layout Standard
+Upon instruction issue, the funcitonal unit pool is queried to find a free
+ functional unit of the specified functional unit category (
+\family typewriter
+FunctionalUnitType
+\family default
+) for a ready instruction from the ready queue.
+ If a free functional unit is found, the instruction is issued.
+ Otherwise, the instruction is pushed back into the ready queue.
+\end_layout
+
+\begin_layout Paragraph
+Branch Predictors.
+\end_layout
+
+\begin_layout Standard
+Branch predictors provides the prediction of branch direction and targets.
+ The branch predictors in Flexim.
+ are modeled after Marss86.
+ Three kinds of branch predictors (interface 
+\family typewriter
+Bpred
+\family default
+) are implemented: the bimod predictor (
+\family typewriter
+BimodBpredDir
+\family default
+), the two level predictor (
+\family typewriter
+TwoLevelBpredDir
+\family default
+) and the combined predictor (
+\family typewriter
+TwoLevelBpredDir
+\family default
+).
+ Separate branch predictors are implemented per thread.
+\end_layout
+
+\begin_layout Paragraph
+Decode Buffer.
+\end_layout
+
+\begin_layout Standard
+The decode buffer is used as a FIFO queue between the instruction fetch
+ stage and the decode/rename/dispatch stage.
+\end_layout
+
+\begin_layout Paragraph
+Reorder Buffers.
+\end_layout
+
+\begin_layout Standard
+In order to maintain the correct ordering of the commtted instructions,
+ the reorder buffer is explicitly modeled as a FIFO (First-In-First-Out)
+ buffer.
+ Its entries (
+\family typewriter
+ReorderBufferEntry
+\family default
+) are pushed during instruction dispatch and are popped in the program order
+ during instruction commit.
+\end_layout
+
+\begin_layout Paragraph
+load/store queues.
+\end_layout
+
+\begin_layout Standard
+Loads and store access the L1 data cache shared among threads within a core.
+ In order to keep track of pending memory accesses, the load/store queue
+ (
+\family typewriter
+LoadStoreQueue
+\family default
+) is used.
+ Separate load/store queue is maintained per thread, so that an unresolved
+ address from one thread does not prevent loads in other threads from issuing.
+\end_layout
+
+\begin_layout Subsection
+Simulating Multi-Level Cache Hierarchies
+\end_layout
+
+\begin_layout Standard
+A two-level cache hierarchy is modeled for the moment.
+ Cache coherence is enforced with the directory-based MESI protocol between
+ the private level one caches owned by each core and the level two cache
+ that shared among cores.
+\end_layout
+
+\begin_layout Standard
+Currently, constant-latency on-chip interconnect is modeled, the cycle-accurate
+ simulation of on-chip interconnect and DRAM access is left as future work.
+ The integration of DRAMSim with Flexim is planned.
+\end_layout
+
+\begin_layout Subsubsection
+Structural Modeling
+\end_layout
+
+\begin_layout Standard
+Besides the data, tag, and state, a cache block has a corresponding directory
+ entry that contains the owner and sharers information of the block.
+ The geometry parameters of each cache in the memory hierarchy are configured
+ via XML files.
+ The cache subblock granularity is currently not supported but planned for
+ future work.
+ The LRU cache replacement policy is implemented for the moment, the implementat
+ions of more advanced policies are left as future work.
 \end_layout
 
 \begin_layout Paragraph
 Cache.
+ 
 \end_layout
 
-\begin_layout Subparagraph
-Cache Block.
+\begin_layout Standard
+Each cache (
+\family typewriter
+Cache
+\family default
+) can be partitioned into a number of sets (
+\family typewriter
+CacheSet
+\family default
+s), the number of sets in a cache is defined by the parameter 
+\family typewriter
+numSets
+\family default
+.
+ And each set can be partitioned further into a few blocks (
+\family typewriter
+CacheBlock
+\family default
+s), the number of bloks in a set is defined by the parameter 
+\family typewriter
+assoc
+\family default
+ (associativity).
+ And the cache replacement policy tries to select a victim cache block within
+ a set to evict when the requesting cache block is being brought from the
+ lower cache hierarchy.
 \end_layout
 
-\begin_layout Subparagraph
-Cache Set.
+\begin_layout Paragraph
+Directory.
+\end_layout
+
+\begin_layout Standard
+Each cache maintains its own directory (
+\family typewriter
+Dir
+\family default
+) which is a set of directory entries (
+\family typewriter
+DirEntry
+\family default
+s).
+ Each directory entry keeps the track of owner and sharer information for
+ the associated cache block or subblock, depending on the availability of
+ subblock modeling.
 \end_layout
 
 \begin_layout Subsubsection
@@ -890,19 +1445,83 @@ Behavioral Modeling
 \end_layout
 
 \begin_layout Paragraph
-Cache Replacement (LRU as an Example).
+Cache Coherence (Directory Based MESI as an Example).
 \end_layout
 
-\begin_layout Paragraph
-Cache Coherence (Directory Based MESI as an Example).
+\begin_layout Standard
+A directory based MESI cache coherence protocol running on a simple fixed-latenc
+y point-to-point interconnect is modeled for the moment.
+ the cache block state transition diagram is shown in Fig.
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Directory-based-MESI"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename mesi_dir_cc_protocol.pdf
+	scale 60
+	BoundingBox 60bp 80bp 700bp 580bp
+	clip
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Directory based MESI Cache Coherence
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Directory-based-MESI"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
 Results
 \end_layout
 
+\begin_layout Standard
+In progress.
+\end_layout
+
 \begin_layout Section
 Conclusion
+\end_layout
+
+\begin_layout Standard
+In progress.
 \end_layout
 
 \begin_layout Itemize
