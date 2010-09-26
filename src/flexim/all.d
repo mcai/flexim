@@ -31,10 +31,16 @@ public import std.stdio;
 public import std.string;
 public import std.typecons;
 
+public import gdk.Color;
+public import gdk.Drawable;
+public import gdk.Event;
+public import gdk.Rectangle;
+
 public import glade.Glade;
 
 public import glib.RandG;
 
+public import gobject.ObjectG;
 public import gobject.Value;
 
 public import gtk.AboutDialog;
@@ -42,12 +48,19 @@ public import gtk.Builder;
 public import gtk.Button;
 public import gtk.CellRendererText;
 public import gtk.CheckButton;
+public import gtk.DrawingArea;
+public import gtk.Frame;
+public import gtk.HBox;
+public import gtk.ImageMenuItem;
 public import gtk.Label;
 public import gtk.ListStore;
 public import gtk.Main;
 public import gtk.MainWindow;
+public import gtk.MenuItem;
 public import gtk.MessageDialog;
+public import gtk.ObjectGtk;
 public import gtk.ScrolledWindow;
+public import gtk.ToolButton;
 public import gtk.TreeIter;
 public import gtk.TreePath;
 public import gtk.TreeModel;
@@ -63,6 +76,9 @@ public import flexim.cpu.registers;
 
 public import flexim.cpu.ooo.common;
 public import flexim.cpu.ooo.pipelines;
+
+public import flexim.gui.builder;
+public import flexim.gui.widgets;
 
 public import flexim.io.logging;
 public import flexim.io.xml;
