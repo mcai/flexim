@@ -30,26 +30,116 @@ import cairo.Surface;
 
 import gtk.Timeout;
 
-class BuilderCanvas : public DrawingArea
-{
+void newDrawing(Context context, void delegate() del) {
+	context.save();
+	del();
+	context.restore();
+}
+
+abstract class BuilderCanvasObject {
+	this(double lineWidth) {
+		this.lineWidth = lineWidth;
+	}
+	
+	abstract void render(Context context);
+	
+	double lineWidth;
+}
+
+class CircleCanvasObject: BuilderCanvasObject {
+	this(double x, double y, double radius,  double lineWidth = 0.005) {
+		super(lineWidth);
+		
+		this.x = x;
+		this.y = y;
+		this.radius = radius;
+	}
+	
+	override void render(Context context) {
+		newDrawing(context,
+			{
+				context.arc(x, y, radius, 0, 2 * PI);
+		
+				context.setSourceColor(new Color(0xF7FBE5));
+				context.fillPreserve();
+
+				context.setSourceColor(new Color(0xFF0000));
+				context.setLineWidth(this.lineWidth);
+				context.setLineCap(cairo_line_cap_t.ROUND);
+				context.stroke();
+			});
+	}
+	
+	double x, y, radius;
+}
+
+class LineCanvasObject: BuilderCanvasObject {
+	this(double x, double y, double offsetX, double offsetY,  double lineWidth = 0.005) {
+		super(lineWidth);
+		
+		this.x = x;
+		this.y = y;
+		this.offsetX = offsetX;
+		this.offsetY = offsetY;
+	}
+	
+	override void render(Context context) {
+		newDrawing(context,
+			{
+				context.moveTo(x, y);
+				context.lineTo(x + offsetX, y + offsetY);
+				
+				context.setSourceColor(new Color(0xFF0000));
+				context.setLineWidth(this.lineWidth);
+				context.setLineCap(cairo_line_cap_t.ROUND);
+				context.stroke();
+			});
+	}
+	
+	double x, y, offsetX, offsetY;
+}
+
+class RectangleCanvasObject: BuilderCanvasObject {
+	this(double x, double y, double width, double height,  double lineWidth = 0.005) {
+		super(lineWidth);
+		
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+	}
+	
+	override void render(Context context) {
+		newDrawing(context,
+			{
+				context.rectangle(this.x, this.y, this.width, this.height);
+				
+				context.setSourceColor(new Color(0xEEE5F3));
+				context.fillPreserve();
+				
+				context.setSourceColor(new Color(0xFF0000));
+				context.setLineWidth(this.lineWidth);
+				context.setLineCap(cairo_line_cap_t.ROUND);
+				context.stroke();
+			});
+	}
+	
+	double x, y, width, height;
+}
+
+class BuilderCanvasBase: DrawingArea {
 	this()
 	{
 		this.addOnExpose(&this.exposeCallback);
 	}
-	
-	void newDrawing(Context context, void delegate() del) {
-		context.save();
-		del();
-		context.restore();
-	}
 
 	bool exposeCallback(GdkEventExpose* event, Widget widget)
 	{
-		if ( this.timeout is null )
+		if(this.timeout is null)
 		{
 			this.timeout = new Timeout( 1000, &onSecondElapsed, false );
 		}
-
+		
 		Drawable dr = this.getWindow();
 
 		int width;
@@ -57,117 +147,30 @@ class BuilderCanvas : public DrawingArea
 
 		dr.getSize(width, height);
 
-		Context cr = new Context(dr);
+		Context context = new Context(dr);
 
 		if(event !is null)
 		{
-			cr.rectangle(event.area.x, event.area.y, event.area.width, event.area.height);
-			cr.clip();
+			context.rectangle(event.area.x, event.area.y, event.area.width, event.area.height);
+			context.clip();
 		}
 
-		cr.scale(width, height);
-		cr.translate(0.5, 0.5);
-		cr.setLineWidth(m_lineWidth);
+		context.scale(width, height);
+		context.translate(0.5, 0.5);
+		context.setLineWidth(0.005);
 		
-		this.newDrawing(cr,
+		newDrawing(context,
 			{
-				cr.setSourceColor(new Color(0xADD8E6));
-				cr.paint();
+				context.setSourceColor(new Color(0xADD8E6));
+				context.paint();
 			});
-
-		/*this.newDrawing(cr, 
-			{
-				cr.setSourceRgba(0.3, 0.6, 0.2, 0.9);
-				cr.paint();
-			});
-
-		cr.arc(0, 0, m_radius, 0, 2 * PI);
-
-		this.newDrawing(cr,
-			{
-				cr.setSourceRgba(0.0, 0.0, 0.0, 0.8);
-				cr.fillPreserve();
-			});
-
-		this.newDrawing(cr, 
-			{
-				cr.setSourceRgba(1.0, 1.0, 1.0, 1.0);
-				cr.setLineWidth( m_lineWidth * 1.7);
-				cr.strokePreserve();
-				cr.clip();
-			});
-
-		for (int i = 0; i < 12; i++)
-		{
-			double inset = 0.07;
-
-			this.newDrawing(cr, 
-				{
-					cr.setSourceRgba(1.0, 1.0, 1.0, 1.0);
-					cr.setLineWidth( m_lineWidth * 0.25);
-					cr.setLineCap(cairo_line_cap_t.ROUND);
-	
-					if (i % 3 != 0)
-					{
-						inset *= 1.2;
-						cr.setLineWidth( m_lineWidth * 0.5 );
-					}
-	
-					cr.moveTo(
-						(m_radius - inset) * cos (i * PI / 6),
-						(m_radius - inset) * sin (i * PI / 6));
-					cr.lineTo (
-						m_radius * cos (i * PI / 6),
-						m_radius * sin (i * PI / 6));
-					cr.stroke();
-				});
+		
+		foreach(obj; this.objectsToDraw) {
+			obj.render(context);
 		}
 
-		d_time lNow;
-		string lNowString;
-
-		lNow = std.date.getUTCtime();
-		lNowString = std.date.toString(lNow);
-
-		Date timeinfo;
-		timeinfo.parse(lNowString);
-
-		double minutes = timeinfo.minute * PI / 30;
-		double hours = timeinfo.hour * PI / 6;
-		double seconds= timeinfo.second * PI / 30;
-
-		this.newDrawing(cr, 
-			{
-				cr.setLineCap(cairo_line_cap_t.ROUND);
-	
-				this.newDrawing(cr, 
-					{
-						cr.setLineWidth(m_lineWidth / 3);
-						cr.setSourceRgba(0.7, 0.7, 0.85, 0.8);
-						cr.moveTo(0, 0);
-						cr.lineTo(sin(seconds) * (m_radius * 0.8),
-							-cos(seconds) * (m_radius * 0.8));
-						cr.stroke();
-					});
-	
-				cr.setSourceRgba(0.712, 0.337, 0.117, 0.9);
-				cr.moveTo(0, 0);
-				cr.lineTo(sin(minutes + seconds / 60) * (m_radius * 0.7),
-					-cos(minutes + seconds / 60) * (m_radius * 0.7));
-				cr.stroke();
-	
-				cr.setSourceRgba(0.337, 0.612, 0.117, 0.9);
-				cr.moveTo(0, 0);
-				cr.lineTo(sin(hours + minutes / 12.0) * (m_radius * 0.4),
-					-cos(hours + minutes / 12.0) * (m_radius * 0.4));
-				cr.stroke();
-			});
-
-		cr.arc(0, 0, m_lineWidth / 3.0, 0, 2 * PI);
-		cr.fill();*/
-
-		delete cr;
-
+		context.destroy();
+		
 		return true;
 	}
 
@@ -194,9 +197,8 @@ class BuilderCanvas : public DrawingArea
 
 		return true;
 	}
-
-	double m_radius = 0.40;
-	double m_lineWidth = 0.065;
+	
+	BuilderCanvasObject[] objectsToDraw;
 
 	Timeout timeout;
 }

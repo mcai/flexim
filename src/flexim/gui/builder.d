@@ -23,13 +23,37 @@ module flexim.gui.builder;
 
 import flexim.all;
 
-T castFromGtkBuilderObject(T, K)(ObjectG obj) {
+T getBuilderObject(T, K)(ObjectG obj) {
 	obj.setData("GObject", null);
 	return new T(cast(K*)obj.getObjectGStruct());
 }
 
 T getBuilderObject(T, K)(Builder builder, string name) {
-	return castFromGtkBuilderObject!(T, K)(builder.getObject(name));
+	return getBuilderObject!(T, K)(builder.getObject(name));
+}
+
+class BuilderCanvas: BuilderCanvasBase {
+	this() {
+		this.initObjectsToDraw();
+	}
+	
+	void initObjectsToDraw() {
+		this.objectsToDraw ~= new CircleCanvasObject(0, 0, 0.4);
+		
+		double x = 0, y = 0;
+		double radius = 0.4;
+		
+		for(uint i = 0; i < 12; i++) {
+			double inset = (i % 3 == 0) ? 0.2 * radius : 0.1 * radius;
+			
+			this.objectsToDraw ~= new LineCanvasObject(x + (radius - inset) * cos(i * PI / 6),
+				y + (radius - inset) * sin(i * PI / 6),
+				inset * cos(i * PI / 6),
+				inset * sin(i * PI / 6));
+		}		
+		
+		this.objectsToDraw ~= new RectangleCanvasObject(-0.4, -0.4, 0.2, 0.3);
+	}
 }
 
 void guiActionNotImplemented(Window parent, string text) {
