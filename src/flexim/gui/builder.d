@@ -91,7 +91,9 @@ void mainGui(string[] args) {
 		});
 		
 	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
-	BuilderCanvas builderCanvas = new BuilderCanvas();
+	//BuilderCanvas builderCanvas = new BuilderCanvas();
+	//frameDrawing.add(builderCanvas);
+	PersonBoxTable builderCanvas = new PersonBoxTable();
 	frameDrawing.add(builderCanvas);
 	
 	mainWindow.showAll();

@@ -60,6 +60,7 @@ public import gtk.MenuItem;
 public import gtk.MessageDialog;
 public import gtk.ObjectGtk;
 public import gtk.ScrolledWindow;
+public import gtk.Table;
 public import gtk.ToolButton;
 public import gtk.TreeIter;
 public import gtk.TreePath;

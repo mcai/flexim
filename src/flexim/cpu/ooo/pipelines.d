@@ -560,7 +560,7 @@ class Thread {
 			
 			this.lastCommitCycle = Simulator.singleInstance.currentCycle;
 			
-			//logging.infof(LogCategory.DEBUG, "t%s one instruction committed (dynamicInst=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.name, 
+			//logging.infof(LogCategory.DEBUG, "t%d one instruction committed (dynamicInst=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.num, 
 			//	reorderBufferEntry.dynamicInst);
 		}
 	}
@@ -625,7 +625,7 @@ class Thread {
 			this.state = ThreadState.Halted;
 			this.core.processor.activeThreadCount--;
 			
-			assert(0); //TODO: should stop thread from running!!
+			//assert(0); //TODO: should stop thread from running!!
 		}
 		else {
 			assert(0);
