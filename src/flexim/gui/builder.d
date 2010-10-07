@@ -32,30 +32,6 @@ T getBuilderObject(T, K)(Builder builder, string name) {
 	return getBuilderObject!(T, K)(builder.getObject(name));
 }
 
-class BuilderCanvas: BuilderCanvasBase {
-	this() {
-		this.initObjectsToDraw();
-	}
-	
-	void initObjectsToDraw() {
-		this.objectsToDraw ~= new CircleCanvasObject(0, 0, 0.4);
-		
-		double x = 0, y = 0;
-		double radius = 0.4;
-		
-		for(uint i = 0; i < 12; i++) {
-			double inset = (i % 3 == 0) ? 0.2 * radius : 0.1 * radius;
-			
-			this.objectsToDraw ~= new LineCanvasObject(x + (radius - inset) * cos(i * PI / 6),
-				y + (radius - inset) * sin(i * PI / 6),
-				inset * cos(i * PI / 6),
-				inset * sin(i * PI / 6));
-		}		
-		
-		this.objectsToDraw ~= new RectangleCanvasObject(-0.4, -0.4, 0.2, 0.3);
-	}
-}
-
 void guiActionNotImplemented(Window parent, string text) {
 	MessageDialog d = new MessageDialog(parent, GtkDialogFlags.MODAL, MessageType.INFO, ButtonsType.OK, text);
 	d.run();
@@ -91,10 +67,13 @@ void mainGui(string[] args) {
 		});
 		
 	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
-	//BuilderCanvas builderCanvas = new BuilderCanvas();
-	//frameDrawing.add(builderCanvas);
-	PersonBoxTable builderCanvas = new PersonBoxTable();
-	frameDrawing.add(builderCanvas);
+	
+	DrawingElementCanvas canvas = new DrawingElementCanvas();
+	canvas.put(new RectangleElement("fuck pussy"), 0, 0);
+	canvas.put(new LineElement(400, 500), 100, 200);
+	canvas.put(new CircleElement("yiting"), 600, 500);
+	
+	frameDrawing.add(canvas);
 	
 	mainWindow.showAll();
 	

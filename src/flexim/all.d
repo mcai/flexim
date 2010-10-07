@@ -49,6 +49,7 @@ public import gtk.Button;
 public import gtk.CellRendererText;
 public import gtk.CheckButton;
 public import gtk.DrawingArea;
+public import gtk.Fixed;
 public import gtk.Frame;
 public import gtk.HBox;
 public import gtk.ImageMenuItem;
