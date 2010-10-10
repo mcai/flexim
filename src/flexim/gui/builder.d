@@ -67,11 +67,18 @@ void mainGui(string[] args) {
 		});
 		
 	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
-	
+
 	DrawingElementCanvas canvas = new DrawingElementCanvas();
-	canvas.put(new RectangleElement("fuck pussy"), 0, 0);
-	canvas.put(new LineElement(400, 500), 100, 200);
-	canvas.put(new CircleElement("yiting"), 600, 500);
+	
+	canvas.put(new CircleElement("Home", 30), 20, 30);
+
+	canvas.put(new RectangleElement("Root Node", 200, 50), 380, 50);
+	
+	for(uint i = 0; i < 4; i++) {
+		canvas.put(new RectangleElement(format("Child Node #%d", i), 200, 50), 50 + i * 220, 150);
+	}
+	
+	canvas.put(new LineElement(200, 300), 100, 200);
 	
 	frameDrawing.add(canvas);
 	

@@ -79,9 +79,7 @@ class DrawingElement: DrawingArea {
 }
 
 class CircleElement: DrawingElement {
-	this(string text, double radius = 50,
-		Color bgColor = new Color(185, 207, 231),
-		Color borderColor = new Color(32, 74, 135)) {
+	this(string text, double radius = 50, Color bgColor = new Color(185, 207, 231), Color borderColor = new Color(32, 74, 135)) {
 		this.text = text;
 		this.radius = radius;
 		this.bgColor = bgColor;
@@ -109,7 +107,7 @@ class CircleElement: DrawingElement {
 				context.setLineCap(cairo_line_cap_t.ROUND);
 				context.stroke();
 				
-				context.moveTo(10, 15);
+				context.moveTo(20, 30);
 				context.showText(format("%s", this));
 			});
 	
@@ -126,9 +124,7 @@ class CircleElement: DrawingElement {
 }
 
 class RectangleElement: DrawingElement {
-	this(string text, double width = 200, double height = 50,
-		Color bgColor = new Color(185, 207, 231),
-		Color borderColor = new Color(32, 74, 135)) {
+	this(string text, double width = 200, double height = 50, Color bgColor = new Color(185, 207, 231), Color borderColor = new Color(32, 74, 135)) {
 		this.text = text;
 		this.width = width;
 		this.height = height;
@@ -157,7 +153,7 @@ class RectangleElement: DrawingElement {
 				context.setLineCap(cairo_line_cap_t.ROUND);
 				context.stroke();
 				
-				context.moveTo(10, 15);
+				context.moveTo(20, 30);
 				context.showText(format("%s", this));
 			});
 		
@@ -207,5 +203,9 @@ class LineElement: DrawingElement {
 
 class DrawingElementCanvas: Fixed {
 	this() {
+	}
+	
+	void addNodes(T...)(T widgets) {
+		
 	}
 }

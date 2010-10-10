@@ -77,6 +77,12 @@ void mainConsole(string[] args) {
 }
 
 void main(string[] args) {
+	Main.init(args);
+	new Application();
+	Main.run();
+}
+
+void main1(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
 	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");

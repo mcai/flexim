@@ -48,10 +48,14 @@ public import gtk.Builder;
 public import gtk.Button;
 public import gtk.CellRendererText;
 public import gtk.CheckButton;
+public import gtk.ComboBox;
 public import gtk.DrawingArea;
+public import gtk.Expander;
+public import gtk.FileChooserDialog;
 public import gtk.Fixed;
 public import gtk.Frame;
 public import gtk.HBox;
+public import gtk.Image;
 public import gtk.ImageMenuItem;
 public import gtk.Label;
 public import gtk.ListStore;
@@ -59,9 +63,12 @@ public import gtk.Main;
 public import gtk.MainWindow;
 public import gtk.MenuItem;
 public import gtk.MessageDialog;
+public import gtk.Notebook;
 public import gtk.ObjectGtk;
 public import gtk.ScrolledWindow;
+public import gtk.SpinButton;
 public import gtk.Table;
+public import gtk.ToggleButton;
 public import gtk.ToolButton;
 public import gtk.TreeIter;
 public import gtk.TreePath;
@@ -78,6 +85,10 @@ public import flexim.cpu.registers;
 
 public import flexim.cpu.ooo.common;
 public import flexim.cpu.ooo.pipelines;
+
+public import flexim.graph.adt;
+public import flexim.graph.alg;
+public import flexim.graph.app;
 
 public import flexim.gui.builder;
 public import flexim.gui.widgets;
