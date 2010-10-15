@@ -23,10 +23,33 @@ module flexim.gui.graph;
 
 import flexim.all;
 
+import core.thread;
+
 import std.file;
 import std.getopt;
 import std.path;
-import core.thread;
+
+BenchmarkSuite[string] benchmarkSuites;
+ExperimentConfig[string] experimentConfigs;
+ExperimentStat[string] experimentStats;
+
+void preloadConfigsAndStats(void delegate(string text) del) {
+    foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
+    {
+    	del("Loading " ~ name);
+		benchmarkSuites[basename(name, ".xml")] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
+    }
+    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
+    {
+    	del("Loading " ~ name);
+		experimentConfigs[basename(name, ".config.xml")] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
+    }
+    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
+    {
+    	del("Loading " ~ name);
+		experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
+    }
+}
 
 import cairo.Context;
 
@@ -413,15 +436,9 @@ class GraphView : DrawingArea {
 	ImmutableTreeNode dragged, selected;
 }
 
-BenchmarkSuite[string] benchmarkSuites;
-ExperimentConfig[string] experimentConfigs;
-ExperimentStat[string] experimentStats;
-
 class VBoxViewButtonsList : VBox {	
 	this(GraphView graphView) {
 		super(false, 5);
-		
-		this.preloadConfigsAndStats();
 		
 		this.graphView = graphView;
 		
@@ -476,26 +493,32 @@ class VBoxViewButtonsList : VBox {
 		}
 		
 		this.packStart(this.boxBenchmarkSuites, false, false, 0);
-		packStart(new Label(""), false, false, 0);
+		this.packStart(new Label(""), false, false, 0);
 		this.packStart(this.boxExperiments, false, false, 0);
 	}
 
 	void buttonBenchmarkConfigViewClicked(Button button) {
 		BenchmarkSuite benchmarkSuite = benchmarkSuites[this.selectedBenchmarkSuiteName];
-		this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
-		this.graphView.redraw();
+		if(benchmarkSuite !is null) {
+			this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
+			this.graphView.redraw();
+		}
 	}
 
 	void buttonExperimentConfigViewClicked(Button button) {
 		ExperimentConfig experimentConfig = experimentConfigs[this.selectedExperimentName];
-		this.graphView.graph = new ExperimentConfigTree(experimentConfig);
-		this.graphView.redraw();
+		if(experimentConfig !is null) {
+			this.graphView.graph = new ExperimentConfigTree(experimentConfig);
+			this.graphView.redraw();
+		}
 	}
 
 	void buttonExperimentStatViewClicked(Button button) {
 		ExperimentStat experimentStat = experimentStats[this.selectedExperimentName];
-		this.graphView.graph = new ExperimentStatTree(experimentStat);
-		this.graphView.redraw();
+		if(experimentStat !is null) {
+			this.graphView.graph = new ExperimentStatTree(experimentStat);
+			this.graphView.redraw();
+		}
 	}
 
 	void buttonExperimentRunClicked(Button button) {
@@ -514,21 +537,6 @@ class VBoxViewButtonsList : VBox {
 		this.buttonExperimentRun.setSensitive(false);
 		this.buttonExperimentRun.setLabel("Simulating.. Please Wait");
 		threadRunExperiment.start();
-	}
-	
-	void preloadConfigsAndStats() {
-	    foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
-	    {
-			benchmarkSuites[basename(name, ".xml")] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
-	    }
-	    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
-	    {
-			experimentConfigs[basename(name, ".config.xml")] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
-	    }
-	    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
-	    {
-			experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
-	    }
 	}
 	
 	string selectedBenchmarkSuiteName() {

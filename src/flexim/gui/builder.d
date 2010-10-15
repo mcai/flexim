@@ -23,6 +23,8 @@ module flexim.gui.builder;
 
 import flexim.all;
 
+import gtk.Timeout;
+
 T getBuilderObject(T, K)(ObjectG obj) {
 	obj.setData("GObject", null);
 	return new T(cast(K*)obj.getObjectGStruct());
@@ -96,7 +98,26 @@ void mainGui(string[] args) {
 	VBox vboxCenterBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxCenterBottom");
 	vboxCenterBottom.packStart(tableTreeNodeProperties, true, true, 0);
 	
-	mainWindow.showAll();
+	Window splashScreen = getBuilderObject!(Window, GtkWindow)(builder, "splashScreen");
+	splashScreen.showAll();
+	
+	Label labelLoading = getBuilderObject!(Label, GtkLabel)(builder, "labelLoading");
+	
+	Timeout timeout = new Timeout(100, delegate bool ()
+		{
+			preloadConfigsAndStats((string text){
+				labelLoading.setLabel(text);
+
+				while(Main.eventsPending) {
+					Main.iterationDo(false);
+				}
+			});
+			splashScreen.hideAll();
+			
+			mainWindow.showAll();
+			
+			return false;
+		}, false);
 	
 	Main.run();
 }

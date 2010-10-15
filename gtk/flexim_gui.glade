@@ -408,7 +408,7 @@
     </child>
   </object>
   <object class="GtkWindow" id="splashScreen">
-    <property name="width_request">800</property>
+    <property name="width_request">600</property>
     <property name="height_request">400</property>
     <property name="title" translatable="yes">Flexim Integrated Simulation Environment</property>
     <property name="resizable">False</property>
@@ -430,6 +430,11 @@
           <object class="GtkLabel" id="label1">
             <property name="visible">True</property>
             <property name="label" translatable="yes">Flexim Integrated Simulation Environment</property>
+            <attributes>
+              <attribute name="weight" value="ultrabold"/>
+              <attribute name="stretch" value="ultra-condensed"/>
+              <attribute name="scale" value="1.500000"/>
+            </attributes>
           </object>
           <packing>
             <property name="position">1</property>
