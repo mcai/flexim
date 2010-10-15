@@ -26,7 +26,11 @@ import flexim.all;
 import std.path;
 import std.regexp;
 
-class Benchmark {
+interface PropertiesProvider {
+	string[string] properties();
+}
+
+class Benchmark : PropertiesProvider {
 	this(string title, string cwd, string exe, string argsLiteral, string stdin = null, string stdout = null, uint numThreads = 1) {
 		this.title = title;
 		this.cwd = cwd;
@@ -40,6 +44,20 @@ class Benchmark {
 	override string toString() {
 		return format("Benchmark[title=%s, cwd=%s, exe=%s, argsLiteral=%s, stdin=%s, stdout=%s, numThreads=%d]",
 			this.title, this.cwd, this.exe, this.argsLiteral, this.stdin, this.stdout, this.numThreads);
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["title"] = this.title;
+		props["cwd"] = this.cwd;
+		props["exe"] = this.exe;
+		props["argsLiteral"] = this.argsLiteral;
+		props["stdin"] = this.stdin;
+		props["stdout"] = this.stdout;
+		props["numThreads"] = to!(string)(this.numThreads);
+		
+		return props;
 	}
 	
 	string title;
@@ -58,7 +76,7 @@ class Benchmark {
 	BenchmarkSuite suite;
 }
 
-class BenchmarkSuite {	
+class BenchmarkSuite : PropertiesProvider {	
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
@@ -88,6 +106,15 @@ class BenchmarkSuite {
 	
 	static void saveXML(BenchmarkSuite benchmarkSuite, string cwd, string fileName) {
 		BenchmarkSuiteXMLFileSerializer.singleInstance.saveXML(benchmarkSuite, join(cwd, fileName));
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["title"] = this.title;
+		props["cwd"] = this.cwd;
+		
+		return props;
 	}
 	
 	string title;

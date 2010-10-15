@@ -68,7 +68,14 @@ enum ImmutableTreeNodeShape: string {
 
 class ImmutableTreeNode {
 	this(string text, ImmutableTreeNodeShape shape = ImmutableTreeNodeShape.CIRCLE) {
+		string[string] props;
+		this(text, props, shape);
+	}
+	
+	this(string text, string[string] properties, ImmutableTreeNodeShape shape = ImmutableTreeNodeShape.CIRCLE) {
 		this.text = text;
+		this.properties = properties;
+		
 		this.shape = shape;
 		
 		this.x = 0.0;
@@ -119,6 +126,7 @@ class ImmutableTreeNode {
 	}
 	
 	string text;
+	string[string] properties;
 	double x, y;
 	int size, drawSize;
 	bool selected;
@@ -338,6 +346,29 @@ class GraphView : DrawingArea {
 		this.addOnMotionNotify(&this.motionNotified);
 	}
 	
+	void addOnNodeDeselected(void delegate(ImmutableTreeNode node) del) {
+		this.nodeDeselectedListeners ~= del;
+	}
+	
+	void fireNodeDeselected(ImmutableTreeNode node) {
+		foreach(listener; this.nodeDeselectedListeners) {
+			listener(node);
+		}
+	}
+	
+	void addOnNodeSelected(void delegate(ImmutableTreeNode node) del) {
+		this.nodeSelectedListeners ~= del;
+	}
+	
+	void fireNodeSelected(ImmutableTreeNode node) {
+		foreach(listener; this.nodeSelectedListeners) {
+			listener(node);
+		}
+	}
+	
+	void delegate(ImmutableTreeNode node)[] nodeDeselectedListeners;
+	void delegate(ImmutableTreeNode node)[] nodeSelectedListeners;
+	
 	void redraw() {		
 		Drawable dr = this.getWindow();
 
@@ -378,11 +409,16 @@ class GraphView : DrawingArea {
 			}
 			
 			if(event.button == 1) {
-				if(this.selectedNode !is null) {
+				if(this.selectedNode !is null && this.selectedNode != v) {
 					this.selectedNode.selected = false;
+					this.fireNodeDeselected(this.selectedNode);
 				}
-				this.selectedNode = v;
-				this.selectedNode.selected = true;
+				
+				if(this.selectedNode != v) {
+					this.selectedNode = v;
+					this.selectedNode.selected = true;
+					this.fireNodeSelected(v);
+				}
 				
 				this.draggedNode = v;
 				
@@ -488,24 +524,24 @@ class VBoxViewButtonsList : VBox {
 	}
 
 	void buttonBenchmarkConfigViewClicked(Button button) {
-		BenchmarkSuite benchmarkSuite = benchmarkSuites[this.selectedBenchmarkSuiteName];
-		if(benchmarkSuite !is null) {
+		if(this.selectedBenchmarkSuiteName in benchmarkSuites) {
+			BenchmarkSuite benchmarkSuite = benchmarkSuites[this.selectedBenchmarkSuiteName];
 			this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
 			this.graphView.redraw();
 		}
 	}
 
 	void buttonExperimentConfigViewClicked(Button button) {
-		ExperimentConfig experimentConfig = experimentConfigs[this.selectedExperimentName];
-		if(experimentConfig !is null) {
+		if(this.selectedExperimentName in experimentConfigs) {
+			ExperimentConfig experimentConfig = experimentConfigs[this.selectedExperimentName];
 			this.graphView.graph = new ExperimentConfigTree(experimentConfig);
 			this.graphView.redraw();
 		}
 	}
 
 	void buttonExperimentStatViewClicked(Button button) {
-		ExperimentStat experimentStat = experimentStats[this.selectedExperimentName];
-		if(experimentStat !is null) {
+		if(this.selectedExperimentName in experimentStats) {
+			ExperimentStat experimentStat = experimentStats[this.selectedExperimentName];
 			this.graphView.graph = new ExperimentStatTree(experimentStat);
 			this.graphView.redraw();
 		}
@@ -547,26 +583,37 @@ class VBoxViewButtonsList : VBox {
 	GraphView graphView;
 }
 
-class TableTreeNodeProperties: Table {
-	this(int numProperties = 20) {
-		super(numProperties / 2, 2, true);
+class TreeViewNodeProperties : TreeView {
+	this() {		
+		GType[] types;
 		
-		this.numProperties = numProperties;
+		types ~= GType.STRING;
+		types ~= GType.STRING;
 		
-		for(int i = 0; i < this.numProperties; i++) {
-			HBox boxProperty = new HBox(false, 5);
-			
-			Label labelPropertyName = new Label(format("#%d Name: ", i));
-			Label labelPropertyValue = new Label("Value");
-			
-			boxProperty.packStart(labelPropertyName, true, false, 5);
-			boxProperty.packStart(labelPropertyValue, true, false, 5);
-			
-			this.attach(boxProperty);
-		}
+		this.listStore = new ListStore(types);
+		
+		this.appendColumn(new TreeViewColumn("Key", new CellRendererText(), "text", 0));
+		this.appendColumn(new TreeViewColumn("Value", new CellRendererText(), "text", 1));
+		
+		this.refreshList();
 	}
 	
-	int numProperties;
+	void refreshList() {
+		this.setModel(null);
+		this.listStore.clear();
+		
+		foreach(key, value; this.data) {
+			TreeIter iter = this.listStore.createIter();
+			
+			this.listStore.setValue(iter, 0, key);
+			this.listStore.setValue(iter, 1, value);
+		}
+		
+		this.setModel(this.listStore);
+	}
+	
+	string[string] data;	
+	ListStore listStore;
 }
 
 class BenchmarkSuiteConfigTree : ImmutableTree {
@@ -577,11 +624,11 @@ class BenchmarkSuiteConfigTree : ImmutableTree {
 	}
 	
 	override void doCreateGraph() {
-		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.benchmarkSuite.title, ImmutableTreeNodeShape.RECTANGLE);
+		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.benchmarkSuite.title, this.benchmarkSuite.properties, ImmutableTreeNodeShape.RECTANGLE);
 		this.nodes ~= nodeRoot;
 		
 		foreach(benchmarkTitle, benchmark; this.benchmarkSuite.benchmarks) {
-			ImmutableTreeNode nodeBenchmark = new ImmutableTreeNode(benchmark.title, ImmutableTreeNodeShape.RECTANGLE);
+			ImmutableTreeNode nodeBenchmark = new ImmutableTreeNode(benchmark.title, benchmark.properties, ImmutableTreeNodeShape.RECTANGLE);
 			this.nodes ~= nodeBenchmark;
 			
 			this.addEdge(nodeRoot, nodeBenchmark);
@@ -599,21 +646,21 @@ class ExperimentConfigTree : ImmutableTree {
 	}
 	
 	override void doCreateGraph() {
-		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.experimentConfig.title, ImmutableTreeNodeShape.RECTANGLE);
+		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.experimentConfig.title, this.experimentConfig.properties, ImmutableTreeNodeShape.RECTANGLE);
 		this.nodes ~= nodeRoot;
 		
 		foreach(simulationConfig; this.experimentConfig.simulationConfigs) {
-			ImmutableTreeNode nodeSimulationConfig = new ImmutableTreeNode(simulationConfig.title, ImmutableTreeNodeShape.RECTANGLE);
+			ImmutableTreeNode nodeSimulationConfig = new ImmutableTreeNode(simulationConfig.title, simulationConfig.properties, ImmutableTreeNodeShape.RECTANGLE);
 			this.nodes ~= nodeSimulationConfig;
 			
 			this.addEdge(nodeRoot, nodeSimulationConfig);
 			
-			ImmutableTreeNode nodeProcessorConfig = new ImmutableTreeNode("processor config", ImmutableTreeNodeShape.RECTANGLE);
+			ImmutableTreeNode nodeProcessorConfig = new ImmutableTreeNode("processor config", simulationConfig.processorConfig.properties, ImmutableTreeNodeShape.RECTANGLE);
 			this.nodes ~= nodeProcessorConfig;
 			
 			this.addEdge(nodeSimulationConfig, nodeProcessorConfig);
 			
-			ImmutableTreeNode nodeMemorySystemConfig = new ImmutableTreeNode("memory system config", ImmutableTreeNodeShape.RECTANGLE);
+			ImmutableTreeNode nodeMemorySystemConfig = new ImmutableTreeNode("memory system config", simulationConfig.memorySystemConfig.properties, ImmutableTreeNodeShape.RECTANGLE);
 			this.nodes ~= nodeMemorySystemConfig;
 
 			this.addEdge(nodeSimulationConfig, nodeMemorySystemConfig);
@@ -631,21 +678,21 @@ class ExperimentStatTree : ImmutableTree {
 	}
 	
 	override void doCreateGraph() {
-		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.experimentStat.title, ImmutableTreeNodeShape.RECTANGLE);
+		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.experimentStat.title, this.experimentStat.properties, ImmutableTreeNodeShape.RECTANGLE);
 		this.nodes ~= nodeRoot;
 		
 		foreach(simulationStat; this.experimentStat.simulationStats) {
-			ImmutableTreeNode nodeSimulationStat = new ImmutableTreeNode(simulationStat.title, ImmutableTreeNodeShape.RECTANGLE);
+			ImmutableTreeNode nodeSimulationStat = new ImmutableTreeNode(simulationStat.title, simulationStat.properties, ImmutableTreeNodeShape.RECTANGLE);
 			this.nodes ~= nodeSimulationStat;
 			
 			this.addEdge(nodeRoot, nodeSimulationStat);
 			
-			ImmutableTreeNode nodeProcessorStat = new ImmutableTreeNode("processor stat", ImmutableTreeNodeShape.RECTANGLE);
+			ImmutableTreeNode nodeProcessorStat = new ImmutableTreeNode("processor stat", simulationStat.processorStat.properties, ImmutableTreeNodeShape.RECTANGLE);
 			this.nodes ~= nodeProcessorStat;
 			
 			this.addEdge(nodeSimulationStat, nodeProcessorStat);
 			
-			ImmutableTreeNode nodeMemorySystemStat = new ImmutableTreeNode("memory system stat", ImmutableTreeNodeShape.RECTANGLE);
+			ImmutableTreeNode nodeMemorySystemStat = new ImmutableTreeNode("memory system stat", simulationStat.memorySystemStat.properties, ImmutableTreeNodeShape.RECTANGLE);
 			this.nodes ~= nodeMemorySystemStat;
 
 			this.addEdge(nodeSimulationStat, nodeMemorySystemStat);
@@ -721,13 +768,23 @@ void mainGui(string[] args) {
 	GraphView canvas = new GraphView();
 	frameDrawing.add(canvas);
 
-	VBoxViewButtonsList vboxViewButtonsList = new VBoxViewButtonsList(canvas);
 	VBox vboxLeft = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeft");
+		
+	VBoxViewButtonsList vboxViewButtonsList = new VBoxViewButtonsList(canvas);
 	vboxLeft.packStart(vboxViewButtonsList, false, false, 0);
-	
-	TableTreeNodeProperties tableTreeNodeProperties = new TableTreeNodeProperties();
+
 	VBox vboxCenterBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxCenterBottom");
-	vboxCenterBottom.packStart(tableTreeNodeProperties, true, true, 0);
+		
+	vboxCenterBottom.packStart(new Label("Properties"), false, false, 0);
+		
+	TreeViewNodeProperties treeViewNodeProperties = new TreeViewNodeProperties();
+	vboxCenterBottom.packStart(treeViewNodeProperties, true, true, 0);
+	
+	canvas.addOnNodeSelected(delegate void(ImmutableTreeNode node)
+		{
+			treeViewNodeProperties.data = node.properties;
+			treeViewNodeProperties.refreshList();
+		});
 	
 	Window splashScreen = getBuilderObject!(Window, GtkWindow)(builder, "splashScreen");
 	splashScreen.showAll();

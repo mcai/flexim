@@ -28,9 +28,17 @@ import std.path;
 abstract class Stat {
 }
 
-class ThreadStat {
+class ThreadStat: Stat, PropertiesProvider {
 	this(uint num) {
 		this.num = num;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		props["num"] = to!(string)(this.num);
+		props["totalInsts"] = to!(string)(this.totalInsts);
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -71,8 +79,14 @@ class ThreadStatXMLSerializer: XMLSerializer!(ThreadStat) {
 	static ThreadStatXMLSerializer singleInstance;
 }
 
-class ProcessorStat: Stat {
+class ProcessorStat: Stat, PropertiesProvider {
 	this() {
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -114,9 +128,36 @@ class ProcessorStatXMLSerializer: XMLSerializer!(ProcessorStat) {
 	static ProcessorStatXMLSerializer singleInstance;
 }
 
-class CacheStat: Stat {
+class CacheStat: Stat, PropertiesProvider {
 	this(string name) {
 		this.name = name;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["name"] = this.name;
+		props["accesses"] = to!(string)(this.accesses);
+		props["hits"] = to!(string)(this.hits);
+		props["evictions"] = to!(string)(this.evictions);
+		props["reads"] = to!(string)(this.reads);
+		props["blockingReads"] = to!(string)(this.blockingReads);
+		props["nonblockingReads"] = to!(string)(this.nonblockingReads);
+		props["readHits"] = to!(string)(this.readHits);
+		props["writes"] = to!(string)(this.writes);
+		props["blockingWrites"] = to!(string)(this.blockingWrites);
+		props["nonblockingWrites"] = to!(string)(this.nonblockingWrites);
+		props["writeHits"] = to!(string)(this.writeHits);
+		props["readRetries"] = to!(string)(this.readRetries);
+		props["writeRetries"] = to!(string)(this.writeRetries);
+		props["noRetryAccesses"] = to!(string)(this.noRetryAccesses);
+		props["noRetryHits"] = to!(string)(this.noRetryHits);
+		props["noRetryReads"] = to!(string)(this.noRetryReads);
+		props["noRetryReadHits"] = to!(string)(this.noRetryReadHits);
+		props["noRetryWrites"] = to!(string)(this.noRetryWrites);
+		props["noRetryWriteHits"] = to!(string)(this.noRetryWriteHits);
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -239,8 +280,17 @@ class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
 	static CacheStatXMLSerializer singleInstance;
 }
 
-class MemoryStat: Stat {
+class MemoryStat: Stat, PropertiesProvider {
 	this() {
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		props["accesses"] = to!(string)(this.accesses);
+		props["reads"] = to!(string)(this.reads);
+		props["writes"] = to!(string)(this.writes);
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -286,8 +336,14 @@ class MemoryStatXMLSerializer: XMLSerializer!(MemoryStat) {
 	static MemoryStatXMLSerializer singleInstance;
 }
 
-class MemorySystemStat: Stat {
+class MemorySystemStat: Stat, PropertiesProvider {
 	this() {
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -336,13 +392,22 @@ class MemorySystemStatXMLSerializer: XMLSerializer!(MemorySystemStat) {
 	static MemorySystemStatXMLSerializer singleInstance;
 }
 
-class SimulationStat {
+class SimulationStat: Stat, PropertiesProvider {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
 		
 		this.processorStat = new ProcessorStat();
 		this.memorySystemStat = new MemorySystemStat();
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		props["duration"] = to!(string)(this.duration);
+		props["title"] = this.title;
+		props["cwd"] = this.cwd;
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -398,7 +463,7 @@ class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
 	static SimulationStatXMLSerializer singleInstance;
 }
 
-class ExperimentStat {
+class ExperimentStat: Stat, PropertiesProvider {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
@@ -408,6 +473,14 @@ class ExperimentStat {
 		this.title = title;
 		this.cwd = cwd;
 		this.simulationStats = simulationStats;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		props["title"] = this.title;
+		props["cwd"] = this.cwd;
+		
+		return props;
 	}
 	
 	override string toString() {

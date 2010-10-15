@@ -28,12 +28,23 @@ import std.path;
 abstract class Config(ConfigT) {
 }
 
-class ContextConfig: Config!(ContextConfig) {	
+class ContextConfig: Config!(ContextConfig), PropertiesProvider {	
 	this(uint num, string binariesDir, string benchmarkSuiteName, string benchmarkName) {
 		this.num = num;
 		this.binariesDir = binariesDir;
 		this.benchmarkSuiteName = benchmarkSuiteName;
 		this.benchmarkName = benchmarkName;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["num"] = to!(string)(this.num);
+		props["binariesDir"] = this.binariesDir;
+		props["benchmarkSuiteName"] = this.benchmarkSuiteName;
+		props["benchmarkName"] = this.benchmarkName;
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -110,7 +121,7 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	static ContextConfigXMLSerializer singleInstance;
 }
 
-class ProcessorConfig: Config!(ProcessorConfig) {	
+class ProcessorConfig: Config!(ProcessorConfig), PropertiesProvider {	
 	this(ulong maxCycle, ulong maxInsts, ulong maxTime, uint numCores, uint numThreads) {
 		this.maxCycle = maxCycle;
 		this.maxInsts = maxInsts;
@@ -128,6 +139,18 @@ class ProcessorConfig: Config!(ProcessorConfig) {
 		}
 		
 		return processorConfig;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["maxCycle"] = to!(string)(this.maxCycle);
+		props["maxInsts"] = to!(string)(this.maxInsts);
+		props["maxTime"] = to!(string)(this.maxTime);
+		props["numCores"] = to!(string)(this.numCores);
+		props["numThreads"] = to!(string)(this.numThreads);
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -188,7 +211,7 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 	static ProcessorConfigXMLSerializer singleInstance;
 }
 
-class CacheConfig: Config!(CacheConfig) {
+class CacheConfig: Config!(CacheConfig), PropertiesProvider {
 	this(string name, uint level, uint numSets, uint assoc, uint blockSize, uint hitLatency, uint missLatency, CacheReplacementPolicy policy) {
 		this.name = name;
 		this.level = level;
@@ -198,6 +221,21 @@ class CacheConfig: Config!(CacheConfig) {
 		this.hitLatency = hitLatency;
 		this.missLatency = missLatency;
 		this.policy = policy;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["name"] = this.name;
+		props["level"] = to!(string)(this.level);
+		props["numSets"] = to!(string)(this.numSets);
+		props["assoc"] = to!(string)(this.assoc);
+		props["blockSize"] = to!(string)(this.blockSize);
+		props["hitLatency"] = to!(string)(this.hitLatency);
+		props["missLatency"] = to!(string)(this.missLatency);
+		props["policy"] = to!(string)(this.policy);
+			
+		return props;
 	}
 	
 	override string toString() {
@@ -256,9 +294,17 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	static CacheConfigXMLSerializer singleInstance;
 }
 
-class MemoryConfig: Config!(MemoryConfig) {
+class MemoryConfig: Config!(MemoryConfig), PropertiesProvider {
 	this(uint latency) {
 		this.latency = latency;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["latency"] = to!(string)(this.latency);
+			
+		return props;
 	}
 	
 	override string toString() {
@@ -295,8 +341,14 @@ class MemoryConfigXMLSerializer: XMLSerializer!(MemoryConfig) {
 	static MemoryConfigXMLSerializer singleInstance;
 }
 
-class MemorySystemConfig: Config!(MemorySystemConfig) {		
+class MemorySystemConfig: Config!(MemorySystemConfig), PropertiesProvider {		
 	this() {
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -345,10 +397,19 @@ class MemorySystemConfigXMLSerializer: XMLSerializer!(MemorySystemConfig) {
 	static MemorySystemConfigXMLSerializer singleInstance;
 }
 
-class SimulationConfig {
+class SimulationConfig: PropertiesProvider {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["title"] = this.title;
+		props["cwd"] = this.cwd;
+		
+		return props;
 	}
 	
 	override string toString() {
@@ -399,7 +460,7 @@ class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig) {
 	static SimulationConfigXMLSerializer singleInstance;
 }
 
-class ExperimentConfig {
+class ExperimentConfig: PropertiesProvider {
 	this(string title, string cwd) {
 		this.title = title;
 		this.cwd = cwd;
@@ -409,6 +470,15 @@ class ExperimentConfig {
 		this.title = title;
 		this.cwd = cwd;
 		this.simulationConfigs = simulationConfigs;
+	}
+	
+	override string[string] properties() {
+		string[string] props;
+		
+		props["title"] = this.title;
+		props["cwd"] = this.cwd;
+		
+		return props;
 	}
 	
 	override string toString() {
