@@ -84,18 +84,17 @@ void mainGui(string[] args) {
 		});
 		
 	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
+	
+	GraphView canvas = new GraphView();
+	frameDrawing.add(canvas);
 
-	VBoxViewButtonsList vboxViewButtonsList = new VBoxViewButtonsList();
+	VBoxViewButtonsList vboxViewButtonsList = new VBoxViewButtonsList(canvas);
 	VBox vboxLeft = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeft");
 	vboxLeft.packStart(vboxViewButtonsList, false, false, 0);
 	
 	TableTreeNodeProperties tableTreeNodeProperties = new TableTreeNodeProperties();
 	VBox vboxCenterBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxCenterBottom");
 	vboxCenterBottom.packStart(tableTreeNodeProperties, true, true, 0);
-	
-	GraphView canvas = new GraphView();
-	
-	frameDrawing.add(canvas);
 	
 	mainWindow.showAll();
 	
