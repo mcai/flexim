@@ -88,13 +88,6 @@ public import flexim.cpu.registers;
 public import flexim.cpu.ooo.common;
 public import flexim.cpu.ooo.pipelines;
 
-public import flexim.graph.adt;
-public import flexim.graph.alg;
-public import flexim.graph.app;
-
-public import flexim.gui.builder;
-public import flexim.gui.graph;
-
 public import flexim.io.logging;
 public import flexim.io.xml;
 
@@ -121,6 +114,7 @@ public import flexim.mem.tm.transaction;
 
 public import flexim.sim.benchmark;
 public import flexim.sim.configs;
+public import flexim.sim.ide;
 public import flexim.sim.simulations;
 public import flexim.sim.simulator;
 public import flexim.sim.stats;

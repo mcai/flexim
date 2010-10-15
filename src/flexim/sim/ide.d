@@ -1,5 +1,5 @@
 /*
- * flexim/gui/graph.d
+ * flexim/sim/ide.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.gui.graph;
+module flexim.sim.ide;
 
 import flexim.all;
 
@@ -29,6 +29,8 @@ import std.file;
 import std.getopt;
 import std.path;
 
+import gtk.Timeout;
+
 BenchmarkSuite[string] benchmarkSuites;
 ExperimentConfig[string] experimentConfigs;
 ExperimentStat[string] experimentStats;
@@ -36,17 +38,17 @@ ExperimentStat[string] experimentStats;
 void preloadConfigsAndStats(void delegate(string text) del) {
     foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
     {
-    	del("Loading " ~ name);
+    	del("Loading benchmark config: " ~ basename(name, ".xml") ~ "...");
 		benchmarkSuites[basename(name, ".xml")] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
     }
     foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
     {
-    	del("Loading " ~ name);
+    	del("Loading experiment config: " ~ basename(name, ".config.xml") ~ "...");
 		experimentConfigs[basename(name, ".config.xml")] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
     }
     foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
     {
-    	del("Loading " ~ name);
+    	del("Loading experiment stat: " ~ basename(name, ".stat.xml") ~ "...");
 		experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
     }
 }
@@ -196,28 +198,8 @@ abstract class ImmutableTree {
 		v2.parentEdge = e;
 	}
 	
-	void createBinaryTreeEdges() {		
-		foreach(i, v; this.vertices) {
-			int otherVertexIndex = i * 2;
-			
-			if(otherVertexIndex + 1 > this.vertices.length - 1) {
-				break;
-			}
-			else {
-				this.addEdge(this.vertices[i], this.vertices[otherVertexIndex + 1]);
-			}
-			
-			if(otherVertexIndex + 2 > this.vertices.length - 1) {
-				break;
-			}
-			else {
-				this.addEdge(this.vertices[i], this.vertices[otherVertexIndex + 2]);
-			}
-		}
-	}
-	
-	ImmutableTreeNode getVertexByPosition(double x, double y) {
-		foreach(v; this.vertices) {
+	ImmutableTreeNode getNodeByPosition(double x, double y) {
+		foreach(v; this.nodes) {
 			if(x >= v.x - v.drawSize &&
 				x <= v.x + v.drawSize &&
 				y >= v.y - v.drawSize &&
@@ -234,7 +216,7 @@ abstract class ImmutableTree {
 			return;
 		}
 		
-		foreach(v; this.vertices) {
+		foreach(v; this.nodes) {
 			v.x += x;
 			v.y += y;
 		}
@@ -263,17 +245,17 @@ abstract class ImmutableTree {
 			e.expose(context);
 		}
 		
-		foreach(v; this.vertices) {
+		foreach(v; this.nodes) {
 			v.expose(context);
 		}
 	}
 	
-	int indexOf(Vertex v) {
-		return this.vertices.indexOf(v);
+	int indexOf(ImmutableTreeNode v) {
+		return this.nodes.indexOf(v);
 	}
 	
 	void inorderTraversal(void delegate(ImmutableTreeNode, int) del) {
-		this.inorderTraversal(this.vertices[0], 0, del);
+		this.inorderTraversal(this.nodes[0], 0, del);
 	}
 	
 	void inorderTraversal(ImmutableTreeNode rootNode, int level, void delegate(ImmutableTreeNode, int) del) {
@@ -293,8 +275,8 @@ abstract class ImmutableTree {
 		
 		str ~= format("ImmutableTree[width=%d, height=%d, wall=%s]\n", this.width, this.height, this.wall);
 		
-		str ~= "vertices:\n";
-		foreach(i, v; this.vertices) {
+		str ~= "nodes:\n";
+		foreach(i, v; this.nodes) {
 			str ~= format("[%d] %s\n", i, v);
 		}
 		
@@ -306,7 +288,7 @@ abstract class ImmutableTree {
 		return str;
 	}
 	
-	ImmutableTreeNode[] vertices;
+	ImmutableTreeNode[] nodes;
 	ImmutableTreeEdge[] edges;
 	int width, height;
 	bool wall;
@@ -390,19 +372,19 @@ class GraphView : DrawingArea {
 	
 	bool buttonPressed(GdkEventButton* event, Widget widget) {
 		if(this.graph !is null) {
-			ImmutableTreeNode v = this.graph.getVertexByPosition(event.x, event.y);
+			ImmutableTreeNode v = this.graph.getNodeByPosition(event.x, event.y);
 			if(v is null) {
 				return false;
 			}
 			
 			if(event.button == 1) {
-				if(this.selected !is null) {
-					this.selected.selected = false;
+				if(this.selectedNode !is null) {
+					this.selectedNode.selected = false;
 				}
-				this.selected = v;
-				this.selected.selected = true;
+				this.selectedNode = v;
+				this.selectedNode.selected = true;
 				
-				this.dragged = v;
+				this.draggedNode = v;
 				
 				this.queueDraw();
 			}
@@ -413,7 +395,7 @@ class GraphView : DrawingArea {
 	
 	bool buttonReleased(GdkEventButton* event, Widget widget) {
 		if(this.graph !is null) {
-			this.dragged = null;
+			this.draggedNode = null;
 			
 			this.queueDraw();
 		}
@@ -422,9 +404,9 @@ class GraphView : DrawingArea {
 	
 	bool motionNotified(GdkEventMotion* event, Widget widget) {
 		if(this.graph !is null) {
-			if(this.dragged !is null) {
-				this.dragged.x = event.x;
-				this.dragged.y = event.y;
+			if(this.draggedNode !is null) {
+				this.draggedNode.x = event.x;
+				this.draggedNode.y = event.y;
 				this.queueDraw();
 			}
 		}
@@ -433,7 +415,7 @@ class GraphView : DrawingArea {
 	}
 	
 	ImmutableTree graph;
-	ImmutableTreeNode dragged, selected;
+	ImmutableTreeNode draggedNode, selectedNode;
 }
 
 class VBoxViewButtonsList : VBox {	
@@ -459,32 +441,21 @@ class VBoxViewButtonsList : VBox {
 		}
 		
 		with(this.comboBoxBenchmarkSuites = new ComboBox()) {
-		    foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
-		    {
-				appendText(basename(name, ".xml"));
-		    }
-			setActive(0);
 		}
 		
 		with(this.boxBenchmarkSuites = new VBox(false, 5)) {
-			packStart(new Label("Benchmark Browser"), false, false, 0);
-			packStart(new HSeparator(), true, true, 0);
 			packStart(new Label("Please select a benchmark suite:"), false, false, 0);
 			packStart(this.comboBoxBenchmarkSuites, true, true, 0);
 			packStart(this.buttonBenchmarkConfigView, true, true, 0);
 		}
 		
+		Frame frameBenchmarkSuites = new Frame("Benchmark Suites");
+		frameBenchmarkSuites.add(this.boxBenchmarkSuites);
+		
 		with(this.comboBoxExperiments = new ComboBox()) {
-		    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
-		    {
-				appendText(basename(name, ".config.xml"));
-		    }
-			setActive(0);
 		}
 		
 		with(this.boxExperiments = new VBox(false, 5)) {
-			packStart(new Label("Experiment Browser"), false, false, 0);
-			packStart(new HSeparator(), true, true, 0);
 			packStart(new Label("Please select an experiment:"), false, false, 0);
 			packStart(this.comboBoxExperiments, true, true, 0);
 			packStart(this.buttonExperimentConfigView, true, true, 0);
@@ -492,9 +463,28 @@ class VBoxViewButtonsList : VBox {
 			packStart(this.buttonExperimentRun, true, true, 0);
 		}
 		
-		this.packStart(this.boxBenchmarkSuites, false, false, 0);
+		Frame frameExperiments = new Frame("Experiments");
+		frameExperiments.add(this.boxExperiments);
+		
+		this.packStart(frameBenchmarkSuites, false, false, 0);
 		this.packStart(new Label(""), false, false, 0);
-		this.packStart(this.boxExperiments, false, false, 0);
+		this.packStart(frameExperiments, false, false, 0);
+	}
+	
+	void refillComboBoxItems() {
+		with(this.comboBoxBenchmarkSuites) {
+			foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
+				appendText(benchmarkSuiteTitle);
+			}
+			setActive(0);
+		}
+		
+		with(this.comboBoxExperiments) {
+			foreach(experimentTitle, experimentConfig; experimentConfigs) {
+				appendText(experimentTitle);
+			}
+			setActive(0);
+		}
 	}
 
 	void buttonBenchmarkConfigViewClicked(Button button) {
@@ -588,11 +578,11 @@ class BenchmarkSuiteConfigTree : ImmutableTree {
 	
 	override void doCreateGraph() {
 		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.benchmarkSuite.title, ImmutableTreeNodeShape.RECTANGLE);
-		this.vertices ~= nodeRoot;
+		this.nodes ~= nodeRoot;
 		
 		foreach(benchmarkTitle, benchmark; this.benchmarkSuite.benchmarks) {
 			ImmutableTreeNode nodeBenchmark = new ImmutableTreeNode(benchmark.title, ImmutableTreeNodeShape.RECTANGLE);
-			this.vertices ~= nodeBenchmark;
+			this.nodes ~= nodeBenchmark;
 			
 			this.addEdge(nodeRoot, nodeBenchmark);
 		}
@@ -610,21 +600,21 @@ class ExperimentConfigTree : ImmutableTree {
 	
 	override void doCreateGraph() {
 		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.experimentConfig.title, ImmutableTreeNodeShape.RECTANGLE);
-		this.vertices ~= nodeRoot;
+		this.nodes ~= nodeRoot;
 		
 		foreach(simulationConfig; this.experimentConfig.simulationConfigs) {
 			ImmutableTreeNode nodeSimulationConfig = new ImmutableTreeNode(simulationConfig.title, ImmutableTreeNodeShape.RECTANGLE);
-			this.vertices ~= nodeSimulationConfig;
+			this.nodes ~= nodeSimulationConfig;
 			
 			this.addEdge(nodeRoot, nodeSimulationConfig);
 			
 			ImmutableTreeNode nodeProcessorConfig = new ImmutableTreeNode("processor config", ImmutableTreeNodeShape.RECTANGLE);
-			this.vertices ~= nodeProcessorConfig;
+			this.nodes ~= nodeProcessorConfig;
 			
 			this.addEdge(nodeSimulationConfig, nodeProcessorConfig);
 			
 			ImmutableTreeNode nodeMemorySystemConfig = new ImmutableTreeNode("memory system config", ImmutableTreeNodeShape.RECTANGLE);
-			this.vertices ~= nodeMemorySystemConfig;
+			this.nodes ~= nodeMemorySystemConfig;
 
 			this.addEdge(nodeSimulationConfig, nodeMemorySystemConfig);
 		}
@@ -642,25 +632,126 @@ class ExperimentStatTree : ImmutableTree {
 	
 	override void doCreateGraph() {
 		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.experimentStat.title, ImmutableTreeNodeShape.RECTANGLE);
-		this.vertices ~= nodeRoot;
+		this.nodes ~= nodeRoot;
 		
 		foreach(simulationStat; this.experimentStat.simulationStats) {
 			ImmutableTreeNode nodeSimulationStat = new ImmutableTreeNode(simulationStat.title, ImmutableTreeNodeShape.RECTANGLE);
-			this.vertices ~= nodeSimulationStat;
+			this.nodes ~= nodeSimulationStat;
 			
 			this.addEdge(nodeRoot, nodeSimulationStat);
 			
 			ImmutableTreeNode nodeProcessorStat = new ImmutableTreeNode("processor stat", ImmutableTreeNodeShape.RECTANGLE);
-			this.vertices ~= nodeProcessorStat;
+			this.nodes ~= nodeProcessorStat;
 			
 			this.addEdge(nodeSimulationStat, nodeProcessorStat);
 			
 			ImmutableTreeNode nodeMemorySystemStat = new ImmutableTreeNode("memory system stat", ImmutableTreeNodeShape.RECTANGLE);
-			this.vertices ~= nodeMemorySystemStat;
+			this.nodes ~= nodeMemorySystemStat;
 
 			this.addEdge(nodeSimulationStat, nodeMemorySystemStat);
 		}
 	}
 	
 	ExperimentStat experimentStat;
+}
+
+T getBuilderObject(T, K)(ObjectG obj) {
+	obj.setData("GObject", null);
+	return new T(cast(K*)obj.getObjectGStruct());
+}
+
+T getBuilderObject(T, K)(Builder builder, string name) {
+	return getBuilderObject!(T, K)(builder.getObject(name));
+}
+
+void guiActionNotImplemented(Window parent, string text) {
+	MessageDialog d = new MessageDialog(parent, GtkDialogFlags.MODAL, MessageType.INFO, ButtonsType.OK, text);
+	d.run();
+	d.destroy();
+}
+
+void mainGui(string[] args) {
+	Main.init(args);
+	
+	Builder builder = new Builder();
+	builder.addFromFile("../gtk/flexim_gui.glade");
+	builder.connectSignals(null); 
+	
+	Window mainWindow = getBuilderObject!(Window, GtkWindow)(builder, "mainWindow");
+	mainWindow.addOnDestroy(delegate void(ObjectGtk)
+		{
+			Main.exit(0);
+		});
+	
+	ToolButton toolButtonNew = getBuilderObject!(ToolButton, GtkToolButton)(builder, "toolButtonNew");
+	toolButtonNew.addOnClicked(delegate void(ToolButton toolButton)
+		{
+			writeln(toolButtonNew.getTooltipText());
+		});
+	
+	ImageMenuItem menuItemHelpAbout = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(builder, "menuItemHelpAbout");
+	menuItemHelpAbout.addOnActivate(delegate void(MenuItem)
+		{
+			string[] authors, documenters, artists;
+	
+			authors ~= "Min Cai (itecgo@163.com)";
+			documenters ~= "Min Cai (itecgo@163.com)";
+			artists ~= "Min Cai (itecgo@163.com)";
+			
+			AboutDialog aboutDialog = new AboutDialog();
+			aboutDialog.setProgramName("Flexim ISE");
+			aboutDialog.setVersion("0.1 Prelease");
+			aboutDialog.setCopyright("Copyright (c) 2010 Min Cai <itecgo@163.com>");
+			//aboutDialog.setLogo(this.icon.getPixbuf);
+			aboutDialog.setAuthors(authors);
+			aboutDialog.setDocumenters(documenters);
+			aboutDialog.setArtists(artists);
+			aboutDialog.setLicense("GPL (GNU General Public License)\nsee http://www.gnu.org/licenses/gpl.html");
+			aboutDialog.setWebsite("http://github.com/mcai/flexim");
+			aboutDialog.setComments("Flexim Integrated Simulation Enviroment (ISE) is a flexible and rich architectural simulator written in D.");
+			
+			
+			if (aboutDialog.run() == GtkResponseType.GTK_RESPONSE_CANCEL) {
+				aboutDialog.destroy();
+			}
+		});
+		
+	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
+	
+	GraphView canvas = new GraphView();
+	frameDrawing.add(canvas);
+
+	VBoxViewButtonsList vboxViewButtonsList = new VBoxViewButtonsList(canvas);
+	VBox vboxLeft = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeft");
+	vboxLeft.packStart(vboxViewButtonsList, false, false, 0);
+	
+	TableTreeNodeProperties tableTreeNodeProperties = new TableTreeNodeProperties();
+	VBox vboxCenterBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxCenterBottom");
+	vboxCenterBottom.packStart(tableTreeNodeProperties, true, true, 0);
+	
+	Window splashScreen = getBuilderObject!(Window, GtkWindow)(builder, "splashScreen");
+	splashScreen.showAll();
+	
+	Label labelLoading = getBuilderObject!(Label, GtkLabel)(builder, "labelLoading");
+	
+	Timeout timeout = new Timeout(100, delegate bool ()
+		{
+			preloadConfigsAndStats((string text){
+				labelLoading.setLabel(text);
+
+				while(Main.eventsPending) {
+					Main.iterationDo(false);
+				}
+			});
+			
+			vboxViewButtonsList.refillComboBoxItems();
+			
+			splashScreen.hideAll();
+			
+			mainWindow.showAll();
+			
+			return false;
+		}, false);
+	
+	Main.run();
 }

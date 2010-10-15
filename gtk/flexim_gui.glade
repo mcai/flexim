@@ -5,7 +5,7 @@
   <object class="GtkWindow" id="mainWindow">
     <property name="width_request">900</property>
     <property name="height_request">600</property>
-    <property name="title" translatable="yes">Flexim Integrated Simulation Environment</property>
+    <property name="title" translatable="yes">Flexim Integrated Simulation Environment (ISE)</property>
     <property name="window_position">center</property>
     <property name="icon_name">applications-system</property>
     <child>
@@ -380,6 +380,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">2</property>
                   </packing>
                 </child>
@@ -410,6 +411,7 @@
   <object class="GtkWindow" id="splashScreen">
     <property name="width_request">600</property>
     <property name="height_request">400</property>
+    <property name="border_width">1</property>
     <property name="title" translatable="yes">Flexim Integrated Simulation Environment</property>
     <property name="resizable">False</property>
     <property name="window_position">center</property>
@@ -429,7 +431,7 @@
         <child>
           <object class="GtkLabel" id="label1">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">Flexim Integrated Simulation Environment</property>
+            <property name="label" translatable="yes">Flexim Integrated Simulation Environment (ISE)</property>
             <attributes>
               <attribute name="weight" value="ultrabold"/>
               <attribute name="stretch" value="ultra-condensed"/>

@@ -4,11 +4,6 @@ src/flexim/cpu/instruction.d
 src/flexim/cpu/ooo/common.d
 src/flexim/cpu/ooo/pipelines.d
 src/flexim/cpu/registers.d
-src/flexim/graph/adt.d
-src/flexim/graph/alg.d
-src/flexim/graph/app.d
-src/flexim/gui/builder.d
-src/flexim/gui/graph.d
 src/flexim/io/logging.d
 src/flexim/io/xml.d
 src/flexim/isa/basic.d
@@ -32,6 +27,7 @@ src/flexim/mem/timing/sequencer.d
 src/flexim/mem/tm/transaction.d
 src/flexim/sim/benchmark.d
 src/flexim/sim/configs.d
+src/flexim/sim/ide.d
 src/flexim/sim/simulations.d
 src/flexim/sim/simulator.d
 src/flexim/sim/stats.d
