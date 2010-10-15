@@ -2,9 +2,9 @@
 <ExperimentStat title="WCETBench-fir-2x1" cwd="../stats/experiments">
    <SimulationStat title="WCETBench-fir-2x1" cwd="../stats/experiments" duration="179">
       <ProcessorStat>
-         <ThreadStat totalInsts="2686">
+         <ThreadStat totalInsts="2686" num="0">
          </ThreadStat>
-         <ThreadStat totalInsts="2684">
+         <ThreadStat totalInsts="2684" num="1">
          </ThreadStat>
       </ProcessorStat>
       <MemorySystemStat numCaches="5">

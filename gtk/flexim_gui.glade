@@ -407,4 +407,44 @@
       </object>
     </child>
   </object>
+  <object class="GtkWindow" id="splashScreen">
+    <property name="width_request">800</property>
+    <property name="height_request">400</property>
+    <property name="title" translatable="yes">Flexim Integrated Simulation Environment</property>
+    <property name="resizable">False</property>
+    <property name="window_position">center</property>
+    <property name="type_hint">splashscreen</property>
+    <property name="decorated">False</property>
+    <child>
+      <object class="GtkVBox" id="vbox2">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkLabel" id="label3">
+            <property name="visible">True</property>
+          </object>
+          <packing>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label1">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">Flexim Integrated Simulation Environment</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="labelLoading">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">Loading.. Please wait.</property>
+          </object>
+          <packing>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
 </interface>

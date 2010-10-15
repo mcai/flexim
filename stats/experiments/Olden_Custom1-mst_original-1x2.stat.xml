@@ -2,9 +2,9 @@
 <ExperimentStat title="Olden_Custom1-mst_original-1x2" cwd="../stats/experiments">
    <SimulationStat title="Olden_Custom1-mst_original-1x2" cwd="../stats/experiments" duration="53789">
       <ProcessorStat>
-         <ThreadStat totalInsts="2316082">
+         <ThreadStat totalInsts="2316082" num="0">
          </ThreadStat>
-         <ThreadStat totalInsts="2316082">
+         <ThreadStat totalInsts="2316082" num="1">
          </ThreadStat>
       </ProcessorStat>
       <MemorySystemStat numCaches="5">

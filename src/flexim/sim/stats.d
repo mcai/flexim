@@ -48,6 +48,7 @@ class ThreadStatXMLSerializer: XMLSerializer!(ThreadStat) {
 	override XMLConfig save(ThreadStat threadStat) {
 		XMLConfig xmlConfig = new XMLConfig("ThreadStat");
 		
+		xmlConfig["num"] = to!(string)(threadStat.num);
 		xmlConfig["totalInsts"] = to!(string)(threadStat.totalInsts);
 			
 		return xmlConfig;
@@ -410,7 +411,7 @@ class ExperimentStat {
 	}
 	
 	override string toString() {
-		return format("ExperimentStat[title=%s, cwd=%s, simulationConfigs.length=%d]", this.title, this.cwd, this.simulationStats.length);
+		return format("ExperimentStat[title=%s, cwd=%s, simulationStats.length=%d]", this.title, this.cwd, this.simulationStats.length);
 	}
 	
 	static ExperimentStat loadXML(string cwd, string fileName) {

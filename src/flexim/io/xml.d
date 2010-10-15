@@ -44,6 +44,7 @@ class XMLConfig {
 	}
 	
 	string opIndex(string index) {
+		assert(index in this.attributes, index);
 		return this.attributes[index];
 	}
 

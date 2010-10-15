@@ -49,25 +49,24 @@ class ImmutableTreeNode {
 		this.x = 0.0;
 		this.y = 0.0;
 		
-		this.size = 40;
-		this.drawSize = this.size / 6;
+		this.size = 60;
+		this.drawSize = this.size / 3;
 
-		this.locked = false;
 		this.selected = false;
 	}
 	
 	void expose(Context context) {
 		if(this.shape == ImmutableTreeNodeShape.RECTANGLE) {
-			context.moveTo(this.x + this.drawSize + 15, this.y + 5);
+			context.moveTo(this.x + this.drawSize, this.y + 2);
 			context.showText(format("%s", this.text));
 				
 			newDrawing(context,
 				{
-					context.setSourceColor(new Color(0x6287E7));
-					context.rectangle(this.x - this.drawSize - 10,
-						this.y - this.drawSize - 10,
-						this.drawSize * 2 + 20,
-						this.drawSize * 2 + 20);
+					context.setSourceColor(new Color(this.selected ? 0x36539C: 0x6287E7));
+					context.rectangle(this.x - this.drawSize/2,
+						this.y - this.drawSize/2,
+						this.drawSize,
+						this.drawSize);
 					context.fillPreserve();
 					context.setSourceColor(new Color(0x000000));
 					context.stroke();
@@ -90,14 +89,14 @@ class ImmutableTreeNode {
 	}
 	
 	override string toString() {
-		return format("%s[x=%f, y=%f, size=%d, drawSize=%d, locked=%s, selected=%s, childrenEdges.length=%d]",
-			this.text, this.x, this.y, this.size, this.drawSize, this.locked, this.selected, this.childrenEdges.length);
+		return format("%s[x=%f, y=%f, size=%d, drawSize=%d, selected=%s, childrenEdges.length=%d]",
+			this.text, this.x, this.y, this.size, this.drawSize, this.selected, this.childrenEdges.length);
 	}
 	
 	string text;
 	double x, y;
 	int size, drawSize;
-	bool locked, selected;
+	bool selected;
 	
 	ImmutableTreeNodeShape shape;
 	
@@ -374,7 +373,15 @@ class GraphView : DrawingArea {
 			}
 			
 			if(event.button == 1) {
+				if(this.selected !is null) {
+					this.selected.selected = false;
+				}
+				this.selected = v;
+				this.selected.selected = true;
+				
 				this.dragged = v;
+				
+				this.queueDraw();
 			}
 		}
 		
@@ -384,6 +391,8 @@ class GraphView : DrawingArea {
 	bool buttonReleased(GdkEventButton* event, Widget widget) {
 		if(this.graph !is null) {
 			this.dragged = null;
+			
+			this.queueDraw();
 		}
 		return false;
 	}
@@ -404,9 +413,15 @@ class GraphView : DrawingArea {
 	ImmutableTreeNode dragged, selected;
 }
 
+BenchmarkSuite[string] benchmarkSuites;
+ExperimentConfig[string] experimentConfigs;
+ExperimentStat[string] experimentStats;
+
 class VBoxViewButtonsList : VBox {	
 	this(GraphView graphView) {
 		super(false, 5);
+		
+		this.preloadConfigsAndStats();
 		
 		this.graphView = graphView;
 		
@@ -466,26 +481,21 @@ class VBoxViewButtonsList : VBox {
 	}
 
 	void buttonBenchmarkConfigViewClicked(Button button) {
-		core.thread.Thread thread = new core.thread.Thread(
-			{
-				BenchmarkSuite benchmarkSuite = BenchmarkSuite.loadXML("../configs/benchmarks", this.selectedBenchmarkSuiteName ~ ".xml");
-				this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
-				this.graphView.redraw();
-			});
-		thread.start();
+		BenchmarkSuite benchmarkSuite = benchmarkSuites[this.selectedBenchmarkSuiteName];
+		this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
+		this.graphView.redraw();
 	}
 
 	void buttonExperimentConfigViewClicked(Button button) {
-		core.thread.Thread thread = new core.thread.Thread(
-			{
-				ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", this.selectedExperimentName ~ ".config.xml");
-				this.graphView.graph = new ExperimentConfigTree(experimentConfig);
-				this.graphView.redraw();
-			});
-		thread.start();
+		ExperimentConfig experimentConfig = experimentConfigs[this.selectedExperimentName];
+		this.graphView.graph = new ExperimentConfigTree(experimentConfig);
+		this.graphView.redraw();
 	}
 
 	void buttonExperimentStatViewClicked(Button button) {
+		ExperimentStat experimentStat = experimentStats[this.selectedExperimentName];
+		this.graphView.graph = new ExperimentStatTree(experimentStat);
+		this.graphView.redraw();
 	}
 
 	void buttonExperimentRunClicked(Button button) {
@@ -504,6 +514,21 @@ class VBoxViewButtonsList : VBox {
 		this.buttonExperimentRun.setSensitive(false);
 		this.buttonExperimentRun.setLabel("Simulating.. Please Wait");
 		threadRunExperiment.start();
+	}
+	
+	void preloadConfigsAndStats() {
+	    foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
+	    {
+			benchmarkSuites[basename(name, ".xml")] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
+	    }
+	    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
+	    {
+			experimentConfigs[basename(name, ".config.xml")] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
+	    }
+	    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
+	    {
+			experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
+	    }
 	}
 	
 	string selectedBenchmarkSuiteName() {
@@ -598,4 +623,36 @@ class ExperimentConfigTree : ImmutableTree {
 	}
 	
 	ExperimentConfig experimentConfig;
+}
+
+class ExperimentStatTree : ImmutableTree {
+	this(ExperimentStat experimentStat) {
+		this.experimentStat = experimentStat;
+		
+		this.createGraph();
+	}
+	
+	override void doCreateGraph() {
+		ImmutableTreeNode nodeRoot = new ImmutableTreeNode(this.experimentStat.title, ImmutableTreeNodeShape.RECTANGLE);
+		this.vertices ~= nodeRoot;
+		
+		foreach(simulationStat; this.experimentStat.simulationStats) {
+			ImmutableTreeNode nodeSimulationStat = new ImmutableTreeNode(simulationStat.title, ImmutableTreeNodeShape.RECTANGLE);
+			this.vertices ~= nodeSimulationStat;
+			
+			this.addEdge(nodeRoot, nodeSimulationStat);
+			
+			ImmutableTreeNode nodeProcessorStat = new ImmutableTreeNode("processor stat", ImmutableTreeNodeShape.RECTANGLE);
+			this.vertices ~= nodeProcessorStat;
+			
+			this.addEdge(nodeSimulationStat, nodeProcessorStat);
+			
+			ImmutableTreeNode nodeMemorySystemStat = new ImmutableTreeNode("memory system stat", ImmutableTreeNodeShape.RECTANGLE);
+			this.vertices ~= nodeMemorySystemStat;
+
+			this.addEdge(nodeSimulationStat, nodeMemorySystemStat);
+		}
+	}
+	
+	ExperimentStat experimentStat;
 }
