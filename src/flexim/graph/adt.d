@@ -114,11 +114,11 @@ class Quadrant {
 	}
 	
 	double centerX() {
-		return this.x + (this.length / 2);
+		return this.x + this.length / 2;
 	}
 	
 	double centerY() {
-		return this.y + (this.length / 2);
+		return this.y + this.length / 2;
 	}
 	
 	double x, y;
@@ -323,14 +323,8 @@ class Graph {
 		}
 	}
 	
-	int getVertexIndex(Vertex v) {
-		foreach(i, ver; this.vertices) {
-			if(ver == v) {
-				return i;
-			}
-		}
-		
-		return -1;
+	int indexOf(Vertex v) {
+		return this.vertices.indexOf(v);
 	}
 	
 	Vertex[] vertices;

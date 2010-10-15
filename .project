@@ -11,12 +11,12 @@
 			</arguments>
 		</buildCommand>
 		<buildCommand>
-			<name>mmrnmhrm.core.deebuilder</name>
+			<name>org.dsource.ddt.ide.core.deebuilder</name>
 			<arguments>
 			</arguments>
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>mmrnmhrm.core.nature</nature>
+		<nature>org.dsource.ddt.ide.core.nature</nature>
 	</natures>
 </projectDescription>

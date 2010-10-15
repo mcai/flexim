@@ -121,3 +121,11 @@ class Experiment: Reproducible {
 	
 	Simulation[] simulations;
 }
+
+void runExperiment(string experimentName) {	
+	logging.infof(LogCategory.SIMULATOR, "runExperiment(experimentName=%s)", experimentName);
+	
+	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".config.xml");
+	Experiment experiment = new Experiment(experimentConfig);
+	experiment.execute();
+}

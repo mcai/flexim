@@ -28,40 +28,6 @@ import std.getopt;
 import std.path;
 
 import std.concurrency, std.stdio, std.typecons;
- 
-int main11() {
-    auto tid = spawn(&foo); // create an actor object
- 
-    foreach(i; 0 .. 10)
-        tid.send(i);    // send some integers
-    tid.send(1.0f);     // send a float
-    tid.send("hello");  // send a string
-    tid.send(thisTid);  // send an object (Tid)
- 
-    receive( (int x) {  writeln("Main thread receives message: ", x);  });
- 
-    return 0;
-}
- 
-void foo() {
-    bool cont = true;
- 
-    while (cont) {
-        receive(  // pattern matching
-            (int msg) 	{ writeln("int receive: ", msg); },  // int type
-            (Tid sender){ cont = false; sender.send(-1); },  // object type
-            (Variant v)	{ writeln("huh?"); }  // any type
-        );
-    }
-}
-
-void runExperiment(string experimentName) {	
-	logging.infof(LogCategory.SIMULATOR, "runExperiment(experimentName=%s)", experimentName);
-	
-	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".config.xml");
-	Experiment experiment = new Experiment(experimentConfig);
-	experiment.execute();
-}
 
 void mainConsole(string[] args) {
 	//string experimentName = "WCETBench-fir-1x1";
@@ -77,17 +43,9 @@ void mainConsole(string[] args) {
 }
 
 void main(string[] args) {
-	Main.init(args);
-	new Application();
-	Main.run();
-}
-
-void main1(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
 	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
-	
-	//main11();
 	
 	bool useBuilder = true;
 	

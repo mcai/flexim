@@ -60,25 +60,40 @@ void mainGui(string[] args) {
 	ImageMenuItem menuItemHelpAbout = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(builder, "menuItemHelpAbout");
 	menuItemHelpAbout.addOnActivate(delegate void(MenuItem)
 		{
-			AboutDialog aboutDialog = getBuilderObject!(AboutDialog, GtkAboutDialog)(builder, "aboutDialogFleximBuilder");
+			string[] authors, documenters, artists;
+	
+			authors ~= "Min Cai (itecgo@163.com)";
+			documenters ~= "Min Cai (itecgo@163.com)";
+			artists ~= "Min Cai (itecgo@163.com)";
 			
-			aboutDialog.run();
-			aboutDialog.hideAll();
+			AboutDialog aboutDialog = new AboutDialog();
+			aboutDialog.setProgramName("Flexim Integrated Simulation Enviroment");
+			aboutDialog.setVersion("0.1 Prelease");
+			aboutDialog.setCopyright("Copyright (c) 2010 Min Cai <itecgo@163.com>");
+			//aboutDialog.setLogo(this.icon.getPixbuf);
+			aboutDialog.setAuthors(authors);
+			aboutDialog.setDocumenters(documenters);
+			aboutDialog.setArtists(artists);
+			aboutDialog.setLicense("GPL (GNU General Public License)\nsee http://www.gnu.org/licenses/gpl.html");
+			aboutDialog.setWebsite("http://github.com/mcai/flexim");
+			aboutDialog.setComments("A flexible and rich architectural simulator written in D.");
+			
+			if(aboutDialog.run() == GtkResponseType.GTK_RESPONSE_CANCEL) {
+				aboutDialog.destroy();
+			}
 		});
 		
 	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
 
-	DrawingElementCanvas canvas = new DrawingElementCanvas();
+	VBoxViewButtonsList vboxViewButtonsList = new VBoxViewButtonsList();
+	VBox vboxLeft = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeft");
+	vboxLeft.packStart(vboxViewButtonsList, false, false, 0);
 	
-	canvas.put(new CircleElement("Home", 30), 20, 30);
-
-	canvas.put(new RectangleElement("Root Node", 200, 50), 380, 50);
+	TableTreeNodeProperties tableTreeNodeProperties = new TableTreeNodeProperties();
+	VBox vboxCenterBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxCenterBottom");
+	vboxCenterBottom.packStart(tableTreeNodeProperties, true, true, 0);
 	
-	for(uint i = 0; i < 4; i++) {
-		canvas.put(new RectangleElement(format("Child Node #%d", i), 200, 50), 50 + i * 220, 150);
-	}
-	
-	canvas.put(new LineElement(200, 300), 100, 200);
+	GraphView canvas = new GraphView();
 	
 	frameDrawing.add(canvas);
 	

@@ -55,6 +55,7 @@ public import gtk.FileChooserDialog;
 public import gtk.Fixed;
 public import gtk.Frame;
 public import gtk.HBox;
+public import gtk.HSeparator;
 public import gtk.Image;
 public import gtk.ImageMenuItem;
 public import gtk.Label;
@@ -76,6 +77,7 @@ public import gtk.TreeModel;
 public import gtk.TreeView;
 public import gtk.TreeViewColumn;
 public import gtk.VBox;
+public import gtk.VSeparator;
 public import gtk.Widget;
 public import gtk.Window;
 
@@ -91,7 +93,7 @@ public import flexim.graph.alg;
 public import flexim.graph.app;
 
 public import flexim.gui.builder;
-public import flexim.gui.widgets;
+public import flexim.gui.graph;
 
 public import flexim.io.logging;
 public import flexim.io.xml;

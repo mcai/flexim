@@ -5,7 +5,7 @@
   <object class="GtkWindow" id="mainWindow">
     <property name="width_request">900</property>
     <property name="height_request">600</property>
-    <property name="title" translatable="yes">Flexim Builder</property>
+    <property name="title" translatable="yes">Flexim Integrated Simulation Environment</property>
     <property name="window_position">center</property>
     <property name="icon_name">applications-system</property>
     <child>
@@ -310,17 +310,11 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <object class="GtkVBox" id="vbox2">
+              <object class="GtkVBox" id="vboxLeft">
                 <property name="width_request">260</property>
                 <property name="visible">True</property>
                 <child>
-                  <object class="GtkLabel" id="labelSelectedModuleName">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">MIPS32 Processor Core</property>
-                  </object>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
+                  <placeholder/>
                 </child>
                 <child>
                   <placeholder/>
@@ -335,10 +329,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="vbox3">
+              <object class="GtkVBox" id="vboxCenter">
                 <property name="visible">True</property>
                 <child>
                   <object class="GtkScrolledWindow" id="scrolledwindow1">
+                    <property name="width_request">400</property>
+                    <property name="height_request">300</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="hscrollbar_policy">automatic</property>
@@ -373,12 +369,11 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHButtonBox" id="hbuttonbox1">
+                  <placeholder/>
+                </child>
+                <child>
+                  <object class="GtkVBox" id="vboxCenterBottom">
                     <property name="visible">True</property>
-                    <property name="homogeneous">True</property>
-                    <child>
-                      <placeholder/>
-                    </child>
                     <child>
                       <placeholder/>
                     </child>
@@ -387,8 +382,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
@@ -410,43 +404,6 @@
           <packing>
             <property name="expand">False</property>
             <property name="position">3</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
-  <object class="GtkAboutDialog" id="aboutDialogFleximBuilder">
-    <property name="border_width">5</property>
-    <property name="resizable">False</property>
-    <property name="modal">True</property>
-    <property name="window_position">center</property>
-    <property name="type_hint">normal</property>
-    <property name="has_separator">False</property>
-    <property name="program_name">Flexim Builder</property>
-    <property name="version">0.1 Prelease</property>
-    <property name="copyright" translatable="yes">Copyright (c) 2010 Min Cai &lt;itecgo@163.com&gt;</property>
-    <property name="comments" translatable="yes">A flexible and rich architectural simulator written in D.</property>
-    <property name="website">http://github.com/mcai/flexim</property>
-    <property name="website_label" translatable="yes">Flexim's Project Site on Github</property>
-    <property name="license" translatable="yes">GPL (GNU General Public License)
-see http://www.gnu.org/licenses/gpl.html</property>
-    <property name="authors">Min Cai (itecgo@163.com)</property>
-    <child internal-child="vbox">
-      <object class="GtkVBox" id="dialog-vbox1">
-        <property name="visible">True</property>
-        <property name="spacing">2</property>
-        <child>
-          <placeholder/>
-        </child>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="dialog-action_area1">
-            <property name="visible">True</property>
-            <property name="layout_style">end</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="pack_type">end</property>
-            <property name="position">0</property>
           </packing>
         </child>
       </object>

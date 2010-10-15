@@ -8,7 +8,7 @@ src/flexim/graph/adt.d
 src/flexim/graph/alg.d
 src/flexim/graph/app.d
 src/flexim/gui/builder.d
-src/flexim/gui/widgets.d
+src/flexim/gui/graph.d
 src/flexim/io/logging.d
 src/flexim/io/xml.d
 src/flexim/isa/basic.d
