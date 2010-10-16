@@ -773,7 +773,10 @@ void mainGui(string[] args) {
 	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
 	
 	GraphView canvas = new GraphView();
-	frameDrawing.add(canvas);
+	//frameDrawing.add(canvas);
+	
+	Canvas canvas1 = new Canvas();
+	frameDrawing.add(canvas1);
 
 	VBox vboxLeft = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeft");
 		
@@ -800,13 +803,13 @@ void mainGui(string[] args) {
 	
 	Timeout timeout = new Timeout(100, delegate bool ()
 		{
-			preloadConfigsAndStats((string text){
+			/*preloadConfigsAndStats((string text){
 				labelLoading.setLabel(text);
 
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
-			});
+			});*/
 			
 			vboxViewButtonsList.refillComboBoxItems();
 			

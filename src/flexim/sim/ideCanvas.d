@@ -59,8 +59,17 @@ class Cursor {
 		gdk.Screen.Screen screen = invisible.getScreen();
 		gdk.Display.Display display = screen.getDisplay();
 		
-		Pixbuf pixbuf = new Pixbuf("cursors" ~ "/" ~ this.set ~ "/" ~ "pointer.png");
-		this.normal = new gdk.Cursor.Cursor(display, pixbuf, 4, 2);
+		this.normal = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "pointer.png"), 4, 2);
+		this.northwest = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-northwest.png"), 6, 6);
+		this.north = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-north.png"), 12, 6);
+		this.northeast = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-northeast.png"), 18, 6);
+		this.west = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-west.png"), 6, 12);
+		this.east = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-east.png"), 18, 12);
+		this.southwest = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-southwest.png"), 6, 18);
+		this.south = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-south.png"), 12, 18);
+		this.southeast = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "direction-southeast.png"), 18, 18);
+		this.cross = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "stroke.png"), 2, 20);
+		this.move = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "move.png"), 11, 11);
 	}
 	
 	string set;
@@ -254,13 +263,16 @@ class Grid: Rectangle {
 	this() {
 		this.active = true;
 		this.size = 15.0;
-		this.snap = false;		
+		this.snap = false;
 	}
 	
 	void draw(Context context) {
 		context.setLineWidth(0.15);
 		context.setSourceRgb(0.0, 0.0, 0.0);
-		//context.setDash(..);
+		double[] dash;
+		dash ~= 2.0;
+		dash ~= 5.0;
+		context.setDash(dash, 0);
 		
 		double _x = this.x;
 		double _y = this.y;
@@ -273,8 +285,8 @@ class Grid: Rectangle {
 		
 		while(_y <= this.y + this.height) {
 			context.moveTo(this.x, _y);
-			context.lineTo(this.x + this.width, y);
-			y += this.size;
+			context.lineTo(this.x + this.width, _y);
+			_y += this.size;
 		}
 		
 		context.stroke();
@@ -827,6 +839,58 @@ class Canvas: DrawingArea {
 		this.addOnButtonPress(&this.buttonPressed);
 		this.addOnButtonRelease(&this.buttonReleased);
 		this.addOnMotionNotify(&this.motionNotified);
+		
+		this.setupSampleData();
+	}
+	
+	void setupSampleData() {
+		this.paper.x = 25;
+		this.paper.y = 25;
+		this.paper.top = 25;
+		this.paper.left = 25;
+		this.paper.bottom = 25;
+		this.paper.right = 25;
+		this.paper.width = 800;
+		this.paper.height = 500;
+		
+		/*Text text = new Text("foo");
+		this.add(text);
+		
+		text = new Text("bar");
+		text.y += 100;
+		this.add(text);
+		
+		text = new Text("baz");
+		text.y += 200;
+		this.add(text);*/
+		
+		Box box = new Box();
+		box.x = 200;
+		box.y = 200;
+		box.width = 100;
+		box.height = 100;
+		this.add(box);
+		
+		Line line = new Line();
+		line.y = 300;
+		line.width = 100;
+		line.height = 100;
+		this.add(line);
+		
+		RoundedBox rounded = new RoundedBox();
+		rounded.width = 100;
+		rounded.height = 100;
+		rounded.x = 500;
+		this.add(rounded);
+		
+		Curve curve = new Curve();
+		curve.width = 100;
+		curve.height = 100;
+		curve.x = 600;
+		curve.y = 250;
+		this.add(curve);
+		
+		this.grid.snap = true;
 	}
 	
 	void addOnSelected(void delegate(DrawableObject child) del) {
@@ -1147,6 +1211,8 @@ class Canvas: DrawingArea {
 				}
 			}
 		}
+		
+		//TODO: connect motion id
 		
 		return true;
 	}
