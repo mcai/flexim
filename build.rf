@@ -28,6 +28,7 @@ src/flexim/mem/tm/transaction.d
 src/flexim/sim/benchmark.d
 src/flexim/sim/configs.d
 src/flexim/sim/ide.d
+src/flexim/sim/ideCanvas.d
 src/flexim/sim/simulations.d
 src/flexim/sim/simulator.d
 src/flexim/sim/stats.d

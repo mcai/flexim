@@ -29,6 +29,8 @@ import std.file;
 import std.getopt;
 import std.path;
 
+import cairo.Context;
+
 import gtk.Timeout;
 
 BenchmarkSuite[string] benchmarkSuites;
@@ -52,8 +54,6 @@ void preloadConfigsAndStats(void delegate(string text) del) {
 		experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
     }
 }
-
-import cairo.Context;
 
 void newDrawing(Context context, void delegate() del) {
 	context.save();
@@ -94,24 +94,24 @@ class ImmutableTreeNode {
 				
 			newDrawing(context,
 				{
-					context.setSourceColor(new Color(this.selected ? 0x36539C: 0x6287E7));
+					context.setSourceColor(new gdk.Color.Color(this.selected ? 0x36539C: 0x6287E7));
 					context.rectangle(this.x - this.drawSize/2,
 						this.y - this.drawSize/2,
 						this.drawSize,
 						this.drawSize);
 					context.fillPreserve();
-					context.setSourceColor(new Color(0x000000));
+					context.setSourceColor(new gdk.Color.Color(0x000000));
 					context.stroke();
 				});
 		}
 		else if (this.shape == ImmutableTreeNodeShape.CIRCLE){
 			newDrawing(context,
 				{
-					context.setSourceColor(new Color(0x6287E7));
+					context.setSourceColor(new gdk.Color.Color(0x6287E7));
 					context.arc(this.x, this.y, (this.drawSize * 2 + 20) / 2, 0, 2 * PI);
 					context.closePath();
 					context.fillPreserve();
-					context.setSourceColor(new Color(0x000000));
+					context.setSourceColor(new gdk.Color.Color(0x000000));
 					context.stroke();
 				});
 			
@@ -381,8 +381,14 @@ class GraphView : DrawingArea {
 		
 		newDrawing(context,
 			{
-				context.setSourceColor(new Color(0xDAE3E6));
-				context.paint();
+				context.setSourceColor(new gdk.Color.Color(0xDAE3E6));
+				context.rectangle(0, 0, this.getAllocation().width, this.getAllocation().height);
+				context.fillPreserve();
+				context.clip();
+				if(this.graph !is null) {
+					context.scale(this.getAllocation().width/this.graph.width, this.getAllocation().height/this.graph.height);
+				}
+				//context.paint();
 			});
 			
 		context.setSourceRgb(0.2, 0.2, 0.2);
@@ -725,6 +731,7 @@ void mainGui(string[] args) {
 	builder.connectSignals(null); 
 	
 	Window mainWindow = getBuilderObject!(Window, GtkWindow)(builder, "mainWindow");
+	mainWindow.maximize();
 	mainWindow.addOnDestroy(delegate void(ObjectGtk)
 		{
 			Main.exit(0);

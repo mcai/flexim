@@ -32,9 +32,12 @@ public import std.string;
 public import std.typecons;
 
 public import gdk.Color;
+public import gdk.Display;
 public import gdk.Drawable;
 public import gdk.Event;
+public import gdk.Pixbuf;
 public import gdk.Rectangle;
+public import gdk.Screen;
 
 public import glade.Glade;
 
@@ -59,6 +62,7 @@ public import gtk.HSeparator;
 public import gtk.Image;
 public import gtk.ImageMenuItem;
 public import gtk.Label;
+public import gtk.Layout;
 public import gtk.ListStore;
 public import gtk.Main;
 public import gtk.MainWindow;
@@ -115,6 +119,7 @@ public import flexim.mem.tm.transaction;
 public import flexim.sim.benchmark;
 public import flexim.sim.configs;
 public import flexim.sim.ide;
+public import flexim.sim.ideCanvas;
 public import flexim.sim.simulations;
 public import flexim.sim.simulator;
 public import flexim.sim.stats;
