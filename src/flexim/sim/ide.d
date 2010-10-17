@@ -775,8 +775,19 @@ void mainGui(string[] args) {
 	GraphView canvas = new GraphView();
 	//frameDrawing.add(canvas);
 	
-	Canvas canvas1 = new Canvas();
-	frameDrawing.add(canvas1);
+	/////////////////////////////
+
+	
+	ScrolledWindow scrolledWindow = new ScrolledWindow();
+	scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+	frameDrawing.add(scrolledWindow);
+	
+	Canvas canvas2 = new Canvas();
+	
+	scrolledWindow.addWithViewport(canvas2);
+	
+	
+	/////////////////////////////
 
 	VBox vboxLeft = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeft");
 		

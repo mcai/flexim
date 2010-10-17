@@ -49,11 +49,11 @@ class Holder {
 
 class Cursor {
 	this() {
-		this.set = "default";
-		this.set = "aero";
+		//this.set = "default";
+		//this.set = "aero";
 		this.set = "entis";
-		this.set = "incarnerry-mark";
-		this.set = "volta-ringlets";
+		//this.set = "incarnerry-mark";
+		//this.set = "volta-ringlets";
 		
 		gtk.Invisible.Invisible invisible = new gtk.Invisible.Invisible();
 		gdk.Screen.Screen screen = invisible.getScreen();
@@ -155,7 +155,8 @@ class Control: Rectangle {
 	}
 	
 	bool atPosition(double x, double y) {
-		return x >= (this.x - this.size / 2.0) && x <= (this.x + this.size) && y >= (this.y - this.size / 2.0) && y <= (this.y + this.size);
+		return x >= (this.x - this.size / 2.0) && x <= (this.x + this.size) &&
+			y >= (this.y - this.size / 2.0) && y <= (this.y + this.size);
 	}
 	
 	Point offset;
@@ -263,7 +264,7 @@ class Grid: Rectangle {
 	this() {
 		this.active = true;
 		this.size = 15.0;
-		this.snap = false;
+		this.snap = true;
 	}
 	
 	void draw(Context context) {
@@ -271,7 +272,7 @@ class Grid: Rectangle {
 		context.setSourceRgb(0.0, 0.0, 0.0);
 		double[] dash;
 		dash ~= 2.0;
-		dash ~= 5.0;
+		dash ~= 2.0;
 		context.setDash(dash, 0);
 		
 		double _x = this.x;
@@ -331,10 +332,10 @@ class Axis: Rectangle {
 		
 		double _x = this.x;
 		double _y = this.y;
-		
+
 		while(_x <= this.x + this.width) {
 			context.moveTo(_x, this.y);
-			context.moveTo(_x, this.y + this.height);
+			context.lineTo(_x, this.y + this.height);
 			_x += this.size;
 		}
 		
@@ -623,6 +624,7 @@ class Box: DrawableObject {
 
 class RoundedBox: DrawableObject {
 	this() {
+		this.radius = 10;
 		this.color = new Color();
 		this.color.red = 0.25;
 		this.color.green = 0.25;
@@ -771,45 +773,6 @@ class Flex: DrawableObject {
 	double[] dash;
 }
 
-class Curve: DrawableObject {
-	this() {
-		this.thickness = 2.5;
-		this.radius = 20;
-		
-		this.handler.controls[Direction.END] = new Control();
-		
-		this.block = false;
-	}
-	
-	override void post() {
-		this.handler.controls[Direction.NORTHWEST].x = this.x;
-		this.handler.controls[Direction.NORTHWEST].y = this.y;
-		this.handler.controls[Direction.SOUTHEAST].x = this.x + this.width;
-		this.handler.controls[Direction.SOUTHEAST].y = this.y + this.height;
-		
-		if(!this.block) {
-			this.handler.controls[Direction.END].limbus = true;
-			this.handler.controls[Direction.END].x = this.x + this.width;
-			this.handler.controls[Direction.END].y = this.y;
-			this.block = !this.block;
-		}
-	}
-	
-	override void draw(Context context) {
-		super.draw(context);
-		
-		context.setDash(dash, 0);
-		context.setLineWidth(this.thickness);
-		context.curveTo(this.x, this.y, this.handler.controls[Direction.END].x, this.handler.controls[Direction.END].y, this.x + this.width, this.y + this.height);
-		context.setSourceRgb(0.0, 0.0, 0.0);
-		context.stroke();
-	}
-	
-	double thickness, radius;
-	double[] dash;
-	bool block;
-}
-
 class Canvas: DrawingArea {
 	this() {
 		this.paper = new Paper();
@@ -883,13 +846,6 @@ class Canvas: DrawingArea {
 		rounded.x = 500;
 		this.add(rounded);
 		
-		Curve curve = new Curve();
-		curve.width = 100;
-		curve.height = 100;
-		curve.x = 600;
-		curve.y = 250;
-		this.add(curve);
-		
 		this.grid.snap = true;
 	}
 	
@@ -928,7 +884,7 @@ class Canvas: DrawingArea {
 		context.paint();
 		
 		this.paper.x = (width - this.paper.width) / 2;
-		this.paper.y = (width - this.paper.height) / 2;
+		this.paper.y = (height - this.paper.height) / 2;
 		
 		if(this.paper.x < this.border) {
 			this.paper.x = this.border;
@@ -1034,6 +990,7 @@ class Canvas: DrawingArea {
 					child.direction = child.handler.getDirection(event.x + this.origin.x, event.y + this.origin.y);
 					child.handler.controls[child.direction].offset.x = event.x - child.x;
 					child.handler.controls[child.direction].offset.y = event.y - child.y;
+					resize = true;
 				}
 				break;
 			}
@@ -1045,7 +1002,8 @@ class Canvas: DrawingArea {
 				if(child.selected) {
 					child.offset.x = event.x - child.x;
 					child.offset.y = event.y - child.y;
-					if(!child.atPosition(event.x, event.y) && !move && event.state != ModifierType.CONTROL_MASK  || child.atPosition(event.x, event.y) && move && event.state == ModifierType.CONTROL_MASK) {
+					if(!child.atPosition(event.x, event.y) && !move && !(event.state & ModifierType.CONTROL_MASK) ||
+						child.atPosition(event.x, event.y) && move && event.state & ModifierType.CONTROL_MASK) {
 						child.selected = false;
 					}
 					else {
@@ -1069,7 +1027,7 @@ class Canvas: DrawingArea {
 			this.queueDraw();
 		}
 		
-		return false;
+		return true;
 	}
 	
 	bool buttonReleased(GdkEventButton* event, Widget widget) {
@@ -1092,14 +1050,22 @@ class Canvas: DrawingArea {
 		return true;
 	}
 	
+	bool handlingMotionNotified = false;
+	
 	bool motionNotified(GdkEventMotion* event, Widget widget) {
-		//TODO: disconnect motion id
+		if(this.handlingMotionNotified) {
+			return true;
+		}
+		
+		if(!this.handlingMotionNotified) {
+			this.handlingMotionNotified = true;
+		}
 		
 		double x = event.x - this.origin.x;
 		double y = event.y - this.origin.y;
 		
 		Direction direction = Direction.NONE;
-		if(event.state != ModifierType.BUTTON1_MASK) {
+		if(!(event.state & ModifierType.BUTTON1_MASK)) {
 			foreach(child; this.children) {
 				if(child.atPosition(x, y)) {
 					if(child.selected) {
@@ -1135,10 +1101,10 @@ class Canvas: DrawingArea {
 				this.getWindow().setCursor(this.cursor.south);
 			}
 			else if(direction == Direction.SOUTHEAST) {
-				this.getWindow().setCursor(this.cursor.southwest);
+				this.getWindow().setCursor(this.cursor.southeast);
 			}
 		}
-		else if(event.state == ModifierType.BUTTON1_MASK) {
+		else if(event.state & ModifierType.BUTTON1_MASK) {
 			this.getWindow().setCursor(this.cursor.move);
 		}
 		else if(this.pick) {
@@ -1155,7 +1121,7 @@ class Canvas: DrawingArea {
 			this.needUpdate = false;
 			this.queueDraw();
 		}
-		else if(event.state == ModifierType.BUTTON1_MASK) {
+		else if(event.state & ModifierType.BUTTON1_MASK) {
 			foreach(child; this.children) {
 				if(child.selected) {
 					if(child.resize) {
@@ -1211,8 +1177,8 @@ class Canvas: DrawingArea {
 				}
 			}
 		}
-		
-		//TODO: connect motion id
+
+		this.handlingMotionNotified = false;
 		
 		return true;
 	}
