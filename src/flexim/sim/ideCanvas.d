@@ -24,6 +24,12 @@ module flexim.sim.ideCanvas;
 import flexim.all;
 
 import cairo.Context;
+import cairo.ImageSurface;
+
+import pango.PgCairo;
+import pango.PgLayout;
+import pango.PgFontDescription;
+
 import gdk.Cursor;
 
 enum Direction {
@@ -475,11 +481,11 @@ abstract class DrawableObject: Rectangle {
 	Direction direction;
 }
 
-/*class Text: DrawableObject {
+class Text: DrawableObject {
 	this(string text) {
 		this.properties["font"] = "Verdana";
 		this.properties["size"] = "32";
-		this.properties["preserve"] = "True";
+		this.properties["preserve"] = "true";
 		this.properties["text"] = text;
 	}
 	
@@ -514,42 +520,43 @@ abstract class DrawableObject: Rectangle {
 		
 		newDrawing(context, 
 			{
-				Context _context = new pangocairo.Context(context); //TODO
-				Layout layout = new pangocairo.Layout(context); //TODO
+				PgLayout layout = PgCairo.createLayout(context);
 				
-				string fontname = this.properties["font"];
-				//TODO
-				FontDescription font = new FontDescription(description);
+				string fontName = this.properties["font"];
+				int size = to!(int) (this.properties["size"]);
+				string description = format("%s %d", fontName, size);
+				
+				PgFontDescription font = PgFontDescription.fromString(description);
 				layout.setJustify(true);
 				layout.setFontDescription(font);
 				string text = this.properties["text"];
-				layout.setMarkup(text);
+				layout.setMarkup(text, text.sizeof);
 				
-				_context.setSourceRgb(0.0, 0.0, 0.0);
-				_context.moveTo(this.x, this.y);
+				context.setSourceRgb(0.0, 0.0, 0.0);
+				context.moveTo(this.x, this.y);
 				
 				bool preserve = to!(bool)(this.properties["preserve"]);
 				
 				if(!preserve) {
-					double width = layout.size.width;
-					double height = layout.size.height;
-					width /= pango.SCALE;
-					height /= pango.SCALE;
+					int width, height;
+					layout.getSize(width, height);
+					width /= PANGO_SCALE;
+					height /= PANGO_SCALE;
 					this.scale(context, width, height);
 				}
 				else {
-					layout.setWidth(cast(int) (this.width) * pango.SCALE);
-					double width = layout.size.width;
-					double height = layout.size.height;
-					height /= pango.SCALE;
+					layout.setWidth(cast(int) (this.width) * PANGO_SCALE);
+					int width, height;
+					layout.getSize(width, height);
+					height /= PANGO_SCALE;
 					this.height = height;
 				}
-				
-				context.showLayout(layout);
+	
+				PgCairo.showLayout(context, layout);
 			});
 	}
 	
-	void scale(Context context, double width, double height) {
+	void scale(Context context, double w, double h) {
 		if(this.width == 0) {
 			this.width = width;
 		}
@@ -559,8 +566,8 @@ abstract class DrawableObject: Rectangle {
 		}
 		
 		Scale scale = new Scale();
-		scale.x = this.width / width;
-		scale.y = this.height / height;
+		scale.x = this.width / w;
+		scale.y = this.height / h;
 		
 		if(scale.x != 0) {
 			context.scale(scale.x, 1.0);
@@ -570,7 +577,7 @@ abstract class DrawableObject: Rectangle {
 			context.scale(1.0, scale.y);
 		}
 	}
-}*/
+}
 
 class Box: DrawableObject {
 	this() {
@@ -816,16 +823,22 @@ class Canvas: DrawingArea {
 		this.paper.width = 800;
 		this.paper.height = 500;
 		
-		/*Text text = new Text("foo");
+		Text text = new Text("foo");
+		text.width = 100;
+		text.height = 50;
 		this.add(text);
 		
 		text = new Text("bar");
+		text.width = 100;
+		text.height = 50;
 		text.y += 100;
 		this.add(text);
 		
 		text = new Text("baz");
+		text.width = 100;
+		text.height = 50;
 		text.y += 200;
-		this.add(text);*/
+		this.add(text);
 		
 		Box box = new Box();
 		box.x = 200;
