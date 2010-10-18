@@ -56,12 +56,16 @@
 \begin_body
 
 \begin_layout Title
-Flexim: A Decoupled Approach to Cycle-Accurate Simulation of Multicore Processor
-s
+Flexim: Facilitating User-Friendly Cycle-Accurate Simulation of Multicore
+ Processors
 \end_layout
 
 \begin_layout Author
-Min Cai
+Min Cai, Zhimin Gu
+\end_layout
+
+\begin_layout Institution
+Beijing Institute of Technology, Beijing 100081, P.R.China
 \end_layout
 
 \begin_layout Abstract
@@ -81,15 +85,21 @@ Good cycle-accurate simulators are critical for conducting successful multicore
 \end_layout
 
 \begin_layout Abstract
-In this report, we present Flexim, which exploits the idea of separation
- of structural and behavioral modeling of architectural components, and
- apply interface-based hierarchical modularity and cycle-accurate callback-based
- eventing to structural modeling and behavioral modeling, respectively.
- Flexim remodels the core functionalities of the classic SimpleScalar simulator
- and extends it to enable extensible timing simulation of out-of-order cores
- and multi-level cache hierarchies of multicore processors.
- Simulation results of a few popular benchmarks are shown for illustrative
- purposes.
+In this paper, we present Flexim, a user-friendly cycle-accurate multicore
+ archiectural simulator, which consists of the simulator core and the GUI
+ based Integrated Simulation Environment (ISE) .
+ Within the core, Flexim remodels the core functionalities of the classic
+ SimpleScalar simulator and extends it to enable configurable timing simulation
+ of out-of-order cores and multi-level cache hierarchies of multicore processors.
+ It exploits interface-based hierarchical modularity and cycle-accurate
+ callback-based eventing to improve the modualrity and extensibility of
+ the simulator core.
+ For the GUI-based ISE, Flexim uses XML files and setup wizards to ease
+ the configuration of the simulator, and utilizes graph visualization to
+ provide static and dynamic views of the multicore archietecture under simulatio
+n.
+ Simulation results from a few popular benchmark suites such as Olden and
+ CPU2006 are shown for illustrative purposes.
 \end_layout
 
 \begin_layout Keywords
@@ -1534,6 +1544,17 @@ Functional simulation: parallel workload support
 \end_layout
 
 \end_deeper
+\begin_layout Section*
+Acknowledgments
+\end_layout
+
+\begin_layout Standard
+This work was supported by the Ministry of Education of China-Intel Special
+ Research Foundation for Information Technology program under the contract
+ No.
+ MOE-INTEL-08-10.
+\end_layout
+
 \begin_layout Standard
 \begin_inset CommandInset bibtex
 LatexCommand bibtex

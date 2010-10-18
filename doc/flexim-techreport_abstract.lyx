@@ -1,0 +1,110 @@
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass paper
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize 12
+\spacing onehalf
+\use_hyperref true
+\pdf_bookmarks true
+\pdf_bookmarksnumbered true
+\pdf_bookmarksopen true
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks true
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Flexim: Facilitating User-Friendly Cycle-Accurate Simulation of Multicore
+ Processors
+\end_layout
+
+\begin_layout Author
+Min Cai, Zhimin Gu
+\end_layout
+
+\begin_layout Institution
+Beijing Institute of Technology, Beijing 100081, P.R.China
+\end_layout
+
+\begin_layout Abstract
+Good cycle-accurate simulators are critical for conducting successful multicore
+ processor architecture research nowadays.
+ However, most of the existing simulators are written in C or C++ for speed
+ considerations and the modeled computer structures and functionalities
+ are too complicated to be implemented in a clear yet efficient way.
+ The resulting unreadable code makes the simulator hard to use and extend.
+ As a niche market, other not-so-realistic simulators are mostly used for
+ educational and visualization purposes that they are written in traditional
+ object-oriented languages such as Java or C#, which omit many machine details
+ that are necessary for architectural study.
+ There is a permanent need of balancing speed and elegance while simulating
+ multicore architectures.
+ 
+\end_layout
+
+\begin_layout Abstract
+In this paper, we present Flexim, a user-friendly cycle-accurate multicore
+ architectural simulator, which consists of the simulator core and the GUI
+ based Integrated Simulation Environment (ISE) .
+ Within the core, Flexim remodels the core functionalities of the classic
+ SimpleScalar simulator and extends it to enable configurable timing simulation
+ of out-of-order cores and multi-level cache hierarchies of multicore processors.
+ It exploits interface-based hierarchical modularity and cycle-accurate
+ callback-based eventing to improve the modularity and extensibility of
+ the simulator core.
+ For the GUI-based ISE, Flexim uses XML files and setup wizards to ease
+ the configuration of the simulator, and utilizes graph visualization to
+ provide static and dynamic views of the multicore architecture under simulation.
+ Simulations of a few popular benchmark suites such as Olden and CPU2006
+ are shown for illustrative purposes.
+\end_layout
+
+\begin_layout Keywords
+Cycle-accurate simulator, multicore processor architecture, integrated simulatio
+n environment
+\end_layout
+
+\end_body
+\end_document
