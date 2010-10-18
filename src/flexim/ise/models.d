@@ -1,5 +1,5 @@
 /*
- * flexim/sim/ide.d
+ * flexim/ise/models.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.sim.ide;
+module flexim.ise.models;
 
 import flexim.all;
 
@@ -32,34 +32,6 @@ import std.path;
 import cairo.Context;
 
 import gtk.Timeout;
-
-BenchmarkSuite[string] benchmarkSuites;
-ExperimentConfig[string] experimentConfigs;
-ExperimentStat[string] experimentStats;
-
-void preloadConfigsAndStats(void delegate(string text) del) {
-    foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
-    {
-    	del("Loading benchmark config: " ~ basename(name, ".xml") ~ "...");
-		benchmarkSuites[basename(name, ".xml")] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
-    }
-    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
-    {
-    	del("Loading experiment config: " ~ basename(name, ".config.xml") ~ "...");
-		experimentConfigs[basename(name, ".config.xml")] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
-    }
-    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
-    {
-    	del("Loading experiment stat: " ~ basename(name, ".stat.xml") ~ "...");
-		experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
-    }
-}
-
-void newDrawing(Context context, void delegate() del) {
-	context.save();
-	del();
-	context.restore();
-}
 
 enum ImmutableTreeNodeShape: string {
 	RECTANGLE = "RECTANGLE",
@@ -461,10 +433,11 @@ class GraphView : DrawingArea {
 }
 
 class VBoxViewButtonsList : VBox {	
-	this(GraphView graphView) {
+	//this(GraphView graphView) {
+	this() {
 		super(false, 5);
 		
-		this.graphView = graphView;
+		//this.graphView = graphView;
 		
 		with(this.buttonBenchmarkConfigView = new Button("View Config")) {
 			addOnClicked(&this.buttonBenchmarkConfigViewClicked);
@@ -486,7 +459,6 @@ class VBoxViewButtonsList : VBox {
 		}
 		
 		with(this.boxBenchmarkSuites = new VBox(false, 5)) {
-			packStart(new Label("Please select a benchmark suite:"), false, false, 0);
 			packStart(this.comboBoxBenchmarkSuites, true, true, 0);
 			packStart(this.buttonBenchmarkConfigView, true, true, 0);
 		}
@@ -498,7 +470,6 @@ class VBoxViewButtonsList : VBox {
 		}
 		
 		with(this.boxExperiments = new VBox(false, 5)) {
-			packStart(new Label("Please select an experiment:"), false, false, 0);
 			packStart(this.comboBoxExperiments, true, true, 0);
 			packStart(this.buttonExperimentConfigView, true, true, 0);
 			packStart(this.buttonExperimentStatView, true, true, 0);
@@ -532,24 +503,24 @@ class VBoxViewButtonsList : VBox {
 	void buttonBenchmarkConfigViewClicked(Button button) {
 		if(this.selectedBenchmarkSuiteName in benchmarkSuites) {
 			BenchmarkSuite benchmarkSuite = benchmarkSuites[this.selectedBenchmarkSuiteName];
-			this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
-			this.graphView.redraw();
+			//this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
+			//this.graphView.redraw();
 		}
 	}
 
 	void buttonExperimentConfigViewClicked(Button button) {
 		if(this.selectedExperimentName in experimentConfigs) {
 			ExperimentConfig experimentConfig = experimentConfigs[this.selectedExperimentName];
-			this.graphView.graph = new ExperimentConfigTree(experimentConfig);
-			this.graphView.redraw();
+			//this.graphView.graph = new ExperimentConfigTree(experimentConfig);
+			//this.graphView.redraw();
 		}
 	}
 
 	void buttonExperimentStatViewClicked(Button button) {
 		if(this.selectedExperimentName in experimentStats) {
 			ExperimentStat experimentStat = experimentStats[this.selectedExperimentName];
-			this.graphView.graph = new ExperimentStatTree(experimentStat);
-			this.graphView.redraw();
+			//this.graphView.graph = new ExperimentStatTree(experimentStat);
+			//this.graphView.redraw();
 		}
 	}
 
@@ -586,7 +557,7 @@ class VBoxViewButtonsList : VBox {
 	Button buttonExperimentConfigView, buttonExperimentStatView;
 	Button buttonExperimentRun;
 	
-	GraphView graphView;
+	//GraphView graphView;
 }
 
 class TreeViewNodeProperties : TreeView {
@@ -706,130 +677,4 @@ class ExperimentStatTree : ImmutableTree {
 	}
 	
 	ExperimentStat experimentStat;
-}
-
-T getBuilderObject(T, K)(ObjectG obj) {
-	obj.setData("GObject", null);
-	return new T(cast(K*)obj.getObjectGStruct());
-}
-
-T getBuilderObject(T, K)(Builder builder, string name) {
-	return getBuilderObject!(T, K)(builder.getObject(name));
-}
-
-void guiActionNotImplemented(Window parent, string text) {
-	MessageDialog d = new MessageDialog(parent, GtkDialogFlags.MODAL, MessageType.INFO, ButtonsType.OK, text);
-	d.run();
-	d.destroy();
-}
-
-void mainGui(string[] args) {
-	Main.init(args);
-	
-	Builder builder = new Builder();
-	builder.addFromFile("../gtk/flexim_gui.glade");
-	builder.connectSignals(null); 
-	
-	Window mainWindow = getBuilderObject!(Window, GtkWindow)(builder, "mainWindow");
-	mainWindow.maximize();
-	mainWindow.addOnDestroy(delegate void(ObjectGtk)
-		{
-			Main.exit(0);
-		});
-	
-	ToolButton toolButtonNew = getBuilderObject!(ToolButton, GtkToolButton)(builder, "toolButtonNew");
-	toolButtonNew.addOnClicked(delegate void(ToolButton toolButton)
-		{
-			writeln(toolButtonNew.getTooltipText());
-		});
-	
-	ImageMenuItem menuItemHelpAbout = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(builder, "menuItemHelpAbout");
-	menuItemHelpAbout.addOnActivate(delegate void(MenuItem)
-		{
-			string[] authors, documenters, artists;
-	
-			authors ~= "Min Cai (itecgo@163.com)";
-			documenters ~= "Min Cai (itecgo@163.com)";
-			artists ~= "Min Cai (itecgo@163.com)";
-			
-			AboutDialog aboutDialog = new AboutDialog();
-			aboutDialog.setProgramName("Flexim ISE");
-			aboutDialog.setVersion("0.1 Prelease");
-			aboutDialog.setCopyright("Copyright (c) 2010 Min Cai <itecgo@163.com>");
-			//aboutDialog.setLogo(this.icon.getPixbuf);
-			aboutDialog.setAuthors(authors);
-			aboutDialog.setDocumenters(documenters);
-			aboutDialog.setArtists(artists);
-			aboutDialog.setLicense("GPL (GNU General Public License)\nsee http://www.gnu.org/licenses/gpl.html");
-			aboutDialog.setWebsite("http://github.com/mcai/flexim");
-			aboutDialog.setComments("Flexim Integrated Simulation Enviroment (ISE) is a flexible and rich architectural simulator written in D.");
-			
-			
-			if (aboutDialog.run() == GtkResponseType.GTK_RESPONSE_CANCEL) {
-				aboutDialog.destroy();
-			}
-		});
-		
-	Frame frameDrawing = getBuilderObject!(Frame, GtkFrame)(builder, "frameDrawing");
-	
-	GraphView canvas = new GraphView();
-	//frameDrawing.add(canvas);
-	
-	/////////////////////////////
-
-	
-	ScrolledWindow scrolledWindow = new ScrolledWindow();
-	scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
-	frameDrawing.add(scrolledWindow);
-	
-	Canvas canvas2 = new Canvas();
-	
-	scrolledWindow.addWithViewport(canvas2);
-	
-	
-	/////////////////////////////
-
-	VBox vboxLeft = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeft");
-		
-	VBoxViewButtonsList vboxViewButtonsList = new VBoxViewButtonsList(canvas);
-	vboxLeft.packStart(vboxViewButtonsList, false, false, 0);
-
-	VBox vboxCenterBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxCenterBottom");
-		
-	vboxCenterBottom.packStart(new Label("Properties"), false, false, 0);
-		
-	TreeViewNodeProperties treeViewNodeProperties = new TreeViewNodeProperties();
-	vboxCenterBottom.packStart(treeViewNodeProperties, true, true, 0);
-	
-	canvas.addOnNodeSelected(delegate void(ImmutableTreeNode node)
-		{
-			treeViewNodeProperties.data = node.properties;
-			treeViewNodeProperties.refreshList();
-		});
-	
-	Window splashScreen = getBuilderObject!(Window, GtkWindow)(builder, "splashScreen");
-	splashScreen.showAll();
-	
-	Label labelLoading = getBuilderObject!(Label, GtkLabel)(builder, "labelLoading");
-	
-	Timeout timeout = new Timeout(100, delegate bool ()
-		{
-			/*preloadConfigsAndStats((string text){
-				labelLoading.setLabel(text);
-
-				while(Main.eventsPending) {
-					Main.iterationDo(false);
-				}
-			});*/
-			
-			vboxViewButtonsList.refillComboBoxItems();
-			
-			splashScreen.hideAll();
-			
-			mainWindow.showAll();
-			
-			return false;
-		}, false);
-	
-	Main.run();
 }

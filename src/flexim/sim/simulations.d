@@ -23,6 +23,7 @@ module flexim.sim.simulations;
 
 import flexim.all;
 
+import std.file;
 import std.path;
 
 interface Reproducible {
@@ -128,4 +129,26 @@ void runExperiment(string experimentName) {
 	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".config.xml");
 	Experiment experiment = new Experiment(experimentConfig);
 	experiment.execute();
+}
+
+BenchmarkSuite[string] benchmarkSuites;
+ExperimentConfig[string] experimentConfigs;
+ExperimentStat[string] experimentStats;
+
+void preloadConfigsAndStats(void delegate(string text) del) {
+    foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
+    {
+    	del("Loading benchmark config: " ~ basename(name, ".xml") ~ "...");
+		benchmarkSuites[basename(name, ".xml")] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
+    }
+    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
+    {
+    	del("Loading experiment config: " ~ basename(name, ".config.xml") ~ "...");
+		experimentConfigs[basename(name, ".config.xml")] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
+    }
+    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
+    {
+    	del("Loading experiment stat: " ~ basename(name, ".stat.xml") ~ "...");
+		experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
+    }
 }

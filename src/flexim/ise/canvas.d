@@ -1,5 +1,5 @@
 /*
- * flexim/sim/ideCanvas.d
+ * flexim/ise/canvas.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,18 +19,27 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.sim.ideCanvas;
+module flexim.ise.canvas;
 
 import flexim.all;
 
 import cairo.Context;
 import cairo.ImageSurface;
 
+import gdk.Cursor;
+import gdk.Keymap;
+
+import gtk.StockItem;
+
 import pango.PgCairo;
 import pango.PgLayout;
 import pango.PgFontDescription;
 
-import gdk.Cursor;
+void newDrawing(Context context, void delegate() del) {
+	context.save();
+	del();
+	context.restore();
+}
 
 enum Direction {
 	NONE = -1,
@@ -83,32 +92,38 @@ class Cursor {
 }
 
 class Point: Holder {
-	this() {
-		this.x = this.y = 0.0;
+	this(double x = 0.0, double y = 0.0) {
+		this.x = x;
+		this.y = y;
 	}
 	
 	double x, y;
 }
 
 class Size: Holder {
-	this() {
-		this.width = this.height = 0.0;
+	this(double width = 0.0, double height = 0.0) {
+		this.width = width;
+		this.height = height;
 	}
 	
 	double width, height;
 }
 
 class Scale {
-	this() {
-		this.x = this.y = 1.0;
+	this(double x = 1.0, double y = 1.0) {
+		this.x = x;
+		this.y = y;
 	}
 	
 	double x, y;
 }
 
 class Color {
-	this() {
-		this.red = this.green = this.blue = this.alpha = 0.0;
+	this(double red = 0.0, double green = 0.0, double blue = 0.0, double alpha = 0.0) {
+		this.red = red;
+		this.green = green;
+		this.blue = blue;
+		this.alpha = alpha;
 	}
 	
 	double red, green, blue, alpha;
@@ -117,8 +132,11 @@ class Color {
 alias Point Origin, Position;
 
 class Rectangle: Holder {
-	this() {
-		this.x = this.y = this.width = this.height = 0.0;
+	this(double x = 0.0, double y = 0.0, double width = 0.0, double height = 0.0) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
 	}
 	
 	double x, y, width, height;
@@ -481,7 +499,49 @@ abstract class DrawableObject: Rectangle {
 	Direction direction;
 }
 
-class Text: DrawableObject {
+abstract class BoxBase: DrawableObject {
+	this() {
+		this.color = new Color(0.25, 0.25, 0.25, 0.25);
+	}
+	
+	override void post() {
+	    this.handler.controls[Direction.NORTHWEST].x = this.x;
+	    this.handler.controls[Direction.NORTHWEST].y = this.y;
+	    
+	    this.handler.controls[Direction.NORTHEAST].x = this.x + this.width;
+	    this.handler.controls[Direction.NORTHEAST].y = this.y;
+	    
+	    this.handler.controls[Direction.SOUTHWEST].x = this.x;
+	    this.handler.controls[Direction.SOUTHWEST].y = this.y + this.height;
+	    
+	    this.handler.controls[Direction.SOUTHEAST].x = this.x + this.width;
+	    this.handler.controls[Direction.SOUTHEAST].y = this.y + this.height;
+	    
+	    this.handler.controls[Direction.NORTH].x = this.x + this.width / 2;
+	    this.handler.controls[Direction.NORTH].y = this.y;
+	    
+	    this.handler.controls[Direction.SOUTH].x = this.x + this.width / 2;
+	    this.handler.controls[Direction.SOUTH].y = this.y + this.height;
+	    
+	    this.handler.controls[Direction.WEST].x = this.x;
+	    this.handler.controls[Direction.WEST].y = this.y + this.height / 2;
+	    
+	    this.handler.controls[Direction.EAST].x = this.x + this.width;
+	    this.handler.controls[Direction.EAST].y = this.y + this.height / 2;
+	}
+	
+	override void draw(Context context) {
+		super.draw(context);
+		
+		this.drawBox(context);
+	}
+	
+	abstract void drawBox(Context context);
+	
+	Color color;
+}
+
+class Text: BoxBase {
 	this(string text) {
 		this.properties["font"] = "Verdana";
 		this.properties["size"] = "32";
@@ -489,35 +549,7 @@ class Text: DrawableObject {
 		this.properties["text"] = text;
 	}
 	
-	override void post() {
-		this.handler.controls[Direction.NORTHWEST].x = this.x;
-		this.handler.controls[Direction.NORTHWEST].y = this.y;
-		
-		this.handler.controls[Direction.NORTHEAST].x = this.x + this.width;
-		this.handler.controls[Direction.NORTHEAST].y = this.y;
-		
-		this.handler.controls[Direction.SOUTHWEST].x = this.x;
-		this.handler.controls[Direction.SOUTHWEST].y = this.y + this.height;
-		
-		this.handler.controls[Direction.SOUTHEAST].x = this.x + this.width;
-		this.handler.controls[Direction.SOUTHEAST].y = this.y + this.height;
-		
-		this.handler.controls[Direction.NORTH].x = this.x + this.width / 2;
-		this.handler.controls[Direction.NORTH].y = this.y;
-		
-		this.handler.controls[Direction.SOUTH].x = this.x + this.width / 2;
-		this.handler.controls[Direction.SOUTH].y = this.y + this.height;
-		
-		this.handler.controls[Direction.WEST].x = this.x;
-		this.handler.controls[Direction.WEST].y = this.y + this.height / 2;
-		
-		this.handler.controls[Direction.EAST].x = this.x + this.width;
-		this.handler.controls[Direction.EAST].y = this.y + this.height / 2;
-	}
-	
-	override void draw(Context context) {
-		super.draw(context);
-		
+	override void drawBox(Context context) {
 		newDrawing(context, 
 			{
 				PgLayout layout = PgCairo.createLayout(context);
@@ -579,43 +611,11 @@ class Text: DrawableObject {
 	}
 }
 
-class Box: DrawableObject {
+class Box: BoxBase {
 	this() {
-		this.color = new Color();
-		this.color.red = 0.25;
-		this.color.green = 0.25;
-		this.color.blue = 0.25;
-		this.color.alpha = 0.25;
 	}
 	
-	override void post() {
-	    this.handler.controls[Direction.NORTHWEST].x = this.x;
-	    this.handler.controls[Direction.NORTHWEST].y = this.y;
-	    
-	    this.handler.controls[Direction.NORTHEAST].x = this.x + this.width;
-	    this.handler.controls[Direction.NORTHEAST].y = this.y;
-	    
-	    this.handler.controls[Direction.SOUTHWEST].x = this.x;
-	    this.handler.controls[Direction.SOUTHWEST].y = this.y + this.height;
-	    
-	    this.handler.controls[Direction.SOUTHEAST].x = this.x + this.width;
-	    this.handler.controls[Direction.SOUTHEAST].y = this.y + this.height;
-	    
-	    this.handler.controls[Direction.NORTH].x = this.x + this.width / 2;
-	    this.handler.controls[Direction.NORTH].y = this.y;
-	    
-	    this.handler.controls[Direction.SOUTH].x = this.x + this.width / 2;
-	    this.handler.controls[Direction.SOUTH].y = this.y + this.height;
-	    
-	    this.handler.controls[Direction.WEST].x = this.x;
-	    this.handler.controls[Direction.WEST].y = this.y + this.height / 2;
-	    
-	    this.handler.controls[Direction.EAST].x = this.x + this.width;
-	    this.handler.controls[Direction.EAST].y = this.y + this.height / 2;
-	}
-	
-	override void draw(Context context) {
-		super.draw(context);
+	override void drawBox(Context context) {
 		double[] dash;
 		context.setDash(dash, 0);
 		context.setLineWidth(2.5);
@@ -625,55 +625,23 @@ class Box: DrawableObject {
 		context.setSourceRgb(0.0, 0.0, 0.0);
 		context.stroke();
 	}
-	
-	Color color;
 }
 
-class RoundedBox: DrawableObject {
+class RoundedBox: BoxBase {
 	this() {
 		this.radius = 10;
-		this.color = new Color();
-		this.color.red = 0.25;
-		this.color.green = 0.25;
-		this.color.blue = 0.25;
-		this.color.alpha = 0.25;
-		
 		this.handler.controls[Direction.END] = new Control();
 	}
 	
 	override void post() {
-	    this.handler.controls[Direction.NORTHWEST].x = this.x;
-	    this.handler.controls[Direction.NORTHWEST].y = this.y;
-	    
-	    this.handler.controls[Direction.NORTHEAST].x = this.x + this.width;
-	    this.handler.controls[Direction.NORTHEAST].y = this.y;
-	    
-	    this.handler.controls[Direction.SOUTHWEST].x = this.x;
-	    this.handler.controls[Direction.SOUTHWEST].y = this.y + this.height;
-	    
-	    this.handler.controls[Direction.SOUTHEAST].x = this.x + this.width;
-	    this.handler.controls[Direction.SOUTHEAST].y = this.y + this.height;
-	    
-	    this.handler.controls[Direction.NORTH].x = this.x + this.width / 2;
-	    this.handler.controls[Direction.NORTH].y = this.y;
-	    
-	    this.handler.controls[Direction.SOUTH].x = this.x + this.width / 2;
-	    this.handler.controls[Direction.SOUTH].y = this.y + this.height;
-	    
-	    this.handler.controls[Direction.WEST].x = this.x;
-	    this.handler.controls[Direction.WEST].y = this.y + this.height / 2;
-	    
-	    this.handler.controls[Direction.EAST].x = this.x + this.width;
-	    this.handler.controls[Direction.EAST].y = this.y + this.height / 2;
+		super.post();
 	    
 	    this.handler.controls[Direction.END].x = this.x + this.radius;
 	    this.handler.controls[Direction.END].y = this.y + this.radius;
 	    this.handler.controls[Direction.END].limbus = true;
 	}
 	
-	override void draw(Context context) {
-		super.draw(context);
-		
+	override void drawBox(Context context) {
 		double _radius = this.radius;
 		
 		double[] dash;
@@ -706,7 +674,72 @@ class RoundedBox: DrawableObject {
 	}
 	
 	double radius;
-	Color color;
+}
+
+class TextBox: Box {
+	this(string text) {
+		this.properties["font"] = "Verdana";
+		this.properties["size"] = "12";
+		this.properties["preserve"] = "true";
+		this.properties["text"] = text;
+	}
+	
+	void drawText(Context context) {
+		PgLayout layout = PgCairo.createLayout(context);
+		
+		string fontName = this.properties["font"];
+		int size = to!(int) (this.properties["size"]);
+		string description = format("%s %d", fontName, size);
+		
+		PgFontDescription font = PgFontDescription.fromString(description);
+		layout.setJustify(true);
+		layout.setFontDescription(font);
+		string text = this.properties["text"];
+		layout.setMarkup(text, -1);
+		
+		context.setSourceRgb(0.0, 0.0, 0.0);
+		context.moveTo(this.x + 10, this.y + 10);
+
+		PgCairo.showLayout(context, layout);
+	}
+	
+	override void drawBox(Context context) {
+		super.drawBox(context);		
+		this.drawText(context);
+	}
+}
+
+class RoundedTextBox: RoundedBox {
+	this(string text) {
+		this.properties["font"] = "Verdana";
+		this.properties["size"] = "12";
+		this.properties["preserve"] = "true";
+		this.properties["text"] = text;
+	}
+	
+	void drawText(Context context) {
+		PgLayout layout = PgCairo.createLayout(context);
+		
+		string fontName = this.properties["font"];
+		int size = to!(int) (this.properties["size"]);
+		string description = format("%s %d", fontName, size);
+		
+		PgFontDescription font = PgFontDescription.fromString(description);
+		layout.setJustify(true);
+		layout.setFontDescription(font);
+		string text = this.properties["text"];
+		layout.setMarkup(text, -1);
+		
+		context.setSourceRgb(0.0, 0.0, 0.0);
+		context.moveTo(this.x + 10, this.y + 10);
+
+		PgCairo.showLayout(context, layout);
+	}
+	
+	override void drawBox(Context context) {
+		super.drawBox(context);		
+		this.drawText(context);
+	}
 }
 
 class Line: DrawableObject {
@@ -738,46 +771,23 @@ class Line: DrawableObject {
 	double thickness;
 }
 
-class Flex: DrawableObject {
+class CompositeDrawableObject: Box {
+	override void drawBox(Context context) {
+		super.drawBox(context);
+		
+		foreach(child; this.children) {
+			child.draw(context);
+		}
+	}
+	
+	DrawableObject[] children;
+}
+
+class DrawableObjectGroup {
 	this() {
-		this.thickness = 2.5;
-		this.radius = 20;
-		
-		this.handler.controls[Direction.END] = new Control();
-		this.handler.controls[Direction.END2] = new Control();
 	}
 	
-	override void post() {
-		this.handler.controls[Direction.NORTHWEST].x = this.x;
-		this.handler.controls[Direction.NORTHWEST].y = this.y;
-		
-		this.handler.controls[Direction.SOUTHEAST].x = this.x + this.width;
-		this.handler.controls[Direction.SOUTHEAST].y = this.y + this.height;
-		
-		this.handler.controls[Direction.END].limbus = true;
-		this.handler.controls[Direction.END].x = this.x + this.width / 2;
-		this.handler.controls[Direction.END].y = this.y;
-		
-		this.handler.controls[Direction.END2].limbus = true;
-		this.handler.controls[Direction.END2].x = this.x + this.width / 2;
-		this.handler.controls[Direction.END2].y = this.y + this.height;
-	}
-	
-	override void draw(Context context) {
-		super.draw(context);
-		
-		context.setDash(this.dash, 0);
-		context.setLineWidth(this.thickness);
-		context.curveTo(this.x, this.y, this.handler.controls[Direction.END].x, this.handler.controls[Direction.END].y,
-			this.x + this.width / 2, this.y + this.height / 2);
-		context.curveTo(this.x + this.width / 2, this.y + this.height / 2, this.handler.controls[Direction.END2].x, this.handler.controls[Direction.END2].y,
-			this.x + this.width, this.y + this.height);
-		context.setSourceRgb(0.0, 0.0, 0.0);
-		context.stroke();
-	}
-	
-	double thickness, radius;
-	double[] dash;
+	DrawableObject[] children;
 }
 
 class Canvas: DrawingArea {
@@ -790,11 +800,8 @@ class Canvas: DrawingArea {
 		this.cursor = new Cursor();
 		
 		this.total = new Size();
-
-		this.origin.x = 0;
-		this.origin.y = 0;
 		
-		this.border = 25;
+		this.border = 10;
 		
 		this.pick = false;
 		this.updated = false;
@@ -810,34 +817,26 @@ class Canvas: DrawingArea {
 		this.addOnButtonRelease(&this.buttonReleased);
 		this.addOnMotionNotify(&this.motionNotified);
 		
+		this.paper.x = 5;
+		this.paper.y = 5;
+		this.paper.top = 5;
+		this.paper.left = 5;
+		this.paper.bottom = 5;
+		this.paper.right = 5;
+		this.paper.width = 800;
+		this.paper.height = 650;
+		
+		this.grid.snap = true;
+		
 		this.setupSampleData();
 	}
 	
-	void setupSampleData() {
-		this.paper.x = 25;
-		this.paper.y = 25;
-		this.paper.top = 25;
-		this.paper.left = 25;
-		this.paper.bottom = 25;
-		this.paper.right = 25;
-		this.paper.width = 800;
-		this.paper.height = 500;
-		
-		Text text = new Text("foo");
-		text.width = 100;
+	void setupSampleData() {		
+		TextBox text = new TextBox("Instruction Cache (blahblahblahblahblahblah...)");
+		text.x = 100;
+		text.y = 100;
+		text.width = 400;
 		text.height = 50;
-		this.add(text);
-		
-		text = new Text("bar");
-		text.width = 100;
-		text.height = 50;
-		text.y += 100;
-		this.add(text);
-		
-		text = new Text("baz");
-		text.width = 100;
-		text.height = 50;
-		text.y += 200;
 		this.add(text);
 		
 		Box box = new Box();
@@ -848,18 +847,18 @@ class Canvas: DrawingArea {
 		this.add(box);
 		
 		Line line = new Line();
+		line.x = 0;
 		line.y = 300;
 		line.width = 100;
 		line.height = 100;
 		this.add(line);
 		
 		RoundedBox rounded = new RoundedBox();
+		rounded.x = 500;
+		rounded.y = 0;
 		rounded.width = 100;
 		rounded.height = 100;
-		rounded.x = 500;
 		this.add(rounded);
-		
-		this.grid.snap = true;
 	}
 	
 	void addOnSelected(void delegate(DrawableObject child) del) {
@@ -1126,7 +1125,10 @@ class Canvas: DrawingArea {
 		else {
 			this.getWindow().setCursor(this.cursor.normal);
 		}
-		
+
+		this.horizontalRuler.setRange(0, 200, event.x / this.horizontalRuler.getAllocation().width * 200, 200);
+		this.verticalRuler.setRange(0, 200, event.y / this.verticalRuler.getAllocation().height * 200, 200);
+
 		if(this.selection.active) {
 			this.selection.width = x - this.selection.x;
 			this.selection.height = y - this.selection.y;
@@ -1237,4 +1239,32 @@ class Canvas: DrawingArea {
 	double border;
 	bool pick, updated, needUpdate;
 	DrawableObject selectedChild;
+	HRuler horizontalRuler;
+	VRuler verticalRuler;
+}
+
+string registerStockId(string name, string label, string key) {
+	string fileName = format("../gtk/stock/%s.png", name);
+	string domain = "slow";
+	string id = format("%s-%s", domain, name);
+	Pixbuf pixbuf = new Pixbuf(fileName);
+	IconSet iconSet = new IconSet(pixbuf);
+	IconFactory factory = new IconFactory();
+	factory.add(id, iconSet);
+	factory.addDefault();
+	int keyval = Keymap.gdkKeyvalFromName(key);
+	GdkModifierType modifier = GdkModifierType.MOD1_MASK;
+	
+	GtkStockItem gtkStockItem;
+
+	gtkStockItem.stockId = cast(char*) toStringz(id);
+	gtkStockItem.label = cast(char*) toStringz(label);
+	gtkStockItem.modifier = modifier;
+	gtkStockItem.keyval = keyval;
+	gtkStockItem.translationDomain = cast(char*) toStringz(domain);
+	
+	StockItem stockItem = new StockItem(&gtkStockItem);
+	stockItem.add(1);
+	
+	return id;
 }

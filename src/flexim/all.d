@@ -58,7 +58,10 @@ public import gtk.FileChooserDialog;
 public import gtk.Fixed;
 public import gtk.Frame;
 public import gtk.HBox;
+public import gtk.HRuler;
 public import gtk.HSeparator;
+public import gtk.IconFactory;
+public import gtk.IconSet;
 public import gtk.Image;
 public import gtk.ImageMenuItem;
 public import gtk.Label;
@@ -75,12 +78,14 @@ public import gtk.SpinButton;
 public import gtk.Table;
 public import gtk.ToggleButton;
 public import gtk.ToolButton;
+public import gtk.Toolbar;
 public import gtk.TreeIter;
 public import gtk.TreePath;
 public import gtk.TreeModel;
 public import gtk.TreeView;
 public import gtk.TreeViewColumn;
 public import gtk.VBox;
+public import gtk.VRuler;
 public import gtk.VSeparator;
 public import gtk.Widget;
 public import gtk.Window;
@@ -104,6 +109,10 @@ public import flexim.isa.integer;
 public import flexim.isa.mem;
 public import flexim.isa.misc;
 
+public import flexim.ise.canvas;
+public import flexim.ise.models;
+public import flexim.ise.startup;
+
 public import flexim.linux.process;
 public import flexim.linux.syscall;
 
@@ -118,8 +127,6 @@ public import flexim.mem.tm.transaction;
 
 public import flexim.sim.benchmark;
 public import flexim.sim.configs;
-public import flexim.sim.ide;
-public import flexim.sim.ideCanvas;
 public import flexim.sim.simulations;
 public import flexim.sim.simulator;
 public import flexim.sim.stats;

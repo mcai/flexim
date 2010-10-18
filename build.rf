@@ -14,6 +14,9 @@ src/flexim/isa/fp.d
 src/flexim/isa/integer.d
 src/flexim/isa/mem.d
 src/flexim/isa/misc.d
+src/flexim/ise/canvas.d
+src/flexim/ise/models.d
+src/flexim/ise/startup.d
 src/flexim/linux/process.d
 src/flexim/linux/syscall.d
 src/flexim/main.d
@@ -27,8 +30,6 @@ src/flexim/mem/timing/sequencer.d
 src/flexim/mem/tm/transaction.d
 src/flexim/sim/benchmark.d
 src/flexim/sim/configs.d
-src/flexim/sim/ide.d
-src/flexim/sim/ideCanvas.d
 src/flexim/sim/simulations.d
 src/flexim/sim/simulator.d
 src/flexim/sim/stats.d
