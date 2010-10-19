@@ -60,6 +60,14 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkImageMenuItem" id="menuItemFileExportToPDF">
+                        <property name="label" translatable="yes">Export to PDF</property>
+                        <property name="visible">True</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkSeparatorMenuItem" id="separatormenuitem1">
                         <property name="visible">True</property>
                       </object>
@@ -452,5 +460,9 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
   </object>
 </interface>

@@ -26,7 +26,9 @@ import flexim.all;
 import std.path;
 
 import cairo.Context;
+import cairo.Surface;
 import cairo.ImageSurface;
+import cairo.PdfSurface;
 
 import gdk.Cursor;
 
@@ -1592,6 +1594,23 @@ class Canvas: DrawingArea {
 			this.children = this.children.remove(index);
 			this.queueDraw();
 		}
+	}
+	
+	void exportToPdf(string fileName) {
+		Surface surface = PdfSurface.create(fileName, this.paper.width, this.paper.height);
+		Context context = Context.create(surface);
+		foreach(child; this.children) {
+			bool selected = child.selected;
+			child.selected = false;
+			child.x += this.paper.left;
+			child.y += this.paper.top;
+			child.draw(context);
+			child.x -= this.paper.left;
+			child.y -= this.paper.top;
+			child.selected = selected;
+		}
+		surface.finish();
+		context.showPage();
 	}
 	
 	override string toString() {

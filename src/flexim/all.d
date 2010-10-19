@@ -57,6 +57,7 @@ public import gtk.ComboBox;
 public import gtk.DrawingArea;
 public import gtk.Expander;
 public import gtk.FileChooserDialog;
+public import gtk.FileFilter;
 public import gtk.Fixed;
 public import gtk.Frame;
 public import gtk.HBox;

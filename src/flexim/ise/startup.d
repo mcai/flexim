@@ -249,6 +249,30 @@ class Startup {
 		}
 	}
 	
+	void exportToPdf() {		
+		FileChooserDialog dialog = new FileChooserDialog("PDF file to generate", this.mainWindow, FileChooserAction.SAVE);
+		
+		FileFilter filter1 = new FileFilter();
+		filter1.setName("PDF Files");
+		filter1.addMimeType("document/pdf");
+		filter1.addPattern("*.pdf");
+		dialog.addFilter(filter1);
+			
+		FileFilter filter2 = new FileFilter();
+		filter2.setName("All Files");
+		filter2.addPattern("*");
+		dialog.addFilter(filter2);
+		
+		if(dialog.run() == ResponseType.GTK_RESPONSE_OK) {
+			string fileName = dialog.getFilename();
+			if(fileName !is null) {
+				this.canvas.exportToPdf(fileName);
+			}
+		}
+		
+		dialog.destroy();
+	}
+	
 	void buildMainWindow() {
 		this.mainWindow = getBuilderObject!(Window, GtkWindow)(this.builder, "mainWindow");
 		this.mainWindow.maximize();
@@ -270,6 +294,12 @@ class Startup {
 	}
 	
 	void buildMenus() {
+		this.menuItemFileExportToPDF = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemFileExportToPDF");
+		this.menuItemFileExportToPDF.addOnActivate(delegate void(MenuItem)
+			{
+				this.exportToPdf();
+			});
+		
 		this.menuItemHelpAbout = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemHelpAbout");
 		this.menuItemHelpAbout.addOnActivate(delegate void(MenuItem)
 			{
@@ -301,7 +331,6 @@ class Startup {
 	void buildFrameDrawing() {
 		this.frameDrawing = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameDrawing");
 			
-		//this.canvas = new Canvas();
 		this.canvas = Canvas.loadXML();
 			
 		void buildToolbar() {
@@ -442,7 +471,7 @@ class Startup {
 	Builder builder;
 	Window mainWindow;
 	ToolButton toolButtonNew;
-	ImageMenuItem menuItemHelpAbout;
+	ImageMenuItem menuItemFileExportToPDF, menuItemHelpAbout;
 	Frame frameDrawing;
 	Toolbar toolbarDrawableObjects;
 	Table tableCanvas;
