@@ -1,15 +1,49 @@
 <?xml version="1.0"?>
 <Canvas>
-   <TextBox x="375" preserve="true" y="210" size="12" text="Architectural Component" width="400" height="50" font="Verdana">
+   <TextBox x="75" preserve="true" y="75" size="12" text="MIPS32 Little Endian CPU" width="300" height="45" font="Verdana">
    </TextBox>
-   <Box x="0" y="0" width="100" height="100">
+   <TextBox x="75" preserve="true" y="120" size="12" text="D-cache" width="150" height="45" font="Verdana">
+   </TextBox>
+   <TextBox x="225" preserve="true" y="120" size="12" text="I-cache" width="150" height="45" font="Verdana">
+   </TextBox>
+   <Box x="60" y="60" width="330" height="120">
    </Box>
-   <Line x="0" y="300" width="100" height="100">
+   <Box x="405" y="60" width="330" height="120">
+   </Box>
+   <TextBox x="420" preserve="true" y="120" size="12" text="D-cache" width="150" height="45" font="Verdana">
+   </TextBox>
+   <TextBox x="570" preserve="true" y="120" size="12" text="I-cache" width="150" height="45" font="Verdana">
+   </TextBox>
+   <TextBox x="420" preserve="true" y="75" size="12" text="MIPS32 Little Endian CPU" width="300" height="45" font="Verdana">
+   </TextBox>
+   <TextBox x="60" preserve="true" y="210" size="12" text="MESI cache coherence / Fixed-latency P2P interconnect" width="675" height="45" font="Verdana">
+   </TextBox>
+   <TextBox x="75" preserve="true" y="300" size="12" text="Shared L2 cache" width="645" height="45" font="Verdana">
+   </TextBox>
+   <TextBox x="75" preserve="true" y="345" size="12" text="Directory" width="645" height="45" font="Verdana">
+   </TextBox>
+   <Box x="60" y="285" width="675" height="120">
+   </Box>
+   <Line x="150" y="165" width="0" height="45">
    </Line>
-   <RoundedBox x="500" y="0" width="100" radius="10" height="100">
-   </RoundedBox>
-   <RoundedBox x="270" y="90" width="240" radius="10" height="150">
-   </RoundedBox>
-   <Box x="165" y="315" width="255" height="240">
-   </Box>
+   <Line x="300" y="165" width="0" height="45">
+   </Line>
+   <Line x="495" y="165" width="0" height="45">
+   </Line>
+   <Line x="645" y="165" width="0" height="45">
+   </Line>
+   <Line x="150" y="255" width="0" height="45">
+   </Line>
+   <Line x="300" y="255" width="0" height="45">
+   </Line>
+   <Line x="495" y="255" width="0" height="45">
+   </Line>
+   <Line x="645" y="255" width="0" height="45">
+   </Line>
+   <Line x="405" y="390" width="0" height="45">
+   </Line>
+   <Text x="300" preserve="true" y="435" size="12" text="Fixed-Latency DRAM Access" width="285" height="19" font="Verdana">
+   </Text>
+   <Text x="465" preserve="true" y="15" size="12" text="Shared-L2-Cache Dual Core (MIPS32)" width="315" height="19" font="Verdana">
+   </Text>
 </Canvas>
