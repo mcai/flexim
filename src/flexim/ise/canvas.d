@@ -59,6 +59,10 @@ class Holder {
 	this() {
 	}
 	
+	override string toString() {
+		return format("Holder[]");
+	}
+	
 	string[string] properties;
 }
 
@@ -87,6 +91,10 @@ class Cursor {
 		this.move = new gdk.Cursor.Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.set ~ "/" ~ "move.png"), 11, 11);
 	}
 	
+	override string toString() {
+		return format("Cursor[set=%s]", this.set);
+	}
+	
 	string set;
 	gdk.Cursor.Cursor normal, northwest, north, northeast, west, east, southwest, south, southeast, cross, move;
 }
@@ -95,6 +103,10 @@ class Point: Holder {
 	this(double x = 0.0, double y = 0.0) {
 		this.x = x;
 		this.y = y;
+	}
+	
+	override string toString() {
+		return format("Point[x=%f, y=%f]", this.x, this.y);
 	}
 	
 	double x, y;
@@ -106,6 +118,10 @@ class Size: Holder {
 		this.height = height;
 	}
 	
+	override string toString() {
+		return format("Size[width=%f, height=%f]", this.width, this.height);
+	}
+	
 	double width, height;
 }
 
@@ -113,6 +129,10 @@ class Scale {
 	this(double x = 1.0, double y = 1.0) {
 		this.x = x;
 		this.y = y;
+	}
+	
+	override string toString() {
+		return format("Scale[x=%f, y=%f]", this.x, this.y);
 	}
 	
 	double x, y;
@@ -126,6 +146,10 @@ class Color {
 		this.alpha = alpha;
 	}
 	
+	override string toString() {
+		return format("Color[red=%f, green=%f, blue=%f, alpha=%f]", this.red, this.green, this.blue, this.alpha);
+	}
+	
 	double red, green, blue, alpha;
 }
 
@@ -137,6 +161,10 @@ class Rectangle: Holder {
 		this.y = y;
 		this.width = width;
 		this.height = height;
+	}
+	
+	override string toString() {
+		return format("Rectangle[x=%f, y=%f, width=%f, height=%f]", this.x, this.y, this.width, this.height);
 	}
 	
 	double x, y, width, height;
@@ -181,6 +209,11 @@ class Control: Rectangle {
 	bool atPosition(double x, double y) {
 		return x >= (this.x - this.size / 2.0) && x <= (this.x + this.size) &&
 			y >= (this.y - this.size / 2.0) && y <= (this.y + this.size);
+	}
+	
+	override string toString() {
+		return format("Control[x=%f, y=%f, width=%f, height=%f, offset=%s, size=%f, limbus=%s]",
+			this.x, this.y, this.width, this.height, this.offset, this.size, this.limbus);
 	}
 	
 	Point offset;
@@ -246,6 +279,11 @@ class Margins: Rectangle {
 		}
 	}
 	
+	override string toString() {
+		return format("Margins[x=%f, y=%f, width=%f, height=%f, active=%s, top=%f, left=%f, bottom=%f, right=%f]", 
+			this.x, this.y, this.width, this.height, this.active, this.top, this.left, this.bottom, this.right);
+	}
+	
 	bool active;
 	double top, left, bottom, right;
 	
@@ -281,6 +319,11 @@ class Paper: Margins {
 		context.lineTo(this.x + this.width + shadow / 2.0, this.y + this.height + shadow / 2.0);
 		context.lineTo(this.x + shadow, this.y + this.height + shadow / 2.0);
 		context.stroke();
+	}
+	
+	override string toString() {
+		return format("Paper[x=%f, y=%f, width=%f, height=%f, active=%s, top=%f, left=%f, bottom=%f, right=%f]", 
+			this.x, this.y, this.width, this.height, this.active, this.top, this.left, this.bottom, this.right);
 	}
 }
 
@@ -334,6 +377,11 @@ class Grid: Rectangle {
 		}
 	}
 	
+	override string toString() {
+		return format("Grid[x=%f, y=%f, width=%f, height=%f, active=%s, snap=%s, size=%f]",
+			this.x, this.y, this.width, this.height, this.active, this.snap, this.size);
+	}
+	
 	bool active, snap;
 	double size;
 }
@@ -372,6 +420,11 @@ class Axis: Rectangle {
 		context.stroke();
 	}
 	
+	override string toString() {
+		return format("Axis[x=%f, y=%f, width=%f, height=%f, active=%s, size=%f]",
+			this.x, this.y, this.width, this.height, this.active, this.size);
+	}
+	
 	bool active;
 	double size;
 }
@@ -390,6 +443,11 @@ class Selection: Rectangle {
 		context.fillPreserve();
 		context.setSourceRgba(0.0, 0.0, 0.25, 0.5);
 		context.stroke();
+	}
+	
+	override string toString() {
+		return format("Selection[x=%f, y=%f, width=%f, height=%f, active=%s]",
+			this.x, this.y, this.width, this.height, this.active);
 	}
 	
 	bool active;
@@ -443,6 +501,11 @@ class Handler: Rectangle {
 		return Direction.NONE;
 	}
 	
+	override string toString() {
+		return format("Handler[x=%f, y=%f, width=%f, height=%f, line=%s]",
+			this.x, this.y, this.width, this.height, this.line);
+	}
+	
 	Control[Direction] controls;
 	bool line;
 }
@@ -493,6 +556,11 @@ abstract class DrawableObject: Rectangle {
 		return this.inRegion(selection.x, selection.y, selection.width, selection.height);
 	}
 	
+	override string toString() {
+		return format("DrawableObject[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction);
+	}
+	
 	Handler handler;
 	Rectangle offset;
 	bool selected, resize;
@@ -538,15 +606,20 @@ abstract class BoxBase: DrawableObject {
 	
 	abstract void drawBox(Context context);
 	
+	override string toString() {
+		return format("BoxBase[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color);
+	}
+	
 	Color color;
 }
 
 class Text: BoxBase {
-	this(string text) {
-		this.properties["font"] = "Verdana";
-		this.properties["size"] = "32";
-		this.properties["preserve"] = "true";
-		this.properties["text"] = text;
+	this(string text = "") {
+		this.font = "Verdana";
+		this.size = 32;
+		this.preserve = true;
+		this.text = text;
 	}
 	
 	override void drawBox(Context context) {
@@ -554,22 +627,17 @@ class Text: BoxBase {
 			{
 				PgLayout layout = PgCairo.createLayout(context);
 				
-				string fontName = this.properties["font"];
-				int size = to!(int) (this.properties["size"]);
-				string description = format("%s %d", fontName, size);
+				string description = format("%s %d", this.font, this.size);
 				
 				PgFontDescription font = PgFontDescription.fromString(description);
 				layout.setJustify(true);
 				layout.setFontDescription(font);
-				string text = this.properties["text"];
-				layout.setMarkup(text, text.sizeof);
+				layout.setMarkup(this.text, -1);
 				
 				context.setSourceRgb(0.0, 0.0, 0.0);
 				context.moveTo(this.x, this.y);
 				
-				bool preserve = to!(bool)(this.properties["preserve"]);
-				
-				if(!preserve) {
+				if(!this.preserve) {
 					int width, height;
 					layout.getSize(width, height);
 					width /= PANGO_SCALE;
@@ -609,6 +677,65 @@ class Text: BoxBase {
 			context.scale(1.0, scale.y);
 		}
 	}
+	
+	override string toString() {
+		return format("Text[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color);
+	}
+	
+	string font;
+	int size;
+	bool preserve;
+	string text;
+}
+
+class TextXMLSerializer: XMLSerializer!(Text) {
+	this() {
+	}
+	
+	override XMLConfig save(Text text) {
+		XMLConfig xmlConfig = new XMLConfig("Text");
+		xmlConfig["x"] = to!(string)(text.x);
+		xmlConfig["y"] = to!(string)(text.y);
+		xmlConfig["width"] = to!(string)(text.width);
+		xmlConfig["height"] = to!(string)(text.height);
+		
+		xmlConfig["font"] = text.font;
+		xmlConfig["size"] = to!(string)(text.size);
+		xmlConfig["preserve"] = to!(string)(text.preserve);
+		xmlConfig["text"] = text.text;
+			
+		return xmlConfig;
+	}
+	
+	override Text load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+		double y = to!(double)(xmlConfig["y"]);
+		double width = to!(double)(xmlConfig["width"]);
+		double height = to!(double)(xmlConfig["height"]);
+		
+		string font = xmlConfig["font"];
+		int size = to!(int)(xmlConfig["size"]);
+		bool preserve = to!(bool)(xmlConfig["preserve"]);
+		string textStr = xmlConfig["text"];
+			
+		Text text = new Text();
+		text.x = x;
+		text.y = y;
+		text.width = width;
+		text.height = height;
+		text.font = font;
+		text.size = size;
+		text.preserve = preserve;
+		text.text = textStr;
+		return text;
+	}
+	
+	static this() {
+		singleInstance = new TextXMLSerializer();
+	}
+	
+	static TextXMLSerializer singleInstance;
 }
 
 class Box: BoxBase {
@@ -625,6 +752,46 @@ class Box: BoxBase {
 		context.setSourceRgb(0.0, 0.0, 0.0);
 		context.stroke();
 	}
+	
+	override string toString() {
+		return format("Box[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color);
+	}
+}
+
+class BoxXMLSerializer: XMLSerializer!(Box) {
+	this() {
+	}
+	
+	override XMLConfig save(Box box) {
+		XMLConfig xmlConfig = new XMLConfig("Box");
+		xmlConfig["x"] = to!(string)(box.x);
+		xmlConfig["y"] = to!(string)(box.y);
+		xmlConfig["width"] = to!(string)(box.width);
+		xmlConfig["height"] = to!(string)(box.height);
+			
+		return xmlConfig;
+	}
+	
+	override Box load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+		double y = to!(double)(xmlConfig["y"]);
+		double width = to!(double)(xmlConfig["width"]);
+		double height = to!(double)(xmlConfig["height"]);
+			
+		Box box = new Box();
+		box.x = x;
+		box.y = y;
+		box.width = width;
+		box.height = height;
+		return box;
+	}
+	
+	static this() {
+		singleInstance = new BoxXMLSerializer();
+	}
+	
+	static BoxXMLSerializer singleInstance;
 }
 
 class RoundedBox: BoxBase {
@@ -673,29 +840,69 @@ class RoundedBox: BoxBase {
 		context.stroke();
 	}
 	
+	override string toString() {
+		return format("RoundedBox[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s, radius=%f]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color, this.radius);
+	}
+	
 	double radius;
 }
 
+class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
+	this() {
+	}
+	
+	override XMLConfig save(RoundedBox box) {
+		XMLConfig xmlConfig = new XMLConfig("RoundedBox");
+		xmlConfig["x"] = to!(string)(box.x);
+		xmlConfig["y"] = to!(string)(box.y);
+		xmlConfig["width"] = to!(string)(box.width);
+		xmlConfig["height"] = to!(string)(box.height);
+		xmlConfig["radius"] = to!(string)(box.radius);
+			
+		return xmlConfig;
+	}
+	
+	override RoundedBox load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+		double y = to!(double)(xmlConfig["y"]);
+		double width = to!(double)(xmlConfig["width"]);
+		double height = to!(double)(xmlConfig["height"]);
+		double radius = to!(double)(xmlConfig["radius"]);
+			
+		RoundedBox roundedBox = new RoundedBox();
+		roundedBox.x = x;
+		roundedBox.y = y;
+		roundedBox.width = width;
+		roundedBox.height = height;
+		roundedBox.radius = radius;
+		return roundedBox;
+	}
+	
+	static this() {
+		singleInstance = new RoundedBoxXMLSerializer();
+	}
+	
+	static RoundedBoxXMLSerializer singleInstance;
+}
+
 class TextBox: Box {
-	this(string text) {
-		this.properties["font"] = "Verdana";
-		this.properties["size"] = "12";
-		this.properties["preserve"] = "true";
-		this.properties["text"] = text;
+	this(string text = "") {
+		this.font = "Verdana";
+		this.size = 12;
+		this.preserve = true;
+		this.text = text;
 	}
 	
 	void drawText(Context context) {
 		PgLayout layout = PgCairo.createLayout(context);
 		
-		string fontName = this.properties["font"];
-		int size = to!(int) (this.properties["size"]);
-		string description = format("%s %d", fontName, size);
+		string description = format("%s %d", this.font, this.size);
 		
 		PgFontDescription font = PgFontDescription.fromString(description);
 		layout.setJustify(true);
 		layout.setFontDescription(font);
-		string text = this.properties["text"];
-		layout.setMarkup(text, -1);
+		layout.setMarkup(this.text, -1);
 		
 		context.setSourceRgb(0.0, 0.0, 0.0);
 		context.moveTo(this.x + 10, this.y + 10);
@@ -707,28 +914,84 @@ class TextBox: Box {
 		super.drawBox(context);		
 		this.drawText(context);
 	}
+	
+	override string toString() {
+		return format("TextBox[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color);
+	}
+	
+	string font;
+	int size;
+	bool preserve;
+	string text;
+}
+
+class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
+	this() {
+	}
+	
+	override XMLConfig save(TextBox textBox) {
+		XMLConfig xmlConfig = new XMLConfig("TextBox");
+		xmlConfig["x"] = to!(string)(textBox.x);
+		xmlConfig["y"] = to!(string)(textBox.y);
+		xmlConfig["width"] = to!(string)(textBox.width);
+		xmlConfig["height"] = to!(string)(textBox.height);
+		
+		xmlConfig["font"] = textBox.font;
+		xmlConfig["size"] = to!(string)(textBox.size);
+		xmlConfig["preserve"] = to!(string)(textBox.preserve);
+		xmlConfig["text"] = textBox.text;
+			
+		return xmlConfig;
+	}
+	
+	override TextBox load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+		double y = to!(double)(xmlConfig["y"]);
+		double width = to!(double)(xmlConfig["width"]);
+		double height = to!(double)(xmlConfig["height"]);
+		
+		string font = xmlConfig["font"];
+		int size = to!(int)(xmlConfig["size"]);
+		bool preserve = to!(bool)(xmlConfig["preserve"]);
+		string text = xmlConfig["text"];
+			
+		TextBox textBox = new TextBox();
+		textBox.x = x;
+		textBox.y = y;
+		textBox.width = width;
+		textBox.height = height;
+		textBox.font = font;
+		textBox.size = size;
+		textBox.preserve = preserve;
+		textBox.text = text;
+		return textBox;
+	}
+	
+	static this() {
+		singleInstance = new TextBoxXMLSerializer();
+	}
+	
+	static TextBoxXMLSerializer singleInstance;
 }
 
 class RoundedTextBox: RoundedBox {
-	this(string text) {
-		this.properties["font"] = "Verdana";
-		this.properties["size"] = "12";
-		this.properties["preserve"] = "true";
-		this.properties["text"] = text;
+	this(string text = "") {
+		this.font = "Verdana";
+		this.size = 12;
+		this.preserve = true;
+		this.text = text;
 	}
 	
 	void drawText(Context context) {
 		PgLayout layout = PgCairo.createLayout(context);
 		
-		string fontName = this.properties["font"];
-		int size = to!(int) (this.properties["size"]);
-		string description = format("%s %d", fontName, size);
+		string description = format("%s %d", this.font, this.size);
 		
 		PgFontDescription font = PgFontDescription.fromString(description);
 		layout.setJustify(true);
 		layout.setFontDescription(font);
-		string text = this.properties["text"];
-		layout.setMarkup(text, -1);
+		layout.setMarkup(this.text, -1);
 		
 		context.setSourceRgb(0.0, 0.0, 0.0);
 		context.moveTo(this.x + 10, this.y + 10);
@@ -740,6 +1003,68 @@ class RoundedTextBox: RoundedBox {
 		super.drawBox(context);		
 		this.drawText(context);
 	}
+	
+	override string toString() {
+		return format("RoundedTextBox[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s, radius=%f]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color, this.radius);
+	}
+	
+	string font;
+	int size;
+	bool preserve;
+	string text;
+}
+
+class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
+	this() {
+	}
+	
+	override XMLConfig save(RoundedTextBox roundedTextBox) {
+		XMLConfig xmlConfig = new XMLConfig("RoundedTextBox");
+		xmlConfig["x"] = to!(string)(roundedTextBox.x);
+		xmlConfig["y"] = to!(string)(roundedTextBox.y);
+		xmlConfig["width"] = to!(string)(roundedTextBox.width);
+		xmlConfig["height"] = to!(string)(roundedTextBox.height);
+		xmlConfig["radius"] = to!(string)(roundedTextBox.radius);
+		
+		xmlConfig["font"] = roundedTextBox.font;
+		xmlConfig["size"] = to!(string)(roundedTextBox.size);
+		xmlConfig["preserve"] = to!(string)(roundedTextBox.preserve);
+		xmlConfig["text"] = roundedTextBox.text;
+			
+		return xmlConfig;
+	}
+	
+	override RoundedTextBox load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+		double y = to!(double)(xmlConfig["y"]);
+		double width = to!(double)(xmlConfig["width"]);
+		double height = to!(double)(xmlConfig["height"]);
+		double radius = to!(double)(xmlConfig["radius"]);
+		
+		string font = xmlConfig["font"];
+		int size = to!(int)(xmlConfig["size"]);
+		bool preserve = to!(bool)(xmlConfig["preserve"]);
+		string text = xmlConfig["text"];
+			
+		RoundedTextBox roundedTextBox = new RoundedTextBox();
+		roundedTextBox.x = x;
+		roundedTextBox.y = y;
+		roundedTextBox.width = width;
+		roundedTextBox.height = height;
+		roundedTextBox.radius = radius;
+		roundedTextBox.font = font;
+		roundedTextBox.size = size;
+		roundedTextBox.preserve = preserve;
+		roundedTextBox.text = text;
+		return roundedTextBox;
+	}
+	
+	static this() {
+		singleInstance = new RoundedTextBoxXMLSerializer();
+	}
+	
+	static RoundedTextBoxXMLSerializer singleInstance;
 }
 
 class Line: DrawableObject {
@@ -767,27 +1092,48 @@ class Line: DrawableObject {
 		context.stroke();
 	}
 	
+	override string toString() {
+		return format("Line[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, thickness=%f]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.thickness);
+	}
+	
 	double[] dash;
 	double thickness;
 }
 
-class CompositeDrawableObject: Box {
-	override void drawBox(Context context) {
-		super.drawBox(context);
-		
-		foreach(child; this.children) {
-			child.draw(context);
-		}
-	}
-	
-	DrawableObject[] children;
-}
-
-class DrawableObjectGroup {
+class LineXMLSerializer: XMLSerializer!(Line) {
 	this() {
 	}
 	
-	DrawableObject[] children;
+	override XMLConfig save(Line line) {
+		XMLConfig xmlConfig = new XMLConfig("Line");
+		xmlConfig["x"] = to!(string)(line.x);
+		xmlConfig["y"] = to!(string)(line.y);
+		xmlConfig["width"] = to!(string)(line.width);
+		xmlConfig["height"] = to!(string)(line.height);
+			
+		return xmlConfig;
+	}
+	
+	override Line load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+		double y = to!(double)(xmlConfig["y"]);
+		double width = to!(double)(xmlConfig["width"]);
+		double height = to!(double)(xmlConfig["height"]);
+			
+		Line line = new Line();
+		line.x = x;
+		line.y = y;
+		line.width = width;
+		line.height = height;
+		return line;
+	}
+	
+	static this() {
+		singleInstance = new LineXMLSerializer();
+	}
+	
+	static LineXMLSerializer singleInstance;
 }
 
 class Canvas: DrawingArea {
@@ -1228,6 +1574,11 @@ class Canvas: DrawingArea {
 		this.queueDraw();
 	}
 	
+	override string toString() {
+		return format("Canvas[origin=%s, total=%s, border=%f, pick=%s, updated=%s, needUpdate=%s, selectedChild=%s]",
+			this.origin, this.total, this.border, this.pick, this.updated, this.needUpdate, this.selectedChild);
+	}
+	
 	Paper paper;
 	Origin origin;
 	Grid grid;
@@ -1241,6 +1592,77 @@ class Canvas: DrawingArea {
 	DrawableObject selectedChild;
 	HRuler horizontalRuler;
 	VRuler verticalRuler;
+}
+
+class CanvasXMLSerializer: XMLSerializer!(Canvas) {
+	this() {
+	}
+	
+	override XMLConfig save(Canvas canvas) {
+		XMLConfig xmlConfig = new XMLConfig("Canvas");
+		//xmlConfig["x"] = to!(string)(canvas.x);
+		
+		foreach(child; canvas.children) {
+			if(is(child: Text)) {
+				xmlConfig.entries ~= TextXMLSerializer.singleInstance.save(cast(Text) child);
+			}
+			else if(is(child: Box)) {
+				xmlConfig.entries ~= BoxXMLSerializer.singleInstance.save(cast(Box) child);
+			}
+			else if(is(child: RoundedBox)) {
+				xmlConfig.entries ~= RoundedBoxXMLSerializer.singleInstance.save(cast(RoundedBox) child);
+			}
+			else if(is(child: TextBox)) {
+				xmlConfig.entries ~= TextBoxXMLSerializer.singleInstance.save(cast(TextBox) child);
+			}
+			else if(is(child: RoundedTextBox)) {
+				xmlConfig.entries ~= RoundedTextBoxXMLSerializer.singleInstance.save(cast(RoundedTextBox) child);
+			}
+			else if(is(child: Line)) {
+				xmlConfig.entries ~= LineXMLSerializer.singleInstance.save(cast(Line) child);
+			}
+		}
+			
+		return xmlConfig;
+	}
+	
+	override Canvas load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+			
+		Canvas canvas = new Canvas();
+		//canvas.x = x;
+		
+		foreach(entry; xmlConfig.entries) {
+			string typeName = entry.typeName;
+			
+			if(typeName == "Text") {
+				canvas.add(TextXMLSerializer.singleInstance.load(entry));
+			}
+			else if(typeName == "Box") {
+				canvas.add(BoxXMLSerializer.singleInstance.load(entry));
+			}
+			else if(typeName == "RoundedBox") {
+				canvas.add(RoundedBoxXMLSerializer.singleInstance.load(entry));
+			}
+			else if(typeName == "TextBox") {
+				canvas.add(TextBoxXMLSerializer.singleInstance.load(entry));
+			}
+			else if(typeName == "RoundedTextBox") {
+				canvas.add(RoundedTextBoxXMLSerializer.singleInstance.load(entry));
+			}
+			else if(typeName == "Line") {
+				canvas.add(LineXMLSerializer.singleInstance.load(entry));
+			}
+		}
+		
+		return canvas;
+	}
+	
+	static this() {
+		singleInstance = new CanvasXMLSerializer();
+	}
+	
+	static CanvasXMLSerializer singleInstance;
 }
 
 string registerStockId(string name, string label, string key) {
