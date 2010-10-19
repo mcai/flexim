@@ -230,6 +230,7 @@ class Startup {
 		this.mainWindow.maximize();
 		this.mainWindow.addOnDestroy(delegate void(ObjectGtk)
 			{
+				Canvas.saveXML(this.canvas);
 				Main.exit(0);
 			});
 	}
@@ -274,7 +275,8 @@ class Startup {
 	void buildFrameDrawing() {
 		this.frameDrawing = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameDrawing");
 			
-		this.canvas = new Canvas();
+		//this.canvas = new Canvas();
+		this.canvas = Canvas.loadXML();
 			
 		void buildToolbar() {
 			this.toolbarDrawableObjects = new Toolbar();

@@ -44,7 +44,7 @@ class XMLConfig {
 	}
 	
 	string opIndex(string index) {
-		assert(index in this.attributes, index);
+		assert(index in this.attributes, format("typeName=%s, index=%s", this.typeName, index));
 		return this.attributes[index];
 	}
 

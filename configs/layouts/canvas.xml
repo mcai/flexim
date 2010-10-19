@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<Canvas>
+   <TextBox x="375" preserve="true" y="210" size="12" text="Architectural Component" width="400" height="50" font="Verdana">
+   </TextBox>
+   <Box x="0" y="0" width="100" height="100">
+   </Box>
+   <Line x="0" y="300" width="100" height="100">
+   </Line>
+   <RoundedBox x="500" y="0" width="100" radius="10" height="100">
+   </RoundedBox>
+   <RoundedBox x="270" y="90" width="240" radius="10" height="150">
+   </RoundedBox>
+   <Box x="165" y="315" width="255" height="240">
+   </Box>
+</Canvas>

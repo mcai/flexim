@@ -23,6 +23,8 @@ module flexim.ise.canvas;
 
 import flexim.all;
 
+import std.path;
+
 import cairo.Context;
 import cairo.ImageSurface;
 
@@ -556,6 +558,8 @@ abstract class DrawableObject: Rectangle {
 		return this.inRegion(selection.x, selection.y, selection.width, selection.height);
 	}
 	
+	abstract XMLConfig save();
+	
 	override string toString() {
 		return format("DrawableObject[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s]",
 			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction);
@@ -678,6 +682,10 @@ class Text: BoxBase {
 		}
 	}
 	
+	override XMLConfig save() {
+		return TextXMLSerializer.singleInstance.save(this);
+	}
+	
 	override string toString() {
 		return format("Text[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s]",
 			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color);
@@ -751,6 +759,10 @@ class Box: BoxBase {
 		context.fillPreserve();
 		context.setSourceRgb(0.0, 0.0, 0.0);
 		context.stroke();
+	}
+	
+	override XMLConfig save() {
+		return BoxXMLSerializer.singleInstance.save(this);
 	}
 	
 	override string toString() {
@@ -840,6 +852,10 @@ class RoundedBox: BoxBase {
 		context.stroke();
 	}
 	
+	override XMLConfig save() {
+		return RoundedBoxXMLSerializer.singleInstance.save(this);
+	}
+	
 	override string toString() {
 		return format("RoundedBox[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s, radius=%f]",
 			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color, this.radius);
@@ -913,6 +929,10 @@ class TextBox: Box {
 	override void drawBox(Context context) {
 		super.drawBox(context);		
 		this.drawText(context);
+	}
+	
+	override XMLConfig save() {
+		return TextBoxXMLSerializer.singleInstance.save(this);
 	}
 	
 	override string toString() {
@@ -1004,6 +1024,10 @@ class RoundedTextBox: RoundedBox {
 		this.drawText(context);
 	}
 	
+	override XMLConfig save() {
+		return RoundedTextBoxXMLSerializer.singleInstance.save(this);
+	}
+	
 	override string toString() {
 		return format("RoundedTextBox[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, color=%s, radius=%f]",
 			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.color, this.radius);
@@ -1092,6 +1116,10 @@ class Line: DrawableObject {
 		context.stroke();
 	}
 	
+	override XMLConfig save() {
+		return LineXMLSerializer.singleInstance.save(this);
+	}
+	
 	override string toString() {
 		return format("Line[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, thickness=%f]",
 			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.thickness);
@@ -1174,7 +1202,7 @@ class Canvas: DrawingArea {
 		
 		this.grid.snap = true;
 		
-		this.setupSampleData();
+		//this.setupSampleData();
 	}
 	
 	void setupSampleData() {		
@@ -1579,6 +1607,14 @@ class Canvas: DrawingArea {
 			this.origin, this.total, this.border, this.pick, this.updated, this.needUpdate, this.selectedChild);
 	}
 	
+	static Canvas loadXML(string cwd = "../configs/layouts", string fileName = "canvas" ~ ".xml") {
+		return CanvasXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(Canvas canvas, string cwd = "../configs/layouts", string fileName = "canvas" ~ ".xml") {
+		CanvasXMLFileSerializer.singleInstance.saveXML(canvas, join(cwd, fileName));
+	}
+	
 	Paper paper;
 	Origin origin;
 	Grid grid;
@@ -1594,45 +1630,28 @@ class Canvas: DrawingArea {
 	VRuler verticalRuler;
 }
 
-class CanvasXMLSerializer: XMLSerializer!(Canvas) {
+class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
 	this() {
 	}
 	
-	override XMLConfig save(Canvas canvas) {
-		XMLConfig xmlConfig = new XMLConfig("Canvas");
-		//xmlConfig["x"] = to!(string)(canvas.x);
+	override XMLConfigFile save(Canvas canvas) {
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("Canvas");
+		//xmlConfigFile["x"] = to!(string)(canvas.x);
 		
 		foreach(child; canvas.children) {
-			if(is(child: Text)) {
-				xmlConfig.entries ~= TextXMLSerializer.singleInstance.save(cast(Text) child);
-			}
-			else if(is(child: Box)) {
-				xmlConfig.entries ~= BoxXMLSerializer.singleInstance.save(cast(Box) child);
-			}
-			else if(is(child: RoundedBox)) {
-				xmlConfig.entries ~= RoundedBoxXMLSerializer.singleInstance.save(cast(RoundedBox) child);
-			}
-			else if(is(child: TextBox)) {
-				xmlConfig.entries ~= TextBoxXMLSerializer.singleInstance.save(cast(TextBox) child);
-			}
-			else if(is(child: RoundedTextBox)) {
-				xmlConfig.entries ~= RoundedTextBoxXMLSerializer.singleInstance.save(cast(RoundedTextBox) child);
-			}
-			else if(is(child: Line)) {
-				xmlConfig.entries ~= LineXMLSerializer.singleInstance.save(cast(Line) child);
-			}
+			xmlConfigFile.entries ~= child.save();
 		}
 			
-		return xmlConfig;
+		return xmlConfigFile;
 	}
 	
-	override Canvas load(XMLConfig xmlConfig) {
-		double x = to!(double)(xmlConfig["x"]);
+	override Canvas load(XMLConfigFile xmlConfigFile) {
+		//double x = to!(double)(xmlConfigFile["x"]);
 			
 		Canvas canvas = new Canvas();
 		//canvas.x = x;
 		
-		foreach(entry; xmlConfig.entries) {
+		foreach(entry; xmlConfigFile.entries) {
 			string typeName = entry.typeName;
 			
 			if(typeName == "Text") {
@@ -1659,10 +1678,10 @@ class CanvasXMLSerializer: XMLSerializer!(Canvas) {
 	}
 	
 	static this() {
-		singleInstance = new CanvasXMLSerializer();
+		singleInstance = new CanvasXMLFileSerializer();
 	}
 	
-	static CanvasXMLSerializer singleInstance;
+	static CanvasXMLFileSerializer singleInstance;
 }
 
 string registerStockId(string name, string label, string key) {
