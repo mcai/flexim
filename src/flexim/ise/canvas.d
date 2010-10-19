@@ -917,12 +917,14 @@ class TextBox: Box {
 		string description = format("%s %d", this.font, this.size);
 		
 		PgFontDescription font = PgFontDescription.fromString(description);
-		layout.setJustify(true);
+		layout.setAlignment(PangoAlignment.CENTER);
 		layout.setFontDescription(font);
+		layout.setWidth(cast(int) this.width * PANGO_SCALE);
+		layout.setHeight(cast(int) this.height * PANGO_SCALE);
 		layout.setMarkup(this.text, -1);
 		
 		context.setSourceRgb(0.0, 0.0, 0.0);
-		context.moveTo(this.x + 10, this.y + 10);
+		context.moveTo(this.x, this.y + 10);
 
 		PgCairo.showLayout(context, layout);
 	}
@@ -1010,12 +1012,14 @@ class RoundedTextBox: RoundedBox {
 		string description = format("%s %d", this.font, this.size);
 		
 		PgFontDescription font = PgFontDescription.fromString(description);
-		layout.setJustify(true);
+		layout.setAlignment(PangoAlignment.CENTER);
 		layout.setFontDescription(font);
+		layout.setWidth(cast(int) this.width * PANGO_SCALE);
+		layout.setHeight(cast(int) this.height * PANGO_SCALE);
 		layout.setMarkup(this.text, -1);
 		
 		context.setSourceRgb(0.0, 0.0, 0.0);
-		context.moveTo(this.x + 10, this.y + 10);
+		context.moveTo(this.x, this.y + 10);
 
 		PgCairo.showLayout(context, layout);
 	}
