@@ -225,6 +225,30 @@ class Startup {
 		this.run();
 	}
 	
+	bool keyPressed(GdkEventKey* event, Widget widget) {
+		if(event.state & ModifierType.CONTROL_MASK && event.keyval == GdkKeysyms.GDK_c) {
+			this.canvas.copySelected();
+			return  true;
+		}
+		else if(event.state & ModifierType.CONTROL_MASK && event.keyval == GdkKeysyms.GDK_x) {
+			this.canvas.cutSelected();
+			return  true;
+			
+		}
+		else if(event.state & ModifierType.CONTROL_MASK && event.keyval == GdkKeysyms.GDK_v) {
+			this.canvas.paste();
+			return  true;
+			
+		}
+		else if(event.keyval == GdkKeysyms.GDK_Delete) {
+			this.canvas.deleteSelected();
+			return  true;
+		}
+		else {
+			return false;
+		}
+	}
+	
 	void buildMainWindow() {
 		this.mainWindow = getBuilderObject!(Window, GtkWindow)(this.builder, "mainWindow");
 		this.mainWindow.maximize();
@@ -233,6 +257,8 @@ class Startup {
 				Canvas.saveXML(this.canvas);
 				Main.exit(0);
 			});
+			
+		this.mainWindow.addOnKeyPress(&this.keyPressed);
 	}
 	
 	void buildToolbars() {

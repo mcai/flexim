@@ -29,7 +29,6 @@ import cairo.Context;
 import cairo.ImageSurface;
 
 import gdk.Cursor;
-import gdk.Keymap;
 
 import gtk.StockItem;
 
@@ -1180,7 +1179,7 @@ class Canvas: DrawingArea {
 		this.pick = false;
 		this.updated = false;
 		this.selectedChild = null;
-		
+
 		this.addEvents(GdkEventMask.BUTTON_PRESS_MASK);
 		this.addEvents(GdkEventMask.BUTTON_RELEASE_MASK);
 		this.addEvents(GdkEventMask.POINTER_MOTION_MASK);
@@ -1190,6 +1189,11 @@ class Canvas: DrawingArea {
 		this.addOnButtonPress(&this.buttonPressed);
 		this.addOnButtonRelease(&this.buttonReleased);
 		this.addOnMotionNotify(&this.motionNotified);
+		
+		this.addOnSelected(delegate void(DrawableObject child)
+			{
+				this.selectedChild = child;
+			});
 		
 		this.paper.x = 5;
 		this.paper.y = 5;
@@ -1201,38 +1205,6 @@ class Canvas: DrawingArea {
 		this.paper.height = 650;
 		
 		this.grid.snap = true;
-		
-		//this.setupSampleData();
-	}
-	
-	void setupSampleData() {		
-		TextBox text = new TextBox("Instruction Cache (blahblahblahblahblahblah...)");
-		text.x = 100;
-		text.y = 100;
-		text.width = 400;
-		text.height = 50;
-		this.add(text);
-		
-		Box box = new Box();
-		box.x = 200;
-		box.y = 200;
-		box.width = 100;
-		box.height = 100;
-		this.add(box);
-		
-		Line line = new Line();
-		line.x = 0;
-		line.y = 300;
-		line.width = 100;
-		line.height = 100;
-		this.add(line);
-		
-		RoundedBox rounded = new RoundedBox();
-		rounded.x = 500;
-		rounded.y = 0;
-		rounded.width = 100;
-		rounded.height = 100;
-		this.add(rounded);
 	}
 	
 	void addOnSelected(void delegate(DrawableObject child) del) {
@@ -1334,7 +1306,7 @@ class Canvas: DrawingArea {
 			int x, y;
 			this.getPointer(x, y);
 			
-			DrawableObject child = this.selectedChild;
+			DrawableObject child = this.childToAdd;
 			child.selected = true;
 			this.fireSelected(child);
 			child.resize = true;
@@ -1578,14 +1550,26 @@ class Canvas: DrawingArea {
 	
 	void create(DrawableObject child) {
 		this.pick = true;
-		this.selectedChild = child;
+		this.childToAdd = child;
 	}
 	
 	void update(DrawableObject child) {
 		this.queueDraw();
 	}
 	
-	void remove() {
+	void cutSelected() {
+		writefln("cutSelected");
+	}
+	
+	void copySelected() {
+		writefln("copySelected");
+	}
+	
+	void paste() {
+		writefln("paste");
+	}
+	
+	/*void remove() {
 		bool restart = true;
 		
 		while(restart) {
@@ -1600,11 +1584,19 @@ class Canvas: DrawingArea {
 		}
 		
 		this.queueDraw();
+	}*/
+	
+	void deleteSelected() {
+		if(this.selectedChild !is null) {
+			int index = this.children.indexOf(this.selectedChild);
+			this.children = this.children.remove(index);
+			this.queueDraw();
+		}
 	}
 	
 	override string toString() {
-		return format("Canvas[origin=%s, total=%s, border=%f, pick=%s, updated=%s, needUpdate=%s, selectedChild=%s]",
-			this.origin, this.total, this.border, this.pick, this.updated, this.needUpdate, this.selectedChild);
+		return format("Canvas[origin=%s, total=%s, border=%f, pick=%s, updated=%s, needUpdate=%s, childToAdd=%s]",
+			this.origin, this.total, this.border, this.pick, this.updated, this.needUpdate, this.childToAdd);
 	}
 	
 	static Canvas loadXML(string cwd = "../configs/layouts", string fileName = "canvas" ~ ".xml") {
@@ -1625,7 +1617,7 @@ class Canvas: DrawingArea {
 	Size total;
 	double border;
 	bool pick, updated, needUpdate;
-	DrawableObject selectedChild;
+	DrawableObject childToAdd, selectedChild;
 	HRuler horizontalRuler;
 	VRuler verticalRuler;
 }

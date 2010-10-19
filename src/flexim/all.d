@@ -35,6 +35,8 @@ public import gdk.Color;
 public import gdk.Display;
 public import gdk.Drawable;
 public import gdk.Event;
+public import gdk.Keymap;
+public import gdk.Keysyms;
 public import gdk.Pixbuf;
 public import gdk.Rectangle;
 public import gdk.Screen;
