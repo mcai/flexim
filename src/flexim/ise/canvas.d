@@ -1165,6 +1165,150 @@ class LineXMLSerializer: XMLSerializer!(Line) {
 	static LineXMLSerializer singleInstance;
 }
 
+enum ArrowHeadStyle: string {
+	NONE = "NONE",
+	SOLID = "SOLID"
+}
+
+class ArrowHead {
+	this(ArrowHeadStyle style = ArrowHeadStyle.SOLID) {
+		this.length = 5;
+		this.degrees = 0.5;
+		this.style = style;
+	}
+	
+	void draw(Context context, double startX, double startY, double endX, double endY) {	
+		if(this.style == ArrowHeadStyle.SOLID) {
+			double angle = atan2(endY - startY, endX - startX) + PI;
+		
+			double x1 = endX + this.length * cos(angle - this.degrees);
+			double y1 = endY + this.length * sin(angle - this.degrees);
+			double x2 = endX + this.length * cos(angle + this.degrees);
+			double y2 = endY + this.length * sin(angle + this.degrees);
+			
+			context.moveTo(endX, endY);
+			context.lineTo(x1, y1);
+			context.lineTo(x2, y2);
+			context.closePath();
+	
+			context.setSourceColor(new gdk.Color.Color(0x000000));
+			context.strokePreserve();
+	
+			//context.setSourceColor(new gdk.Color.Color(0xFFFFFF));
+			context.fill();
+		}
+	}
+	
+	double length, degrees;
+	ArrowHeadStyle style;
+}
+
+class Arrow: DrawableObject {	
+	this() {
+		this.handler.line = true;
+		this.thickness = 2.5;
+		
+		this.startHead = new ArrowHead(ArrowHeadStyle.NONE);
+		this.endHead = new ArrowHead(ArrowHeadStyle.SOLID);
+	}
+	
+	ArrowHeadStyle startHeadStyle() {
+		return this.startHead.style;
+	}
+	
+	void startHeadStyle(ArrowHeadStyle value) {
+		this.startHead.style = value;
+	}
+	
+	ArrowHeadStyle endHeadStyle() {
+		return this.endHead.style;
+	}
+	
+	void endHeadStyle(ArrowHeadStyle value) {
+		this.endHead.style = value;
+	}
+	
+	override void post() {
+		this.handler.controls[Direction.NORTHWEST].x = this.x;
+		this.handler.controls[Direction.NORTHWEST].y = this.y;
+		
+		this.handler.controls[Direction.SOUTHEAST].x = this.x + this.width;
+		this.handler.controls[Direction.SOUTHEAST].y = this.y +  this.height;
+	}
+	
+	override void draw(Context context) {
+		super.draw(context);
+		
+		context.setDash(this.dash, 0);
+		context.setLineWidth(this.thickness);
+		context.moveTo(this.x, this.y);
+		context.lineTo(this.x + this.width, this.y + this.height);
+		context.setSourceRgb(0.0, 0.0, 0.0);
+		context.stroke();
+		
+		this.startHead.draw(context, this.x + this.width, this.y + this.height, this.x, this.y);
+		this.endHead.draw(context, this.x, this.y, this.x + this.width, this.y + this.height);
+	}
+	
+	override XMLConfig save() {
+		return ArrowXMLSerializer.singleInstance.save(this);
+	}
+	
+	override string toString() {
+		return format("Arrow[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s, thickness=%f]",
+			this.x, this.y, this.width, this.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.thickness);
+	}
+	
+	double[] dash;
+	double thickness;
+	
+	ArrowHead startHead, endHead;
+}
+
+class ArrowXMLSerializer: XMLSerializer!(Arrow) {
+	this() {
+	}
+	
+	override XMLConfig save(Arrow arrow) {
+		XMLConfig xmlConfig = new XMLConfig("Arrow");
+		xmlConfig["x"] = to!(string)(arrow.x);
+		xmlConfig["y"] = to!(string)(arrow.y);
+		xmlConfig["width"] = to!(string)(arrow.width);
+		xmlConfig["height"] = to!(string)(arrow.height);
+		
+		xmlConfig["startHeadStyle"] = to!(string)(arrow.startHeadStyle);
+		xmlConfig["endHeadStyle"] = to!(string)(arrow.endHeadStyle);
+			
+		return xmlConfig;
+	}
+	
+	override Arrow load(XMLConfig xmlConfig) {
+		double x = to!(double)(xmlConfig["x"]);
+		double y = to!(double)(xmlConfig["y"]);
+		double width = to!(double)(xmlConfig["width"]);
+		double height = to!(double)(xmlConfig["height"]);
+		
+		ArrowHeadStyle startHeadStyle = cast(ArrowHeadStyle) (xmlConfig["startHeadStyle"]);
+		ArrowHeadStyle endHeadStyle = cast(ArrowHeadStyle) (xmlConfig["endHeadStyle"]);
+			
+		Arrow arrow = new Arrow();
+		arrow.x = x;
+		arrow.y = y;
+		arrow.width = width;
+		arrow.height = height;
+		
+		arrow.startHeadStyle = startHeadStyle;
+		arrow.endHeadStyle = endHeadStyle;
+		return arrow;
+	}
+	
+	static this() {
+		singleInstance = new ArrowXMLSerializer();
+	}
+	
+	static ArrowXMLSerializer singleInstance;
+}
+
 class Canvas: DrawingArea {
 	this() {
 		this.paper = new Paper();
@@ -1682,6 +1826,12 @@ class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
 			}
 			else if(typeName == "Line") {
 				canvas.add(LineXMLSerializer.singleInstance.load(entry));
+			}
+			else if(typeName == "Arrow") {
+				canvas.add(ArrowXMLSerializer.singleInstance.load(entry));
+			}
+			else {
+				assert(0, typeName);
 			}
 		}
 		

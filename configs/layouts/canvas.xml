@@ -24,24 +24,24 @@
    </TextBox>
    <Box x="60" y="285" width="675" height="120">
    </Box>
-   <Line x="150" y="165" width="0" height="45">
-   </Line>
-   <Line x="300" y="165" width="0" height="45">
-   </Line>
-   <Line x="495" y="165" width="0" height="45">
-   </Line>
-   <Line x="645" y="165" width="0" height="45">
-   </Line>
-   <Line x="150" y="255" width="0" height="45">
-   </Line>
-   <Line x="300" y="255" width="0" height="45">
-   </Line>
-   <Line x="495" y="255" width="0" height="45">
-   </Line>
-   <Line x="645" y="255" width="0" height="45">
-   </Line>
-   <Line x="405" y="390" width="0" height="45">
-   </Line>
+   <Arrow x="150" y="165" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="SOLID">
+   </Arrow>
+   <Arrow x="285" y="165" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="NONE">
+   </Arrow>
+   <Arrow x="495" y="165" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="SOLID">
+   </Arrow>
+   <Arrow x="285" y="255" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="NONE">
+   </Arrow>
+   <Arrow x="150" y="255" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="SOLID">
+   </Arrow>
+   <Arrow x="645" y="165" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="NONE">
+   </Arrow>
+   <Arrow x="495" y="255" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="SOLID">
+   </Arrow>
+   <Arrow x="645" y="255" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="NONE">
+   </Arrow>
+   <Arrow x="405" y="390" width="0" endHeadStyle="SOLID" height="45" startHeadStyle="SOLID">
+   </Arrow>
    <Text x="300" preserve="true" y="435" size="12" text="Fixed-Latency DRAM Access" width="285" height="19" font="Verdana">
    </Text>
    <Text x="465" preserve="true" y="15" size="12" text="Shared-L2-Cache Dual Core (MIPS32)" width="315" height="19" font="Verdana">
