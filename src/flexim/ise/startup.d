@@ -178,7 +178,48 @@ class VBoxViewButtonsList : VBox {
 	Startup startup;
 }
 
-class TreeViewNodeProperties : TreeView {
+class TreeViewNodeProperties: TreeView {
+	class ListStoreBenchmark: ListStore {
+		this() {
+			GType[] types;
+			types ~= Pixbuf.getType();
+			types ~= GType.STRING;
+			types ~= GType.STRING;
+			
+			super(types);
+		}
+	}
+	
+	this() {		
+		this.listStore = new ListStoreBenchmark();
+		
+		this.appendColumn(new TreeViewColumn("Image", new CellRendererPixbuf(), "pixbuf", 0));
+		this.appendColumn(new TreeViewColumn("Key", new CellRendererText(), "text", 1));
+		this.appendColumn(new TreeViewColumn("Value", new CellRendererText(), "text", 2));
+		
+		this.refreshList();
+	}
+	
+	void refreshList() {
+		this.setModel(null);
+		this.listStore.clear();
+		
+		foreach(key, value; this.data) {
+			TreeIter iter = this.listStore.createIter();
+	
+			this.listStore.setValue(iter, 0, new Value(new Pixbuf("../gtk/canvas/cpu.svg")));
+			this.listStore.setValue(iter, 1, "<br>" ~ key ~ "</br>");
+			this.listStore.setValue(iter, 2, value);
+		}
+		
+		this.setModel(this.listStore);
+	}
+	
+	string[string] data;
+	ListStoreBenchmark listStore;
+}
+
+class TreeViewNodeProperties1 : TreeView {
 	this() {		
 		GType[] types;
 		
@@ -311,7 +352,7 @@ class Startup {
 				aboutDialog.setProgramName("Flexim ISE");
 				aboutDialog.setVersion("0.1 Prelease");
 				aboutDialog.setCopyright("Copyright (c) 2010 Min Cai <itecgo@163.com>");
-				//aboutDialog.setLogo(this.icon.getPixbuf);
+				aboutDialog.setLogo(new Pixbuf("../gtk/flexim.png"));
 				aboutDialog.setAuthors(authors);
 				aboutDialog.setDocumenters(documenters);
 				aboutDialog.setArtists(artists);
@@ -413,11 +454,73 @@ class Startup {
 		
 		this.frameDrawing.add(vboxCenter);
 		
-		void buildPropertiesView() {
-			VBox vboxLeftTop = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftTop");
-				
-			this.vboxViewButtonsList = new VBoxViewButtonsList(this);
-			vboxLeftTop.packStart(this.vboxViewButtonsList, false, false, 0);
+		VBox vboxLeftTop = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftTop");
+		
+		void setupPalette() {
+			this.palette = new ToolPalette();
+			
+			ScrolledWindow scrolledWindow = new ScrolledWindow();
+			scrolledWindow.setPolicy(GtkPolicyType.NEVER, GtkPolicyType.AUTOMATIC);
+			scrolledWindow.setBorderWidth(6);
+			
+			scrolledWindow.add(this.palette);
+			
+			vboxLeftTop.packStart(scrolledWindow, true, true, 0);
+		}
+		
+		void populatePalette() {			
+			ToolItemGroup groupProcessorCores = new ToolItemGroup("Processor Cores");
+			this.palette.add(groupProcessorCores);
+		
+			string CPU = registerStockId("cpu", "Cpu", "X", "../gtk/canvas/cpu.svg");
+			
+			for(int i = 0; i < 10; i++) {
+				ToolItem item1 = new ToolButton(CPU);
+				item1.setTooltipText("Out-of-Order Processor Core");
+				item1.setIsImportant(true);
+				groupProcessorCores.insert(item1, -1);
+			}
+			
+			ToolItemGroup groupCaches = new ToolItemGroup("Caches");
+			this.palette.add(groupCaches);
+			
+			string CACHE = registerStockId("cache", "Cache", "X", "../gtk/canvas/cpu.svg");
+
+			for(int i = 0; i < 10; i++) {
+				ToolItem item1 = new ToolButton(CACHE);
+				item1.setTooltipText("Level One Instruction Cache");
+				item1.setIsImportant(true);
+				groupCaches.insert(item1, -1);
+			}
+			
+			ToolItemGroup groupInterconnects = new ToolItemGroup("Interconnects");
+			this.palette.add(groupInterconnects);
+			
+			string INTERCONNECT = registerStockId("interconnect", "Interconnect", "X", "../gtk/canvas/cpu.svg");
+
+			for(int i = 0; i < 10; i++) {
+				ToolItem item1 = new ToolButton(INTERCONNECT);
+				item1.setTooltipText("Fixed-Latency Peer-to-Peer Interconnect");
+				item1.setIsImportant(true);
+				groupInterconnects.insert(item1, -1);
+			}
+			
+			ToolItemGroup groupMainMemories = new ToolItemGroup("Main Memories");
+			this.palette.add(groupMainMemories);
+			
+			string MAIN_MEMORY = registerStockId("mainMemory", "MainMemory", "X", "../gtk/canvas/cpu.svg");
+
+			for(int i = 0; i < 10; i++) {
+				ToolItem item1 = new ToolButton(MAIN_MEMORY);
+				item1.setTooltipText("Fixed-Latency DRAM Controller");
+				item1.setIsImportant(true);
+				groupMainMemories.insert(item1, -1);
+			}
+		}
+		
+		void buildPropertiesView() {				
+			//this.vboxViewButtonsList = new VBoxViewButtonsList(this);
+			//vboxLeftTop.packStart(this.vboxViewButtonsList, false, false, 0);
 
 			VBox vboxLeftBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftBottom");
 				
@@ -432,6 +535,8 @@ class Startup {
 			});
 		}
 		
+		setupPalette();
+		populatePalette();
 		buildPropertiesView();
 	}
 	
@@ -443,39 +548,39 @@ class Startup {
 		
 		Timeout timeout = new Timeout(100, delegate bool ()
 			{
-				preloadConfigsAndStats((string text){
-					labelLoading.setLabel(text);
+				/*preloadConfigsAndStats((string text){
+					labelLoading.setMarkup(text);
 	
 					while(Main.eventsPending) {
 						Main.iterationDo(false);
 					}
-				});
+				});*/
 
-				labelLoading.setLabel("Building main window...");
+				labelLoading.setLabel("Building main window");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
 				this.buildMainWindow();
 				
-				labelLoading.setLabel("Building toolbars...");
+				labelLoading.setLabel("Building toolbars");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
 				this.buildToolbars();
 
-				labelLoading.setLabel("Building menus...");
+				labelLoading.setLabel("Building menus");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
 				this.buildMenus();
 
-				labelLoading.setLabel("Building canvas...");
+				labelLoading.setLabel("Building visualization");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
 				this.buildFrameDrawing();
 				
-				this.vboxViewButtonsList.refillComboBoxItems();
+				//this.vboxViewButtonsList.refillComboBoxItems();
 				
 				this.splashScreen.hideAll();
 				
@@ -498,7 +603,8 @@ class Startup {
 	Table tableCanvas;
 	Canvas canvas;
 	Window splashScreen;
-	VBoxViewButtonsList vboxViewButtonsList;
+	//VBoxViewButtonsList vboxViewButtonsList;
+	ToolPalette palette;
 }
 
 void mainGui(string[] args) {

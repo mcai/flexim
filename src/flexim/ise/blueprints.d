@@ -30,7 +30,12 @@ abstract class BlueprintBase {
 	abstract void realize();
 }
 
-class OoOProcessorCoreBlueprint : BlueprintBase {
+class ProcessorCoreBlueprint: BlueprintBase {
+	this() {
+	}
+}
+
+class OoOProcessorCoreBlueprint : ProcessorCoreBlueprint {
 	this() {
 	}
 	
@@ -90,12 +95,12 @@ class FixedLatencyP2PInterconnectBlueprint : P2PInterconnectBlueprint {
 	}
 }
 
-abstract class DRAMBlueprint : BlueprintBase {
+abstract class MainMemoryBlueprint : BlueprintBase {
 	this() {
 	}
 }
 
-class FixedLatencyDRAMBlueprint : DRAMBlueprint {
+class FixedLatencyDRAMBlueprint : MainMemoryBlueprint {
 	this() {
 	}
 	
@@ -118,11 +123,11 @@ class SharedCacheMulticoreBlueprint: ArchitectureBlueprint {
 		assert(this.cores.length == 2);
 		assert(this.l2 !is null);
 		assert(this.interconnect !is null);
-		assert(this.dram !is null);
+		assert(this.mainMemory !is null);
 	}
 	
 	OoOProcessorCoreBlueprint[] cores;
 	L2CacheBlueprint l2;
 	P2PInterconnectBlueprint interconnect;
-	DRAMBlueprint dram;
+	MainMemoryBlueprint mainMemory;
 }

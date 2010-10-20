@@ -515,6 +515,15 @@ abstract class DrawableObject {
 	
 	abstract XMLConfig save();
 	
+	string opIndex(string index) {
+		assert(index in this.properties);
+		return this.properties[index];
+	}
+	
+	void opIndexAssign(string value, string index) {
+		this.properties[index] = value;
+	}
+	
 	override string toString() {
 		return format("DrawableObject[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s]",
 			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.handler, this.offset, this.selected, this.resize, this.direction);
@@ -889,6 +898,8 @@ class TextBox: Box {
 		this.size = 12;
 		this.preserve = true;
 		this.text = text;
+		
+		this["hello"] = "world";
 	}
 	
 	void drawText(Context context) {
@@ -1844,8 +1855,10 @@ class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
 	static CanvasXMLFileSerializer singleInstance;
 }
 
-string registerStockId(string name, string label, string key) {
-	string fileName = format("../gtk/stock/%s.png", name);
+string registerStockId(string name, string label, string key, string fileName = null) {
+	if(fileName is null) {
+		fileName = format("../gtk/stock/%s.png", name);
+	}
 	string domain = "slow";
 	string id = format("%s-%s", domain, name);
 	Pixbuf pixbuf = new Pixbuf(fileName);
