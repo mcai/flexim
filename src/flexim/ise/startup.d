@@ -48,12 +48,11 @@ void guiActionNotImplemented(Window parent, string text) {
 	d.destroy();
 }
 
-class VBoxViewButtonsList : VBox {	
-	//this(GraphView graphView) {
-	this() {
+class VBoxViewButtonsList : VBox {
+	this(Startup startup) {
 		super(false, 5);
 		
-		//this.graphView = graphView;
+		this.startup = startup;
 		
 		with(this.buttonBenchmarkConfigView = new Button("View Config")) {
 			addOnClicked(&this.buttonBenchmarkConfigViewClicked);
@@ -145,7 +144,10 @@ class VBoxViewButtonsList : VBox {
 		
 		core.thread.Thread threadRunExperiment = new core.thread.Thread(
 			{
-				runExperiment(this.selectedExperimentName);
+				runExperiment(this.selectedExperimentName, delegate void(string text)
+					{
+						this.startup.mainWindow.setTitle(text);
+					}); //TODO
 				
 				this.buttonExperimentStatView.setSensitive(true);
 				this.buttonExperimentRun.setSensitive(true);
@@ -173,7 +175,7 @@ class VBoxViewButtonsList : VBox {
 	Button buttonExperimentConfigView, buttonExperimentStatView;
 	Button buttonExperimentRun;
 	
-	//GraphView graphView;
+	Startup startup;
 }
 
 class TreeViewNodeProperties : TreeView {
@@ -217,10 +219,6 @@ class Startup {
 		this.builder.addFromFile("../gtk/flexim_gui.glade");
 		this.builder.connectSignals(null); 
 
-		this.buildMainWindow();
-		this.buildToolbars();
-		this.buildMenus();
-		this.buildFrameDrawing();
 		this.buildSplashScreen();
 		this.run();
 	}
@@ -321,7 +319,6 @@ class Startup {
 				aboutDialog.setWebsite("http://github.com/mcai/flexim");
 				aboutDialog.setComments("Flexim Integrated Simulation Enviroment (ISE) is a flexible and rich architectural simulator written in D.");
 				
-				
 				if (aboutDialog.run() == GtkResponseType.GTK_RESPONSE_CANCEL) {
 					aboutDialog.destroy();
 				}
@@ -419,7 +416,7 @@ class Startup {
 		void buildPropertiesView() {
 			VBox vboxLeftTop = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftTop");
 				
-			this.vboxViewButtonsList = new VBoxViewButtonsList();
+			this.vboxViewButtonsList = new VBoxViewButtonsList(this);
 			vboxLeftTop.packStart(this.vboxViewButtonsList, false, false, 0);
 
 			VBox vboxLeftBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftBottom");
@@ -446,13 +443,37 @@ class Startup {
 		
 		Timeout timeout = new Timeout(100, delegate bool ()
 			{
-				/*preloadConfigsAndStats((string text){
+				preloadConfigsAndStats((string text){
 					labelLoading.setLabel(text);
 	
 					while(Main.eventsPending) {
 						Main.iterationDo(false);
 					}
-				});*/
+				});
+
+				labelLoading.setLabel("Building main window...");
+				while(Main.eventsPending) {
+					Main.iterationDo(false);
+				}
+				this.buildMainWindow();
+				
+				labelLoading.setLabel("Building toolbars...");
+				while(Main.eventsPending) {
+					Main.iterationDo(false);
+				}
+				this.buildToolbars();
+
+				labelLoading.setLabel("Building menus...");
+				while(Main.eventsPending) {
+					Main.iterationDo(false);
+				}
+				this.buildMenus();
+
+				labelLoading.setLabel("Building canvas...");
+				while(Main.eventsPending) {
+					Main.iterationDo(false);
+				}
+				this.buildFrameDrawing();
 				
 				this.vboxViewButtonsList.refillComboBoxItems();
 				

@@ -30,8 +30,13 @@ public import std.random;
 public import std.stdio;
 public import std.string;
 public import std.typecons;
+ 
+public import cairo.ImageSurface;
+public import cairo.PdfSurface;
+public import cairo.Surface;
 
 public import gdk.Color;
+public import gdk.Cursor;
 public import gdk.Display;
 public import gdk.Drawable;
 public import gdk.Event;
@@ -78,6 +83,7 @@ public import gtk.Notebook;
 public import gtk.ObjectGtk;
 public import gtk.ScrolledWindow;
 public import gtk.SpinButton;
+public import gtk.StockItem;
 public import gtk.Table;
 public import gtk.ToggleButton;
 public import gtk.ToolButton;
@@ -92,6 +98,10 @@ public import gtk.VRuler;
 public import gtk.VSeparator;
 public import gtk.Widget;
 public import gtk.Window;
+
+public import pango.PgCairo;
+public import pango.PgLayout;
+public import pango.PgFontDescription;
 
 public import flexim.cpu.bpred;
 public import flexim.cpu.instruction;
@@ -112,7 +122,8 @@ public import flexim.isa.integer;
 public import flexim.isa.mem;
 public import flexim.isa.misc;
 
-public import flexim.ise.canvas;
+public import flexim.ise.blueprints;
+public import flexim.ise.views;
 public import flexim.ise.models;
 public import flexim.ise.startup;
 
