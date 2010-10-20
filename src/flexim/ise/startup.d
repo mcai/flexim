@@ -347,7 +347,7 @@ class Startup {
 			toolButtonBox.setTooltipText("Box");
 			toolButtonBox.addOnClicked(delegate void(ToolButton button)
 				{
-					Box child = new Box();
+					Box child = new Box(format("box%d", this.canvas.children.length));
 					this.canvas.create(child);
 				});
 			
@@ -355,7 +355,7 @@ class Startup {
 			toolButtonRoundedBox.setTooltipText("Rounded Box");
 			toolButtonRoundedBox.addOnClicked(delegate void(ToolButton button)
 				{
-					RoundedBox child = new RoundedBox();
+					RoundedBox child = new RoundedBox(format("roundedBox%d", this.canvas.children.length));
 					this.canvas.create(child);
 				});
 			
@@ -363,7 +363,7 @@ class Startup {
 			toolButtonText.setTooltipText("Text");
 			toolButtonText.addOnClicked(delegate void(ToolButton button)
 				{
-					Text child = new Text("Insert text here");
+					Text child = new Text(format("text%d", this.canvas.children.length), "Insert text here");
 					child.size = 12;
 					this.canvas.create(child);
 				});
@@ -372,7 +372,7 @@ class Startup {
 			toolButtonLine.setTooltipText("Line");
 			toolButtonLine.addOnClicked(delegate void(ToolButton button)
 				{
-					Line child = new Line();
+					Line child = new Line(format("Line%d", this.canvas.children.length));
 					this.canvas.create(child);
 				});
 			

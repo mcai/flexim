@@ -468,7 +468,8 @@ class Handler {
 }
 
 abstract class DrawableObject {
-	this() {
+	this(string id) {
+		this.id = id;
 		this.handler = new Handler();
 		this.selected = false;
 		this.resize = false;
@@ -518,18 +519,21 @@ abstract class DrawableObject {
 		return format("DrawableObject[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s]",
 			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.handler, this.offset, this.selected, this.resize, this.direction);
 	}
+
+	string id;
+	string[string] properties;
 	
 	Rectangle rect;
 	Handler handler;
 	Rectangle offset;
-	bool selected, resize;
 	Direction direction;
-	string[string] properties;
+	bool selected, resize;
 }
 
 abstract class BoxBase: DrawableObject {
-	this(string backColor = "green") {
-		this.backColor = backColor;
+	this(string id) {
+		super(id);
+		this.backColor = "green";
 	}
 	
 	override void post() {
@@ -560,7 +564,6 @@ abstract class BoxBase: DrawableObject {
 	
 	override void draw(Context context) {
 		super.draw(context);
-		
 		this.drawBox(context);
 	}
 	
@@ -579,7 +582,8 @@ abstract class BoxBase: DrawableObject {
 }
 
 class Text: BoxBase {
-	this(string text = "") {
+	this(string id, string text = "") {
+		super(id);
 		this.font = "Verdana";
 		this.size = 32;
 		this.preserve = true;
@@ -662,6 +666,7 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 	
 	override XMLConfig save(Text text) {
 		XMLConfig xmlConfig = new XMLConfig("Text");
+		xmlConfig["id"] = text.id;
 		xmlConfig["x"] = to!(string)(text.rect.x);
 		xmlConfig["y"] = to!(string)(text.rect.y);
 		xmlConfig["width"] = to!(string)(text.rect.width);
@@ -677,6 +682,7 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 	}
 	
 	override Text load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
 		double x = to!(double)(xmlConfig["x"]);
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
@@ -688,7 +694,7 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 		bool preserve = to!(bool)(xmlConfig["preserve"]);
 		string textStr = xmlConfig["text"];
 			
-		Text text = new Text();
+		Text text = new Text(id);
 		text.rect.x = x;
 		text.rect.y = y;
 		text.rect.width = width;
@@ -709,7 +715,8 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 }
 
 class Box: BoxBase {
-	this() {
+	this(string id) {
+		super(id);
 	}
 	
 	override void drawBox(Context context) {
@@ -739,6 +746,7 @@ class BoxXMLSerializer: XMLSerializer!(Box) {
 	
 	override XMLConfig save(Box box) {
 		XMLConfig xmlConfig = new XMLConfig("Box");
+		xmlConfig["id"] = box.id;
 		xmlConfig["x"] = to!(string)(box.rect.x);
 		xmlConfig["y"] = to!(string)(box.rect.y);
 		xmlConfig["width"] = to!(string)(box.rect.width);
@@ -749,13 +757,14 @@ class BoxXMLSerializer: XMLSerializer!(Box) {
 	}
 	
 	override Box load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
 		double x = to!(double)(xmlConfig["x"]);
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
 		double height = to!(double)(xmlConfig["height"]);
 		string backColor = xmlConfig["backColor"];
 			
-		Box box = new Box();
+		Box box = new Box(id);
 		box.rect.x = x;
 		box.rect.y = y;
 		box.rect.width = width;
@@ -772,7 +781,8 @@ class BoxXMLSerializer: XMLSerializer!(Box) {
 }
 
 class RoundedBox: BoxBase {
-	this() {
+	this(string id) {
+		super(id);
 		this.radius = 10;
 		this.handler.controls[Direction.END] = new Control();
 	}
@@ -835,6 +845,7 @@ class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
 	
 	override XMLConfig save(RoundedBox box) {
 		XMLConfig xmlConfig = new XMLConfig("RoundedBox");
+		xmlConfig["id"] = box.id;
 		xmlConfig["x"] = to!(string)(box.rect.x);
 		xmlConfig["y"] = to!(string)(box.rect.y);
 		xmlConfig["width"] = to!(string)(box.rect.width);
@@ -846,6 +857,7 @@ class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
 	}
 	
 	override RoundedBox load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
 		double x = to!(double)(xmlConfig["x"]);
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
@@ -853,7 +865,7 @@ class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
 		string backColor = xmlConfig["backColor"];
 		double radius = to!(double)(xmlConfig["radius"]);
 			
-		RoundedBox roundedBox = new RoundedBox();
+		RoundedBox roundedBox = new RoundedBox(id);
 		roundedBox.rect.x = x;
 		roundedBox.rect.y = y;
 		roundedBox.rect.width = width;
@@ -871,7 +883,8 @@ class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
 }
 
 class TextBox: Box {
-	this(string text = "") {
+	this(string id, string text = "") {
+		super(id);
 		this.font = "Verdana";
 		this.size = 12;
 		this.preserve = true;
@@ -922,6 +935,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 	
 	override XMLConfig save(TextBox textBox) {
 		XMLConfig xmlConfig = new XMLConfig("TextBox");
+		xmlConfig["id"] = textBox.id;
 		xmlConfig["x"] = to!(string)(textBox.rect.x);
 		xmlConfig["y"] = to!(string)(textBox.rect.y);
 		xmlConfig["width"] = to!(string)(textBox.rect.width);
@@ -937,6 +951,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 	}
 	
 	override TextBox load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
 		double x = to!(double)(xmlConfig["x"]);
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
@@ -948,7 +963,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		bool preserve = to!(bool)(xmlConfig["preserve"]);
 		string text = xmlConfig["text"];
 			
-		TextBox textBox = new TextBox();
+		TextBox textBox = new TextBox(id);
 		textBox.rect.x = x;
 		textBox.rect.y = y;
 		textBox.rect.width = width;
@@ -969,7 +984,8 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 }
 
 class RoundedTextBox: RoundedBox {
-	this(string text = "") {
+	this(string id, string text = "") {
+		super(id);
 		this.font = "Verdana";
 		this.size = 12;
 		this.preserve = true;
@@ -1020,6 +1036,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 	
 	override XMLConfig save(RoundedTextBox roundedTextBox) {
 		XMLConfig xmlConfig = new XMLConfig("RoundedTextBox");
+		xmlConfig["id"] = roundedTextBox.id;
 		xmlConfig["x"] = to!(string)(roundedTextBox.rect.x);
 		xmlConfig["y"] = to!(string)(roundedTextBox.rect.y);
 		xmlConfig["width"] = to!(string)(roundedTextBox.rect.width);
@@ -1036,6 +1053,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 	}
 	
 	override RoundedTextBox load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
 		double x = to!(double)(xmlConfig["x"]);
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
@@ -1048,7 +1066,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		bool preserve = to!(bool)(xmlConfig["preserve"]);
 		string text = xmlConfig["text"];
 			
-		RoundedTextBox roundedTextBox = new RoundedTextBox();
+		RoundedTextBox roundedTextBox = new RoundedTextBox(id);
 		roundedTextBox.rect.x = x;
 		roundedTextBox.rect.y = y;
 		roundedTextBox.rect.width = width;
@@ -1070,7 +1088,8 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 }
 
 class Line: DrawableObject {
-	this() {
+	this(string id) {
+		super(id);
 		this.handler.line = true;
 		this.thickness = 2.5;
 	}
@@ -1113,6 +1132,7 @@ class LineXMLSerializer: XMLSerializer!(Line) {
 	
 	override XMLConfig save(Line line) {
 		XMLConfig xmlConfig = new XMLConfig("Line");
+		xmlConfig["id"] = line.id;
 		xmlConfig["x"] = to!(string)(line.rect.x);
 		xmlConfig["y"] = to!(string)(line.rect.y);
 		xmlConfig["width"] = to!(string)(line.rect.width);
@@ -1122,12 +1142,13 @@ class LineXMLSerializer: XMLSerializer!(Line) {
 	}
 	
 	override Line load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
 		double x = to!(double)(xmlConfig["x"]);
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
 		double height = to!(double)(xmlConfig["height"]);
 			
-		Line line = new Line();
+		Line line = new Line(id);
 		line.rect.x = x;
 		line.rect.y = y;
 		line.rect.width = width;
@@ -1180,7 +1201,8 @@ class ArrowHead {
 }
 
 class Arrow: DrawableObject {	
-	this() {
+	this(string id) {
+		super(id);
 		this.handler.line = true;
 		this.thickness = 2.5;
 		
@@ -1247,6 +1269,7 @@ class ArrowXMLSerializer: XMLSerializer!(Arrow) {
 	
 	override XMLConfig save(Arrow arrow) {
 		XMLConfig xmlConfig = new XMLConfig("Arrow");
+		xmlConfig["id"] = arrow.id;
 		xmlConfig["x"] = to!(string)(arrow.rect.x);
 		xmlConfig["y"] = to!(string)(arrow.rect.y);
 		xmlConfig["width"] = to!(string)(arrow.rect.width);
@@ -1259,6 +1282,7 @@ class ArrowXMLSerializer: XMLSerializer!(Arrow) {
 	}
 	
 	override Arrow load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
 		double x = to!(double)(xmlConfig["x"]);
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
@@ -1267,7 +1291,7 @@ class ArrowXMLSerializer: XMLSerializer!(Arrow) {
 		ArrowHeadStyle startHeadStyle = cast(ArrowHeadStyle) (xmlConfig["startHeadStyle"]);
 		ArrowHeadStyle endHeadStyle = cast(ArrowHeadStyle) (xmlConfig["endHeadStyle"]);
 			
-		Arrow arrow = new Arrow();
+		Arrow arrow = new Arrow(id);
 		arrow.rect.x = x;
 		arrow.rect.y = y;
 		arrow.rect.width = width;
@@ -1667,8 +1691,12 @@ class Canvas: DrawingArea {
 		return true;
 	}
 	
-	void add(DrawableObject child) {
-		this.children ~= child;
+	void add(DrawableObject childToAdd) {
+		foreach(child; this.children) {
+			assert(child.id != childToAdd.id);
+		}
+		
+		this.children ~= childToAdd;
 	}
 	
 	void create(DrawableObject child) {
@@ -1692,27 +1720,21 @@ class Canvas: DrawingArea {
 		writefln("paste");
 	}
 	
-	/*void remove() {
-		bool restart = true;
+	void deleteSelected() {
+		DrawableObject[] childrenToDelete;
 		
-		while(restart) {
-			restart = false;
-			foreach(i, child; this.children) {
-				if(child.selected) {
-					this.children = this.children.remove(i);
-					restart = true;
-					break;
-				}
+		foreach(child; this.children) {
+			if(child.selected) {
+				childrenToDelete ~= child;
 			}
 		}
 		
-		this.queueDraw();
-	}*/
-	
-	void deleteSelected() {
-		if(this.selectedChild !is null) {
-			int index = this.children.indexOf(this.selectedChild);
+		foreach(childToDelete; childrenToDelete) {
+			int index = this.children.indexOf(childToDelete);
 			this.children = this.children.remove(index);
+		}
+		
+		if(childrenToDelete.length > 0) {
 			this.queueDraw();
 		}
 	}
