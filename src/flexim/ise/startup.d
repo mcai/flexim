@@ -379,28 +379,11 @@ class Startup {
 			this.toolbarDrawableObjects.setStyle(GtkToolbarStyle.BOTH_HORIZ);
 			
 			int position = 0;
-			
-			string BOX = registerStockId("box", "Box", "X");
-			string LINE = registerStockId("line", "Line", "X");
-			string FLEX = registerStockId("flex", "Flex", "X");
-			string ROUNDED_BOX = registerStockId("rounded-box", "Rounded", "X");
+
 			string TEXT = registerStockId("text", "Text", "X");
-			
-			ToolButton toolButtonBox = new ToolButton(BOX);
-			toolButtonBox.setTooltipText("Box");
-			toolButtonBox.addOnClicked(delegate void(ToolButton button)
-				{
-					Box child = new Box(format("box%d", this.canvas.children.length));
-					this.canvas.create(child);
-				});
-			
-			ToolButton toolButtonRoundedBox = new ToolButton(ROUNDED_BOX);
-			toolButtonRoundedBox.setTooltipText("Rounded Box");
-			toolButtonRoundedBox.addOnClicked(delegate void(ToolButton button)
-				{
-					RoundedBox child = new RoundedBox(format("roundedBox%d", this.canvas.children.length));
-					this.canvas.create(child);
-				});
+			string BOX = registerStockId("box", "Box", "X");
+			string TEXT_BOX = registerStockId("text_box", "Text Box", "X");
+			string LINE = registerStockId("line", "Line", "X");
 			
 			ToolButton toolButtonText = new ToolButton(TEXT);
 			toolButtonText.setTooltipText("Text");
@@ -411,6 +394,22 @@ class Startup {
 					this.canvas.create(child);
 				});
 			
+			ToolButton toolButtonBox = new ToolButton(BOX);
+			toolButtonBox.setTooltipText("Box");
+			toolButtonBox.addOnClicked(delegate void(ToolButton button)
+				{
+					Box child = new Box(format("box%d", this.canvas.children.length));
+					this.canvas.create(child);
+				});
+				
+			ToolButton toolButtonTextBox = new ToolButton(TEXT_BOX);
+			toolButtonTextBox.setTooltipText("Text Box");
+			toolButtonTextBox.addOnClicked(delegate void(ToolButton button)
+				{
+					TextBox child = new TextBox(format("textBox%d", this.canvas.children.length), "Insert text here");
+					this.canvas.create(child);
+				});
+			
 			ToolButton toolButtonLine = new ToolButton(LINE);
 			toolButtonLine.setTooltipText("Line");
 			toolButtonLine.addOnClicked(delegate void(ToolButton button)
@@ -418,10 +417,10 @@ class Startup {
 					Line child = new Line(format("Line%d", this.canvas.children.length));
 					this.canvas.create(child);
 				});
-			
-			this.toolbarDrawableObjects.insert(toolButtonBox, position++);
-			this.toolbarDrawableObjects.insert(toolButtonRoundedBox, position++);
+	
 			this.toolbarDrawableObjects.insert(toolButtonText, position++);
+			this.toolbarDrawableObjects.insert(toolButtonBox, position++);
+			this.toolbarDrawableObjects.insert(toolButtonTextBox, position++);
 			this.toolbarDrawableObjects.insert(toolButtonLine, position++);
 		}
 		
@@ -488,28 +487,32 @@ class Startup {
 				group.insert(item, -1);
 				return item;
 			}
+			
+			ToolItemGroup groupArchitectures = addItemGroup("Architectures");
+			string ARCH_SHARED_CACHE_MULTICORE = registerStockId("archSharedCacheMulticore", "Shared Cache Multicore", "X", "../gtk/canvas/arch_shared_cache_multicore.svg");
+			addItem(groupArchitectures, ARCH_SHARED_CACHE_MULTICORE, "archSharedCacheMulticore", "Shared Cache Multicore Architecture");
 				
 			ToolItemGroup groupProcessorCores = addItemGroup("Processor Cores");
 			string CPU_SIMPLE = registerStockId("cpuSimple", "Simple CPU", "X", "../gtk/canvas/cpu_simple.svg");
 			string CPU_OOO = registerStockId("cpuOOO", "OoO CPU", "X", "../gtk/canvas/cpu_ooo.svg");
-			addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "cpuSimple");
-			addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "cpuOoO");
+			addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "Simple CPU Core");
+			addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "Out-of-Order CPU Core");
 			
 			ToolItemGroup groupCaches = addItemGroup("Caches");
 			string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../gtk/canvas/cache_l1i.svg");
 			string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../gtk/canvas/cache_l1d.svg");
-			string CACHE_L2 = registerStockId("cacheL2", "L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
-			addItem(groupCaches, CACHE_L1I, "cacheL1I", "cacheL1I");
-			addItem(groupCaches, CACHE_L1D, "cacheL1D", "cacheL1D");
-			addItem(groupCaches, CACHE_L2, "cacheL2", "cacheL2");
+			string CACHE_L2 = registerStockId("cacheL2", "Shared L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
+			addItem(groupCaches, CACHE_L1I, "cacheL1I", "L1 Instruction Cache");
+			addItem(groupCaches, CACHE_L1D, "cacheL1D", "L1 Data Cache");
+			addItem(groupCaches, CACHE_L2, "cacheL2", "Shared L2 Cache");
 			
 			ToolItemGroup groupInterconnects = addItemGroup("Interconnects");
 			string INTERCONNECT_FIXED_P2P = registerStockId("interconnectFixedP2P", "Fixed Latency P2P Interconnect", "X", "../gtk/canvas/interconnect_fixed_p2p.svg");			
-			addItem(groupInterconnects, INTERCONNECT_FIXED_P2P, "interconnectFixedP2P", "interconnectFixedP2P");
+			addItem(groupInterconnects, INTERCONNECT_FIXED_P2P, "interconnectFixedP2P", "Fixed Latency P2P Interconnect");
 			
 			ToolItemGroup groupMainMemories = addItemGroup("Main Memories");
-			string DRAM_FIXED = registerStockId("dramFixed", "Fiexed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
-			addItem(groupMainMemories, DRAM_FIXED, "dramFixed", "dramFixed");
+			string DRAM_FIXED = registerStockId("dramFixed", "Fixed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
+			addItem(groupMainMemories, DRAM_FIXED, "dramFixed", "Fixed Latency DRAM");
 		}
 		
 		void buildPropertiesView() {				

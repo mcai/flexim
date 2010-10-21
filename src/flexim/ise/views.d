@@ -478,6 +478,18 @@ abstract class DrawableObject {
 		this.isAbstract = false;
 	}
 	
+	void addOnBlueprintChanged(void delegate(Blueprint blueprint) del) {
+		this.blueprintChangedListeners ~= del;
+	}
+	
+	void fireBlueprintChanged(Blueprint blueprint) {
+		foreach(listener; this.blueprintChangedListeners) {
+			listener(blueprint);
+		}
+	}
+	
+	void delegate(Blueprint)[] blueprintChangedListeners;
+	
 	abstract void post();
 	
 	void draw(Context context) {
@@ -548,6 +560,20 @@ abstract class DrawableObject {
 	
 	double[] dashNone;
 	double[] dashDots;
+	
+	Blueprint blueprint() {
+		return this.m_blueprint;
+	}
+	
+	void blueprint(Blueprint value) {
+		if(this.m_blueprint != value) {
+			this.m_blueprint = value;
+			
+			this.fireBlueprintChanged(value);
+		}
+	}
+	
+	Blueprint m_blueprint;
 }
 
 abstract class BoxBase: DrawableObject {
@@ -611,6 +637,12 @@ class Text: BoxBase {
 		this.size = 32;
 		this.preserve = true;
 		this.text = text;
+		
+		this.addOnBlueprintChanged(delegate void(Blueprint newBlueprint) 
+			{
+				this.text = newBlueprint.label;
+				this.underline = true;
+			});
 	}
 	
 	override void drawBox(Context context) {
@@ -623,7 +655,7 @@ class Text: BoxBase {
 				PgFontDescription font = PgFontDescription.fromString(description);
 				layout.setJustify(true);
 				layout.setFontDescription(font);
-				layout.setMarkup(this.text, -1);
+				layout.setMarkup(this.underline ? "<u>" ~ this.text ~ "</u>" : this.text, -1);
 				
 				context.setSourceRgb(0.0, 0.0, 0.0);
 				context.moveTo(this.rect.x, this.rect.y);
@@ -681,6 +713,7 @@ class Text: BoxBase {
 	int size;
 	bool preserve;
 	string text;
+	bool underline;
 }
 
 class TextXMLSerializer: XMLSerializer!(Text) {
@@ -695,6 +728,7 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 		xmlConfig["width"] = to!(string)(text.rect.width);
 		xmlConfig["height"] = to!(string)(text.rect.height);
 		xmlConfig["backColor"] = text.backColor;
+		xmlConfig["underline"] = to!(string)(text.underline);
 		
 		xmlConfig["font"] = text.font;
 		xmlConfig["size"] = to!(string)(text.size);
@@ -711,6 +745,7 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 		double width = to!(double)(xmlConfig["width"]);
 		double height = to!(double)(xmlConfig["height"]);
 		string backColor = xmlConfig["backColor"];
+		bool underline = to!(bool)(xmlConfig["underline"]);
 		
 		string font = xmlConfig["font"];
 		int size = to!(int)(xmlConfig["size"]);
@@ -723,6 +758,8 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 		text.rect.width = width;
 		text.rect.height = height;
 		text.backColor = backColor;
+		text.underline = underline;
+		
 		text.font = font;
 		text.size = size;
 		text.preserve = preserve;
@@ -918,6 +955,13 @@ class TextBox: Box {
 		this.text = text;
 		
 		this["hello"] = "world";
+		
+		this.addOnBlueprintChanged(delegate void(Blueprint newBlueprint) 
+			{
+				this.text = newBlueprint.label;
+				this.backColor = newBlueprint.backColor;
+				this.isAbstract = !newBlueprint.isCycleAccurate;
+			});
 	}
 	
 	void drawText(Context context) {
@@ -930,7 +974,7 @@ class TextBox: Box {
 		layout.setFontDescription(font);
 		layout.setWidth(cast(int) this.rect.width * PANGO_SCALE);
 		layout.setHeight(cast(int) this.rect.height * PANGO_SCALE);
-		layout.setMarkup(this.text, -1);
+		layout.setMarkup(this.underline ? "<u>" ~ this.text ~ "</u>" : this.text, -1);
 
 		context.setSourceColor(Color.black);
 		context.moveTo(this.rect.x, this.rect.y + 10);
@@ -956,6 +1000,7 @@ class TextBox: Box {
 	int size;
 	bool preserve;
 	string text;
+	bool underline;
 }
 
 class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
@@ -971,6 +1016,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		xmlConfig["height"] = to!(string)(textBox.rect.height);
 		xmlConfig["backColor"] = textBox.backColor;
 		xmlConfig["isAbstract"] = to!(string)(textBox.isAbstract);
+		xmlConfig["underline"] = to!(string)(textBox.underline);
 		
 		xmlConfig["font"] = textBox.font;
 		xmlConfig["size"] = to!(string)(textBox.size);
@@ -988,6 +1034,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		double height = to!(double)(xmlConfig["height"]);
 		string backColor = xmlConfig["backColor"];
 		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
+		bool underline = to!(bool)(xmlConfig["underline"]);
 		
 		string font = xmlConfig["font"];
 		int size = to!(int)(xmlConfig["size"]);
@@ -1001,6 +1048,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		textBox.rect.height = height;
 		textBox.backColor = backColor;
 		textBox.isAbstract = isAbstract;
+		textBox.underline = underline;
 		
 		textBox.font = font;
 		textBox.size = size;
@@ -1023,6 +1071,13 @@ class RoundedTextBox: RoundedBox {
 		this.size = 12;
 		this.preserve = true;
 		this.text = text;
+		
+		this.addOnBlueprintChanged(delegate void(Blueprint newBlueprint) 
+			{
+				this.text = newBlueprint.label;
+				this.backColor = newBlueprint.backColor;
+				this.isAbstract = !newBlueprint.isCycleAccurate;
+			});
 	}
 	
 	void drawText(Context context) {
@@ -1035,7 +1090,7 @@ class RoundedTextBox: RoundedBox {
 		layout.setFontDescription(font);
 		layout.setWidth(cast(int) this.rect.width * PANGO_SCALE);
 		layout.setHeight(cast(int) this.rect.height * PANGO_SCALE);
-		layout.setMarkup(this.text, -1);
+		layout.setMarkup(this.underline ? "<u>" ~ this.text ~ "</u>" : this.text, -1);
 
 		context.setSourceColor(Color.black);
 		context.moveTo(this.rect.x, this.rect.y + 10);
@@ -1061,6 +1116,7 @@ class RoundedTextBox: RoundedBox {
 	int size;
 	bool preserve;
 	string text;
+	bool underline;
 }
 
 class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
@@ -1077,6 +1133,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		xmlConfig["backColor"] = roundedTextBox.backColor;
 		xmlConfig["radius"] = to!(string)(roundedTextBox.radius);
 		xmlConfig["isAbstract"] = to!(string)(roundedTextBox.isAbstract);
+		xmlConfig["underline"] = to!(string)(roundedTextBox.underline);
 		
 		xmlConfig["font"] = roundedTextBox.font;
 		xmlConfig["size"] = to!(string)(roundedTextBox.size);
@@ -1095,6 +1152,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		string backColor = xmlConfig["backColor"];
 		double radius = to!(double)(xmlConfig["radius"]);
 		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
+		bool underline = to!(bool)(xmlConfig["underline"]);
 		
 		string font = xmlConfig["font"];
 		int size = to!(int)(xmlConfig["size"]);
@@ -1109,6 +1167,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		roundedTextBox.backColor = backColor;
 		roundedTextBox.radius = radius;
 		roundedTextBox.isAbstract = isAbstract;
+		roundedTextBox.underline = underline;
 		
 		roundedTextBox.font = font;
 		roundedTextBox.size = size;
@@ -1403,17 +1462,28 @@ class Canvas: DrawingArea {
 		Widget toolItem = this.startup.palette.getDragItem(data);
 		if(toolItem !is null) {
 			ToolButton toolButton = cast(ToolButton) toolItem;
+			string actionName = toolButton.getActionName();
+			Blueprint blueprintToAssign = null;
 			
 			double _x = x - this.origin.x;
 			double _y = y - this.origin.y;
 			
 			foreach(child; this.children) {
 				if(child.atPosition(_x, _y)) {
-					TextBox textBox = cast(TextBox) child;
-					if(textBox !is null) {
-						string actionName = toolButton.getActionName();
-						Blueprint blueprintToAssign = null;
+					if(cast(Text) child !is null) {
+						Text text = cast(Text) child;
+						if(actionName == "archSharedCacheMulticore") {
+							blueprintToAssign = new SharedCacheMulticoreBlueprint();
+						}
 						
+						if(blueprintToAssign !is null) {
+							text.blueprint = blueprintToAssign;
+						}
+						
+						break;
+					}
+					else if(cast(TextBox) child !is null) {
+						TextBox textBox = cast(TextBox) child;
 						if(actionName == "cpuSimple") {
 							blueprintToAssign = new SimpleProcessorCoreBlueprint();
 						}
@@ -1434,13 +1504,12 @@ class Canvas: DrawingArea {
 						}
 						else if(actionName == "dramFixed") {
 							blueprintToAssign = new FixedLatencyDRAMBlueprint();
-						}						
+						}
 						
-						assert(blueprintToAssign !is null);
+						if(blueprintToAssign !is null) {			
+							textBox.blueprint = blueprintToAssign;
+						}
 						
-						textBox.text = blueprintToAssign.label;
-						textBox.backColor = blueprintToAssign.backColor;
-						textBox.isAbstract = !blueprintToAssign.isCycleAccurate;
 						break;
 					}
 				}
@@ -1944,7 +2013,7 @@ class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
 
 string registerStockId(string name, string label, string key, string fileName = null) {
 	if(fileName is null) {
-		fileName = format("../gtk/stock/%s.png", name);
+		fileName = format("../gtk/stock/%s.svg", name);
 	}
 	string domain = "slow";
 	string id = format("%s-%s", domain, name);

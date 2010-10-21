@@ -25,12 +25,21 @@ import flexim.all;
 
 abstract class Blueprint {
 	this() {
+		this.id = currentId++;
 	}
 	
 	abstract string label();
 	abstract string backColor();
 	abstract bool isCycleAccurate();
 	abstract void realize();
+	
+	int id;
+	
+	static this() {
+		currentId = 0;
+	}
+	
+	static int currentId;
 }
 
 class ProcessorCoreBlueprint: Blueprint {
