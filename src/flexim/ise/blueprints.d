@@ -25,7 +25,6 @@ import flexim.all;
 
 abstract class Blueprint {
 	this() {
-		this.id = currentId++;
 	}
 	
 	abstract string label();
@@ -33,7 +32,7 @@ abstract class Blueprint {
 	abstract bool isCycleAccurate();
 	abstract void realize();
 	
-	int id;
+	string id;
 	
 	static this() {
 		currentId = 0;
@@ -49,6 +48,11 @@ class ProcessorCoreBlueprint: Blueprint {
 
 class SimpleProcessorCoreBlueprint: ProcessorCoreBlueprint {
 	this() {
+		this.id = format("simpleProcessorCoreBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -67,8 +71,38 @@ class SimpleProcessorCoreBlueprint: ProcessorCoreBlueprint {
 	}
 }
 
+class SimpleProcessorCoreBlueprintXMLSerializer: XMLSerializer!(SimpleProcessorCoreBlueprint) {
+	this() {
+	}
+	
+	override XMLConfig save(SimpleProcessorCoreBlueprint blueprint) {
+		XMLConfig xmlConfig = new XMLConfig("SimpleProcessorCoreBlueprint");
+		xmlConfig["id"] = blueprint.id;
+		
+		return xmlConfig;
+	}
+	
+	override SimpleProcessorCoreBlueprint load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
+		
+		SimpleProcessorCoreBlueprint blueprint = new SimpleProcessorCoreBlueprint(id);
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new SimpleProcessorCoreBlueprintXMLSerializer();
+	}
+	
+	static SimpleProcessorCoreBlueprintXMLSerializer singleInstance;	
+}
+
 class OoOProcessorCoreBlueprint : ProcessorCoreBlueprint {
 	this() {
+		this.id = format("ooOProcessorCoreBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -92,6 +126,38 @@ class OoOProcessorCoreBlueprint : ProcessorCoreBlueprint {
 	DCacheBlueprint dcache;
 }
 
+class OoOProcessorCoreBlueprintXMLSerializer: XMLSerializer!(OoOProcessorCoreBlueprint) {
+	this() {
+	}
+	
+	override XMLConfig save(OoOProcessorCoreBlueprint blueprint) {
+		XMLConfig xmlConfig = new XMLConfig("OoOProcessorCoreBlueprint");
+		xmlConfig["id"] = blueprint.id;
+		
+		xmlConfig.entries ~= ICacheBlueprintXMLSerializer.singleInstance.save(blueprint.icache);
+		xmlConfig.entries ~= DCacheBlueprintXMLSerializer.singleInstance.save(blueprint.dcache);
+		
+		return xmlConfig;
+	}
+	
+	override OoOProcessorCoreBlueprint load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
+		
+		OoOProcessorCoreBlueprint blueprint = new OoOProcessorCoreBlueprint(id);
+		
+		blueprint.icache = ICacheBlueprintXMLSerializer.singleInstance.load(xmlConfig.entries[0]);
+		blueprint.dcache = DCacheBlueprintXMLSerializer.singleInstance.load(xmlConfig.entries[1]);
+		
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new OoOProcessorCoreBlueprintXMLSerializer();
+	}
+	
+	static OoOProcessorCoreBlueprintXMLSerializer singleInstance;
+}
+
 abstract class CacheBlueprint : Blueprint {
 	this() {
 	}
@@ -99,6 +165,11 @@ abstract class CacheBlueprint : Blueprint {
 
 class ICacheBlueprint : CacheBlueprint {
 	this() {
+		this.id = format("iCacheBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -117,8 +188,38 @@ class ICacheBlueprint : CacheBlueprint {
 	}
 }
 
+class ICacheBlueprintXMLSerializer: XMLSerializer!(ICacheBlueprint) {
+	this() {
+	}
+	
+	override XMLConfig save(ICacheBlueprint blueprint) {
+		XMLConfig xmlConfig = new XMLConfig("ICacheBlueprint");
+		xmlConfig["id"] = blueprint.id;
+		
+		return xmlConfig;
+	}
+	
+	override ICacheBlueprint load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
+		
+		ICacheBlueprint blueprint = new ICacheBlueprint(id);
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new ICacheBlueprintXMLSerializer();
+	}
+	
+	static ICacheBlueprintXMLSerializer singleInstance;
+}
+
 class DCacheBlueprint : CacheBlueprint {
 	this() {
+		this.id = format("dCacheBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -137,8 +238,38 @@ class DCacheBlueprint : CacheBlueprint {
 	}
 }
 
+class DCacheBlueprintXMLSerializer: XMLSerializer!(DCacheBlueprint) {
+	this() {
+	}
+	
+	override XMLConfig save(DCacheBlueprint blueprint) {
+		XMLConfig xmlConfig = new XMLConfig("DCacheBlueprint");
+		xmlConfig["id"] = blueprint.id;
+		
+		return xmlConfig;
+	}
+	
+	override DCacheBlueprint load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
+		
+		DCacheBlueprint blueprint = new DCacheBlueprint(id);
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new DCacheBlueprintXMLSerializer();
+	}
+	
+	static DCacheBlueprintXMLSerializer singleInstance;
+}
+
 class L2CacheBlueprint : CacheBlueprint {
 	this() {
+		this.id = format("l2CacheBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -157,6 +288,31 @@ class L2CacheBlueprint : CacheBlueprint {
 	}
 }
 
+class L2CacheBlueprintXMLSerializer: XMLSerializer!(L2CacheBlueprint) {
+	this() {
+	}
+	
+	override XMLConfig save(L2CacheBlueprint blueprint) {
+		XMLConfig xmlConfig = new XMLConfig("L2CacheBlueprint");
+		xmlConfig["id"] = blueprint.id;
+		
+		return xmlConfig;
+	}
+	
+	override L2CacheBlueprint load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
+		
+		L2CacheBlueprint blueprint = new L2CacheBlueprint(id);
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new L2CacheBlueprintXMLSerializer();
+	}
+	
+	static L2CacheBlueprintXMLSerializer singleInstance;
+}
+
 abstract class InterconnectBlueprint : Blueprint {
 	this() {
 	}
@@ -169,6 +325,11 @@ abstract class P2PInterconnectBlueprint : InterconnectBlueprint {
 
 class FixedLatencyP2PInterconnectBlueprint : P2PInterconnectBlueprint {
 	this() {
+		this.id = format("fixedLatencyP2PInterconnectBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -187,6 +348,31 @@ class FixedLatencyP2PInterconnectBlueprint : P2PInterconnectBlueprint {
 	}
 }
 
+class FixedLatencyP2PInterconnectBlueprintXMLSerializer: XMLSerializer!(FixedLatencyP2PInterconnectBlueprint) {
+	this() {
+	}
+	
+	override XMLConfig save(FixedLatencyP2PInterconnectBlueprint blueprint) {
+		XMLConfig xmlConfig = new XMLConfig("FixedLatencyP2PInterconnectBlueprint");
+		xmlConfig["id"] = blueprint.id;
+		
+		return xmlConfig;
+	}
+	
+	override FixedLatencyP2PInterconnectBlueprint load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
+		
+		FixedLatencyP2PInterconnectBlueprint blueprint = new FixedLatencyP2PInterconnectBlueprint(id);
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new FixedLatencyP2PInterconnectBlueprintXMLSerializer();
+	}
+	
+	static FixedLatencyP2PInterconnectBlueprintXMLSerializer singleInstance;
+}
+
 abstract class MainMemoryBlueprint : Blueprint {
 	this() {
 	}
@@ -194,6 +380,11 @@ abstract class MainMemoryBlueprint : Blueprint {
 
 class FixedLatencyDRAMBlueprint : MainMemoryBlueprint {
 	this() {
+		this.id = format("fixedLatencyDRAMBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -212,6 +403,31 @@ class FixedLatencyDRAMBlueprint : MainMemoryBlueprint {
 	}
 }
 
+class FixedLatencyDRAMBlueprintXMLSerializer: XMLSerializer!(FixedLatencyDRAMBlueprint) {
+	this() {		
+	}
+	
+	override XMLConfig save(FixedLatencyDRAMBlueprint blueprint) {
+		XMLConfig xmlConfig = new XMLConfig("FixedLatencyDRAMBlueprint");
+		xmlConfig["id"] = blueprint.id;
+		
+		return xmlConfig;
+	}
+	
+	override FixedLatencyDRAMBlueprint load(XMLConfig xmlConfig) {
+		string id = xmlConfig["id"];
+		
+		FixedLatencyDRAMBlueprint blueprint = new FixedLatencyDRAMBlueprint(id);
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new FixedLatencyDRAMBlueprintXMLSerializer();
+	}
+	
+	static FixedLatencyDRAMBlueprintXMLSerializer singleInstance;
+}
+
 abstract class ArchitectureBlueprint : Blueprint {
 	this() {
 		
@@ -220,7 +436,11 @@ abstract class ArchitectureBlueprint : Blueprint {
 
 class SharedCacheMulticoreBlueprint: ArchitectureBlueprint {
 	this() {
-		
+		this.id = format("sharedCacheMulticoreBlueprint%d", currentId++);
+	}
+	
+	this(string id) {
+		this.id = id;
 	}
 	
 	override string label() {
@@ -244,6 +464,56 @@ class SharedCacheMulticoreBlueprint: ArchitectureBlueprint {
 	
 	OoOProcessorCoreBlueprint[] cores;
 	L2CacheBlueprint l2;
-	P2PInterconnectBlueprint interconnect;
-	MainMemoryBlueprint mainMemory;
+	FixedLatencyP2PInterconnectBlueprint interconnect;
+	FixedLatencyDRAMBlueprint mainMemory;
+}
+
+class SharedCacheMulticoreBlueprintXMLFileSerializer: XMLFileSerializer!(SharedCacheMulticoreBlueprint) {
+	this() {		
+	}
+	
+	override XMLConfigFile save(SharedCacheMulticoreBlueprint blueprint) {
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("SharedCacheMulticoreBlueprint");
+		
+		foreach(core; blueprint.cores) {
+			xmlConfigFile.entries ~= OoOProcessorCoreBlueprintXMLSerializer.singleInstance.save(core);
+		}
+
+		xmlConfigFile.entries ~= L2CacheBlueprintXMLSerializer.singleInstance.save(blueprint.l2);
+		xmlConfigFile.entries ~= FixedLatencyP2PInterconnectBlueprintXMLSerializer.singleInstance.save(blueprint.interconnect);
+		xmlConfigFile.entries ~= FixedLatencyDRAMBlueprintXMLSerializer.singleInstance.save(blueprint.mainMemory);
+		
+		return xmlConfigFile;
+	}
+	
+	override SharedCacheMulticoreBlueprint load(XMLConfigFile xmlConfigFile) {
+		string id = xmlConfigFile["id"];
+		
+		SharedCacheMulticoreBlueprint blueprint = new SharedCacheMulticoreBlueprint(id);
+		
+		foreach(entry; xmlConfigFile.entries) {
+			string typeName = entry.typeName;
+			
+			if(typeName == "OoOProcessorCoreBlueprint") {
+				blueprint.cores ~= OoOProcessorCoreBlueprintXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "L2CacheBlueprint") {
+				blueprint.l2 = L2CacheBlueprintXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyP2PInterconnectBlueprint") {
+				blueprint.interconnect = FixedLatencyP2PInterconnectBlueprintXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyDRAMBlueprint") {
+				blueprint.mainMemory = FixedLatencyDRAMBlueprintXMLSerializer.singleInstance.load(entry);
+			}
+		}
+		
+		return blueprint;
+	}
+	
+	static this() {
+		singleInstance = new SharedCacheMulticoreBlueprintXMLFileSerializer();
+	}
+	
+	static SharedCacheMulticoreBlueprintXMLFileSerializer singleInstance;
 }
