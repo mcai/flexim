@@ -324,7 +324,7 @@
                 <property name="can_focus">True</property>
                 <child>
                   <object class="GtkVBox" id="vboxLeftTop">
-                    <property name="height_request">380</property>
+                    <property name="height_request">320</property>
                     <property name="visible">True</property>
                   </object>
                   <packing>

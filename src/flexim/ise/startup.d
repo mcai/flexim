@@ -31,6 +31,7 @@ import std.path;
 
 import cairo.Context;
 
+import gtk.DragAndDrop;
 import gtk.Timeout;
 
 T getBuilderObject(T, K)(ObjectG obj) {
@@ -207,7 +208,7 @@ class TreeViewNodeProperties: TreeView {
 		foreach(key, value; this.data) {
 			TreeIter iter = this.listStore.createIter();
 	
-			this.listStore.setValue(iter, 0, new Value(new Pixbuf("../gtk/canvas/cpu.svg")));
+			this.listStore.setValue(iter, 0, new Value(new Pixbuf("../gtk/canvas/cpu_ooo.svg")));
 			this.listStore.setValue(iter, 1, "<br>" ~ key ~ "</br>");
 			this.listStore.setValue(iter, 2, value);
 		}
@@ -370,6 +371,7 @@ class Startup {
 		this.frameDrawing = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameDrawing");
 			
 		this.canvas = Canvas.loadXML();
+		this.canvas.startup = this;
 			
 		void buildToolbar() {
 			this.toolbarDrawableObjects = new Toolbar();
@@ -458,6 +460,9 @@ class Startup {
 		
 		void setupPalette() {
 			this.palette = new ToolPalette();
+			this.palette.setIconSize(IconSize.DND);
+			
+			this.palette.addDragDest(this.canvas, GtkDestDefaults.ALL, GtkToolPaletteDragTargets.ITEMS, GdkDragAction.ACTION_COPY);
 			
 			ScrolledWindow scrolledWindow = new ScrolledWindow();
 			scrolledWindow.setPolicy(GtkPolicyType.NEVER, GtkPolicyType.AUTOMATIC);
@@ -468,54 +473,43 @@ class Startup {
 			vboxLeftTop.packStart(scrolledWindow, true, true, 0);
 		}
 		
-		void populatePalette() {			
-			ToolItemGroup groupProcessorCores = new ToolItemGroup("Processor Cores");
-			this.palette.add(groupProcessorCores);
-		
-			string CPU = registerStockId("cpu", "Cpu", "X", "../gtk/canvas/cpu.svg");
-			
-			for(int i = 0; i < 10; i++) {
-				ToolItem item1 = new ToolButton(CPU);
-				item1.setTooltipText("Out-of-Order Processor Core");
-				item1.setIsImportant(true);
-				groupProcessorCores.insert(item1, -1);
+		void populatePalette() {
+			ToolItemGroup addItemGroup(string name) {
+				ToolItemGroup group = new ToolItemGroup(name);
+				this.palette.add(group);
+				return group;
 			}
 			
-			ToolItemGroup groupCaches = new ToolItemGroup("Caches");
-			this.palette.add(groupCaches);
-			
-			string CACHE = registerStockId("cache", "Cache", "X", "../gtk/canvas/cpu.svg");
-
-			for(int i = 0; i < 10; i++) {
-				ToolItem item1 = new ToolButton(CACHE);
-				item1.setTooltipText("Level One Instruction Cache");
-				item1.setIsImportant(true);
-				groupCaches.insert(item1, -1);
+			ToolItem addItem(ToolItemGroup group, string stockId, string actionName, string tooltipText) {
+				ToolButton item = new ToolButton(stockId);
+				item.setActionName(actionName);
+				item.setTooltipText(tooltipText);
+				item.setIsImportant(true);
+				group.insert(item, -1);
+				return item;
 			}
+				
+			ToolItemGroup groupProcessorCores = addItemGroup("Processor Cores");
+			string CPU_SIMPLE = registerStockId("cpuSimple", "Simple CPU", "X", "../gtk/canvas/cpu_simple.svg");
+			string CPU_OOO = registerStockId("cpuOOO", "OoO CPU", "X", "../gtk/canvas/cpu_ooo.svg");
+			addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "cpuSimple");
+			addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "cpuOoO");
 			
-			ToolItemGroup groupInterconnects = new ToolItemGroup("Interconnects");
-			this.palette.add(groupInterconnects);
+			ToolItemGroup groupCaches = addItemGroup("Caches");
+			string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../gtk/canvas/cache_l1i.svg");
+			string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../gtk/canvas/cache_l1d.svg");
+			string CACHE_L2 = registerStockId("cacheL2", "L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
+			addItem(groupCaches, CACHE_L1I, "cacheL1I", "cacheL1I");
+			addItem(groupCaches, CACHE_L1D, "cacheL1D", "cacheL1D");
+			addItem(groupCaches, CACHE_L2, "cacheL2", "cacheL2");
 			
-			string INTERCONNECT = registerStockId("interconnect", "Interconnect", "X", "../gtk/canvas/cpu.svg");
-
-			for(int i = 0; i < 10; i++) {
-				ToolItem item1 = new ToolButton(INTERCONNECT);
-				item1.setTooltipText("Fixed-Latency Peer-to-Peer Interconnect");
-				item1.setIsImportant(true);
-				groupInterconnects.insert(item1, -1);
-			}
+			ToolItemGroup groupInterconnects = addItemGroup("Interconnects");
+			string INTERCONNECT_FIXED_P2P = registerStockId("interconnectFixedP2P", "Fixed Latency P2P Interconnect", "X", "../gtk/canvas/interconnect_fixed_p2p.svg");			
+			addItem(groupInterconnects, INTERCONNECT_FIXED_P2P, "interconnectFixedP2P", "interconnectFixedP2P");
 			
-			ToolItemGroup groupMainMemories = new ToolItemGroup("Main Memories");
-			this.palette.add(groupMainMemories);
-			
-			string MAIN_MEMORY = registerStockId("mainMemory", "MainMemory", "X", "../gtk/canvas/cpu.svg");
-
-			for(int i = 0; i < 10; i++) {
-				ToolItem item1 = new ToolButton(MAIN_MEMORY);
-				item1.setTooltipText("Fixed-Latency DRAM Controller");
-				item1.setIsImportant(true);
-				groupMainMemories.insert(item1, -1);
-			}
+			ToolItemGroup groupMainMemories = addItemGroup("Main Memories");
+			string DRAM_FIXED = registerStockId("dramFixed", "Fiexed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
+			addItem(groupMainMemories, DRAM_FIXED, "dramFixed", "dramFixed");
 		}
 		
 		void buildPropertiesView() {				

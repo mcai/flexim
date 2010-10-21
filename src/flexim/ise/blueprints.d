@@ -23,20 +23,55 @@ module flexim.ise.blueprints;
 
 import flexim.all;
 
-abstract class BlueprintBase {
+abstract class Blueprint {
 	this() {
 	}
 	
+	abstract string label();
+	abstract string backColor();
+	abstract bool isCycleAccurate();
 	abstract void realize();
 }
 
-class ProcessorCoreBlueprint: BlueprintBase {
+class ProcessorCoreBlueprint: Blueprint {
 	this() {
+	}
+}
+
+class SimpleProcessorCoreBlueprint: ProcessorCoreBlueprint {
+	this() {
+	}
+	
+	override string label() {
+		return "Simple (Functional) Processor Core";
+	}
+	
+	override string backColor() {
+		return "red";
+	}
+	
+	override bool isCycleAccurate() {
+		return false;
+	}
+	
+	override void realize() {
 	}
 }
 
 class OoOProcessorCoreBlueprint : ProcessorCoreBlueprint {
 	this() {
+	}
+	
+	override string label() {
+		return "Out-of-Order Processor Core";
+	}
+	
+	override string backColor() {
+		return "red";
+	}
+	
+	override bool isCycleAccurate() {
+		return true;
 	}
 	
 	override void realize() {
@@ -48,13 +83,25 @@ class OoOProcessorCoreBlueprint : ProcessorCoreBlueprint {
 	DCacheBlueprint dcache;
 }
 
-abstract class CacheBlueprint : BlueprintBase {
+abstract class CacheBlueprint : Blueprint {
 	this() {
 	}
 }
 
 class ICacheBlueprint : CacheBlueprint {
 	this() {
+	}
+	
+	override string label() {
+		return "Inst Cache";
+	}
+	
+	override string backColor() {
+		return "green";
+	}
+	
+	override bool isCycleAccurate() {
+		return true;
 	}
 	
 	override void realize() {
@@ -65,6 +112,18 @@ class DCacheBlueprint : CacheBlueprint {
 	this() {
 	}
 	
+	override string label() {
+		return "Data Cache";
+	}
+	
+	override string backColor() {
+		return "green";
+	}
+	
+	override bool isCycleAccurate() {
+		return true;
+	}
+	
 	override void realize() {
 	}
 }
@@ -73,11 +132,23 @@ class L2CacheBlueprint : CacheBlueprint {
 	this() {
 	}
 	
+	override string label() {
+		return "L2 Cache";
+	}
+	
+	override string backColor() {
+		return "green";
+	}
+	
+	override bool isCycleAccurate() {
+		return true;
+	}
+	
 	override void realize() {
 	}
 }
 
-abstract class InterconnectBlueprint : BlueprintBase {
+abstract class InterconnectBlueprint : Blueprint {
 	this() {
 	}
 }
@@ -91,11 +162,23 @@ class FixedLatencyP2PInterconnectBlueprint : P2PInterconnectBlueprint {
 	this() {
 	}
 	
+	override string label() {
+		return "Fixed-Latency P2P Interconnect";
+	}
+	
+	override string backColor() {
+		return "blue";
+	}
+	
+	override bool isCycleAccurate() {
+		return false;
+	}
+	
 	override void realize() {
 	}
 }
 
-abstract class MainMemoryBlueprint : BlueprintBase {
+abstract class MainMemoryBlueprint : Blueprint {
 	this() {
 	}
 }
@@ -104,11 +187,23 @@ class FixedLatencyDRAMBlueprint : MainMemoryBlueprint {
 	this() {
 	}
 	
+	override string label() {
+		return "Fixed-Latency DRAM Controller";
+	}
+	
+	override string backColor() {
+		return "brown";
+	}
+	
+	override bool isCycleAccurate() {
+		return false;
+	}
+	
 	override void realize() {
 	}
 }
 
-abstract class ArchitectureBlueprint : BlueprintBase {
+abstract class ArchitectureBlueprint : Blueprint {
 	this() {
 		
 	}
@@ -117,6 +212,18 @@ abstract class ArchitectureBlueprint : BlueprintBase {
 class SharedCacheMulticoreBlueprint: ArchitectureBlueprint {
 	this() {
 		
+	}
+	
+	override string label() {
+		return "Shared Cache Multicore";
+	}
+	
+	override string backColor() {
+		return "default";
+	}
+	
+	override bool isCycleAccurate() {
+		return true;
 	}
 	
 	override void realize() {

@@ -52,6 +52,7 @@ class CanvasColors {
 		this.entries["red"] = new CanvasColor(1, 0, 0, 0.25);
 		this.entries["green"] = new CanvasColor(0, 1, 0, 0.25);
 		this.entries["blue"] = new CanvasColor(0, 0, 1, 0.25);
+		this.entries["brown"] = new CanvasColor(155 / 255, 60 / 255, 19 / 255, 0.25);
 	}
 	
 	static CanvasColor opIndex(string index) {
@@ -474,6 +475,7 @@ abstract class DrawableObject {
 		this.selected = false;
 		this.resize = false;
 		this.direction = Direction.NONE;
+		this.isAbstract = false;
 	}
 	
 	abstract void post();
@@ -524,6 +526,10 @@ abstract class DrawableObject {
 		this.properties[index] = value;
 	}
 	
+	double[] dashToUse() {
+		return this.isAbstract ? this.dashDots : this.dashNone;
+	}
+	
 	override string toString() {
 		return format("DrawableObject[x=%f, y=%f, width=%f, height=%f, handler=%s, offset=%s, selected=%s, resize=%s, direction=%s]",
 			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.handler, this.offset, this.selected, this.resize, this.direction);
@@ -537,12 +543,20 @@ abstract class DrawableObject {
 	Rectangle offset;
 	Direction direction;
 	bool selected, resize;
+	
+	bool isAbstract;
+	
+	double[] dashNone;
+	double[] dashDots;
 }
 
 abstract class BoxBase: DrawableObject {
 	this(string id) {
 		super(id);
 		this.backColor = "green";
+	
+		this.dashDots ~= 8.0;
+		this.dashDots ~= 4.0;
 	}
 	
 	override void post() {
@@ -729,8 +743,7 @@ class Box: BoxBase {
 	}
 	
 	override void drawBox(Context context) {
-		double[] dash;
-		context.setDash(dash, 0);
+		context.setDash(this.dashToUse, 0);
 		context.setLineWidth(2.5);
 		context.rectangle(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
 		context.setSourceRgba(this.color.red, this.color.green, this.color.blue, this.color.alpha);
@@ -761,6 +774,7 @@ class BoxXMLSerializer: XMLSerializer!(Box) {
 		xmlConfig["width"] = to!(string)(box.rect.width);
 		xmlConfig["height"] = to!(string)(box.rect.height);
 		xmlConfig["backColor"] = box.backColor;
+		xmlConfig["isAbstract"] = to!(string)(box.isAbstract);
 			
 		return xmlConfig;
 	}
@@ -772,6 +786,7 @@ class BoxXMLSerializer: XMLSerializer!(Box) {
 		double width = to!(double)(xmlConfig["width"]);
 		double height = to!(double)(xmlConfig["height"]);
 		string backColor = xmlConfig["backColor"];
+		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
 			
 		Box box = new Box(id);
 		box.rect.x = x;
@@ -779,6 +794,7 @@ class BoxXMLSerializer: XMLSerializer!(Box) {
 		box.rect.width = width;
 		box.rect.height = height;
 		box.backColor = backColor;
+		box.isAbstract = isAbstract;
 		return box;
 	}
 	
@@ -807,8 +823,7 @@ class RoundedBox: BoxBase {
 	override void drawBox(Context context) {
 		double _radius = this.radius;
 		
-		double[] dash;
-		context.setDash(dash, 0);
+		context.setDash(this.dashToUse, 0);
 		context.setLineWidth(2.5);
 		
 		if(_radius > (this.rect.height / 2) || _radius > (this.rect.width / 2)) {
@@ -861,6 +876,7 @@ class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
 		xmlConfig["height"] = to!(string)(box.rect.height);
 		xmlConfig["backColor"] = box.backColor;
 		xmlConfig["radius"] = to!(string)(box.radius);
+		xmlConfig["isAbstract"] = to!(string)(box.isAbstract);
 			
 		return xmlConfig;
 	}
@@ -873,6 +889,7 @@ class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
 		double height = to!(double)(xmlConfig["height"]);
 		string backColor = xmlConfig["backColor"];
 		double radius = to!(double)(xmlConfig["radius"]);
+		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
 			
 		RoundedBox roundedBox = new RoundedBox(id);
 		roundedBox.rect.x = x;
@@ -881,6 +898,7 @@ class RoundedBoxXMLSerializer: XMLSerializer!(RoundedBox) {
 		roundedBox.rect.height = height;
 		roundedBox.backColor = backColor;
 		roundedBox.radius = radius;
+		roundedBox.isAbstract = isAbstract;
 		return roundedBox;
 	}
 	
@@ -952,6 +970,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		xmlConfig["width"] = to!(string)(textBox.rect.width);
 		xmlConfig["height"] = to!(string)(textBox.rect.height);
 		xmlConfig["backColor"] = textBox.backColor;
+		xmlConfig["isAbstract"] = to!(string)(textBox.isAbstract);
 		
 		xmlConfig["font"] = textBox.font;
 		xmlConfig["size"] = to!(string)(textBox.size);
@@ -968,6 +987,7 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		double width = to!(double)(xmlConfig["width"]);
 		double height = to!(double)(xmlConfig["height"]);
 		string backColor = xmlConfig["backColor"];
+		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
 		
 		string font = xmlConfig["font"];
 		int size = to!(int)(xmlConfig["size"]);
@@ -980,6 +1000,8 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		textBox.rect.width = width;
 		textBox.rect.height = height;
 		textBox.backColor = backColor;
+		textBox.isAbstract = isAbstract;
+		
 		textBox.font = font;
 		textBox.size = size;
 		textBox.preserve = preserve;
@@ -1054,6 +1076,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		xmlConfig["height"] = to!(string)(roundedTextBox.rect.height);
 		xmlConfig["backColor"] = roundedTextBox.backColor;
 		xmlConfig["radius"] = to!(string)(roundedTextBox.radius);
+		xmlConfig["isAbstract"] = to!(string)(roundedTextBox.isAbstract);
 		
 		xmlConfig["font"] = roundedTextBox.font;
 		xmlConfig["size"] = to!(string)(roundedTextBox.size);
@@ -1071,6 +1094,7 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		double height = to!(double)(xmlConfig["height"]);
 		string backColor = xmlConfig["backColor"];
 		double radius = to!(double)(xmlConfig["radius"]);
+		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
 		
 		string font = xmlConfig["font"];
 		int size = to!(int)(xmlConfig["size"]);
@@ -1084,6 +1108,8 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		roundedTextBox.rect.height = height;
 		roundedTextBox.backColor = backColor;
 		roundedTextBox.radius = radius;
+		roundedTextBox.isAbstract = isAbstract;
+		
 		roundedTextBox.font = font;
 		roundedTextBox.size = size;
 		roundedTextBox.preserve = preserve;
@@ -1116,7 +1142,7 @@ class Line: DrawableObject {
 	override void draw(Context context) {
 		super.draw(context);
 		
-		context.setDash(this.dash, 0);
+		context.setDash(this.dashToUse, 0);
 		context.setLineWidth(this.thickness);
 		context.moveTo(this.rect.x, this.rect.y);
 		context.lineTo(this.rect.x + this.rect.width, this.rect.y + this.rect.height);
@@ -1133,7 +1159,6 @@ class Line: DrawableObject {
 			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.thickness);
 	}
 	
-	double[] dash;
 	double thickness;
 }
 
@@ -1148,6 +1173,7 @@ class LineXMLSerializer: XMLSerializer!(Line) {
 		xmlConfig["y"] = to!(string)(line.rect.y);
 		xmlConfig["width"] = to!(string)(line.rect.width);
 		xmlConfig["height"] = to!(string)(line.rect.height);
+		xmlConfig["isAbstract"] = to!(string)(line.isAbstract);
 			
 		return xmlConfig;
 	}
@@ -1158,12 +1184,14 @@ class LineXMLSerializer: XMLSerializer!(Line) {
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
 		double height = to!(double)(xmlConfig["height"]);
+		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
 			
 		Line line = new Line(id);
 		line.rect.x = x;
 		line.rect.y = y;
 		line.rect.width = width;
 		line.rect.height = height;
+		line.isAbstract = isAbstract;
 		return line;
 	}
 	
@@ -1248,7 +1276,7 @@ class Arrow: DrawableObject {
 	override void draw(Context context) {
 		super.draw(context);
 		
-		context.setDash(this.dash, 0);
+		context.setDash(this.dashToUse, 0);
 		context.setLineWidth(this.thickness);
 		context.moveTo(this.rect.x, this.rect.y);
 		context.lineTo(this.rect.x + this.rect.width, this.rect.y + this.rect.height);
@@ -1268,7 +1296,6 @@ class Arrow: DrawableObject {
 			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.thickness);
 	}
 	
-	double[] dash;
 	double thickness;
 	
 	ArrowHead startHead, endHead;
@@ -1285,6 +1312,7 @@ class ArrowXMLSerializer: XMLSerializer!(Arrow) {
 		xmlConfig["y"] = to!(string)(arrow.rect.y);
 		xmlConfig["width"] = to!(string)(arrow.rect.width);
 		xmlConfig["height"] = to!(string)(arrow.rect.height);
+		xmlConfig["isAbstract"] = to!(string)(arrow.isAbstract);
 		
 		xmlConfig["startHeadStyle"] = to!(string)(arrow.startHeadStyle);
 		xmlConfig["endHeadStyle"] = to!(string)(arrow.endHeadStyle);
@@ -1298,6 +1326,7 @@ class ArrowXMLSerializer: XMLSerializer!(Arrow) {
 		double y = to!(double)(xmlConfig["y"]);
 		double width = to!(double)(xmlConfig["width"]);
 		double height = to!(double)(xmlConfig["height"]);
+		bool isAbstract = to!(bool)(xmlConfig["isAbstract"]);
 		
 		ArrowHeadStyle startHeadStyle = cast(ArrowHeadStyle) (xmlConfig["startHeadStyle"]);
 		ArrowHeadStyle endHeadStyle = cast(ArrowHeadStyle) (xmlConfig["endHeadStyle"]);
@@ -1307,6 +1336,7 @@ class ArrowXMLSerializer: XMLSerializer!(Arrow) {
 		arrow.rect.y = y;
 		arrow.rect.width = width;
 		arrow.rect.height = height;
+		arrow.isAbstract = isAbstract;
 		
 		arrow.startHeadStyle = startHeadStyle;
 		arrow.endHeadStyle = endHeadStyle;
@@ -1321,7 +1351,9 @@ class ArrowXMLSerializer: XMLSerializer!(Arrow) {
 }
 
 class Canvas: DrawingArea {
-	this() {
+	this() {		
+		this.setAppPaintable(true);
+		
 		this.paper = new Paper();
 		this.origin.x = this.origin.y = 0;
 		this.grid = new Grid();
@@ -1347,6 +1379,8 @@ class Canvas: DrawingArea {
 		this.addOnButtonRelease(&this.buttonReleased);
 		this.addOnMotionNotify(&this.motionNotified);
 		
+		this.addOnDragDataReceived(&this.dragDataReceived);
+		
 		this.addOnSelected(delegate void(DrawableObject child)
 			{
 				this.selectedChild = child;
@@ -1363,6 +1397,57 @@ class Canvas: DrawingArea {
 		this.paper.right = 5;
 		
 		this.grid.snap = true;
+	}
+	
+	void dragDataReceived(GdkDragContext* context, gint x, gint y, GtkSelectionData* data, guint info, guint time, Widget widget) {
+		Widget toolItem = this.startup.palette.getDragItem(data);
+		if(toolItem !is null) {
+			ToolButton toolButton = cast(ToolButton) toolItem;
+			
+			double _x = x - this.origin.x;
+			double _y = y - this.origin.y;
+			
+			foreach(child; this.children) {
+				if(child.atPosition(_x, _y)) {
+					TextBox textBox = cast(TextBox) child;
+					if(textBox !is null) {
+						string actionName = toolButton.getActionName();
+						Blueprint blueprintToAssign = null;
+						
+						if(actionName == "cpuSimple") {
+							blueprintToAssign = new SimpleProcessorCoreBlueprint();
+						}
+						else if(actionName == "cpuOoO") {
+							blueprintToAssign = new OoOProcessorCoreBlueprint();
+						}
+						else if(actionName == "cacheL1I") {
+							blueprintToAssign = new ICacheBlueprint();
+						}
+						else if(actionName == "cacheL1D") {
+							blueprintToAssign = new DCacheBlueprint();
+						}
+						else if(actionName == "cacheL2") {
+							blueprintToAssign = new L2CacheBlueprint();
+						}
+						else if(actionName == "interconnectFixedP2P") {
+							blueprintToAssign = new FixedLatencyP2PInterconnectBlueprint();
+						}
+						else if(actionName == "dramFixed") {
+							blueprintToAssign = new FixedLatencyDRAMBlueprint();
+						}						
+						
+						assert(blueprintToAssign !is null);
+						
+						textBox.text = blueprintToAssign.label;
+						textBox.backColor = blueprintToAssign.backColor;
+						textBox.isAbstract = !blueprintToAssign.isCycleAccurate;
+						break;
+					}
+				}
+			}
+		}
+		
+		this.queueDraw();
 	}
 	
 	void addOnSelected(void delegate(DrawableObject child) del) {
@@ -1793,6 +1878,8 @@ class Canvas: DrawingArea {
 	DrawableObject childToAdd, selectedChild;
 	HRuler horizontalRuler;
 	VRuler verticalRuler;
+	
+	Startup startup;
 }
 
 class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
