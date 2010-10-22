@@ -70,11 +70,11 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 	}
 
 	void fatalHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-		exit(1);
+		core.stdc.stdlib.exit(1);
 	}
 
 	void panicHandler(SimulatorEventType eventType, SimulatorEventContext context, ulong when) {
-		exit(-1);
+		core.stdc.stdlib.exit(-1);
 	}
 	
 	Simulator simulator;

@@ -31,36 +31,21 @@ alias Tuple!(double, "x", double, "y") Point;
 alias Tuple!(double, "width", double, "height") Size;
 alias Tuple!(double, "x", double, "y", double, "width", double, "height") Rectangle;
 
-class CanvasColor {
-	this(double red = 0.0, double green = 0.0, double blue = 0.0, double alpha = 0.0) {
-		this.red = red;
-		this.green = green;
-		this.blue = blue;
-		this.alpha = alpha;
-	}
-	
-	override string toString() {
-		return format("CanvasColor[red=%f, green=%f, blue=%f, alpha=%f]", this.red, this.green, this.blue, this.alpha);
-	}
-	
-	double red, green, blue, alpha;
-}
-
 class CanvasColors {
 	static this() {
-		this.entries["default"] = new CanvasColor(0.25, 0.25, 0.25, 0.25);
-		this.entries["red"] = new CanvasColor(1, 0, 0, 0.25);
-		this.entries["green"] = new CanvasColor(0, 1, 0, 0.25);
-		this.entries["blue"] = new CanvasColor(0, 0, 1, 0.25);
-		this.entries["brown"] = new CanvasColor(155 / 255, 60 / 255, 19 / 255, 0.25);
+		this.entries["default"] = new gdk.Color.Color();
+		this.entries["red"] = new gdk.Color.Color(0xEE799F);
+		this.entries["green"] = new gdk.Color.Color(0x43CD80);
+		this.entries["blue"] = new gdk.Color.Color(0x00B2EE);
+		this.entries["brown"] = new gdk.Color.Color(0xEE7942);
 	}
 	
-	static CanvasColor opIndex(string index) {
+	static gdk.Color.Color opIndex(string index) {
 		assert(index in this.entries, index);
 		return this.entries[index];
 	}
 	
-	static CanvasColor[string] entries;
+	static gdk.Color.Color[string] entries;
 }
 
 void newDrawing(Context context, void delegate() del) {
@@ -174,81 +159,13 @@ class Control {
 	bool limbus;
 }
 
-class Margins {
+class Paper {
 	this() {
 		this.active = true;
 		this.top = this.left = this.bottom = this.right = 0;
-		
-		this.controls[Direction.NORTHWEST] = new Control();
-		this.controls[Direction.NORTH] = new Control();
-		this.controls[Direction.NORTHEAST] = new Control();
-		this.controls[Direction.WEST] = new Control();
-		this.controls[Direction.EAST] = new Control();
-		this.controls[Direction.SOUTHWEST] = new Control();
-		this.controls[Direction.SOUTH] = new Control();
-		this.controls[Direction.SOUTHEAST] = new Control();
-		this.controls[Direction.END] = new Control();
 	}
 	
 	void draw(Context context) {
-		if(this.active) {
-			context.setSourceRgb(0.5, 0.5, 0.5);
-			double[] dash;
-			dash ~= 8.0;
-			dash ~= 4.0;
-			context.setDash(dash, 0);
-			
-			context.setLineWidth(2);
-			context.rectangle(this.rect.x + this.left, this.rect.y + this.top, this.rect.width - this.right - this.left, this.rect.height - this.bottom - this.top);
-			context.stroke();
-			
-			this.controls[Direction.NORTHWEST].rect.x = this.rect.x + this.left;
-			this.controls[Direction.NORTHWEST].rect.y = this.rect.y + this.top;
-			
-			this.controls[Direction.NORTHEAST].rect.x = this.rect.x + this.rect.width - this.right;
-			this.controls[Direction.NORTHEAST].rect.y = this.rect.y + this.top;
-			
-			this.controls[Direction.SOUTHWEST].rect.x = this.rect.x + this.left;
-			this.controls[Direction.SOUTHWEST].rect.y = this.rect.y + this.rect.height - this.bottom;
-			
-			this.controls[Direction.SOUTHEAST].rect.x = this.rect.x + this.rect.width - this.right;
-			this.controls[Direction.SOUTHEAST].rect.y = this.rect.y + this.rect.height - this.bottom;
-			
-			this.controls[Direction.NORTH].rect.x = this.rect.x + (this.rect.width - this.right) / 2;
-			this.controls[Direction.NORTH].rect.y = this.rect.y + this.top;
-			
-			this.controls[Direction.SOUTH].rect.x = this.rect.x + (this.rect.width - this.right) / 2;
-			this.controls[Direction.SOUTH].rect.y = this.rect.y + this.rect.height - this.bottom;
-			
-			this.controls[Direction.WEST].rect.x = this.rect.x + this.left;
-			this.controls[Direction.WEST].rect.y = this.rect.y + (this.rect.height - this.bottom) / 2;
-			
-			this.controls[Direction.EAST].rect.x = this.rect.x + this.rect.width - this.right;
-			this.controls[Direction.EAST].rect.y = this.rect.y + (this.rect.height - this.bottom) / 2;
-			
-			foreach(control; this.controls) {
-				control.draw(context);
-			}
-		}
-	}
-	
-	override string toString() {
-		return format("Margins[x=%f, y=%f, width=%f, height=%f, active=%s, top=%f, left=%f, bottom=%f, right=%f]", 
-			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.active, this.top, this.left, this.bottom, this.right);
-	}
-	
-	Rectangle rect;
-	bool active;
-	double top, left, bottom, right;
-	
-	Control[Direction] controls;
-}
-
-class Paper: Margins {
-	this() {
-	}
-	
-	override void draw(Context context) {
 		int shadow = 5;
 		
 		context.setLineWidth(2.5);
@@ -261,8 +178,6 @@ class Paper: Margins {
 		double[] dash;
 		context.setDash(dash, 0);
 		context.stroke();
-		
-		super.draw(context);
 		
 		context.setSourceRgba(0.0, 0.0, 0.0, 0.25);
 		double[] dash2;
@@ -279,6 +194,10 @@ class Paper: Margins {
 		return format("Paper[x=%f, y=%f, width=%f, height=%f, active=%s, top=%f, left=%f, bottom=%f, right=%f]", 
 			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.active, this.top, this.left, this.bottom, this.right);
 	}
+	
+	Rectangle rect;
+	bool active;
+	double top, left, bottom, right;
 }
 
 class Grid {
@@ -338,50 +257,6 @@ class Grid {
 	
 	Rectangle rect;
 	bool active, snap;
-	double size;
-}
-
-class Axis {
-	this() {
-		this.active = true;
-		this.size = 15.0 * 8.0;
-	}
-	
-	void draw(Context context) {
-		context.setLineWidth(0.5);
-		context.setSourceRgb(0.0, 0.0, 0.0);
-		double[] dash;
-		dash ~= 2.0;
-		dash ~= 4.0;
-		dash ~= 24.0;
-		dash ~= 4.0;
-		context.setDash(dash, 0);
-		
-		double _x = this.rect.x;
-		double _y = this.rect.y;
-
-		while(_x <= this.rect.x + this.rect.width) {
-			context.moveTo(_x, this.rect.y);
-			context.lineTo(_x, this.rect.y + this.rect.height);
-			_x += this.size;
-		}
-		
-		while(_y <= this.rect.y + this.rect.height) {
-			context.moveTo(this.rect.x, _y);
-			context.lineTo(this.rect.x + this.rect.width, _y);
-			_y += this.size;
-		}
-		
-		context.stroke();
-	}
-	
-	override string toString() {
-		return format("Axis[x=%f, y=%f, width=%f, height=%f, active=%s, size=%f]",
-			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.active, this.size);
-	}
-	
-	Rectangle rect;
-	bool active;
 	double size;
 }
 
@@ -636,7 +511,7 @@ abstract class BoxBase: DrawableObject {
 			this.rect.x, this.rect.y, this.rect.width, this.rect.height, this.handler, this.offset, this.selected, this.resize, this.direction, this.backColor);
 	}
 
-	CanvasColor color() {
+	gdk.Color.Color color() {
 		return CanvasColors[this.backColor];
 	}
 	
@@ -825,9 +700,9 @@ class Box: BoxBase {
 		context.setDash(this.dashToUse, 0);
 		context.setLineWidth(2.5);
 		context.rectangle(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
-		context.setSourceRgba(this.color.red, this.color.green, this.color.blue, this.color.alpha);
+		context.setSourceColor(this.color);
 		context.fillPreserve();
-		context.setSourceColor(Color.black);
+		context.setSourceColor(gdk.Color.Color.black);
 		context.stroke();
 	}
 	
@@ -923,10 +798,10 @@ class RoundedBox: BoxBase {
 		context.lineTo(this.rect.x + _radius, this.rect.y + this.rect.height);
 		context.arc(this.rect.x + this.radius, this.rect.y + this.rect.height - _radius, _radius, PI / 2, PI);
 		context.closePath();
-		context.setSourceRgba(this.color.red, this.color.green, this.color.blue, this.color.alpha);
+		context.setSourceColor(this.color);
 		context.fillPreserve();
 
-		context.setSourceColor(Color.black);
+		context.setSourceColor(gdk.Color.Color.black);
 		context.stroke();
 	}
 	
@@ -1018,7 +893,7 @@ class TextBox: Box {
 		layout.setHeight(cast(int) this.rect.height * PANGO_SCALE);
 		layout.setMarkup(this.underline ? "<u>" ~ this.text ~ "</u>" : this.text, -1);
 
-		context.setSourceColor(Color.black);
+		context.setSourceColor(gdk.Color.Color.black);
 		context.moveTo(this.rect.x, this.rect.y + 10);
 
 		PgCairo.showLayout(context, layout);
@@ -1163,7 +1038,7 @@ class RoundedTextBox: RoundedBox {
 		layout.setHeight(cast(int) this.rect.height * PANGO_SCALE);
 		layout.setMarkup(this.underline ? "<u>" ~ this.text ~ "</u>" : this.text, -1);
 
-		context.setSourceColor(Color.black);
+		context.setSourceColor(gdk.Color.Color.black);
 		context.moveTo(this.rect.x, this.rect.y + 10);
 
 		PgCairo.showLayout(context, layout);
@@ -1305,7 +1180,7 @@ class Line: DrawableObject {
 		context.setLineWidth(this.thickness);
 		context.moveTo(this.rect.x, this.rect.y);
 		context.lineTo(this.rect.x + this.rect.width, this.rect.y + this.rect.height);
-		context.setSourceColor(Color.black);
+		context.setSourceColor(gdk.Color.Color.black);
 		context.stroke();
 	}
 	
@@ -1387,7 +1262,7 @@ class ArrowHead {
 			context.lineTo(x2, y2);
 			context.closePath();
 	
-			context.setSourceColor(Color.black);
+			context.setSourceColor(gdk.Color.Color.black);
 			context.strokePreserve();
 	
 			context.fill();
@@ -1439,7 +1314,7 @@ class Arrow: DrawableObject {
 		context.setLineWidth(this.thickness);
 		context.moveTo(this.rect.x, this.rect.y);
 		context.lineTo(this.rect.x + this.rect.width, this.rect.y + this.rect.height);
-		context.setSourceColor(Color.black);
+		context.setSourceColor(gdk.Color.Color.black);
 		context.stroke();
 		
 		this.startHead.draw(context, this.rect.x + this.rect.width, this.rect.y + this.rect.height, this.rect.x, this.rect.y);
@@ -1516,7 +1391,6 @@ class Canvas: DrawingArea {
 		this.paper = new Paper();
 		this.origin.x = this.origin.y = 0;
 		this.grid = new Grid();
-		this.axis = new Axis();
 		this.selection = new Selection();
 		this.cursorSet = new CursorSet();
 		
@@ -1525,7 +1399,6 @@ class Canvas: DrawingArea {
 		this.border = 10;
 		
 		this.pick = false;
-		this.updated = false;
 		this.selectedChild = null;
 
 		this.addEvents(GdkEventMask.BUTTON_PRESS_MASK);
@@ -1661,7 +1534,7 @@ class Canvas: DrawingArea {
 	void delegate(SharedCacheMulticoreSpecification)[] specificationChangedListeners;
 	
 	bool exposed(GdkEventExpose* event, Widget widget) {
-		Context context = new Context(this.getWindow());
+		this.context = new Context(this.getWindow());
 		
 		double width = event.area.width;
 		double height = event.area.height;
@@ -1706,14 +1579,6 @@ class Canvas: DrawingArea {
 			this.grid.draw(context);
 		}
 		
-		if(this.axis.active) {
-			this.axis.rect.x = this.origin.x;
-			this.axis.rect.y = this.origin.y;
-			this.axis.rect.width = this.paper.rect.width - this.paper.left - this.paper.right;
-			this.axis.rect.height = this.paper.rect.height - this.paper.top - this.paper.bottom;
-			this.axis.draw(context);
-		}
-		
 		foreach(child; this.children) {
 			child.rect.x += this.origin.x;
 			child.rect.y += this.origin.y;
@@ -1730,9 +1595,21 @@ class Canvas: DrawingArea {
 			this.selection.rect.y -= this.origin.y;
 		}
 		
-		this.updated = true;
+		Effect[] effectsToRemove;
 		
-		return false;
+		foreach(effect; this.effects) {
+			effect.draw(context);
+			if(!effect.active) {
+				effectsToRemove ~= effect;
+			}
+		}
+		
+		foreach(effectToRemove; effectsToRemove) {
+			int indexToRemove = this.effects.indexOf(effectToRemove);
+			this.effects = this.effects.remove(indexToRemove);
+		}
+		
+		return true;
 	}
 	
 	bool buttonPressed(GdkEventButton* event, Widget widget) {
@@ -1819,9 +1696,6 @@ class Canvas: DrawingArea {
 				this.selection.rect.height = 0;
 				this.selection.active = true;
 			}
-			else {
-				this.updated = false;
-			}
 			
 			this.queueDraw();
 		}
@@ -1843,25 +1717,16 @@ class Canvas: DrawingArea {
 		this.pick = false;
 		this.getWindow().setCursor(this.cursorSet.normal);
 		
-		this.needUpdate = false;
 		this.queueDraw();
 		
 		return true;
 	}
 	
-	bool handlingMotionNotified = false;
-	
-	bool motionNotified(GdkEventMotion* event, Widget widget) {
-		if(this.handlingMotionNotified) {
-			return true;
-		}
-		
-		if(!this.handlingMotionNotified) {
-			this.handlingMotionNotified = true;
-		}
-		
+	bool motionNotified(GdkEventMotion* event, Widget widget) {		
 		double x = event.x - this.origin.x;
 		double y = event.y - this.origin.y;
+		
+		this.setTooltipText("");
 
 		foreach(child; this.children) {
 			if(child.atPosition(x, y)) {
@@ -1920,14 +1785,10 @@ class Canvas: DrawingArea {
 			this.getWindow().setCursor(this.cursorSet.normal);
 		}
 
-		this.horizontalRuler.setRange(0, 200, event.x / this.horizontalRuler.getAllocation().width * 200, 200);
-		this.verticalRuler.setRange(0, 200, event.y / this.verticalRuler.getAllocation().height * 200, 200);
-
 		if(this.selection.active) {
 			this.selection.rect.width = x - this.selection.rect.x;
 			this.selection.rect.height = y - this.selection.rect.y;
 			
-			this.needUpdate = false;
 			this.queueDraw();
 		}
 		else if(event.state & ModifierType.BUTTON1_MASK) {
@@ -1978,16 +1839,10 @@ class Canvas: DrawingArea {
 						child.rect.y = this.grid.nearest(y - child.offset.y);
 					}
 					
-					if(child.rect.x > 0 || child.rect.y > 0 || child.rect.width > 0 || child.rect.height > 0) {
-						this.needUpdate = false;
-					}
-					
 					this.queueDraw();
 				}
 			}
 		}
-
-		this.handlingMotionNotified = false;
 		
 		return true;
 	}
@@ -2003,10 +1858,8 @@ class Canvas: DrawingArea {
 	void create(DrawableObject child) {
 		this.pick = true;
 		this.childToAdd = child;
-	}
-	
-	void update(DrawableObject child) {
-		this.queueDraw();
+		
+		this.effects ~= new PuffEffect(this);
 	}
 	
 	void cutSelected() {
@@ -2058,8 +1911,8 @@ class Canvas: DrawingArea {
 	}
 	
 	override string toString() {
-		return format("Canvas[origin=%s, total=%s, border=%f, pick=%s, updated=%s, needUpdate=%s, childToAdd=%s]",
-			this.origin, this.total, this.border, this.pick, this.updated, this.needUpdate, this.childToAdd);
+		return format("Canvas[origin=%s, total=%s, border=%f, pick=%s, childToAdd=%s]",
+			this.origin, this.total, this.border, this.pick, this.childToAdd);
 	}
 	
 	static Canvas loadXML(string cwd = "../configs/layouts", string fileName = "canvas" ~ ".xml") {
@@ -2103,16 +1956,17 @@ class Canvas: DrawingArea {
 	Paper paper;
 	Point origin;
 	Grid grid;
-	Axis axis;
 	Selection selection;
 	CursorSet cursorSet;
 	DrawableObject[] children;
 	Size total;
 	double border;
-	bool pick, updated, needUpdate;
+	bool pick;
 	DrawableObject childToAdd, selectedChild;
-	HRuler horizontalRuler;
-	VRuler verticalRuler;
+	
+	Context context;
+	
+	Effect[] effects;
 	
 	Startup startup;
 	
@@ -2234,4 +2088,66 @@ string registerStockId(string name, string label, string key, string fileName = 
 	stockItem.add(1);
 	
 	return id;
+}
+
+class Effect {
+	this(Canvas canvas) {
+		this.canvas = canvas;
+		this.active = true;
+	}
+	
+	abstract void draw(Context context);
+	
+	Canvas canvas;
+	bool active;
+}
+
+class PuffEffect: Effect {
+	this(Canvas canvas) {
+		super(canvas);
+		
+		this.alpha = 1.0;
+		this.size = 1.0;
+			
+		Timeout timeout = new Timeout(5, delegate  bool()
+		{
+			if(!this.active) {
+				return false;
+			}
+			
+			this.canvas.queueDraw();
+			return true;
+		}, true);
+	}
+	
+	override void draw(Context context) {
+		double w = this.canvas.getAllocation().width;
+		double h = this.canvas.getAllocation().height;
+		
+		context.selectFontFace("Courier", cairo_font_slant_t.NORMAL, cairo_font_weight_t.BOLD);
+		
+		this.size = this.size + 3.8;
+		
+		if(this.size > 10) {
+			this.alpha = this.alpha - 0.1;
+		}
+		
+		context.setFontSize(this.size);
+		context.setSourceRgb(0, 0, 0);
+		
+		cairo_text_extents_t extents;
+		context.textExtents("ZetCode", &extents);
+		
+		context.moveTo(w/2 - extents.width/2, h/2);
+		context.textPath("ZetCode");
+		context.clip();
+		context.stroke();
+		context.paintWithAlpha(this.alpha);
+		
+		if(this.alpha <= 0) {
+			this.active = false;
+		}
+	}
+	
+	double alpha, size;
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Canvas>
    <TextBox x="75" backColor="red" isAbstract="false" underline="false" preserve="true" y="75" size="12" text="Out-of-Order Processor Core" width="300" id="textBox1" height="45" font="Verdana">
-      <OoOProcessorCoreSpecification drawableObjectId="textBox1" iCacheId="iCache2" dCacheId="dCache3" id="ooOProcessorCore1">
+      <OoOProcessorCoreSpecification drawableObjectId="textBox1" iCacheId="iCache0" dCacheId="dCache1" id="ooOProcessorCore0">
       </OoOProcessorCoreSpecification>
    </TextBox>
    <TextBox x="75" backColor="green" isAbstract="false" underline="false" preserve="true" y="120" size="12" text="Inst Cache" width="150" id="textBox2" height="45" font="Verdana">
@@ -13,7 +13,7 @@
       </DCacheSpecification>
    </TextBox>
    <TextBox x="420" backColor="red" isAbstract="false" underline="false" preserve="true" y="75" size="12" text="Out-of-Order Processor Core" width="300" id="textBox4" height="45" font="Verdana">
-      <OoOProcessorCoreSpecification drawableObjectId="textBox4" iCacheId="iCache0" dCacheId="dCache1" id="ooOProcessorCore0">
+      <OoOProcessorCoreSpecification drawableObjectId="textBox4" iCacheId="iCache2" dCacheId="dCache3" id="ooOProcessorCore2">
       </OoOProcessorCoreSpecification>
    </TextBox>
    <TextBox x="420" backColor="green" isAbstract="false" underline="false" preserve="true" y="120" size="12" text="Inst Cache" width="150" id="textBox5" height="45" font="Verdana">
@@ -56,6 +56,6 @@
       <FixedLatencyDRAMSpecification drawableObjectId="box22" id="fixedLatencyDRAM7">
       </FixedLatencyDRAMSpecification>
    </TextBox>
-   <SharedCacheMulticoreSpecification interconnectId="fixedLatencyP2PInterconnect6" mainMemoryId="fixedLatencyDRAM7" numCores="2" coreId0="ooOProcessorCore0" id="sharedCacheMulticore0" coreId1="ooOProcessorCore1" l2CacheId="l2Cache2">
+   <SharedCacheMulticoreSpecification interconnectId="fixedLatencyP2PInterconnect6" mainMemoryId="fixedLatencyDRAM7" numCores="2" coreId0="ooOProcessorCore0" id="sharedCacheMulticore0" coreId1="ooOProcessorCore2" l2CacheId="l2Cache2">
    </SharedCacheMulticoreSpecification>
 </Canvas>

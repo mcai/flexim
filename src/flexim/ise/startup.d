@@ -31,9 +31,6 @@ import std.path;
 
 import cairo.Context;
 
-import gtk.DragAndDrop;
-import gtk.Timeout;
-
 T getBuilderObject(T, K)(ObjectG obj) {
 	obj.setData("GObject", null);
 	return new T(cast(K*)obj.getObjectGStruct());
@@ -403,6 +400,7 @@ class TreeViewArchitecturalSpecificationProperties: TreeView {
 
 class Startup {
 	this(string[] args) {
+		Main.init(null);
 		Main.init(args);
 		
 		this.builder = new Builder();
@@ -575,22 +573,10 @@ class Startup {
 		void buildCanvas() {
 			this.tableCanvas = new Table(3, 3, false);
 			
-			HRuler horizontalRuler = new HRuler();
-			horizontalRuler.setMetric(GtkMetricType.PIXELS);
-			horizontalRuler.setRange(0, 200, 0, 200);
-			this.tableCanvas.attach(horizontalRuler, 1, 2, 0, 1, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, GtkAttachOptions.SHRINK, 4, 4);
-			
-			VRuler verticalRuler = new VRuler();
-			verticalRuler.setMetric(GtkMetricType.PIXELS);
-			verticalRuler.setRange(0, 200, 0, 200);
-			this.tableCanvas.attach(verticalRuler, 0, 1, 1, 2, GtkAttachOptions.SHRINK, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, 4, 4);
-			
 			ScrolledWindow scrolledWindow = new ScrolledWindow();
 			scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
 			this.tableCanvas.attach(scrolledWindow, 1, 2, 1, 2, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, 4, 4);
 			
-			this.canvas.horizontalRuler = horizontalRuler;
-			this.canvas.verticalRuler = verticalRuler;
 			scrolledWindow.addWithViewport(this.canvas);
 		}
 		
@@ -646,7 +632,7 @@ class Startup {
 			addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "Simple CPU Core");
 			addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "Out-of-Order CPU Core");
 			
-			ToolItemGroup groupCaches = addItemGroup("Memory Hierarchies");
+			ToolItemGroup groupCaches = addItemGroup("Memory Hierarchy Objects");
 			string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../gtk/canvas/cache_l1i.svg");
 			string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../gtk/canvas/cache_l1d.svg");
 			string CACHE_L2 = registerStockId("cacheL2", "Shared L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
