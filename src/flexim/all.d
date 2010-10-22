@@ -57,6 +57,7 @@ public import gtk.AboutDialog;
 public import gtk.Builder;
 public import gtk.Button;
 public import gtk.CellRenderer;
+public import gtk.CellRendererCombo;
 public import gtk.CellRendererPixbuf;
 public import gtk.CellRendererText;
 public import gtk.CheckButton;
@@ -128,7 +129,7 @@ public import flexim.isa.integer;
 public import flexim.isa.mem;
 public import flexim.isa.misc;
 
-public import flexim.ise.blueprints;
+public import flexim.ise.specifications;
 public import flexim.ise.views;
 public import flexim.ise.models;
 public import flexim.ise.startup;

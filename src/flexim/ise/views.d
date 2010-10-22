@@ -478,17 +478,17 @@ abstract class DrawableObject {
 		this.isAbstract = false;
 	}
 	
-	void addOnBlueprintChanged(void delegate(Blueprint blueprint) del) {
-		this.blueprintChangedListeners ~= del;
+	void addOnArchitecturalSpecificationChanged(void delegate(ArchitecturalSpecification specification) del) {
+		this.specificationChangedListeners ~= del;
 	}
 	
-	void fireBlueprintChanged(Blueprint blueprint) {
-		foreach(listener; this.blueprintChangedListeners) {
-			listener(blueprint);
+	void fireArchitecturalSpecificationChanged(ArchitecturalSpecification specification) {
+		foreach(listener; this.specificationChangedListeners) {
+			listener(specification);
 		}
 	}
 	
-	void delegate(Blueprint)[] blueprintChangedListeners;
+	void delegate(ArchitecturalSpecification)[] specificationChangedListeners;
 	
 	abstract void post();
 	
@@ -535,8 +535,21 @@ abstract class DrawableObject {
 	}
 	
 	void opIndexAssign(string value, string index) {
+		this.firePropertyChanged(index, value);
 		this.properties[index] = value;
 	}
+	
+	void addOnPropertyChanged(void delegate(string key, string newValue) del) {
+		this.propertyChangedListeners ~= del;
+	}
+	
+	void firePropertyChanged(string key, string newValue) {
+		foreach(listener; this.propertyChangedListeners) {
+			listener(key, newValue);
+		}
+	}
+	
+	void delegate(string, string)[] propertyChangedListeners;
 	
 	double[] dashToUse() {
 		return this.isAbstract ? this.dashDots : this.dashNone;
@@ -561,19 +574,19 @@ abstract class DrawableObject {
 	double[] dashNone;
 	double[] dashDots;
 	
-	Blueprint blueprint() {
-		return this.m_blueprint;
+	ArchitecturalSpecification specification() {
+		return this.m_specification;
 	}
 	
-	void blueprint(Blueprint value) {
-		if(this.m_blueprint != value) {
-			this.m_blueprint = value;
+	void specification(ArchitecturalSpecification value) {
+		if(this.m_specification != value) {
+			this.m_specification = value;
 			
-			this.fireBlueprintChanged(value);
+			this.fireArchitecturalSpecificationChanged(value);
 		}
 	}
 	
-	Blueprint m_blueprint;
+	ArchitecturalSpecification m_specification;
 }
 
 abstract class BoxBase: DrawableObject {
@@ -638,9 +651,9 @@ class Text: BoxBase {
 		this.preserve = true;
 		this.text = text;
 		
-		this.addOnBlueprintChanged(delegate void(Blueprint newBlueprint) 
+		this.addOnArchitecturalSpecificationChanged(delegate void(ArchitecturalSpecification newArchitecturalSpecification) 
 			{
-				this.text = newBlueprint.label;
+				this.text = newArchitecturalSpecification.label;
 				this.underline = true;
 			});
 	}
@@ -734,6 +747,10 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 		xmlConfig["size"] = to!(string)(text.size);
 		xmlConfig["preserve"] = to!(string)(text.preserve);
 		xmlConfig["text"] = text.text;
+
+		if(text.specification !is null) {
+			xmlConfig.entries ~= text.specification.save();
+		}
 			
 		return xmlConfig;
 	}
@@ -764,6 +781,25 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 		text.size = size;
 		text.preserve = preserve;
 		text.text = textStr;
+		
+		foreach(entry; xmlConfig.entries) {
+			string typeName = entry.typeName;
+			
+			if(typeName == "OoOProcessorCoreSpecification") {
+				text.specification = OoOProcessorCoreSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "L2CacheSpecification") {
+				text.specification = L2CacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyP2PInterconnectSpecification") {
+				text.specification = FixedLatencyP2PInterconnectSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyDRAMSpecification") {
+				text.specification = FixedLatencyDRAMSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			break;
+		}
+		
 		return text;
 	}
 	
@@ -956,11 +992,11 @@ class TextBox: Box {
 		
 		this["hello"] = "world";
 		
-		this.addOnBlueprintChanged(delegate void(Blueprint newBlueprint) 
+		this.addOnArchitecturalSpecificationChanged(delegate void(ArchitecturalSpecification newArchitecturalSpecification) 
 			{
-				this.text = newBlueprint.label;
-				this.backColor = newBlueprint.backColor;
-				this.isAbstract = !newBlueprint.isCycleAccurate;
+				this.text = newArchitecturalSpecification.label;
+				this.backColor = newArchitecturalSpecification.backColor;
+				this.isAbstract = !newArchitecturalSpecification.isCycleAccurate;
 			});
 	}
 	
@@ -1022,6 +1058,10 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		xmlConfig["size"] = to!(string)(textBox.size);
 		xmlConfig["preserve"] = to!(string)(textBox.preserve);
 		xmlConfig["text"] = textBox.text;
+
+		if(textBox.specification !is null) {
+			xmlConfig.entries ~= textBox.specification.save();
+		}
 			
 		return xmlConfig;
 	}
@@ -1054,6 +1094,25 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 		textBox.size = size;
 		textBox.preserve = preserve;
 		textBox.text = text;
+		
+		foreach(entry; xmlConfig.entries) {
+			string typeName = entry.typeName;
+			
+			if(typeName == "OoOProcessorCoreSpecification") {
+				textBox.specification = OoOProcessorCoreSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "L2CacheSpecification") {
+				textBox.specification = L2CacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyP2PInterconnectSpecification") {
+				textBox.specification = FixedLatencyP2PInterconnectSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyDRAMSpecification") {
+				textBox.specification = FixedLatencyDRAMSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			break;
+		}
+		
 		return textBox;
 	}
 	
@@ -1072,11 +1131,11 @@ class RoundedTextBox: RoundedBox {
 		this.preserve = true;
 		this.text = text;
 		
-		this.addOnBlueprintChanged(delegate void(Blueprint newBlueprint) 
+		this.addOnArchitecturalSpecificationChanged(delegate void(ArchitecturalSpecification newArchitecturalSpecification) 
 			{
-				this.text = newBlueprint.label;
-				this.backColor = newBlueprint.backColor;
-				this.isAbstract = !newBlueprint.isCycleAccurate;
+				this.text = newArchitecturalSpecification.label;
+				this.backColor = newArchitecturalSpecification.backColor;
+				this.isAbstract = !newArchitecturalSpecification.isCycleAccurate;
 			});
 	}
 	
@@ -1139,6 +1198,10 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		xmlConfig["size"] = to!(string)(roundedTextBox.size);
 		xmlConfig["preserve"] = to!(string)(roundedTextBox.preserve);
 		xmlConfig["text"] = roundedTextBox.text;
+
+		if(roundedTextBox.specification !is null) {
+			xmlConfig.entries ~= roundedTextBox.specification.save();
+		}
 			
 		return xmlConfig;
 	}
@@ -1173,6 +1236,25 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 		roundedTextBox.size = size;
 		roundedTextBox.preserve = preserve;
 		roundedTextBox.text = text;
+		
+		foreach(entry; xmlConfig.entries) {
+			string typeName = entry.typeName;
+			
+			if(typeName == "OoOProcessorCoreSpecification") {
+				roundedTextBox.specification = OoOProcessorCoreSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "L2CacheSpecification") {
+				roundedTextBox.specification = L2CacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyP2PInterconnectSpecification") {
+				roundedTextBox.specification = FixedLatencyP2PInterconnectSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "FixedLatencyDRAMSpecification") {
+				roundedTextBox.specification = FixedLatencyDRAMSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			break;
+		}
+		
 		return roundedTextBox;
 	}
 	
@@ -1463,7 +1545,7 @@ class Canvas: DrawingArea {
 		if(toolItem !is null) {
 			ToolButton toolButton = cast(ToolButton) toolItem;
 			string actionName = toolButton.getActionName();
-			Blueprint blueprintToAssign = null;
+			ArchitecturalSpecification specificationToAssign = null;
 			
 			double _x = x - this.origin.x;
 			double _y = y - this.origin.y;
@@ -1473,11 +1555,14 @@ class Canvas: DrawingArea {
 					if(cast(Text) child !is null) {
 						Text text = cast(Text) child;
 						if(actionName == "archSharedCacheMulticore") {
-							blueprintToAssign = new SharedCacheMulticoreBlueprint();
+							this.specification = new SharedCacheMulticoreSpecification();
+							this.specification.drawableObjectId = child.id;
+							specificationToAssign = this.specification;
 						}
 						
-						if(blueprintToAssign !is null) {
-							text.blueprint = blueprintToAssign;
+						if(specificationToAssign !is null) {
+							text.specification = specificationToAssign;
+							this.fireArchitecturalSpecificationAssociated(text, text.specification);
 						}
 						
 						break;
@@ -1485,29 +1570,31 @@ class Canvas: DrawingArea {
 					else if(cast(TextBox) child !is null) {
 						TextBox textBox = cast(TextBox) child;
 						if(actionName == "cpuSimple") {
-							blueprintToAssign = new SimpleProcessorCoreBlueprint();
+							specificationToAssign = new SimpleProcessorCoreSpecification();
 						}
 						else if(actionName == "cpuOoO") {
-							blueprintToAssign = new OoOProcessorCoreBlueprint();
+							specificationToAssign = new OoOProcessorCoreSpecification();
 						}
 						else if(actionName == "cacheL1I") {
-							blueprintToAssign = new ICacheBlueprint();
+							specificationToAssign = new ICacheSpecification();
 						}
 						else if(actionName == "cacheL1D") {
-							blueprintToAssign = new DCacheBlueprint();
+							specificationToAssign = new DCacheSpecification();
 						}
 						else if(actionName == "cacheL2") {
-							blueprintToAssign = new L2CacheBlueprint();
+							specificationToAssign = new L2CacheSpecification();
 						}
 						else if(actionName == "interconnectFixedP2P") {
-							blueprintToAssign = new FixedLatencyP2PInterconnectBlueprint();
+							specificationToAssign = new FixedLatencyP2PInterconnectSpecification();
 						}
 						else if(actionName == "dramFixed") {
-							blueprintToAssign = new FixedLatencyDRAMBlueprint();
+							specificationToAssign = new FixedLatencyDRAMSpecification();
 						}
 						
-						if(blueprintToAssign !is null) {			
-							textBox.blueprint = blueprintToAssign;
+						if(specificationToAssign !is null) {
+							specificationToAssign.drawableObjectId = child.id;
+							textBox.specification = specificationToAssign;
+							this.fireArchitecturalSpecificationAssociated(textBox, textBox.specification);
 						}
 						
 						break;
@@ -1518,6 +1605,18 @@ class Canvas: DrawingArea {
 		
 		this.queueDraw();
 	}
+	
+	void addOnArchitecturalSpecificationAssociated(void delegate(DrawableObject child, ArchitecturalSpecification specification) del) {
+		this.specificationAssociatedListeners ~= del;
+	}
+	
+	void fireArchitecturalSpecificationAssociated(DrawableObject child, ArchitecturalSpecification specification) {
+		foreach(listener; this.specificationAssociatedListeners) {
+			listener(child, specification);
+		}
+	}
+	
+	void delegate(DrawableObject, ArchitecturalSpecification)[] specificationAssociatedListeners;
 	
 	void addOnSelected(void delegate(DrawableObject child) del) {
 		this.selectedListeners ~= del;
@@ -1530,6 +1629,18 @@ class Canvas: DrawingArea {
 	}
 	
 	void delegate(DrawableObject)[] selectedListeners;
+	
+	void addOnArchitecturalSpecificationChanged(void delegate(SharedCacheMulticoreSpecification specification) del) {
+		this.specificationChangedListeners ~= del;
+	}
+	
+	void fireArchitecturalSpecificationChanged(SharedCacheMulticoreSpecification specification) {
+		foreach(listener; this.specificationChangedListeners) {
+			listener(specification);
+		}
+	}
+	
+	void delegate(SharedCacheMulticoreSpecification)[] specificationChangedListeners;
 	
 	bool exposed(GdkEventExpose* event, Widget widget) {
 		Context context = new Context(this.getWindow());
@@ -1733,6 +1844,13 @@ class Canvas: DrawingArea {
 		
 		double x = event.x - this.origin.x;
 		double y = event.y - this.origin.y;
+
+		foreach(child; this.children) {
+			if(child.atPosition(x, y)) {
+				this.setTooltipText(child.specification !is null ? child.specification.id : "(" ~ child.id ~ ")");
+				break;
+			}
+		}
 		
 		Direction direction = Direction.NONE;
 		if(!(event.state & ModifierType.BUTTON1_MASK)) {
@@ -1934,6 +2052,38 @@ class Canvas: DrawingArea {
 		CanvasXMLFileSerializer.singleInstance.saveXML(canvas, join(cwd, fileName));
 	}
 	
+	DrawableObject getDrawableObject(string id) {
+		foreach(child; this.children) {
+			if(child.id == id) {
+				return child;
+			}
+		}
+		
+		assert(0);
+	}
+	
+	DrawableObject getDrawableObjectFromSpecificationId(string specificationId) {
+		foreach(child; this.children) {
+			if(child.specification !is null && child.specification.id == specificationId) {
+				return child;
+			}
+		}
+		
+		assert(0, specificationId);
+	}
+	
+
+	
+	ArchitecturalSpecification getSpecification(string specificationId) {
+		foreach(child; this.children) {
+			if(child.specification !is null && child.specification.id == specificationId) {
+				return child.specification;
+			}
+		}
+		
+		assert(0, specificationId);
+	}
+	
 	Paper paper;
 	Point origin;
 	Grid grid;
@@ -1949,6 +2099,20 @@ class Canvas: DrawingArea {
 	VRuler verticalRuler;
 	
 	Startup startup;
+	
+	SharedCacheMulticoreSpecification specification() {
+		return this.m_specification;
+	}
+	
+	void specification(SharedCacheMulticoreSpecification value) {
+		if(this.m_specification != value) {
+			this.m_specification = value;
+			
+			this.fireArchitecturalSpecificationChanged(value);
+		}
+	}
+	
+	SharedCacheMulticoreSpecification m_specification;
 }
 
 class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
@@ -1961,6 +2125,10 @@ class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
 		
 		foreach(child; canvas.children) {
 			xmlConfigFile.entries ~= child.save();
+		}
+		
+		if(canvas.specification !is null) {
+			xmlConfigFile.entries ~= canvas.specification.save();
 		}
 			
 		return xmlConfigFile;
@@ -1996,9 +2164,22 @@ class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
 			else if(typeName == "Arrow") {
 				canvas.add(ArrowXMLSerializer.singleInstance.load(entry));
 			}
+			else if(typeName == "SharedCacheMulticoreSpecification") {
+				canvas.specification = SharedCacheMulticoreSpecificationXMLFileSerializer.singleInstance.load(entry);
+			}
 			else {
 				assert(0, typeName);
 			}
+		}
+		
+		foreach(child; canvas.children) {
+			if(child.specification !is null) {
+				child.specification.canvas = canvas;
+			}
+		}
+		
+		if(canvas.specification !is null) {
+			canvas.specification.canvas = canvas;
 		}
 		
 		return canvas;

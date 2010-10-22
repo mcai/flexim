@@ -220,37 +220,145 @@ class TreeViewNodeProperties: TreeView {
 	ListStoreBenchmark listStore;
 }
 
-class TreeViewNodeProperties1 : TreeView {
-	this() {		
+import glib.Str;
+import gtkc.gobject;
+
+class TreeViewArchitecturalSpecificationProperties: TreeView {
+	bool delegate(string)[int] rowToActionMappings;
+	
+	this(Canvas canvas) {
+		this.canvas = canvas;
+		this.canvas.addOnArchitecturalSpecificationChanged(delegate void(SharedCacheMulticoreSpecification specification)
+			{
+				this.populate();
+			});
+			
+		this.canvas.addOnArchitecturalSpecificationAssociated(delegate void(DrawableObject child, ArchitecturalSpecification specification)
+			{
+				this.populateComboItems();
+			});
+		
 		GType[] types;
-		
 		types ~= GType.STRING;
 		types ~= GType.STRING;
+				
+		this.treeStore = new TreeStore(types);
+
+		GType[] types2;
+		types2 ~= GType.STRING;
+		types2 ~= GType.STRING;
+		types2 ~= GType.STRING;
+		this.listStoreCombo = new ListStore(types2);
+		this.populateComboItems();
+
+		this.appendColumn(new TreeViewColumn("Component", new CellRendererText(), "text", 0));
 		
-		this.listStore = new ListStore(types);
+		CellRendererCombo cellRendererCombo = new CellRendererCombo();
 		
-		this.appendColumn(new TreeViewColumn("Key", new CellRendererText(), "text", 0));
-		this.appendColumn(new TreeViewColumn("Value", new CellRendererText(), "text", 1));
+		g_object_set(
+			cellRendererCombo.getCellRendererComboStruct(), 
+			Str.toStringz("model"), this.listStoreCombo.getListStoreStruct(), 
+			Str.toStringz("text-column"), 0,
+			Str.toStringz("editable"), true,
+			Str.toStringz("has-entry"), false,
+			null);
 		
-		this.refreshList();
+		cellRendererCombo.addOnEdited(delegate void(string pathString, string newText, CellRendererText cellRendererText)
+			{
+				TreeIter iter = new TreeIter();
+				this.treeStore.getIterFromString(iter, pathString);
+				
+				int rowId = to!(int)(pathString);
+				assert(rowId in this.rowToActionMappings);
+				
+				if(newText != "" && this.rowToActionMappings[rowId](newText)) {
+					this.treeStore.setValue(iter, 1, newText);
+				}
+			});
+		
+		this.appendColumn(new TreeViewColumn("Specification", cellRendererCombo, "text", 1));
+		
+		this.setRulesHint(true);
+		
+		this.populate();
 	}
 	
-	void refreshList() {
-		this.setModel(null);
-		this.listStore.clear();
+	void populateComboItems() {
+		this.listStoreCombo.clear();
 		
-		foreach(key, value; this.data) {
-			TreeIter iter = this.listStore.createIter();
+		foreach(child; this.canvas.children) {
+			if(child.specification !is null) {
+				TreeIter iter = this.listStoreCombo.createIter();
+				this.listStoreCombo.setValue(iter, 0, child.specification.id);
+			}
+		}
+	}
+	
+	void populate() {
+		this.setModel(null);
+		this.treeStore.clear();
+		
+		int currentRow = 0;
+		
+		if(this.canvas.specification !is null) {			
+			foreach(i, ref coreId; this.canvas.specification.coreIds) {
+				TreeIter iterCore = this.treeStore.createIter();
+				this.treeStore.setValue(iterCore, 0, format("core#%d", i));
+				this.treeStore.setValue(iterCore, 1, coreId);
+				
+				this.rowToActionMappings[currentRow++] = delegate bool(string text) {
+					ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;
+					coreId = specification.id;
+					return (cast(OoOProcessorCoreSpecification) specification !is null);
+				};
+				
+				TreeIter iterICache = this.treeStore.append(iterCore);
+				this.treeStore.setValue(iterICache, 0, "icache");
+				this.treeStore.setValue(iterICache, 1, "N/A");
+				
+				TreeIter iterDCache = this.treeStore.append(iterCore);
+				this.treeStore.setValue(iterDCache, 0, "dcache");
+				this.treeStore.setValue(iterDCache, 1, "N/A");
+			}
 			
-			this.listStore.setValue(iter, 0, key);
-			this.listStore.setValue(iter, 1, value);
+			TreeIter iterL2 = this.treeStore.createIter();
+			this.treeStore.setValue(iterL2, 0, "l2");
+			this.treeStore.setValue(iterL2, 1, this.canvas.specification.l2CacheId);
+			
+			this.rowToActionMappings[currentRow++] = delegate bool(string text) {
+				ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;	
+				this.canvas.specification.l2CacheId = specification.id;
+				return (cast(L2CacheSpecification) specification !is null);
+			};
+			
+			TreeIter iterInterconnect = this.treeStore.createIter();
+			this.treeStore.setValue(iterInterconnect, 0, "interconnect");
+			this.treeStore.setValue(iterInterconnect, 1, this.canvas.specification.interconnectId);
+			
+			this.rowToActionMappings[currentRow++] = delegate bool(string text) {
+				ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;	
+				this.canvas.specification.interconnectId = specification.id;
+				return (cast(FixedLatencyP2PInterconnectSpecification) specification !is null);
+			};
+			
+			TreeIter iterMainMemory = this.treeStore.createIter();
+			this.treeStore.setValue(iterMainMemory, 0, "mainMemory");
+			this.treeStore.setValue(iterMainMemory, 1, this.canvas.specification.mainMemoryId);
+			
+			this.rowToActionMappings[currentRow++] = delegate bool(string text) {
+				ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;	
+				this.canvas.specification.mainMemoryId = specification.id;
+				return (cast(FixedLatencyDRAMSpecification) specification !is null);
+			};
 		}
 		
-		this.setModel(this.listStore);
+		this.setModel(this.treeStore);
 	}
 	
-	string[string] data;	
-	ListStore listStore;
+	TreeStore treeStore;
+	ListStore listStoreCombo;
+	
+	Canvas canvas;
 }
 
 class Startup {
@@ -521,14 +629,17 @@ class Startup {
 
 			VBox vboxLeftBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftBottom");
 				
-			vboxLeftBottom.packStart(new Label("Properties View"), false, false, 0);
-				
-			TreeViewNodeProperties treeViewNodeProperties = new TreeViewNodeProperties();
+			vboxLeftBottom.packStart(new Label("Simulated Architecture"), false, false, 0);
+			
+			//TODO: add scrollbar.
+			
+			TreeViewArchitecturalSpecificationProperties treeViewNodeProperties = new TreeViewArchitecturalSpecificationProperties(this.canvas);
+			//TreeViewNodeProperties treeViewNodeProperties = new TreeViewNodeProperties();
 			vboxLeftBottom.packStart(treeViewNodeProperties, true, true, 0);
 			
 			canvas.addOnSelected(delegate void(DrawableObject child) {
-				treeViewNodeProperties.data = child.properties;
-				treeViewNodeProperties.refreshList();
+				//treeViewNodeProperties.data = child.properties;
+				//treeViewNodeProperties.refreshList();
 			});
 		}
 		
