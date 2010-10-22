@@ -146,7 +146,7 @@ class OoOProcessorCoreSpecification : ProcessorCoreSpecification {
 	
 	ICacheSpecification iCache() {
 		if(this.canvas !is null && this.iCacheId != "") {
-			return cast(ICacheSpecification)(this.canvas.getSpecification(this.iCacheId));
+			return this.canvas.getSpecification!(ICacheSpecification)(this.iCacheId);
 		}
 		
 		return null;
@@ -154,7 +154,7 @@ class OoOProcessorCoreSpecification : ProcessorCoreSpecification {
 	
 	DCacheSpecification dCache() {
 		if(this.canvas !is null && this.dCacheId != "") {
-			return cast(DCacheSpecification)(this.canvas.getSpecification(this.dCacheId));
+			return this.canvas.getSpecification!(DCacheSpecification)(this.dCacheId);
 		}
 		
 		return null;
@@ -557,7 +557,7 @@ class SharedCacheMulticoreSpecification: ArchitectureArchitecturalSpecification 
 	
 	OoOProcessorCoreSpecification getCore(string coreId) {
 		if(this.canvas !is null && coreId != "") {
-			return cast(OoOProcessorCoreSpecification)(this.canvas.getSpecification(coreId));
+			return this.canvas.getSpecification!(OoOProcessorCoreSpecification)(coreId);
 		}
 		
 		return null;
@@ -573,7 +573,7 @@ class SharedCacheMulticoreSpecification: ArchitectureArchitecturalSpecification 
 	
 	L2CacheSpecification l2Cache() {
 		if(this.canvas !is null && this.l2CacheId != "") {
-			return cast(L2CacheSpecification)(this.canvas.getSpecification(this.l2CacheId));
+			return this.canvas.getSpecification!(L2CacheSpecification)(this.l2CacheId);
 		}
 		
 		return null;
@@ -581,7 +581,7 @@ class SharedCacheMulticoreSpecification: ArchitectureArchitecturalSpecification 
 	
 	FixedLatencyP2PInterconnectSpecification interconnect() {
 		if(this.canvas !is null && this.interconnectId != "") {
-			return cast(FixedLatencyP2PInterconnectSpecification)(this.canvas.getSpecification(this.interconnectId));
+			return this.canvas.getSpecification!(FixedLatencyP2PInterconnectSpecification)(this.interconnectId);
 		}
 		
 		return null;
@@ -589,7 +589,7 @@ class SharedCacheMulticoreSpecification: ArchitectureArchitecturalSpecification 
 	
 	FixedLatencyDRAMSpecification mainMemory() {
 		if(this.canvas !is null && this.mainMemoryId != "") {
-			return cast(FixedLatencyDRAMSpecification)(this.canvas.getSpecification(this.mainMemoryId));
+			return this.canvas.getSpecification!(FixedLatencyDRAMSpecification)(this.mainMemoryId);
 		}
 		
 		return null;

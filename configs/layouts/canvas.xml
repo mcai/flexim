@@ -1,27 +1,35 @@
 <?xml version="1.0"?>
 <Canvas>
    <TextBox x="75" backColor="red" isAbstract="false" underline="false" preserve="true" y="75" size="12" text="Out-of-Order Processor Core" width="300" id="textBox1" height="45" font="Verdana">
-      <OoOProcessorCoreSpecification drawableObjectId="textBox1" iCacheId="" dCacheId="" id="ooOProcessorCore1">
+      <OoOProcessorCoreSpecification drawableObjectId="textBox1" iCacheId="iCache2" dCacheId="dCache3" id="ooOProcessorCore1">
       </OoOProcessorCoreSpecification>
    </TextBox>
    <TextBox x="75" backColor="green" isAbstract="false" underline="false" preserve="true" y="120" size="12" text="Inst Cache" width="150" id="textBox2" height="45" font="Verdana">
+      <ICacheSpecification drawableObjectId="textBox2" id="iCache0">
+      </ICacheSpecification>
    </TextBox>
    <TextBox x="225" backColor="green" isAbstract="false" underline="false" preserve="true" y="120" size="12" text="Data Cache" width="150" id="textBox3" height="45" font="Verdana">
+      <DCacheSpecification drawableObjectId="textBox3" id="dCache1">
+      </DCacheSpecification>
    </TextBox>
    <TextBox x="420" backColor="red" isAbstract="false" underline="false" preserve="true" y="75" size="12" text="Out-of-Order Processor Core" width="300" id="textBox4" height="45" font="Verdana">
-      <OoOProcessorCoreSpecification drawableObjectId="textBox4" iCacheId="" dCacheId="" id="ooOProcessorCore0">
+      <OoOProcessorCoreSpecification drawableObjectId="textBox4" iCacheId="iCache0" dCacheId="dCache1" id="ooOProcessorCore0">
       </OoOProcessorCoreSpecification>
    </TextBox>
    <TextBox x="420" backColor="green" isAbstract="false" underline="false" preserve="true" y="120" size="12" text="Inst Cache" width="150" id="textBox5" height="45" font="Verdana">
+      <ICacheSpecification drawableObjectId="textBox5" id="iCache2">
+      </ICacheSpecification>
    </TextBox>
    <TextBox x="570" backColor="green" isAbstract="false" underline="false" preserve="true" y="120" size="12" text="Data Cache" width="150" id="textBox6" height="45" font="Verdana">
+      <DCacheSpecification drawableObjectId="textBox6" id="dCache3">
+      </DCacheSpecification>
    </TextBox>
    <TextBox x="75" backColor="blue" isAbstract="true" underline="false" preserve="true" y="210" size="12" text="Fixed-Latency P2P Interconnect" width="645" id="textBox7" height="45" font="Verdana">
       <FixedLatencyP2PInterconnectSpecification drawableObjectId="textBox7" id="fixedLatencyP2PInterconnect6">
       </FixedLatencyP2PInterconnectSpecification>
    </TextBox>
    <TextBox x="75" backColor="green" isAbstract="false" underline="false" preserve="true" y="300" size="12" text="L2 Cache" width="645" id="textBox8" height="45" font="Verdana">
-      <L2CacheSpecification drawableObjectId="textBox8" id="l2Cache5">
+      <L2CacheSpecification drawableObjectId="textBox8" id="l2Cache2">
       </L2CacheSpecification>
    </TextBox>
    <Arrow x="150" isAbstract="false" y="165" width="0" endHeadStyle="SOLID" id="arrow1" height="45" startHeadStyle="SOLID">
@@ -48,6 +56,6 @@
       <FixedLatencyDRAMSpecification drawableObjectId="box22" id="fixedLatencyDRAM7">
       </FixedLatencyDRAMSpecification>
    </TextBox>
-   <SharedCacheMulticoreSpecification interconnectId="fixedLatencyP2PInterconnect6" mainMemoryId="fixedLatencyDRAM7" numCores="2" coreId0="ooOProcessorCore0" id="sharedCacheMulticore0" coreId1="ooOProcessorCore1" l2CacheId="l2Cache5">
+   <SharedCacheMulticoreSpecification interconnectId="fixedLatencyP2PInterconnect6" mainMemoryId="fixedLatencyDRAM7" numCores="2" coreId0="ooOProcessorCore0" id="sharedCacheMulticore0" coreId1="ooOProcessorCore1" l2CacheId="l2Cache2">
    </SharedCacheMulticoreSpecification>
 </Canvas>

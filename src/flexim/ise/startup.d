@@ -224,7 +224,7 @@ import glib.Str;
 import gtkc.gobject;
 
 class TreeViewArchitecturalSpecificationProperties: TreeView {
-	bool delegate(string)[int] rowToActionMappings;
+	bool delegate(string)[string] rowToActionMappings;
 	
 	this(Canvas canvas) {
 		this.canvas = canvas;
@@ -268,10 +268,9 @@ class TreeViewArchitecturalSpecificationProperties: TreeView {
 				TreeIter iter = new TreeIter();
 				this.treeStore.getIterFromString(iter, pathString);
 				
-				int rowId = to!(int)(pathString);
-				assert(rowId in this.rowToActionMappings);
+				assert(pathString in this.rowToActionMappings);
 				
-				if(newText != "" && this.rowToActionMappings[rowId](newText)) {
+				if(newText != "" && this.rowToActionMappings[pathString](newText)) {
 					this.treeStore.setValue(iter, 1, newText);
 				}
 			});
@@ -298,57 +297,98 @@ class TreeViewArchitecturalSpecificationProperties: TreeView {
 		this.setModel(null);
 		this.treeStore.clear();
 		
-		int currentRow = 0;
+		int currentRow = -1;
 		
-		if(this.canvas.specification !is null) {			
+		if(this.canvas.specification !is null) {
 			foreach(i, ref coreId; this.canvas.specification.coreIds) {
 				TreeIter iterCore = this.treeStore.createIter();
 				this.treeStore.setValue(iterCore, 0, format("core#%d", i));
 				this.treeStore.setValue(iterCore, 1, coreId);
 				
-				this.rowToActionMappings[currentRow++] = delegate bool(string text) {
-					ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;
+				this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
+					OoOProcessorCoreSpecification specification = this.canvas.getSpecification!(OoOProcessorCoreSpecification)(text);
 					coreId = specification.id;
 					return (cast(OoOProcessorCoreSpecification) specification !is null);
 				};
+
+				OoOProcessorCoreSpecification specCore = this.canvas.getSpecification!(OoOProcessorCoreSpecification)(coreId);
+				string iCacheId = specCore.iCacheId;
+				string dCacheId = specCore.dCacheId;
 				
 				TreeIter iterICache = this.treeStore.append(iterCore);
 				this.treeStore.setValue(iterICache, 0, "icache");
-				this.treeStore.setValue(iterICache, 1, "N/A");
+				this.treeStore.setValue(iterICache, 1, iCacheId);
+				
+				this.rowToActionMappings[format("%d:%d", currentRow, 0)] = delegate bool(string text) {
+					ICacheSpecification specification = this.canvas.getSpecification!(ICacheSpecification)(text);
+					if(specification !is null) {
+						specCore.iCacheId = specification.id;
+						return true;
+					}
+					else {
+						return false;
+					}
+				};
 				
 				TreeIter iterDCache = this.treeStore.append(iterCore);
 				this.treeStore.setValue(iterDCache, 0, "dcache");
-				this.treeStore.setValue(iterDCache, 1, "N/A");
+				this.treeStore.setValue(iterDCache, 1, dCacheId);
+				
+				this.rowToActionMappings[format("%d:%d", currentRow, 1)] = delegate bool(string text) {
+					DCacheSpecification specification = this.canvas.getSpecification!(DCacheSpecification)(text);
+					if(specification !is null) {
+						specCore.dCacheId = specification.id;
+						return true;
+					}
+					else {
+						return false;
+					}
+				};
 			}
 			
 			TreeIter iterL2 = this.treeStore.createIter();
 			this.treeStore.setValue(iterL2, 0, "l2");
 			this.treeStore.setValue(iterL2, 1, this.canvas.specification.l2CacheId);
 			
-			this.rowToActionMappings[currentRow++] = delegate bool(string text) {
-				ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;	
-				this.canvas.specification.l2CacheId = specification.id;
-				return (cast(L2CacheSpecification) specification !is null);
+			this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
+				L2CacheSpecification specification = this.canvas.getSpecification!(L2CacheSpecification)(text);
+				if(specification !is null) {
+					this.canvas.specification.l2CacheId = specification.id;
+					return true;
+				}
+				else {
+					return false;
+				}
 			};
 			
 			TreeIter iterInterconnect = this.treeStore.createIter();
 			this.treeStore.setValue(iterInterconnect, 0, "interconnect");
 			this.treeStore.setValue(iterInterconnect, 1, this.canvas.specification.interconnectId);
 			
-			this.rowToActionMappings[currentRow++] = delegate bool(string text) {
-				ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;	
-				this.canvas.specification.interconnectId = specification.id;
-				return (cast(FixedLatencyP2PInterconnectSpecification) specification !is null);
+			this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
+				FixedLatencyP2PInterconnectSpecification specification = this.canvas.getSpecification!(FixedLatencyP2PInterconnectSpecification)(text);
+				if(specification !is null) {
+					this.canvas.specification.interconnectId = specification.id;
+					return true;
+				}
+				else {
+					return false;
+				}
 			};
 			
 			TreeIter iterMainMemory = this.treeStore.createIter();
 			this.treeStore.setValue(iterMainMemory, 0, "mainMemory");
 			this.treeStore.setValue(iterMainMemory, 1, this.canvas.specification.mainMemoryId);
 			
-			this.rowToActionMappings[currentRow++] = delegate bool(string text) {
-				ArchitecturalSpecification specification = this.canvas.getDrawableObjectFromSpecificationId(text).specification;	
-				this.canvas.specification.mainMemoryId = specification.id;
-				return (cast(FixedLatencyDRAMSpecification) specification !is null);
+			this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
+				FixedLatencyDRAMSpecification specification = this.canvas.getSpecification!(FixedLatencyDRAMSpecification)(text);
+				if(specification !is null) {
+					this.canvas.specification.mainMemoryId = specification.id;
+					return true;
+				}
+				else {
+					return false;
+				}
 			};
 		}
 		
@@ -606,21 +646,19 @@ class Startup {
 			addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "Simple CPU Core");
 			addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "Out-of-Order CPU Core");
 			
-			ToolItemGroup groupCaches = addItemGroup("Caches");
+			ToolItemGroup groupCaches = addItemGroup("Memory Hierarchies");
 			string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../gtk/canvas/cache_l1i.svg");
 			string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../gtk/canvas/cache_l1d.svg");
 			string CACHE_L2 = registerStockId("cacheL2", "Shared L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
+			string DRAM_FIXED = registerStockId("dramFixed", "Fixed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
 			addItem(groupCaches, CACHE_L1I, "cacheL1I", "L1 Instruction Cache");
 			addItem(groupCaches, CACHE_L1D, "cacheL1D", "L1 Data Cache");
 			addItem(groupCaches, CACHE_L2, "cacheL2", "Shared L2 Cache");
+			addItem(groupCaches, DRAM_FIXED, "dramFixed", "Fixed Latency DRAM");
 			
 			ToolItemGroup groupInterconnects = addItemGroup("Interconnects");
 			string INTERCONNECT_FIXED_P2P = registerStockId("interconnectFixedP2P", "Fixed Latency P2P Interconnect", "X", "../gtk/canvas/interconnect_fixed_p2p.svg");			
 			addItem(groupInterconnects, INTERCONNECT_FIXED_P2P, "interconnectFixedP2P", "Fixed Latency P2P Interconnect");
-			
-			ToolItemGroup groupMainMemories = addItemGroup("Main Memories");
-			string DRAM_FIXED = registerStockId("dramFixed", "Fixed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
-			addItem(groupMainMemories, DRAM_FIXED, "dramFixed", "Fixed Latency DRAM");
 		}
 		
 		void buildPropertiesView() {				
@@ -630,12 +668,14 @@ class Startup {
 			VBox vboxLeftBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftBottom");
 				
 			vboxLeftBottom.packStart(new Label("Simulated Architecture"), false, false, 0);
-			
-			//TODO: add scrollbar.
-			
+
 			TreeViewArchitecturalSpecificationProperties treeViewNodeProperties = new TreeViewArchitecturalSpecificationProperties(this.canvas);
-			//TreeViewNodeProperties treeViewNodeProperties = new TreeViewNodeProperties();
-			vboxLeftBottom.packStart(treeViewNodeProperties, true, true, 0);
+			
+			ScrolledWindow scrolledWindow = new ScrolledWindow();
+			scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+			scrolledWindow.add(treeViewNodeProperties);
+			
+			vboxLeftBottom.packStart(scrolledWindow, true, true, 0);
 			
 			canvas.addOnSelected(delegate void(DrawableObject child) {
 				//treeViewNodeProperties.data = child.properties;

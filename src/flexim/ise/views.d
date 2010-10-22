@@ -788,6 +788,12 @@ class TextXMLSerializer: XMLSerializer!(Text) {
 			if(typeName == "OoOProcessorCoreSpecification") {
 				text.specification = OoOProcessorCoreSpecificationXMLSerializer.singleInstance.load(entry);
 			}
+			else if(typeName == "ICacheSpecification") {
+				text.specification = ICacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "DCacheSpecification") {
+				text.specification = DCacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
 			else if(typeName == "L2CacheSpecification") {
 				text.specification = L2CacheSpecificationXMLSerializer.singleInstance.load(entry);
 			}
@@ -1101,6 +1107,12 @@ class TextBoxXMLSerializer: XMLSerializer!(TextBox) {
 			if(typeName == "OoOProcessorCoreSpecification") {
 				textBox.specification = OoOProcessorCoreSpecificationXMLSerializer.singleInstance.load(entry);
 			}
+			else if(typeName == "ICacheSpecification") {
+				textBox.specification = ICacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "DCacheSpecification") {
+				textBox.specification = DCacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
 			else if(typeName == "L2CacheSpecification") {
 				textBox.specification = L2CacheSpecificationXMLSerializer.singleInstance.load(entry);
 			}
@@ -1242,6 +1254,12 @@ class RoundedTextBoxXMLSerializer: XMLSerializer!(RoundedTextBox) {
 			
 			if(typeName == "OoOProcessorCoreSpecification") {
 				roundedTextBox.specification = OoOProcessorCoreSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "ICacheSpecification") {
+				roundedTextBox.specification = ICacheSpecificationXMLSerializer.singleInstance.load(entry);
+			}
+			else if(typeName == "DCacheSpecification") {
+				roundedTextBox.specification = DCacheSpecificationXMLSerializer.singleInstance.load(entry);
 			}
 			else if(typeName == "L2CacheSpecification") {
 				roundedTextBox.specification = L2CacheSpecificationXMLSerializer.singleInstance.load(entry);
@@ -2068,20 +2086,18 @@ class Canvas: DrawingArea {
 				return child;
 			}
 		}
-		
-		assert(0, specificationId);
+
+		return null;
 	}
 	
-
-	
-	ArchitecturalSpecification getSpecification(string specificationId) {
+	T getSpecification(T)(string specificationId) {
 		foreach(child; this.children) {
 			if(child.specification !is null && child.specification.id == specificationId) {
-				return child.specification;
+				return cast(T) (child.specification);
 			}
 		}
-		
-		assert(0, specificationId);
+
+		return null;
 	}
 	
 	Paper paper;
