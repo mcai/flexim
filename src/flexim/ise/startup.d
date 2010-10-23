@@ -176,6 +176,19 @@ class VBoxViewButtonsList : VBox {
 	Startup startup;
 }
 
+void setupTextComboBox(ComboBox comboBox) {
+	GType[] types;
+	types ~= GType.STRING;
+	
+	ListStore listStore = new ListStore(types);
+	
+	comboBox.setModel(listStore);
+	
+	CellRenderer renderer = new CellRendererText();
+	comboBox.packStart(renderer, true);
+	comboBox.addAttribute(renderer, "text", 0);
+}
+
 class TreeViewNodeProperties: TreeView {
 	class ListStoreBenchmark: ListStore {
 		this() {
@@ -398,6 +411,10 @@ class TreeViewArchitecturalSpecificationProperties: TreeView {
 	Canvas canvas;
 }
 
+class BenchmarkSpecification {
+	
+}
+
 class Startup {
 	this(string[] args) {
 		Main.init(null);
@@ -471,6 +488,138 @@ class Startup {
 		this.mainWindow.addOnKeyPress(&this.keyPressed);
 	}
 	
+	void buildDialogs() {
+		this.dialogEditBenchmarks = getBuilderObject!(Dialog, GtkDialog)(this.builder, "dialogEditBenchmarks");
+		this.dialogEditBenchmarks.addOnDelete(delegate bool(gdk.Event.Event, Widget)
+			{
+				this.dialogEditBenchmarks.hide();
+				return true;
+			});
+		
+		this.comboBoxBenchmarkSuites = getBuilderObject!(ComboBox, GtkComboBox)(this.builder, "comboBoxBenchmarkSuites");
+		this.vboxBenchmarks = getBuilderObject!(VBox, GtkVBox)(this.builder, "vboxBenchmarks");
+		
+		setupTextComboBox(this.comboBoxBenchmarkSuites);
+		
+		Notebook notebookBenchmarks = new Notebook();
+		notebookBenchmarks.setShowTabs(false);
+		notebookBenchmarks.setBorderWidth(10);
+		
+		this.vboxBenchmarks.packStart(notebookBenchmarks, true, true, 0);
+			
+		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
+			comboBoxBenchmarkSuites.appendText(benchmarkSuiteTitle);
+			
+			VBox vboxBenchmarksList = new VBox(false, 6);
+			
+			foreach(benchmark; benchmarkSuite.benchmarks) {
+				vboxBenchmarksList.packStart(new HSeparator(), false, true, 4);
+				
+				HBox hbox1 = new HBox(false, 6);
+				
+				Label labelTitle = new Label("Title: ");
+				Entry entryTitle = new Entry(benchmark.title);
+				
+				Label labelCwd = new Label("Cwd: ");
+				Entry entryCwd = new Entry(benchmark.cwd);
+				
+				hbox1.packStart(labelTitle, false, false, 0);
+				hbox1.packStart(entryTitle, true, true, 0);
+				hbox1.packStart(labelCwd, false, false, 0);
+				hbox1.packStart(entryCwd, true, true, 0);
+				
+				HBox hbox2 = new HBox(false, 6);
+				
+				Label labelExe = new Label("Exe: ");
+				Entry entryExe = new Entry(benchmark.exe);
+				
+				Label labelArgsLiteral = new Label("Args in Literal: ");
+				Entry entryArgsLiteral = new Entry(benchmark.argsLiteral);
+				
+				hbox2.packStart(labelExe, false, false, 0);
+				hbox2.packStart(entryExe, true, true, 0);
+				hbox2.packStart(labelArgsLiteral, false, false, 0);
+				hbox2.packStart(entryArgsLiteral, true, true, 0);
+				
+				HBox hbox3 = new HBox(false, 6);
+				
+				Label labelStdin = new Label("Stdin: ");
+				Entry entryStdin = new Entry(benchmark.stdin);
+				
+				Label labelStdout = new Label("Stdout: ");
+				Entry entryStdout = new Entry(benchmark.stdout);
+				
+				hbox3.packStart(labelStdin, false, false, 0);
+				hbox3.packStart(entryStdin, true, true, 0);
+				hbox3.packStart(labelStdout, false, false, 0);
+				hbox3.packStart(entryStdout, true, true, 0);
+				
+				HBox hbox4 = new HBox(false, 6);
+				Label labelNumThreads = new Label("Number of Threads: ");
+				Entry entryNumThreads = new Entry(benchmark.numThreads);
+				
+				hbox4.packStart(labelNumThreads, false, false, 0);
+				hbox4.packStart(entryNumThreads, true, true, 0);
+				
+				VBox vbox = new VBox(false, 6);
+				vbox.packStart(hbox1, false, true, 0);
+				vbox.packStart(hbox2, false, true, 0);
+				vbox.packStart(hbox3, false, true, 0);
+				vbox.packStart(hbox4, false, true, 0);
+				
+				Label labelBenchmarkTitle = new Label(benchmark.title);
+				Button buttonRemoveBenchmark = new Button("Remove");
+				
+				HBox hboxBenchmark = new HBox(false, 6);
+				hboxBenchmark.packStart(labelBenchmarkTitle, false, false, 0);
+				hboxBenchmark.packStart(new VSeparator(), false, false, 0);
+				hboxBenchmark.packStart(vbox, true, true, 0);
+				hboxBenchmark.packStart(new VSeparator(), false, false, 0);
+				hboxBenchmark.packStart(buttonRemoveBenchmark, false, false, 0);
+				
+				vboxBenchmarksList.packStart(hboxBenchmark, false, true, 0);
+			}
+			
+			ScrolledWindow scrolledWindow = new ScrolledWindow();
+			scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+			
+			scrolledWindow.addWithViewport(vboxBenchmarksList);
+			
+			notebookBenchmarks.appendPage(scrolledWindow, benchmarkSuiteTitle);
+		}
+		notebookBenchmarks.setCurrentPage(0);
+		comboBoxBenchmarkSuites.setActive(0);
+		
+		HBox hboxButtonAdd = new HBox(false, 6);
+		
+		Button buttonAdd = new Button("Add Benchmark");
+		hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
+		
+		this.vboxBenchmarks.packStart(hboxButtonAdd, false, true, 6);
+		
+		this.comboBoxBenchmarkSuites.addOnChanged(delegate void(ComboBox)
+			{
+				string benchmarkSuiteTitle = this.comboBoxBenchmarkSuites.getActiveText();
+				
+				BenchmarkSuite benchmarkSuite = benchmarkSuites[benchmarkSuiteTitle];
+				assert(benchmarkSuite !is null);
+				
+				int indexOfBenchmarkSuite = this.comboBoxBenchmarkSuites.getActive();
+				
+				notebookBenchmarks.setCurrentPage(indexOfBenchmarkSuite);
+			});
+		
+		void addBenchmark() {
+			
+		}
+		
+		Button buttonCloseDialogEditBenchmarks = getBuilderObject!(Button, GtkButton)(this.builder, "buttonCloseDialogEditBenchmarks");
+		buttonCloseDialogEditBenchmarks.addOnClicked(delegate void(Button)
+			{
+				this.dialogEditBenchmarks.hideAll();
+			});
+	}
+	
 	void buildToolbars() {
 		this.toolButtonNew = getBuilderObject!(ToolButton, GtkToolButton)(this.builder, "toolButtonNew");
 		this.toolButtonNew.addOnClicked(delegate void(ToolButton toolButton)
@@ -480,14 +629,20 @@ class Startup {
 	}
 	
 	void buildMenus() {
-		this.menuItemFileExportToPDF = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemFileExportToPDF");
-		this.menuItemFileExportToPDF.addOnActivate(delegate void(MenuItem)
+		MenuItem menuItemFileQuit = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemFileQuit");
+		menuItemFileQuit.addOnActivate(delegate void(MenuItem)
+			{
+				Main.quit();
+			});
+		
+		ImageMenuItem menuItemFileExportToPDF = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemFileExportToPDF");
+		menuItemFileExportToPDF.addOnActivate(delegate void(MenuItem)
 			{
 				this.exportToPdf();
 			});
 		
-		this.menuItemHelpAbout = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemHelpAbout");
-		this.menuItemHelpAbout.addOnActivate(delegate void(MenuItem)
+		ImageMenuItem menuItemHelpAbout = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemHelpAbout");
+		menuItemHelpAbout.addOnActivate(delegate void(MenuItem)
 			{
 				string[] authors, documenters, artists;
 		
@@ -510,6 +665,12 @@ class Startup {
 				if (aboutDialog.run() == GtkResponseType.GTK_RESPONSE_CANCEL) {
 					aboutDialog.destroy();
 				}
+			});
+		
+		MenuItem menuItemToolsBenchmarks = getBuilderObject!(MenuItem, GtkMenuItem)(this.builder, "menuItemToolsBenchmarks");
+		menuItemToolsBenchmarks.addOnActivate(delegate void(MenuItem)
+			{
+				dialogEditBenchmarks.showAll();
 			});
 	}
 	
@@ -682,36 +843,43 @@ class Startup {
 		
 		Timeout timeout = new Timeout(100, delegate bool ()
 			{
-				/*preloadConfigsAndStats((string text){
+				preloadConfigsAndStats((string text){
 					labelLoading.setMarkup(text);
 	
 					while(Main.eventsPending) {
 						Main.iterationDo(false);
 					}
-				});*/
+				});
 
-				labelLoading.setLabel("Building main window");
+				labelLoading.setLabel("Initializing Widgets");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
 				this.buildMainWindow();
 				
-				labelLoading.setLabel("Building toolbars");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
+				
+				this.buildDialogs();
+				
+				while(Main.eventsPending) {
+					Main.iterationDo(false);
+				}
+				
 				this.buildToolbars();
 
-				labelLoading.setLabel("Building menus");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
+				
 				this.buildMenus();
 
-				labelLoading.setLabel("Building visualization");
+				labelLoading.setLabel("Initializing designer");
 				while(Main.eventsPending) {
 					Main.iterationDo(false);
 				}
+				
 				this.buildFrameDrawing();
 				
 				//this.vboxViewButtonsList.refillComboBoxItems();
@@ -730,8 +898,13 @@ class Startup {
 	
 	Builder builder;
 	Window mainWindow;
+	
+	Dialog dialogEditBenchmarks;
+	ComboBox comboBoxBenchmarkSuites;
+	VBox vboxBenchmarks;
+	
 	ToolButton toolButtonNew;
-	ImageMenuItem menuItemFileExportToPDF, menuItemHelpAbout;
+	
 	Frame frameDrawing;
 	Toolbar toolbarDrawableObjects;
 	Table tableCanvas;

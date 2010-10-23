@@ -46,7 +46,7 @@ import gtk.Main;
 enum string libName = "GTK";
 
 import dstats.all, std.stdio;
-void main(string[] args)
+void main1(string[] args)
 {
 	Main.init(null);
 	Main.init(args);
