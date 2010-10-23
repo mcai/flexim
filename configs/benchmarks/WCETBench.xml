@@ -12,25 +12,25 @@
    </Benchmark>
    <Benchmark title="insertsort" cwd="./" stdin="" exe="insertsort" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="matmult" cwd="./" stdin="" exe="matmult" argsLiteral="" stdout="">
-   </Benchmark>
    <Benchmark title="minmax" cwd="./" stdin="" exe="minmax" argsLiteral="" stdout="">
+   </Benchmark>
+   <Benchmark title="matmult" cwd="./" stdin="" exe="matmult" argsLiteral="" stdout="">
    </Benchmark>
    <Benchmark title="edn" cwd="./" stdin="" exe="edn" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="fft1" cwd="./" stdin="" exe="fft1" argsLiteral="" stdout="">
-   </Benchmark>
    <Benchmark title="nsichneu" cwd="./" stdin="" exe="nsichneu" argsLiteral="" stdout="">
+   </Benchmark>
+   <Benchmark title="fft1" cwd="./" stdin="" exe="fft1" argsLiteral="" stdout="">
    </Benchmark>
    <Benchmark title="bs" cwd="./" stdin="" exe="bs" argsLiteral="" stdout="">
    </Benchmark>
    <Benchmark title="adpcm" cwd="./" stdin="" exe="adpcm" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="lcdnum" cwd="./" stdin="" exe="lcdnum" argsLiteral="" stdout="">
+   <Benchmark title="qurt" cwd="./" stdin="" exe="qurt" argsLiteral="" stdout="">
    </Benchmark>
    <Benchmark title="minver" cwd="./" stdin="" exe="minver" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="qurt" cwd="./" stdin="" exe="qurt" argsLiteral="" stdout="">
+   <Benchmark title="lcdnum" cwd="./" stdin="" exe="lcdnum" argsLiteral="" stdout="">
    </Benchmark>
    <Benchmark title="fdct" cwd="./" stdin="" exe="fdct" argsLiteral="" stdout="">
    </Benchmark>

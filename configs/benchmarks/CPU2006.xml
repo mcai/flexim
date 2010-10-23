@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <BenchmarkSuite title="CPU2006" cwd="CPU2006">
-   <Benchmark title="999.specrand" cwd="999.specrand" stdin="" exe="specrand_base.i386" argsLiteral="1255432124 234923" stdout="">
-   </Benchmark>
    <Benchmark title="416.gamess" cwd="416.gamess" stdin="triazolium.config" exe="gamess_base.i386" argsLiteral="" stdout="">
+   </Benchmark>
+   <Benchmark title="999.specrand" cwd="999.specrand" stdin="" exe="specrand_base.i386" argsLiteral="1255432124 234923" stdout="">
    </Benchmark>
    <Benchmark title="481.wrf" cwd="481.wrf" stdin="" exe="wrf_base.i386" argsLiteral="" stdout="">
    </Benchmark>
