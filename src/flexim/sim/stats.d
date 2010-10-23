@@ -491,6 +491,10 @@ class ExperimentStat: Stat, PropertiesProvider {
 		return ExperimentStatXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
+	static void saveXML(ExperimentStat experimentStat) {
+		saveXML(experimentStat, "../stats/experiments", experimentStat.title ~ ".stat.xml"); 
+	}
+	
 	static void saveXML(ExperimentStat experimentStat, string cwd, string fileName) {
 		ExperimentStatXMLFileSerializer.singleInstance.saveXML(experimentStat, join(cwd, fileName));
 	}

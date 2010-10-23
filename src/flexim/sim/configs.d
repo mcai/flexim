@@ -489,6 +489,10 @@ class ExperimentConfig: PropertiesProvider {
 		return ExperimentConfigXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
+	static void saveXML(ExperimentConfig experimentConfig) {
+		saveXML(experimentConfig, "../configs/experiments", experimentConfig.title ~ ".config.xml");
+	}
+	
 	static void saveXML(ExperimentConfig experimentConfig, string cwd, string fileName) {
 		ExperimentConfigXMLFileSerializer.singleInstance.saveXML(experimentConfig, join(cwd, fileName));
 	}

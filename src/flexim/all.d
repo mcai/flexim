@@ -65,6 +65,7 @@ public import gtk.ComboBox;
 public import gtk.Dialog;
 public import gtk.DragAndDrop;
 public import gtk.DrawingArea;
+public import gtk.EditableIF;
 public import gtk.Entry;
 public import gtk.Expander;
 public import gtk.FileChooserDialog;

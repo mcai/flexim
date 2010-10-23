@@ -139,7 +139,7 @@ BenchmarkSuite[string] benchmarkSuites;
 ExperimentConfig[string] experimentConfigs;
 ExperimentStat[string] experimentStats;
 
-void preloadConfigsAndStats(void delegate(string text) del) {
+void loadConfigsAndStats(void delegate(string text) del) {
     foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
     {
     	del("Loading benchmark config: <b>" ~ basename(name, ".xml") ~ "</b>");
@@ -155,4 +155,16 @@ void preloadConfigsAndStats(void delegate(string text) del) {
     	del("Loading experiment stat: <b>" ~ basename(name, ".stat.xml") ~ "</b>");
 		experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
     }
+}
+
+void saveConfigsAndStats() {
+	foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
+		BenchmarkSuite.saveXML(benchmarkSuite);
+	}	
+	foreach(experimentConfigTitle, experimentConfig; experimentConfigs) {
+		ExperimentConfig.saveXML(experimentConfig);
+	}
+	foreach(experimentStatTitle, experimentStat; experimentStats) {
+		ExperimentStat.saveXML(experimentStat);
+	}
 }

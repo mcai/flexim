@@ -481,12 +481,108 @@ class Startup {
 		this.mainWindow.maximize();
 		this.mainWindow.addOnDestroy(delegate void(ObjectGtk)
 			{
+				saveConfigsAndStats();
 				Canvas.saveXML(this.canvas);
 				Main.exit(0);
 			});
 			
 		this.mainWindow.addOnKeyPress(&this.keyPressed);
 	}
+	
+	void newBenchmark(Benchmark benchmark, VBox vboxBenchmarkList) {
+		HBox hboxBenchmark = new HBox(false, 6);
+		
+		HSeparator sep = new HSeparator();
+		vboxBenchmarkList.packStart(sep, false, true, 4);
+		
+		HBox hbox1 = new HBox(false, 6);
+		
+		Label labelTitle = new Label("Title: ");
+		Entry entryTitle = new Entry(benchmark.title);
+		entryTitle.addOnChanged(delegate void(EditableIF)
+			{
+				benchmark.title = entryTitle.getText();
+				benchmark.suite.benchmarks.remove(benchmark.title);
+				benchmark.suite.register(benchmark);
+			});
+		
+		Label labelCwd = new Label("Cwd: ");
+		Entry entryCwd = new Entry(benchmark.cwd);
+		entryCwd.addOnChanged(delegate void(EditableIF)
+			{
+				benchmark.cwd = entryCwd.getText();
+			});
+		
+		hbox1.packStart(labelTitle, false, false, 0);
+		hbox1.packStart(entryTitle, true, true, 0);
+		hbox1.packStart(labelCwd, false, false, 0);
+		hbox1.packStart(entryCwd, true, true, 0);
+		
+		HBox hbox2 = new HBox(false, 6);
+		
+		Label labelExe = new Label("Exe: ");
+		Entry entryExe = new Entry(benchmark.exe);
+		
+		Label labelArgsLiteral = new Label("Args in Literal: ");
+		Entry entryArgsLiteral = new Entry(benchmark.argsLiteral);
+		entryArgsLiteral.addOnChanged(delegate void(EditableIF)
+			{
+				benchmark.argsLiteral = entryArgsLiteral.getText();
+			});
+		
+		hbox2.packStart(labelExe, false, false, 0);
+		hbox2.packStart(entryExe, true, true, 0);
+		hbox2.packStart(labelArgsLiteral, false, false, 0);
+		hbox2.packStart(entryArgsLiteral, true, true, 0);
+		
+		HBox hbox3 = new HBox(false, 6);
+		
+		Label labelStdin = new Label("Stdin: ");
+		Entry entryStdin = new Entry(benchmark.stdin);
+		entryStdin.addOnChanged(delegate void(EditableIF)
+			{
+				benchmark.stdin = entryStdin.getText();
+			});
+		
+		Label labelStdout = new Label("Stdout: ");
+		Entry entryStdout = new Entry(benchmark.stdout);
+		entryStdout.addOnChanged(delegate void(EditableIF)
+			{
+				benchmark.stdout = entryStdout.getText();
+			});
+		
+		hbox3.packStart(labelStdin, false, false, 0);
+		hbox3.packStart(entryStdin, true, true, 0);
+		hbox3.packStart(labelStdout, false, false, 0);
+		hbox3.packStart(entryStdout, true, true, 0);
+		
+		VBox vbox = new VBox(false, 6);
+		vbox.packStart(hbox1, false, true, 0);
+		vbox.packStart(hbox2, false, true, 0);
+		vbox.packStart(hbox3, false, true, 0);
+		
+		VBox vbox2 = new VBox(false, 6);
+		Label labelBenchmarkTitle = new Label(benchmark.title);
+		Button buttonRemoveBenchmark = new Button("Remove");
+		buttonRemoveBenchmark.addOnClicked(delegate void(Button)
+			{
+				sep.destroy();
+				hboxBenchmark.destroy();
+				benchmark.suite.benchmarks.remove(benchmark.title);
+			});
+		vbox2.packStart(labelBenchmarkTitle, false, false, 0);
+		vbox2.packStart(buttonRemoveBenchmark, false, false, 0);
+		
+		hboxBenchmark.packStart(vbox2, false, false, 0);
+		hboxBenchmark.packStart(new VSeparator(), false, false, 0);
+		hboxBenchmark.packStart(vbox, true, true, 0);
+		
+		vboxBenchmarkList.packStart(hboxBenchmark, false, true, 0);
+		
+		vboxBenchmarkList.showAll();
+	}
+	
+	int currentBenchmarkId = 0;
 	
 	void buildDialogs() {
 		this.dialogEditBenchmarks = getBuilderObject!(Dialog, GtkDialog)(this.builder, "dialogEditBenchmarks");
@@ -510,92 +606,37 @@ class Startup {
 		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
 			comboBoxBenchmarkSuites.appendText(benchmarkSuiteTitle);
 			
-			VBox vboxBenchmarksList = new VBox(false, 6);
+			VBox vboxBenchmarkListContainer = new VBox(false, 0);
+			
+			VBox vboxBenchmarkList = new VBox(false, 6);
 			
 			foreach(benchmark; benchmarkSuite.benchmarks) {
-				vboxBenchmarksList.packStart(new HSeparator(), false, true, 4);
-				
-				HBox hbox1 = new HBox(false, 6);
-				
-				Label labelTitle = new Label("Title: ");
-				Entry entryTitle = new Entry(benchmark.title);
-				
-				Label labelCwd = new Label("Cwd: ");
-				Entry entryCwd = new Entry(benchmark.cwd);
-				
-				hbox1.packStart(labelTitle, false, false, 0);
-				hbox1.packStart(entryTitle, true, true, 0);
-				hbox1.packStart(labelCwd, false, false, 0);
-				hbox1.packStart(entryCwd, true, true, 0);
-				
-				HBox hbox2 = new HBox(false, 6);
-				
-				Label labelExe = new Label("Exe: ");
-				Entry entryExe = new Entry(benchmark.exe);
-				
-				Label labelArgsLiteral = new Label("Args in Literal: ");
-				Entry entryArgsLiteral = new Entry(benchmark.argsLiteral);
-				
-				hbox2.packStart(labelExe, false, false, 0);
-				hbox2.packStart(entryExe, true, true, 0);
-				hbox2.packStart(labelArgsLiteral, false, false, 0);
-				hbox2.packStart(entryArgsLiteral, true, true, 0);
-				
-				HBox hbox3 = new HBox(false, 6);
-				
-				Label labelStdin = new Label("Stdin: ");
-				Entry entryStdin = new Entry(benchmark.stdin);
-				
-				Label labelStdout = new Label("Stdout: ");
-				Entry entryStdout = new Entry(benchmark.stdout);
-				
-				hbox3.packStart(labelStdin, false, false, 0);
-				hbox3.packStart(entryStdin, true, true, 0);
-				hbox3.packStart(labelStdout, false, false, 0);
-				hbox3.packStart(entryStdout, true, true, 0);
-				
-				HBox hbox4 = new HBox(false, 6);
-				Label labelNumThreads = new Label("Number of Threads: ");
-				Entry entryNumThreads = new Entry(benchmark.numThreads);
-				
-				hbox4.packStart(labelNumThreads, false, false, 0);
-				hbox4.packStart(entryNumThreads, true, true, 0);
-				
-				VBox vbox = new VBox(false, 6);
-				vbox.packStart(hbox1, false, true, 0);
-				vbox.packStart(hbox2, false, true, 0);
-				vbox.packStart(hbox3, false, true, 0);
-				vbox.packStart(hbox4, false, true, 0);
-				
-				Label labelBenchmarkTitle = new Label(benchmark.title);
-				Button buttonRemoveBenchmark = new Button("Remove");
-				
-				HBox hboxBenchmark = new HBox(false, 6);
-				hboxBenchmark.packStart(labelBenchmarkTitle, false, false, 0);
-				hboxBenchmark.packStart(new VSeparator(), false, false, 0);
-				hboxBenchmark.packStart(vbox, true, true, 0);
-				hboxBenchmark.packStart(new VSeparator(), false, false, 0);
-				hboxBenchmark.packStart(buttonRemoveBenchmark, false, false, 0);
-				
-				vboxBenchmarksList.packStart(hboxBenchmark, false, true, 0);
+				this.newBenchmark(benchmark, vboxBenchmarkList);
 			}
+			
+			HBox hboxButtonAdd = new HBox(false, 6);
+			
+			Button buttonAdd = new Button("Add Benchmark");
+			buttonAdd.addOnClicked(delegate void(Button)
+				{
+					Benchmark benchmark = new Benchmark(format("benchmark%d", currentBenchmarkId++), "", "", "", "", "");
+					benchmarkSuite.register(benchmark);
+					this.newBenchmark(benchmark, vboxBenchmarkList);
+				});
+			hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
+			
+			vboxBenchmarkListContainer.packStart(vboxBenchmarkList, true, true, 0);
+			vboxBenchmarkListContainer.packStart(hboxButtonAdd, false, true, 6);
 			
 			ScrolledWindow scrolledWindow = new ScrolledWindow();
 			scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
 			
-			scrolledWindow.addWithViewport(vboxBenchmarksList);
+			scrolledWindow.addWithViewport(vboxBenchmarkListContainer);
 			
 			notebookBenchmarks.appendPage(scrolledWindow, benchmarkSuiteTitle);
 		}
 		notebookBenchmarks.setCurrentPage(0);
 		comboBoxBenchmarkSuites.setActive(0);
-		
-		HBox hboxButtonAdd = new HBox(false, 6);
-		
-		Button buttonAdd = new Button("Add Benchmark");
-		hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
-		
-		this.vboxBenchmarks.packStart(hboxButtonAdd, false, true, 6);
 		
 		this.comboBoxBenchmarkSuites.addOnChanged(delegate void(ComboBox)
 			{
@@ -608,10 +649,6 @@ class Startup {
 				
 				notebookBenchmarks.setCurrentPage(indexOfBenchmarkSuite);
 			});
-		
-		void addBenchmark() {
-			
-		}
 		
 		Button buttonCloseDialogEditBenchmarks = getBuilderObject!(Button, GtkButton)(this.builder, "buttonCloseDialogEditBenchmarks");
 		buttonCloseDialogEditBenchmarks.addOnClicked(delegate void(Button)
@@ -843,7 +880,7 @@ class Startup {
 		
 		Timeout timeout = new Timeout(100, delegate bool ()
 			{
-				preloadConfigsAndStats((string text){
+				loadConfigsAndStats((string text){
 					labelLoading.setMarkup(text);
 	
 					while(Main.eventsPending) {
