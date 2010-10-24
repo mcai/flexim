@@ -158,6 +158,19 @@ void loadConfigsAndStats(void delegate(string text) del) {
 }
 
 void saveConfigsAndStats() {
+    foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
+    {
+		std.file.remove(name);
+    }
+    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
+    {
+		std.file.remove(name);
+    }
+    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
+    {
+		std.file.remove(name);
+    }
+    
 	foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
 		BenchmarkSuite.saveXML(benchmarkSuite);
 	}	

@@ -46,136 +46,6 @@ void guiActionNotImplemented(Window parent, string text) {
 	d.destroy();
 }
 
-class VBoxViewButtonsList : VBox {
-	this(Startup startup) {
-		super(false, 5);
-		
-		this.startup = startup;
-		
-		with(this.buttonBenchmarkConfigView = new Button("View Config")) {
-			addOnClicked(&this.buttonBenchmarkConfigViewClicked);
-		}
-		
-		with(this.buttonExperimentConfigView = new Button("View Config")) {
-			addOnClicked(&this.buttonExperimentConfigViewClicked);
-		}
-		
-		with(this.buttonExperimentStatView = new Button("View Stat")) {
-			addOnClicked(&this.buttonExperimentStatViewClicked);
-		}
-		
-		with(this.buttonExperimentRun = new Button("Simulate!")) {
-			addOnClicked(&this.buttonExperimentRunClicked);
-		}
-		
-		with(this.comboBoxBenchmarkSuites = new ComboBox()) {
-		}
-		
-		with(this.boxBenchmarkSuites = new VBox(false, 5)) {
-			packStart(this.comboBoxBenchmarkSuites, true, true, 0);
-			packStart(this.buttonBenchmarkConfigView, true, true, 0);
-		}
-		
-		Frame frameBenchmarkSuites = new Frame("Benchmark Suites");
-		frameBenchmarkSuites.add(this.boxBenchmarkSuites);
-		
-		with(this.comboBoxExperiments = new ComboBox()) {
-		}
-		
-		with(this.boxExperiments = new VBox(false, 5)) {
-			packStart(this.comboBoxExperiments, true, true, 0);
-			packStart(this.buttonExperimentConfigView, true, true, 0);
-			packStart(this.buttonExperimentStatView, true, true, 0);
-			packStart(this.buttonExperimentRun, true, true, 0);
-		}
-		
-		Frame frameExperiments = new Frame("Experiments");
-		frameExperiments.add(this.boxExperiments);
-		
-		this.packStart(frameBenchmarkSuites, false, false, 0);
-		this.packStart(new Label(""), false, false, 0);
-		this.packStart(frameExperiments, false, false, 0);
-	}
-	
-	void refillComboBoxItems() {
-		with(this.comboBoxBenchmarkSuites) {
-			foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
-				appendText(benchmarkSuiteTitle);
-			}
-			setActive(0);
-		}
-		
-		with(this.comboBoxExperiments) {
-			foreach(experimentTitle, experimentConfig; experimentConfigs) {
-				appendText(experimentTitle);
-			}
-			setActive(0);
-		}
-	}
-
-	void buttonBenchmarkConfigViewClicked(Button button) {
-		if(this.selectedBenchmarkSuiteName in benchmarkSuites) {
-			BenchmarkSuite benchmarkSuite = benchmarkSuites[this.selectedBenchmarkSuiteName];
-			//this.graphView.graph = new BenchmarkSuiteConfigTree(benchmarkSuite);
-			//this.graphView.redraw();
-		}
-	}
-
-	void buttonExperimentConfigViewClicked(Button button) {
-		if(this.selectedExperimentName in experimentConfigs) {
-			ExperimentConfig experimentConfig = experimentConfigs[this.selectedExperimentName];
-			//this.graphView.graph = new ExperimentConfigTree(experimentConfig);
-			//this.graphView.redraw();
-		}
-	}
-
-	void buttonExperimentStatViewClicked(Button button) {
-		if(this.selectedExperimentName in experimentStats) {
-			ExperimentStat experimentStat = experimentStats[this.selectedExperimentName];
-			//this.graphView.graph = new ExperimentStatTree(experimentStat);
-			//this.graphView.redraw();
-		}
-	}
-
-	void buttonExperimentRunClicked(Button button) {
-		string oldButtonLabel = button.getLabel();
-		
-		core.thread.Thread threadRunExperiment = new core.thread.Thread(
-			{
-				runExperiment(this.selectedExperimentName, delegate void(string text)
-					{
-						this.startup.mainWindow.setTitle(text);
-					}); //TODO
-				
-				this.buttonExperimentStatView.setSensitive(true);
-				this.buttonExperimentRun.setSensitive(true);
-				this.buttonExperimentRun.setLabel(oldButtonLabel);
-			});
-
-		this.buttonExperimentStatView.setSensitive(false);
-		this.buttonExperimentRun.setSensitive(false);
-		this.buttonExperimentRun.setLabel("Simulating.. Please Wait");
-		threadRunExperiment.start();
-	}
-	
-	string selectedBenchmarkSuiteName() {
-		return this.comboBoxBenchmarkSuites.getActiveText;
-	}
-	
-	string selectedExperimentName() {
-		return this.comboBoxExperiments.getActiveText;
-	}
-	
-	VBox boxBenchmarkSuites, boxExperiments;
-	ComboBox comboBoxBenchmarkSuites, comboBoxExperiments;
-	
-	Button buttonBenchmarkConfigView;
-	Button buttonExperimentConfigView, buttonExperimentStatView;
-	Button buttonExperimentRun;
-	
-	Startup startup;
-}
-
 void setupTextComboBox(ComboBox comboBox) {
 	GType[] types;
 	types ~= GType.STRING;
@@ -188,50 +58,6 @@ void setupTextComboBox(ComboBox comboBox) {
 	comboBox.packStart(renderer, true);
 	comboBox.addAttribute(renderer, "text", 0);
 }
-
-class TreeViewNodeProperties: TreeView {
-	class ListStoreBenchmark: ListStore {
-		this() {
-			GType[] types;
-			types ~= Pixbuf.getType();
-			types ~= GType.STRING;
-			types ~= GType.STRING;
-			
-			super(types);
-		}
-	}
-	
-	this() {		
-		this.listStore = new ListStoreBenchmark();
-		
-		this.appendColumn(new TreeViewColumn("Image", new CellRendererPixbuf(), "pixbuf", 0));
-		this.appendColumn(new TreeViewColumn("Key", new CellRendererText(), "text", 1));
-		this.appendColumn(new TreeViewColumn("Value", new CellRendererText(), "text", 2));
-		
-		this.refreshList();
-	}
-	
-	void refreshList() {
-		this.setModel(null);
-		this.listStore.clear();
-		
-		foreach(key, value; this.data) {
-			TreeIter iter = this.listStore.createIter();
-	
-			this.listStore.setValue(iter, 0, new Value(new Pixbuf("../gtk/canvas/cpu_ooo.svg")));
-			this.listStore.setValue(iter, 1, "<br>" ~ key ~ "</br>");
-			this.listStore.setValue(iter, 2, value);
-		}
-		
-		this.setModel(this.listStore);
-	}
-	
-	string[string] data;
-	ListStoreBenchmark listStore;
-}
-
-import glib.Str;
-import gtkc.gobject;
 
 class TreeViewArchitecturalSpecificationProperties: TreeView {
 	bool delegate(string)[string] rowToActionMappings;
@@ -411,10 +237,6 @@ class TreeViewArchitecturalSpecificationProperties: TreeView {
 	Canvas canvas;
 }
 
-class BenchmarkSpecification {
-	
-}
-
 class Startup {
 	this(string[] args) {
 		Main.init(null);
@@ -487,6 +309,48 @@ class Startup {
 			});
 			
 		this.mainWindow.addOnKeyPress(&this.keyPressed);
+	}
+	
+	void newBenchmarkSuite(BenchmarkSuite benchmarkSuite) {
+		comboBoxBenchmarkSuites.appendText(benchmarkSuite.title);
+					
+		VBox vboxBenchmarkListContainer = new VBox(false, 0);
+		
+		VBox vboxBenchmarkList = new VBox(false, 6);
+		
+		foreach(benchmark; benchmarkSuite.benchmarks) {
+			this.newBenchmark(benchmark, vboxBenchmarkList);
+		}
+		
+		HBox hboxButtonAdd = new HBox(false, 6);
+		
+		Button buttonAdd = new Button("Add Benchmark");
+		buttonAdd.addOnClicked(delegate void(Button)
+			{
+				do
+				{
+					currentBenchmarkId++;
+				}
+				while(format("benchmark%d", currentBenchmarkId) in benchmarkSuite.benchmarks);
+				
+				Benchmark benchmark = new Benchmark(format("benchmark%d", currentBenchmarkId), "", "", "", "", "");
+				benchmarkSuite.register(benchmark);
+				this.newBenchmark(benchmark, vboxBenchmarkList);
+			});
+		hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
+		
+		vboxBenchmarkListContainer.packStart(vboxBenchmarkList, false, true, 0);
+		vboxBenchmarkListContainer.packStart(hboxButtonAdd, false, true, 6);
+		
+		ScrolledWindow scrolledWindow = new ScrolledWindow();
+		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+		
+		scrolledWindow.addWithViewport(vboxBenchmarkListContainer);
+		
+		this.notebookBenchmarks.appendPage(scrolledWindow, benchmarkSuite.title);
+		
+		this.notebookBenchmarks.hideAll();
+		this.notebookBenchmarks.showAll();
 	}
 	
 	void newBenchmark(Benchmark benchmark, VBox vboxBenchmarkList) {
@@ -581,8 +445,9 @@ class Startup {
 		
 		vboxBenchmarkList.showAll();
 	}
-	
-	int currentBenchmarkId = 0;
+
+	int currentBenchmarkSuiteId = -1;
+	int currentBenchmarkId = -1;
 	
 	void buildDialogs() {
 		this.dialogEditBenchmarks = getBuilderObject!(Dialog, GtkDialog)(this.builder, "dialogEditBenchmarks");
@@ -592,62 +457,88 @@ class Startup {
 				return true;
 			});
 		
+		HBox hboxBenchmarkSuiteList = getBuilderObject!(HBox, GtkHBox)(this.builder, "hboxBenchmarkSuiteList");
+			
 		this.comboBoxBenchmarkSuites = getBuilderObject!(ComboBox, GtkComboBox)(this.builder, "comboBoxBenchmarkSuites");
+		
 		this.vboxBenchmarks = getBuilderObject!(VBox, GtkVBox)(this.builder, "vboxBenchmarks");
 		
 		setupTextComboBox(this.comboBoxBenchmarkSuites);
 		
-		Notebook notebookBenchmarks = new Notebook();
-		notebookBenchmarks.setShowTabs(false);
-		notebookBenchmarks.setBorderWidth(10);
+		Button buttonAddBenchmarkSuite = getBuilderObject!(Button, GtkButton)(this.builder, "buttonAddBenchmarkSuite");
+		buttonAddBenchmarkSuite.addOnClicked(delegate void(Button)
+			{
+				do
+				{
+					currentBenchmarkSuiteId++;
+				}
+				while(format("benchmarkSuite%d", currentBenchmarkSuiteId) in benchmarkSuites);
+				
+				BenchmarkSuite benchmarkSuite = new BenchmarkSuite(format("benchmarkSuite%d", currentBenchmarkSuiteId), "");
+				benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
+				this.newBenchmarkSuite(benchmarkSuite);
+				
+				int indexOfBenchmarkSuite = benchmarkSuites.length - 1;
+				
+				this.comboBoxBenchmarkSuites.setActive(indexOfBenchmarkSuite);
+				this.notebookBenchmarks.setCurrentPage(indexOfBenchmarkSuite);
+			});
 		
-		this.vboxBenchmarks.packStart(notebookBenchmarks, true, true, 0);
+		Button buttonRemoveBenchmarkSuite = getBuilderObject!(Button, GtkButton)(this.builder, "buttonRemoveBenchmarkSuite");
+		buttonRemoveBenchmarkSuite.addOnClicked(delegate void(Button)
+			{
+				string benchmarkSuiteTitle = this.comboBoxBenchmarkSuites.getActiveText();
+				
+				if(benchmarkSuiteTitle != "") {
+					BenchmarkSuite benchmarkSuite = benchmarkSuites[benchmarkSuiteTitle];
+					assert(benchmarkSuite !is null);
+						
+					benchmarkSuites.remove(benchmarkSuite.title);
+					
+					int indexOfBenchmarkSuite = this.comboBoxBenchmarkSuites.getActive();
+					this.comboBoxBenchmarkSuites.removeText(indexOfBenchmarkSuite);
+					
+					this.notebookBenchmarks.removePage(indexOfBenchmarkSuite);
+					
+					if(indexOfBenchmarkSuite > 0) {
+						this.comboBoxBenchmarkSuites.setActive(indexOfBenchmarkSuite - 1);
+					}
+					else {
+						this.comboBoxBenchmarkSuites.setActive(benchmarkSuites.length > 0 ? 0 : -1);
+					}
+				}
+			});
+		
+		this.notebookBenchmarks = new Notebook();
+		this.notebookBenchmarks.setShowTabs(false);
+		this.notebookBenchmarks.setBorderWidth(10);
+		
+		this.vboxBenchmarks.packStart(this.notebookBenchmarks, true, true, 0);
 			
 		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
-			comboBoxBenchmarkSuites.appendText(benchmarkSuiteTitle);
-			
-			VBox vboxBenchmarkListContainer = new VBox(false, 0);
-			
-			VBox vboxBenchmarkList = new VBox(false, 6);
-			
-			foreach(benchmark; benchmarkSuite.benchmarks) {
-				this.newBenchmark(benchmark, vboxBenchmarkList);
-			}
-			
-			HBox hboxButtonAdd = new HBox(false, 6);
-			
-			Button buttonAdd = new Button("Add Benchmark");
-			buttonAdd.addOnClicked(delegate void(Button)
-				{
-					Benchmark benchmark = new Benchmark(format("benchmark%d", currentBenchmarkId++), "", "", "", "", "");
-					benchmarkSuite.register(benchmark);
-					this.newBenchmark(benchmark, vboxBenchmarkList);
-				});
-			hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
-			
-			vboxBenchmarkListContainer.packStart(vboxBenchmarkList, true, true, 0);
-			vboxBenchmarkListContainer.packStart(hboxButtonAdd, false, true, 6);
-			
-			ScrolledWindow scrolledWindow = new ScrolledWindow();
-			scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
-			
-			scrolledWindow.addWithViewport(vboxBenchmarkListContainer);
-			
-			notebookBenchmarks.appendPage(scrolledWindow, benchmarkSuiteTitle);
+			this.newBenchmarkSuite(benchmarkSuite);
 		}
-		notebookBenchmarks.setCurrentPage(0);
+		this.notebookBenchmarks.setCurrentPage(0);
 		comboBoxBenchmarkSuites.setActive(0);
 		
 		this.comboBoxBenchmarkSuites.addOnChanged(delegate void(ComboBox)
 			{
 				string benchmarkSuiteTitle = this.comboBoxBenchmarkSuites.getActiveText();
 				
-				BenchmarkSuite benchmarkSuite = benchmarkSuites[benchmarkSuiteTitle];
-				assert(benchmarkSuite !is null);
-				
-				int indexOfBenchmarkSuite = this.comboBoxBenchmarkSuites.getActive();
-				
-				notebookBenchmarks.setCurrentPage(indexOfBenchmarkSuite);
+				if(benchmarkSuiteTitle != "") {
+					assert(benchmarkSuiteTitle in benchmarkSuites, benchmarkSuiteTitle);
+					BenchmarkSuite benchmarkSuite = benchmarkSuites[benchmarkSuiteTitle];
+					assert(benchmarkSuite !is null);
+					
+					int indexOfBenchmarkSuite = this.comboBoxBenchmarkSuites.getActive();
+					
+					this.notebookBenchmarks.setCurrentPage(indexOfBenchmarkSuite);
+
+					buttonRemoveBenchmarkSuite.setSensitive(true);
+				}
+				else {
+					buttonRemoveBenchmarkSuite.setSensitive(false);
+				}
 			});
 		
 		Button buttonCloseDialogEditBenchmarks = getBuilderObject!(Button, GtkButton)(this.builder, "buttonCloseDialogEditBenchmarks");
@@ -938,6 +829,7 @@ class Startup {
 	
 	Dialog dialogEditBenchmarks;
 	ComboBox comboBoxBenchmarkSuites;
+	Notebook notebookBenchmarks;
 	VBox vboxBenchmarks;
 	
 	ToolButton toolButtonNew;
@@ -947,7 +839,6 @@ class Startup {
 	Table tableCanvas;
 	Canvas canvas;
 	Window splashScreen;
-	//VBoxViewButtonsList vboxViewButtonsList;
 	ToolPalette palette;
 }
 

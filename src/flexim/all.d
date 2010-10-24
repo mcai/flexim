@@ -49,6 +49,7 @@ public import gdk.Screen;
 public import glade.Glade;
 
 public import glib.RandG;
+public import glib.Str;
 
 public import gobject.ObjectG;
 public import gobject.Value;
@@ -110,6 +111,8 @@ public import gtk.VRuler;
 public import gtk.VSeparator;
 public import gtk.Widget;
 public import gtk.Window;
+
+public import gtkc.gobject;
 
 public import pango.PgCairo;
 public import pango.PgLayout;
