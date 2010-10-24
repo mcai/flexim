@@ -367,7 +367,7 @@ This section details the main implementation issues that lead to a final
 \end_layout
 
 \begin_layout Subsection
-Simulator and Workloads Compilation
+Simulator Setup and Workloads Compilation
 \end_layout
 
 \begin_layout Standard

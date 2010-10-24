@@ -142,18 +142,24 @@ ExperimentStat[string] experimentStats;
 void loadConfigsAndStats(void delegate(string text) del) {
     foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
     {
-    	del("Loading benchmark config: <b>" ~ basename(name, ".xml") ~ "</b>");
-		benchmarkSuites[basename(name, ".xml")] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
+    	string baseName = basename(name, ".xml");
+    	del("Loading benchmark config: <b>" ~ baseName ~ "</b>");
+		benchmarkSuites[baseName] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
+		assert(benchmarkSuites[baseName].title == baseName);
     }
     foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
     {
-    	del("Loading experiment config: <b>" ~ basename(name, ".config.xml") ~ "</b>");
-		experimentConfigs[basename(name, ".config.xml")] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
+    	string baseName = basename(name, ".config.xml");
+    	del("Loading experiment config: <b>" ~ baseName ~ "</b>");
+		experimentConfigs[baseName] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
+		assert(experimentConfigs[baseName].title == baseName);
     }
     foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
     {
-    	del("Loading experiment stat: <b>" ~ basename(name, ".stat.xml") ~ "</b>");
-		experimentStats[basename(name, ".stat.xml")] = ExperimentStat.loadXML("../stats/experiments", basename(name));
+    	string baseName = basename(name, ".stat.xml");
+    	del("Loading experiment stat: <b>" ~ baseName ~ "</b>");
+		experimentStats[baseName] = ExperimentStat.loadXML("../stats/experiments", basename(name));
+		assert(experimentStats[baseName].title == baseName);
     }
 }
 
@@ -181,3 +187,26 @@ void saveConfigsAndStats() {
 		ExperimentStat.saveXML(experimentStat);
 	}
 }
+
+/*
+void runExperimentCode() {
+	string oldButtonLabel = button.getLabel();
+	
+	core.thread.Thread threadRunExperiment = new core.thread.Thread(
+		{
+			runExperiment(this.selectedExperimentName, delegate void(string text)
+				{
+					this.startup.mainWindow.setTitle(text);
+				}); //TODO
+			
+			this.buttonExperimentStatView.setSensitive(true);
+			this.buttonExperimentRun.setSensitive(true);
+			this.buttonExperimentRun.setLabel(oldButtonLabel);
+		});
+
+	this.buttonExperimentStatView.setSensitive(false);
+	this.buttonExperimentRun.setSensitive(false);
+	this.buttonExperimentRun.setLabel("Simulating.. Please Wait");
+	threadRunExperiment.start();
+}
+*/

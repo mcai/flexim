@@ -316,6 +316,34 @@ class Startup {
 					
 		VBox vboxBenchmarkListContainer = new VBox(false, 0);
 		
+		HBox boxProperties = new HBox(false, 6);
+		
+		Label labelTitle = new Label("Title");
+		Entry entryTitle = new Entry(benchmarkSuite.title);
+		entryTitle.addOnChanged(delegate void(EditableIF)
+			{
+				benchmarkSuites.remove(benchmarkSuite.title);
+				benchmarkSuite.title = entryTitle.getText();
+				benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
+				
+				int index = this.comboBoxBenchmarkSuites.getActive();
+				this.comboBoxBenchmarkSuites.removeText(index);
+				this.comboBoxBenchmarkSuites.insertText(index, benchmarkSuite.title);
+				this.comboBoxBenchmarkSuites.setActive(index);
+			});
+		
+		Label labelCwd = new Label("Cwd");
+		Entry entryCwd = new Entry(benchmarkSuite.cwd);
+		entryCwd.addOnChanged(delegate void(EditableIF)
+			{
+				benchmarkSuite.cwd = entryCwd.getText();
+			});
+		
+		boxProperties.packStart(labelTitle, false, false, 0);
+		boxProperties.packStart(entryTitle, true, true, 0);
+		boxProperties.packStart(labelCwd, false, false, 0);
+		boxProperties.packStart(entryCwd, true, true, 0);
+		
 		VBox vboxBenchmarkList = new VBox(false, 6);
 		
 		foreach(benchmark; benchmarkSuite.benchmarks) {
@@ -339,6 +367,7 @@ class Startup {
 			});
 		hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
 		
+		vboxBenchmarkListContainer.packStart(boxProperties, false, true, 6);
 		vboxBenchmarkListContainer.packStart(vboxBenchmarkList, false, true, 0);
 		vboxBenchmarkListContainer.packStart(hboxButtonAdd, false, true, 6);
 		
@@ -359,15 +388,28 @@ class Startup {
 		HSeparator sep = new HSeparator();
 		vboxBenchmarkList.packStart(sep, false, true, 4);
 		
+		VBox vbox2 = new VBox(false, 6);
+		Label labelBenchmarkTitle = new Label(benchmark.title);
+		Button buttonRemoveBenchmark = new Button("Remove");
+		buttonRemoveBenchmark.addOnClicked(delegate void(Button)
+			{
+				sep.destroy();
+				hboxBenchmark.destroy();
+				benchmark.suite.benchmarks.remove(benchmark.title);
+			});
+		vbox2.packStart(labelBenchmarkTitle, false, false, 0);
+		vbox2.packStart(buttonRemoveBenchmark, false, false, 0);
+		
 		HBox hbox1 = new HBox(false, 6);
 		
 		Label labelTitle = new Label("Title: ");
 		Entry entryTitle = new Entry(benchmark.title);
 		entryTitle.addOnChanged(delegate void(EditableIF)
 			{
-				benchmark.title = entryTitle.getText();
 				benchmark.suite.benchmarks.remove(benchmark.title);
+				benchmark.title = entryTitle.getText();
 				benchmark.suite.register(benchmark);
+				labelBenchmarkTitle.setText(benchmark.title);
 			});
 		
 		Label labelCwd = new Label("Cwd: ");
@@ -424,18 +466,6 @@ class Startup {
 		vbox.packStart(hbox1, false, true, 0);
 		vbox.packStart(hbox2, false, true, 0);
 		vbox.packStart(hbox3, false, true, 0);
-		
-		VBox vbox2 = new VBox(false, 6);
-		Label labelBenchmarkTitle = new Label(benchmark.title);
-		Button buttonRemoveBenchmark = new Button("Remove");
-		buttonRemoveBenchmark.addOnClicked(delegate void(Button)
-			{
-				sep.destroy();
-				hboxBenchmark.destroy();
-				benchmark.suite.benchmarks.remove(benchmark.title);
-			});
-		vbox2.packStart(labelBenchmarkTitle, false, false, 0);
-		vbox2.packStart(buttonRemoveBenchmark, false, false, 0);
 		
 		hboxBenchmark.packStart(vbox2, false, false, 0);
 		hboxBenchmark.packStart(new VSeparator(), false, false, 0);
@@ -511,7 +541,7 @@ class Startup {
 		
 		this.notebookBenchmarks = new Notebook();
 		this.notebookBenchmarks.setShowTabs(false);
-		this.notebookBenchmarks.setBorderWidth(10);
+		this.notebookBenchmarks.setBorderWidth(2);
 		
 		this.vboxBenchmarks.packStart(this.notebookBenchmarks, true, true, 0);
 			

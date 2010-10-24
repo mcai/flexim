@@ -83,7 +83,7 @@ class BenchmarkSuite : PropertiesProvider {
 	}
 	
 	void register(Benchmark benchmark) {
-		assert(!(benchmark.title in this.benchmarks));
+		assert(!(benchmark.title in this.benchmarks), format("%s.%s", this.title, benchmark.title));
 		benchmark.suite = this;
 		this.benchmarks[benchmark.title] = benchmark;
 	}
