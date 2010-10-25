@@ -25,221 +25,8 @@ import flexim.all;
 
 import core.thread;
 
-import std.file;
-import std.getopt;
-import std.path;
-
-import cairo.Context;
-
-T getBuilderObject(T, K)(ObjectG obj) {
-	obj.setData("GObject", null);
-	return new T(cast(K*)obj.getObjectGStruct());
-}
-
-T getBuilderObject(T, K)(Builder builder, string name) {
-	return getBuilderObject!(T, K)(builder.getObject(name));
-}
-
-void guiActionNotImplemented(Window parent, string text) {
-	MessageDialog d = new MessageDialog(parent, GtkDialogFlags.MODAL, MessageType.INFO, ButtonsType.OK, text);
-	d.run();
-	d.destroy();
-}
-
-void setupTextComboBox(ComboBox comboBox) {
-	GType[] types;
-	types ~= GType.STRING;
-	
-	ListStore listStore = new ListStore(types);
-	
-	comboBox.setModel(listStore);
-	
-	CellRenderer renderer = new CellRendererText();
-	comboBox.packStart(renderer, true);
-	comboBox.addAttribute(renderer, "text", 0);
-}
-
-class TreeViewArchitecturalSpecificationProperties: TreeView {
-	bool delegate(string)[string] rowToActionMappings;
-	
-	this(Canvas canvas) {
-		this.canvas = canvas;
-		this.canvas.addOnArchitecturalSpecificationChanged(delegate void(SharedCacheMulticoreSpecification specification)
-			{
-				this.populate();
-			});
-			
-		this.canvas.addOnArchitecturalSpecificationAssociated(delegate void(DrawableObject child, ArchitecturalSpecification specification)
-			{
-				this.populateComboItems();
-			});
-		
-		GType[] types;
-		types ~= GType.STRING;
-		types ~= GType.STRING;
-				
-		this.treeStore = new TreeStore(types);
-
-		GType[] types2;
-		types2 ~= GType.STRING;
-		types2 ~= GType.STRING;
-		types2 ~= GType.STRING;
-		this.listStoreCombo = new ListStore(types2);
-		this.populateComboItems();
-
-		this.appendColumn(new TreeViewColumn("Component", new CellRendererText(), "text", 0));
-		
-		CellRendererCombo cellRendererCombo = new CellRendererCombo();
-		
-		g_object_set(
-			cellRendererCombo.getCellRendererComboStruct(), 
-			Str.toStringz("model"), this.listStoreCombo.getListStoreStruct(), 
-			Str.toStringz("text-column"), 0,
-			Str.toStringz("editable"), true,
-			Str.toStringz("has-entry"), false,
-			null);
-		
-		cellRendererCombo.addOnEdited(delegate void(string pathString, string newText, CellRendererText cellRendererText)
-			{
-				TreeIter iter = new TreeIter();
-				this.treeStore.getIterFromString(iter, pathString);
-				
-				assert(pathString in this.rowToActionMappings);
-				
-				if(newText != "" && this.rowToActionMappings[pathString](newText)) {
-					this.treeStore.setValue(iter, 1, newText);
-				}
-			});
-		
-		this.appendColumn(new TreeViewColumn("Specification", cellRendererCombo, "text", 1));
-		
-		this.setRulesHint(true);
-		
-		this.populate();
-	}
-	
-	void populateComboItems() {
-		this.listStoreCombo.clear();
-		
-		foreach(child; this.canvas.children) {
-			if(child.specification !is null) {
-				TreeIter iter = this.listStoreCombo.createIter();
-				this.listStoreCombo.setValue(iter, 0, child.specification.id);
-			}
-		}
-	}
-	
-	void populate() {
-		this.setModel(null);
-		this.treeStore.clear();
-		
-		int currentRow = -1;
-		
-		if(this.canvas.specification !is null) {
-			foreach(i, ref coreId; this.canvas.specification.coreIds) {
-				TreeIter iterCore = this.treeStore.createIter();
-				this.treeStore.setValue(iterCore, 0, format("core#%d", i));
-				this.treeStore.setValue(iterCore, 1, coreId);
-				
-				this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
-					OoOProcessorCoreSpecification specification = this.canvas.getSpecification!(OoOProcessorCoreSpecification)(text);
-					coreId = specification.id;
-					return (cast(OoOProcessorCoreSpecification) specification !is null);
-				};
-
-				OoOProcessorCoreSpecification specCore = this.canvas.getSpecification!(OoOProcessorCoreSpecification)(coreId);
-				string iCacheId = specCore.iCacheId;
-				string dCacheId = specCore.dCacheId;
-				
-				TreeIter iterICache = this.treeStore.append(iterCore);
-				this.treeStore.setValue(iterICache, 0, "icache");
-				this.treeStore.setValue(iterICache, 1, iCacheId);
-				
-				this.rowToActionMappings[format("%d:%d", currentRow, 0)] = delegate bool(string text) {
-					ICacheSpecification specification = this.canvas.getSpecification!(ICacheSpecification)(text);
-					if(specification !is null) {
-						specCore.iCacheId = specification.id;
-						return true;
-					}
-					else {
-						return false;
-					}
-				};
-				
-				TreeIter iterDCache = this.treeStore.append(iterCore);
-				this.treeStore.setValue(iterDCache, 0, "dcache");
-				this.treeStore.setValue(iterDCache, 1, dCacheId);
-				
-				this.rowToActionMappings[format("%d:%d", currentRow, 1)] = delegate bool(string text) {
-					DCacheSpecification specification = this.canvas.getSpecification!(DCacheSpecification)(text);
-					if(specification !is null) {
-						specCore.dCacheId = specification.id;
-						return true;
-					}
-					else {
-						return false;
-					}
-				};
-			}
-			
-			TreeIter iterL2 = this.treeStore.createIter();
-			this.treeStore.setValue(iterL2, 0, "l2");
-			this.treeStore.setValue(iterL2, 1, this.canvas.specification.l2CacheId);
-			
-			this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
-				L2CacheSpecification specification = this.canvas.getSpecification!(L2CacheSpecification)(text);
-				if(specification !is null) {
-					this.canvas.specification.l2CacheId = specification.id;
-					return true;
-				}
-				else {
-					return false;
-				}
-			};
-			
-			TreeIter iterInterconnect = this.treeStore.createIter();
-			this.treeStore.setValue(iterInterconnect, 0, "interconnect");
-			this.treeStore.setValue(iterInterconnect, 1, this.canvas.specification.interconnectId);
-			
-			this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
-				FixedLatencyP2PInterconnectSpecification specification = this.canvas.getSpecification!(FixedLatencyP2PInterconnectSpecification)(text);
-				if(specification !is null) {
-					this.canvas.specification.interconnectId = specification.id;
-					return true;
-				}
-				else {
-					return false;
-				}
-			};
-			
-			TreeIter iterMainMemory = this.treeStore.createIter();
-			this.treeStore.setValue(iterMainMemory, 0, "mainMemory");
-			this.treeStore.setValue(iterMainMemory, 1, this.canvas.specification.mainMemoryId);
-			
-			this.rowToActionMappings[format("%d", ++currentRow)] = delegate bool(string text) {
-				FixedLatencyDRAMSpecification specification = this.canvas.getSpecification!(FixedLatencyDRAMSpecification)(text);
-				if(specification !is null) {
-					this.canvas.specification.mainMemoryId = specification.id;
-					return true;
-				}
-				else {
-					return false;
-				}
-			};
-		}
-		
-		this.setModel(this.treeStore);
-	}
-	
-	TreeStore treeStore;
-	ListStore listStoreCombo;
-	
-	Canvas canvas;
-}
-
 class Startup {
 	this(string[] args) {
-		Main.init(null);
 		Main.init(args);
 		
 		this.builder = new Builder();
@@ -247,7 +34,8 @@ class Startup {
 		this.builder.connectSignals(null); 
 
 		this.buildSplashScreen();
-		this.run();
+		
+		Main.run();
 	}
 	
 	bool keyPressed(GdkEventKey* event, Widget widget) {
@@ -311,296 +99,19 @@ class Startup {
 		this.mainWindow.addOnKeyPress(&this.keyPressed);
 	}
 	
-	void newBenchmarkSuite(BenchmarkSuite benchmarkSuite) {
-		comboBoxBenchmarkSuites.appendText(benchmarkSuite.title);
-					
-		VBox vboxBenchmarkListContainer = new VBox(false, 0);
-		
-		HBox boxProperties = new HBox(false, 6);
-		
-		Label labelTitle = new Label("Title");
-		Entry entryTitle = new Entry(benchmarkSuite.title);
-		entryTitle.addOnChanged(delegate void(EditableIF)
-			{
-				benchmarkSuites.remove(benchmarkSuite.title);
-				benchmarkSuite.title = entryTitle.getText();
-				benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
-				
-				int index = this.comboBoxBenchmarkSuites.getActive();
-				this.comboBoxBenchmarkSuites.removeText(index);
-				this.comboBoxBenchmarkSuites.insertText(index, benchmarkSuite.title);
-				this.comboBoxBenchmarkSuites.setActive(index);
-			});
-		
-		Label labelCwd = new Label("Cwd");
-		Entry entryCwd = new Entry(benchmarkSuite.cwd);
-		entryCwd.addOnChanged(delegate void(EditableIF)
-			{
-				benchmarkSuite.cwd = entryCwd.getText();
-			});
-		
-		boxProperties.packStart(labelTitle, false, false, 0);
-		boxProperties.packStart(entryTitle, true, true, 0);
-		boxProperties.packStart(labelCwd, false, false, 0);
-		boxProperties.packStart(entryCwd, true, true, 0);
-		
-		VBox vboxBenchmarkList = new VBox(false, 6);
-		
-		foreach(benchmark; benchmarkSuite.benchmarks) {
-			this.newBenchmark(benchmark, vboxBenchmarkList);
-		}
-		
-		HBox hboxButtonAdd = new HBox(false, 6);
-		
-		Button buttonAdd = new Button("Add Benchmark");
-		buttonAdd.addOnClicked(delegate void(Button)
-			{
-				do
-				{
-					currentBenchmarkId++;
-				}
-				while(format("benchmark%d", currentBenchmarkId) in benchmarkSuite.benchmarks);
-				
-				Benchmark benchmark = new Benchmark(format("benchmark%d", currentBenchmarkId), "", "", "", "", "");
-				benchmarkSuite.register(benchmark);
-				this.newBenchmark(benchmark, vboxBenchmarkList);
-			});
-		hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
-		
-		vboxBenchmarkListContainer.packStart(boxProperties, false, true, 6);
-		vboxBenchmarkListContainer.packStart(vboxBenchmarkList, false, true, 0);
-		vboxBenchmarkListContainer.packStart(hboxButtonAdd, false, true, 6);
-		
-		ScrolledWindow scrolledWindow = new ScrolledWindow();
-		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
-		
-		scrolledWindow.addWithViewport(vboxBenchmarkListContainer);
-		
-		this.notebookBenchmarks.appendPage(scrolledWindow, benchmarkSuite.title);
-		
-		this.notebookBenchmarks.hideAll();
-		this.notebookBenchmarks.showAll();
-	}
-	
-	void newBenchmark(Benchmark benchmark, VBox vboxBenchmarkList) {
-		HBox hboxBenchmark = new HBox(false, 6);
-		
-		HSeparator sep = new HSeparator();
-		vboxBenchmarkList.packStart(sep, false, true, 4);
-		
-		VBox vbox2 = new VBox(false, 6);
-		Label labelBenchmarkTitle = new Label(benchmark.title);
-		Button buttonRemoveBenchmark = new Button("Remove");
-		buttonRemoveBenchmark.addOnClicked(delegate void(Button)
-			{
-				sep.destroy();
-				hboxBenchmark.destroy();
-				benchmark.suite.benchmarks.remove(benchmark.title);
-			});
-		vbox2.packStart(labelBenchmarkTitle, false, false, 0);
-		vbox2.packStart(buttonRemoveBenchmark, false, false, 0);
-		
-		HBox hbox1 = new HBox(false, 6);
-		
-		Label labelTitle = new Label("Title: ");
-		Entry entryTitle = new Entry(benchmark.title);
-		entryTitle.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.suite.benchmarks.remove(benchmark.title);
-				benchmark.title = entryTitle.getText();
-				benchmark.suite.register(benchmark);
-				labelBenchmarkTitle.setText(benchmark.title);
-			});
-		
-		Label labelCwd = new Label("Cwd: ");
-		Entry entryCwd = new Entry(benchmark.cwd);
-		entryCwd.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.cwd = entryCwd.getText();
-			});
-		
-		hbox1.packStart(labelTitle, false, false, 0);
-		hbox1.packStart(entryTitle, true, true, 0);
-		hbox1.packStart(labelCwd, false, false, 0);
-		hbox1.packStart(entryCwd, true, true, 0);
-		
-		HBox hbox2 = new HBox(false, 6);
-		
-		Label labelExe = new Label("Exe: ");
-		Entry entryExe = new Entry(benchmark.exe);
-		
-		Label labelArgsLiteral = new Label("Args in Literal: ");
-		Entry entryArgsLiteral = new Entry(benchmark.argsLiteral);
-		entryArgsLiteral.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.argsLiteral = entryArgsLiteral.getText();
-			});
-		
-		hbox2.packStart(labelExe, false, false, 0);
-		hbox2.packStart(entryExe, true, true, 0);
-		hbox2.packStart(labelArgsLiteral, false, false, 0);
-		hbox2.packStart(entryArgsLiteral, true, true, 0);
-		
-		HBox hbox3 = new HBox(false, 6);
-		
-		Label labelStdin = new Label("Stdin: ");
-		Entry entryStdin = new Entry(benchmark.stdin);
-		entryStdin.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.stdin = entryStdin.getText();
-			});
-		
-		Label labelStdout = new Label("Stdout: ");
-		Entry entryStdout = new Entry(benchmark.stdout);
-		entryStdout.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.stdout = entryStdout.getText();
-			});
-		
-		hbox3.packStart(labelStdin, false, false, 0);
-		hbox3.packStart(entryStdin, true, true, 0);
-		hbox3.packStart(labelStdout, false, false, 0);
-		hbox3.packStart(entryStdout, true, true, 0);
-		
-		VBox vbox = new VBox(false, 6);
-		vbox.packStart(hbox1, false, true, 0);
-		vbox.packStart(hbox2, false, true, 0);
-		vbox.packStart(hbox3, false, true, 0);
-		
-		hboxBenchmark.packStart(vbox2, false, false, 0);
-		hboxBenchmark.packStart(new VSeparator(), false, false, 0);
-		hboxBenchmark.packStart(vbox, true, true, 0);
-		
-		vboxBenchmarkList.packStart(hboxBenchmark, false, true, 0);
-		
-		vboxBenchmarkList.showAll();
-	}
-
-	int currentBenchmarkSuiteId = -1;
-	int currentBenchmarkId = -1;
-	
 	void buildDialogs() {
-		this.dialogEditBenchmarks = getBuilderObject!(Dialog, GtkDialog)(this.builder, "dialogEditBenchmarks");
-		this.dialogEditBenchmarks.addOnDelete(delegate bool(gdk.Event.Event, Widget)
-			{
-				this.dialogEditBenchmarks.hide();
-				return true;
-			});
-		
-		HBox hboxBenchmarkSuiteList = getBuilderObject!(HBox, GtkHBox)(this.builder, "hboxBenchmarkSuiteList");
-			
-		this.comboBoxBenchmarkSuites = getBuilderObject!(ComboBox, GtkComboBox)(this.builder, "comboBoxBenchmarkSuites");
-		
-		this.vboxBenchmarks = getBuilderObject!(VBox, GtkVBox)(this.builder, "vboxBenchmarks");
-		
-		setupTextComboBox(this.comboBoxBenchmarkSuites);
-		
-		Button buttonAddBenchmarkSuite = getBuilderObject!(Button, GtkButton)(this.builder, "buttonAddBenchmarkSuite");
-		buttonAddBenchmarkSuite.addOnClicked(delegate void(Button)
-			{
-				do
-				{
-					currentBenchmarkSuiteId++;
-				}
-				while(format("benchmarkSuite%d", currentBenchmarkSuiteId) in benchmarkSuites);
-				
-				BenchmarkSuite benchmarkSuite = new BenchmarkSuite(format("benchmarkSuite%d", currentBenchmarkSuiteId), "");
-				benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
-				this.newBenchmarkSuite(benchmarkSuite);
-				
-				int indexOfBenchmarkSuite = benchmarkSuites.length - 1;
-				
-				this.comboBoxBenchmarkSuites.setActive(indexOfBenchmarkSuite);
-				this.notebookBenchmarks.setCurrentPage(indexOfBenchmarkSuite);
-			});
-		
-		Button buttonRemoveBenchmarkSuite = getBuilderObject!(Button, GtkButton)(this.builder, "buttonRemoveBenchmarkSuite");
-		buttonRemoveBenchmarkSuite.addOnClicked(delegate void(Button)
-			{
-				string benchmarkSuiteTitle = this.comboBoxBenchmarkSuites.getActiveText();
-				
-				if(benchmarkSuiteTitle != "") {
-					BenchmarkSuite benchmarkSuite = benchmarkSuites[benchmarkSuiteTitle];
-					assert(benchmarkSuite !is null);
-						
-					benchmarkSuites.remove(benchmarkSuite.title);
-					
-					int indexOfBenchmarkSuite = this.comboBoxBenchmarkSuites.getActive();
-					this.comboBoxBenchmarkSuites.removeText(indexOfBenchmarkSuite);
-					
-					this.notebookBenchmarks.removePage(indexOfBenchmarkSuite);
-					
-					if(indexOfBenchmarkSuite > 0) {
-						this.comboBoxBenchmarkSuites.setActive(indexOfBenchmarkSuite - 1);
-					}
-					else {
-						this.comboBoxBenchmarkSuites.setActive(benchmarkSuites.length > 0 ? 0 : -1);
-					}
-				}
-			});
-		
-		this.notebookBenchmarks = new Notebook();
-		this.notebookBenchmarks.setShowTabs(false);
-		this.notebookBenchmarks.setBorderWidth(2);
-		
-		this.vboxBenchmarks.packStart(this.notebookBenchmarks, true, true, 0);
-			
-		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
-			this.newBenchmarkSuite(benchmarkSuite);
-		}
-		this.notebookBenchmarks.setCurrentPage(0);
-		comboBoxBenchmarkSuites.setActive(0);
-		
-		this.comboBoxBenchmarkSuites.addOnChanged(delegate void(ComboBox)
-			{
-				string benchmarkSuiteTitle = this.comboBoxBenchmarkSuites.getActiveText();
-				
-				if(benchmarkSuiteTitle != "") {
-					assert(benchmarkSuiteTitle in benchmarkSuites, benchmarkSuiteTitle);
-					BenchmarkSuite benchmarkSuite = benchmarkSuites[benchmarkSuiteTitle];
-					assert(benchmarkSuite !is null);
-					
-					int indexOfBenchmarkSuite = this.comboBoxBenchmarkSuites.getActive();
-					
-					this.notebookBenchmarks.setCurrentPage(indexOfBenchmarkSuite);
-
-					buttonRemoveBenchmarkSuite.setSensitive(true);
-				}
-				else {
-					buttonRemoveBenchmarkSuite.setSensitive(false);
-				}
-			});
-		
-		Button buttonCloseDialogEditBenchmarks = getBuilderObject!(Button, GtkButton)(this.builder, "buttonCloseDialogEditBenchmarks");
-		buttonCloseDialogEditBenchmarks.addOnClicked(delegate void(Button)
-			{
-				this.dialogEditBenchmarks.hideAll();
-			});
+		this.dialogEditSetBenchmarkSuites = new DialogEditSetBenchmarkSuites(this.builder);
+		this.dialogEditSetExperiments = new DialogEditSetExperiments(this.builder);
 	}
 	
 	void buildToolbars() {
-		this.toolButtonNew = getBuilderObject!(ToolButton, GtkToolButton)(this.builder, "toolButtonNew");
-		this.toolButtonNew.addOnClicked(delegate void(ToolButton toolButton)
-			{
-				writeln(this.toolButtonNew.getTooltipText());
-			});
+		bindToolButton(this.builder, "toolButtonNew", {writeln("toolButtonNew is clicked.");});
 	}
 	
 	void buildMenus() {
-		MenuItem menuItemFileQuit = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemFileQuit");
-		menuItemFileQuit.addOnActivate(delegate void(MenuItem)
-			{
-				Main.quit();
-			});
-		
-		ImageMenuItem menuItemFileExportToPDF = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemFileExportToPDF");
-		menuItemFileExportToPDF.addOnActivate(delegate void(MenuItem)
-			{
-				this.exportToPdf();
-			});
-		
-		ImageMenuItem menuItemHelpAbout = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(this.builder, "menuItemHelpAbout");
-		menuItemHelpAbout.addOnActivate(delegate void(MenuItem)
+		bindMenuItem(this.builder, "menuItemFileQuit", {Main.quit();});
+		bindMenuItem(this.builder, "menuItemFileExportToPDF", {this.exportToPdf();});
+		bindMenuItem(this.builder, "menuItemHelpAbout", 
 			{
 				string[] authors, documenters, artists;
 		
@@ -619,178 +130,16 @@ class Startup {
 				aboutDialog.setLicense("GPL (GNU General Public License)\nsee http://www.gnu.org/licenses/gpl.html");
 				aboutDialog.setWebsite("http://github.com/mcai/flexim");
 				aboutDialog.setComments("Flexim Integrated Simulation Enviroment (ISE) is a flexible and rich architectural simulator written in D.");
-				
-				if (aboutDialog.run() == GtkResponseType.GTK_RESPONSE_CANCEL) {
-					aboutDialog.destroy();
-				}
+
+				aboutDialog.run();
+				aboutDialog.destroy();
 			});
-		
-		MenuItem menuItemToolsBenchmarks = getBuilderObject!(MenuItem, GtkMenuItem)(this.builder, "menuItemToolsBenchmarks");
-		menuItemToolsBenchmarks.addOnActivate(delegate void(MenuItem)
-			{
-				dialogEditBenchmarks.showAll();
-			});
+		bindMenuItem(this.builder, "menuItemToolsBenchmarks", {this.dialogEditSetBenchmarkSuites.showDialog();});
+		bindMenuItem(this.builder, "menuItemToolsExperiments", {this.dialogEditSetExperiments.showDialog();});
 	}
 	
 	void buildFrameDrawing() {
-		this.frameDrawing = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameDrawing");
-			
-		this.canvas = Canvas.loadXML();
-		this.canvas.startup = this;
-			
-		void buildToolbar() {
-			this.toolbarDrawableObjects = new Toolbar();
-			this.toolbarDrawableObjects.setOrientation(GtkOrientation.HORIZONTAL);
-			this.toolbarDrawableObjects.setStyle(GtkToolbarStyle.BOTH_HORIZ);
-			
-			int position = 0;
-
-			string TEXT = registerStockId("text", "Text", "X");
-			string BOX = registerStockId("box", "Box", "X");
-			string TEXT_BOX = registerStockId("text_box", "Text Box", "X");
-			string LINE = registerStockId("line", "Line", "X");
-			
-			ToolButton toolButtonText = new ToolButton(TEXT);
-			toolButtonText.setTooltipText("Text");
-			toolButtonText.addOnClicked(delegate void(ToolButton button)
-				{
-					Text child = new Text(format("text%d", this.canvas.children.length), "Insert text here");
-					child.size = 12;
-					this.canvas.create(child);
-				});
-			
-			ToolButton toolButtonBox = new ToolButton(BOX);
-			toolButtonBox.setTooltipText("Box");
-			toolButtonBox.addOnClicked(delegate void(ToolButton button)
-				{
-					Box child = new Box(format("box%d", this.canvas.children.length));
-					this.canvas.create(child);
-				});
-				
-			ToolButton toolButtonTextBox = new ToolButton(TEXT_BOX);
-			toolButtonTextBox.setTooltipText("Text Box");
-			toolButtonTextBox.addOnClicked(delegate void(ToolButton button)
-				{
-					TextBox child = new TextBox(format("textBox%d", this.canvas.children.length), "Insert text here");
-					this.canvas.create(child);
-				});
-			
-			ToolButton toolButtonLine = new ToolButton(LINE);
-			toolButtonLine.setTooltipText("Line");
-			toolButtonLine.addOnClicked(delegate void(ToolButton button)
-				{
-					Line child = new Line(format("Line%d", this.canvas.children.length));
-					this.canvas.create(child);
-				});
-	
-			this.toolbarDrawableObjects.insert(toolButtonText, position++);
-			this.toolbarDrawableObjects.insert(toolButtonBox, position++);
-			this.toolbarDrawableObjects.insert(toolButtonTextBox, position++);
-			this.toolbarDrawableObjects.insert(toolButtonLine, position++);
-		}
-		
-		void buildCanvas() {
-			this.tableCanvas = new Table(3, 3, false);
-			
-			ScrolledWindow scrolledWindow = new ScrolledWindow();
-			scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
-			this.tableCanvas.attach(scrolledWindow, 1, 2, 1, 2, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, 4, 4);
-			
-			scrolledWindow.addWithViewport(this.canvas);
-		}
-		
-		buildToolbar();
-		buildCanvas();
-		
-		VBox vboxCenter = new VBox(false, 0);
-		vboxCenter.packStart(this.toolbarDrawableObjects, false, false, 0);
-		vboxCenter.packStart(this.tableCanvas, true, true, 0);
-		
-		this.frameDrawing.add(vboxCenter);
-		
-		VBox vboxLeftTop = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftTop");
-		
-		void setupPalette() {
-			this.palette = new ToolPalette();
-			this.palette.setIconSize(IconSize.DND);
-			
-			this.palette.addDragDest(this.canvas, GtkDestDefaults.ALL, GtkToolPaletteDragTargets.ITEMS, GdkDragAction.ACTION_COPY);
-			
-			ScrolledWindow scrolledWindow = new ScrolledWindow();
-			scrolledWindow.setPolicy(GtkPolicyType.NEVER, GtkPolicyType.AUTOMATIC);
-			scrolledWindow.setBorderWidth(6);
-			
-			scrolledWindow.add(this.palette);
-			
-			vboxLeftTop.packStart(scrolledWindow, true, true, 0);
-		}
-		
-		void populatePalette() {
-			ToolItemGroup addItemGroup(string name) {
-				ToolItemGroup group = new ToolItemGroup(name);
-				this.palette.add(group);
-				return group;
-			}
-			
-			ToolItem addItem(ToolItemGroup group, string stockId, string actionName, string tooltipText) {
-				ToolButton item = new ToolButton(stockId);
-				item.setActionName(actionName);
-				item.setTooltipText(tooltipText);
-				item.setIsImportant(true);
-				group.insert(item, -1);
-				return item;
-			}
-			
-			ToolItemGroup groupArchitectures = addItemGroup("Architectures");
-			string ARCH_SHARED_CACHE_MULTICORE = registerStockId("archSharedCacheMulticore", "Shared Cache Multicore", "X", "../gtk/canvas/arch_shared_cache_multicore.svg");
-			addItem(groupArchitectures, ARCH_SHARED_CACHE_MULTICORE, "archSharedCacheMulticore", "Shared Cache Multicore Architecture");
-				
-			ToolItemGroup groupProcessorCores = addItemGroup("Processor Cores");
-			string CPU_SIMPLE = registerStockId("cpuSimple", "Simple CPU", "X", "../gtk/canvas/cpu_simple.svg");
-			string CPU_OOO = registerStockId("cpuOOO", "OoO CPU", "X", "../gtk/canvas/cpu_ooo.svg");
-			addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "Simple CPU Core");
-			addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "Out-of-Order CPU Core");
-			
-			ToolItemGroup groupCaches = addItemGroup("Memory Hierarchy Objects");
-			string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../gtk/canvas/cache_l1i.svg");
-			string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../gtk/canvas/cache_l1d.svg");
-			string CACHE_L2 = registerStockId("cacheL2", "Shared L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
-			string DRAM_FIXED = registerStockId("dramFixed", "Fixed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
-			addItem(groupCaches, CACHE_L1I, "cacheL1I", "L1 Instruction Cache");
-			addItem(groupCaches, CACHE_L1D, "cacheL1D", "L1 Data Cache");
-			addItem(groupCaches, CACHE_L2, "cacheL2", "Shared L2 Cache");
-			addItem(groupCaches, DRAM_FIXED, "dramFixed", "Fixed Latency DRAM");
-			
-			ToolItemGroup groupInterconnects = addItemGroup("Interconnects");
-			string INTERCONNECT_FIXED_P2P = registerStockId("interconnectFixedP2P", "Fixed Latency P2P Interconnect", "X", "../gtk/canvas/interconnect_fixed_p2p.svg");			
-			addItem(groupInterconnects, INTERCONNECT_FIXED_P2P, "interconnectFixedP2P", "Fixed Latency P2P Interconnect");
-		}
-		
-		void buildPropertiesView() {				
-			//this.vboxViewButtonsList = new VBoxViewButtonsList(this);
-			//vboxLeftTop.packStart(this.vboxViewButtonsList, false, false, 0);
-
-			VBox vboxLeftBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftBottom");
-				
-			vboxLeftBottom.packStart(new Label("Simulated Architecture"), false, false, 0);
-
-			TreeViewArchitecturalSpecificationProperties treeViewNodeProperties = new TreeViewArchitecturalSpecificationProperties(this.canvas);
-			
-			ScrolledWindow scrolledWindow = new ScrolledWindow();
-			scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
-			scrolledWindow.add(treeViewNodeProperties);
-			
-			vboxLeftBottom.packStart(scrolledWindow, true, true, 0);
-			
-			canvas.addOnSelected(delegate void(DrawableObject child) {
-				//treeViewNodeProperties.data = child.properties;
-				//treeViewNodeProperties.refreshList();
-			});
-		}
-		
-		setupPalette();
-		populatePalette();
-		buildPropertiesView();
+		this.frameDrawingManager = new FrameDrawingManager(this.builder);
 	}
 	
 	void buildSplashScreen() {
@@ -798,51 +147,37 @@ class Startup {
 		this.splashScreen.showAll();
 		
 		Label labelLoading = getBuilderObject!(Label, GtkLabel)(this.builder, "labelLoading");
+			
+		void doPendingEvents() {
+			while(Main.eventsPending) {
+				Main.iterationDo(false);
+			}
+		}
 		
 		Timeout timeout = new Timeout(100, delegate bool ()
 			{
 				loadConfigsAndStats((string text){
 					labelLoading.setMarkup(text);
-	
-					while(Main.eventsPending) {
-						Main.iterationDo(false);
-					}
+					doPendingEvents();
 				});
 
 				labelLoading.setLabel("Initializing Widgets");
-				while(Main.eventsPending) {
-					Main.iterationDo(false);
-				}
-				this.buildMainWindow();
+				doPendingEvents();
 				
-				while(Main.eventsPending) {
-					Main.iterationDo(false);
-				}
+				this.buildMainWindow();
 				
 				this.buildDialogs();
 				
-				while(Main.eventsPending) {
-					Main.iterationDo(false);
-				}
-				
 				this.buildToolbars();
-
-				while(Main.eventsPending) {
-					Main.iterationDo(false);
-				}
 				
 				this.buildMenus();
 
 				labelLoading.setLabel("Initializing designer");
-				while(Main.eventsPending) {
-					Main.iterationDo(false);
-				}
+				doPendingEvents();
 				
 				this.buildFrameDrawing();
 				
-				//this.vboxViewButtonsList.refillComboBoxItems();
-				
-				this.splashScreen.hideAll();
+				this.splashScreen.destroy();
 				
 				this.mainWindow.showAll();
 				
@@ -850,26 +185,16 @@ class Startup {
 			}, false);
 	}
 	
-	void run() {
-		Main.run();
+	Canvas canvas() {
+		return this.frameDrawingManager.canvas;
 	}
 	
 	Builder builder;
 	Window mainWindow;
-	
-	Dialog dialogEditBenchmarks;
-	ComboBox comboBoxBenchmarkSuites;
-	Notebook notebookBenchmarks;
-	VBox vboxBenchmarks;
-	
-	ToolButton toolButtonNew;
-	
-	Frame frameDrawing;
-	Toolbar toolbarDrawableObjects;
-	Table tableCanvas;
-	Canvas canvas;
 	Window splashScreen;
-	ToolPalette palette;
+	FrameDrawingManager frameDrawingManager;
+	DialogEditSetBenchmarkSuites dialogEditSetBenchmarkSuites;
+	DialogEditSetExperiments dialogEditSetExperiments;
 }
 
 void mainGui(string[] args) {

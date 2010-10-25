@@ -14,9 +14,12 @@ src/flexim/isa/fp.d
 src/flexim/isa/integer.d
 src/flexim/isa/mem.d
 src/flexim/isa/misc.d
+src/flexim/ise/dialogs.d
 src/flexim/ise/models.d
 src/flexim/ise/specifications.d
 src/flexim/ise/startup.d
+src/flexim/ise/treeviews.d
+src/flexim/ise/utils.d
 src/flexim/ise/views.d
 src/flexim/linux/process.d
 src/flexim/linux/syscall.d

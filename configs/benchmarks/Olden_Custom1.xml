@@ -1,7 +1,11 @@
 <?xml version="1.0"?>
 <BenchmarkSuite title="Olden_Custom1" cwd="Olden">
+   <Benchmark title="mst_prepush" cwd="mst/prepush" stdin="" exe="" argsLiteral="100" stdout="">
+   </Benchmark>
    <Benchmark title="mst_original" cwd="mst/original" stdin="" exe="mst" argsLiteral="100" stdout="">
    </Benchmark>
    <Benchmark title="em3d_original" cwd="em3d/original" stdin="" exe="em3d" argsLiteral="200 100 75 1" stdout="">
+   </Benchmark>
+   <Benchmark title="em3d_prepush" cwd="em3d/prepush" stdin="" exe="" argsLiteral="200 100 75 1" stdout="">
    </Benchmark>
 </BenchmarkSuite>

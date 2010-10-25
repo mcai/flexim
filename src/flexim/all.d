@@ -137,10 +137,13 @@ public import flexim.isa.integer;
 public import flexim.isa.mem;
 public import flexim.isa.misc;
 
-public import flexim.ise.specifications;
-public import flexim.ise.views;
+public import flexim.ise.dialogs;
 public import flexim.ise.models;
+public import flexim.ise.specifications;
 public import flexim.ise.startup;
+public import flexim.ise.treeviews;
+public import flexim.ise.utils;
+public import flexim.ise.views;
 
 public import flexim.linux.process;
 public import flexim.linux.syscall;

@@ -1432,7 +1432,7 @@ class Canvas: DrawingArea {
 	}
 	
 	void dragDataReceived(GdkDragContext* context, gint x, gint y, GtkSelectionData* data, guint info, guint time, Widget widget) {
-		Widget toolItem = this.startup.palette.getDragItem(data);
+		Widget toolItem = this.frameDrawingManager.palette.getDragItem(data);
 		if(toolItem !is null) {
 			ToolButton toolButton = cast(ToolButton) toolItem;
 			string actionName = toolButton.getActionName();
@@ -1968,7 +1968,7 @@ class Canvas: DrawingArea {
 	
 	Effect[] effects;
 	
-	Startup startup;
+	FrameDrawingManager frameDrawingManager;
 	
 	SharedCacheMulticoreSpecification specification() {
 		return this.m_specification;
@@ -2062,34 +2062,6 @@ class CanvasXMLFileSerializer: XMLFileSerializer!(Canvas) {
 	static CanvasXMLFileSerializer singleInstance;
 }
 
-string registerStockId(string name, string label, string key, string fileName = null) {
-	if(fileName is null) {
-		fileName = format("../gtk/stock/%s.svg", name);
-	}
-	string domain = "slow";
-	string id = format("%s-%s", domain, name);
-	Pixbuf pixbuf = new Pixbuf(fileName);
-	IconSet iconSet = new IconSet(pixbuf);
-	IconFactory factory = new IconFactory();
-	factory.add(id, iconSet);
-	factory.addDefault();
-	int keyval = Keymap.gdkKeyvalFromName(key);
-	GdkModifierType modifier = GdkModifierType.MOD1_MASK;
-	
-	GtkStockItem gtkStockItem;
-
-	gtkStockItem.stockId = cast(char*) toStringz(id);
-	gtkStockItem.label = cast(char*) toStringz(label);
-	gtkStockItem.modifier = modifier;
-	gtkStockItem.keyval = keyval;
-	gtkStockItem.translationDomain = cast(char*) toStringz(domain);
-	
-	StockItem stockItem = new StockItem(&gtkStockItem);
-	stockItem.add(1);
-	
-	return id;
-}
-
 class Effect {
 	this(Canvas canvas) {
 		this.canvas = canvas;
@@ -2150,4 +2122,158 @@ class PuffEffect: Effect {
 	}
 	
 	double alpha, size;
+}
+
+class FrameDrawingManager {
+	this(Builder builder) {
+		this.builder = builder;
+		
+		this.frameDrawing = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameDrawing");
+					
+		this.canvas = Canvas.loadXML();
+		this.canvas.frameDrawingManager = this;
+		
+		this.buildToolbar();
+		this.buildCanvas();
+		
+		VBox vboxCenter = new VBox(false, 0);
+		vboxCenter.packStart(this.toolbarDrawableObjects, false, false, 0);
+		vboxCenter.packStart(this.tableCanvas, true, true, 0);
+		
+		this.frameDrawing.add(vboxCenter);
+		
+		this.setupPalette();
+		this.populatePalette();
+		this.buildPropertiesView();
+	}
+		
+	void buildToolbar() {
+		this.toolbarDrawableObjects = new Toolbar();
+		this.toolbarDrawableObjects.setOrientation(GtkOrientation.HORIZONTAL);
+		this.toolbarDrawableObjects.setStyle(GtkToolbarStyle.BOTH_HORIZ);
+		
+		int position = 0;
+
+		string TEXT = registerStockId("text", "Text", "X");
+		string BOX = registerStockId("box", "Box", "X");
+		string TEXT_BOX = registerStockId("text_box", "Text Box", "X");
+		string LINE = registerStockId("line", "Line", "X");
+		
+		ToolButton toolButtonText = new ToolButton(TEXT);
+		toolButtonText.setTooltipText("Text");
+		bindToolButton(toolButtonText, 
+			{
+				Text child = new Text(format("text%d", this.canvas.children.length), "Insert text here");
+				child.size = 12;
+				this.canvas.create(child);
+			});
+		
+		ToolButton toolButtonBox = new ToolButton(BOX);
+		toolButtonBox.setTooltipText("Box");
+		bindToolButton(toolButtonBox, 
+			{
+				Box child = new Box(format("box%d", this.canvas.children.length));
+				this.canvas.create(child);
+			});
+			
+		ToolButton toolButtonTextBox = new ToolButton(TEXT_BOX);
+		toolButtonTextBox.setTooltipText("Text Box");
+		bindToolButton(toolButtonTextBox, 
+			{
+				TextBox child = new TextBox(format("textBox%d", this.canvas.children.length), "Insert text here");
+				this.canvas.create(child);
+			});
+		
+		ToolButton toolButtonLine = new ToolButton(LINE);
+		toolButtonLine.setTooltipText("Line");
+		bindToolButton(toolButtonLine, 
+			{
+				Line child = new Line(format("Line%d", this.canvas.children.length));
+				this.canvas.create(child);
+			});
+
+		this.toolbarDrawableObjects.insert(toolButtonText, position++);
+		this.toolbarDrawableObjects.insert(toolButtonBox, position++);
+		this.toolbarDrawableObjects.insert(toolButtonTextBox, position++);
+		this.toolbarDrawableObjects.insert(toolButtonLine, position++);
+	}
+	
+	void buildCanvas() {
+		this.tableCanvas = new Table(3, 3, false);
+		
+		ScrolledWindow scrolledWindow = new ScrolledWindow();
+		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+		this.tableCanvas.attach(scrolledWindow, 1, 2, 1, 2, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, GtkAttachOptions.FILL | GtkAttachOptions.EXPAND, 4, 4);
+		
+		scrolledWindow.addWithViewport(this.canvas);
+	}
+	
+	void setupPalette() {
+		this.palette = new ToolPalette();
+		this.palette.setIconSize(IconSize.DND);
+		
+		this.palette.addDragDest(this.canvas, GtkDestDefaults.ALL, GtkToolPaletteDragTargets.ITEMS, GdkDragAction.ACTION_COPY);
+		
+		ScrolledWindow scrolledWindow = new ScrolledWindow();
+		scrolledWindow.setPolicy(GtkPolicyType.NEVER, GtkPolicyType.AUTOMATIC);
+		scrolledWindow.setBorderWidth(6);
+		
+		scrolledWindow.add(this.palette);
+		
+		VBox vboxLeftTop = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftTop");
+		vboxLeftTop.packStart(scrolledWindow, true, true, 0);
+	}
+	
+	void populatePalette() {		
+		ToolItemGroup groupArchitectures = addItemGroup(this.palette, "Architectures");
+		string ARCH_SHARED_CACHE_MULTICORE = registerStockId("archSharedCacheMulticore", "Shared Cache Multicore", "X", "../gtk/canvas/arch_shared_cache_multicore.svg");
+		addItem(groupArchitectures, ARCH_SHARED_CACHE_MULTICORE, "archSharedCacheMulticore", "Shared Cache Multicore Architecture");
+			
+		ToolItemGroup groupProcessorCores = addItemGroup(this.palette, "Processor Cores");
+		string CPU_SIMPLE = registerStockId("cpuSimple", "Simple CPU", "X", "../gtk/canvas/cpu_simple.svg");
+		string CPU_OOO = registerStockId("cpuOOO", "OoO CPU", "X", "../gtk/canvas/cpu_ooo.svg");
+		addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "Simple CPU Core");
+		addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "Out-of-Order CPU Core");
+		
+		ToolItemGroup groupCaches = addItemGroup(this.palette, "Memory Hierarchy Objects");
+		string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../gtk/canvas/cache_l1i.svg");
+		string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../gtk/canvas/cache_l1d.svg");
+		string CACHE_L2 = registerStockId("cacheL2", "Shared L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
+		string DRAM_FIXED = registerStockId("dramFixed", "Fixed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
+		addItem(groupCaches, CACHE_L1I, "cacheL1I", "L1 Instruction Cache");
+		addItem(groupCaches, CACHE_L1D, "cacheL1D", "L1 Data Cache");
+		addItem(groupCaches, CACHE_L2, "cacheL2", "Shared L2 Cache");
+		addItem(groupCaches, DRAM_FIXED, "dramFixed", "Fixed Latency DRAM");
+		
+		ToolItemGroup groupInterconnects = addItemGroup(this.palette, "Interconnects");
+		string INTERCONNECT_FIXED_P2P = registerStockId("interconnectFixedP2P", "Fixed Latency P2P Interconnect", "X", "../gtk/canvas/interconnect_fixed_p2p.svg");			
+		addItem(groupInterconnects, INTERCONNECT_FIXED_P2P, "interconnectFixedP2P", "Fixed Latency P2P Interconnect");
+	}
+	
+	void buildPropertiesView() {
+		VBox vboxLeftBottom = getBuilderObject!(VBox, GtkVBox)(builder, "vboxLeftBottom");
+			
+		vboxLeftBottom.packStart(new Label("Simulated Architecture"), false, false, 0);
+
+		TreeViewArchitecturalSpecificationProperties treeViewNodeProperties = new TreeViewArchitecturalSpecificationProperties(this.canvas);
+		
+		ScrolledWindow scrolledWindow = new ScrolledWindow();
+		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+		scrolledWindow.add(treeViewNodeProperties);
+		
+		vboxLeftBottom.packStart(scrolledWindow, true, true, 0);
+		
+		canvas.addOnSelected(delegate void(DrawableObject child) {
+			//treeViewNodeProperties.data = child.properties;
+			//treeViewNodeProperties.refreshList();
+		});
+	}
+	
+	Frame frameDrawing;
+	Toolbar toolbarDrawableObjects;
+	Table tableCanvas;
+	Canvas canvas;
+	ToolPalette palette;
+	
+	Builder builder;
 }
