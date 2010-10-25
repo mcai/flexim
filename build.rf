@@ -15,7 +15,6 @@ src/flexim/isa/integer.d
 src/flexim/isa/mem.d
 src/flexim/isa/misc.d
 src/flexim/ise/dialogs.d
-src/flexim/ise/models.d
 src/flexim/ise/specifications.d
 src/flexim/ise/startup.d
 src/flexim/ise/treeviews.d

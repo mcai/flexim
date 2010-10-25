@@ -30,16 +30,16 @@ import std.path;
 import std.concurrency, std.stdio, std.typecons;
 
 void mainConsole(string[] args) {
-	//string experimentName = "WCETBench-fir-1x1";
-	//string experimentName = "WCETBench-fir-2x1";
-	//string experimentName = "Olden_Custom1-em3d_original-1x1";
-	//string experimentName = "Olden_Custom1-mst_original-1x1";
-	string experimentName = "Olden_Custom1-mst_original-Olden_Custom1_em3d_original-2x1";
-	//string experimentName = "Olden_Custom1-mst_original-2x1";
+	//string simulationName = "WCETBench-fir-1x1";
+	//string simulationName = "WCETBench-fir-2x1";
+	//string simulationName = "Olden_Custom1-em3d_original-1x1";
+	//string simulationName = "Olden_Custom1-mst_original-1x1";
+	string simulationName = "Olden_Custom1-mst_original-Olden_Custom1_em3d_original-2x1";
+	//string simulationName = "Olden_Custom1-mst_original-2x1";
 	
-	getopt(args, "experiment", &experimentName);
+	getopt(args, "simulation", &simulationName);
 	
-	runExperiment(experimentName);
+	runSimulation(simulationName);
 }
 
 void main(string[] args) {

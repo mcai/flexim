@@ -138,7 +138,6 @@ public import flexim.isa.mem;
 public import flexim.isa.misc;
 
 public import flexim.ise.dialogs;
-public import flexim.ise.models;
 public import flexim.ise.specifications;
 public import flexim.ise.startup;
 public import flexim.ise.treeviews;

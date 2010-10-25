@@ -101,7 +101,7 @@ class Startup {
 	
 	void buildDialogs() {
 		this.dialogEditSetBenchmarkSuites = new DialogEditSetBenchmarkSuites(this.builder);
-		this.dialogEditSetExperiments = new DialogEditSetExperiments(this.builder);
+		this.dialogEditSetSimulations = new DialogEditSetSimulations(this.builder);
 	}
 	
 	void buildToolbars() {
@@ -135,7 +135,7 @@ class Startup {
 				aboutDialog.destroy();
 			});
 		bindMenuItem(this.builder, "menuItemToolsBenchmarks", {this.dialogEditSetBenchmarkSuites.showDialog();});
-		bindMenuItem(this.builder, "menuItemToolsExperiments", {this.dialogEditSetExperiments.showDialog();});
+		bindMenuItem(this.builder, "menuItemToolsSimulations", {this.dialogEditSetSimulations.showDialog();});
 	}
 	
 	void buildFrameDrawing() {
@@ -194,7 +194,7 @@ class Startup {
 	Window splashScreen;
 	FrameDrawingManager frameDrawingManager;
 	DialogEditSetBenchmarkSuites dialogEditSetBenchmarkSuites;
-	DialogEditSetExperiments dialogEditSetExperiments;
+	DialogEditSetSimulations dialogEditSetSimulations;
 }
 
 void mainGui(string[] args) {

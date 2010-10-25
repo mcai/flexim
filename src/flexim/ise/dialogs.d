@@ -331,19 +331,19 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 	int currentBenchmarkId = -1;
 }
 
-class DialogEditSetExperiments : DialogEditSet {
+class DialogEditSetSimulations : DialogEditSet {
 	this(Builder builder) {		
-		Dialog dialogEditExperiments = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditExperiments");
-		ComboBox comboBoxExperiments = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxExperiments");
-		Button buttonAddExperiment = getBuilderObject!(Button, GtkButton)(builder, "buttonAddExperiment");
-		Button buttonRemoveExperiment = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveExperiment");
-		VBox vboxExperiment = getBuilderObject!(VBox, GtkVBox)(builder, "vboxExperiment");
-		Button buttonCloseDialogEditExperiments = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditExperiments");
+		Dialog dialogEditSimulations = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditSimulations");
+		ComboBox comboBoxSimulations = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulations");
+		Button buttonAddSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonAddSimulation");
+		Button buttonRemoveSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveSimulation");
+		VBox vboxSimulation = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulation");
+		Button buttonCloseDialogEditSimulations = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditSimulations");
 			
-		super(dialogEditExperiments, comboBoxExperiments, buttonAddExperiment, buttonRemoveExperiment, vboxExperiment, buttonCloseDialogEditExperiments);
+		super(dialogEditSimulations, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation, buttonCloseDialogEditSimulations);
 		
-		foreach(experimentConfigTitle, experimentConfig; experimentConfigs) {
-			this.newExperimentConfig(experimentConfig);
+		foreach(simulationConfigTitle, simulationConfig; simulationConfigs) {
+			this.newSimulationConfig(simulationConfig);
 		}
 		
 		this.notebookSets.setCurrentPage(0);
@@ -362,7 +362,7 @@ class DialogEditSetExperiments : DialogEditSet {
 		
 	}
 	
-	void newExperimentConfig(ExperimentConfig experimentConfig) {
+	void newSimulationConfig(SimulationConfig simulationConfig) {
 		
 	}
 }

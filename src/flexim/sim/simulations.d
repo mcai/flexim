@@ -39,6 +39,12 @@ class Simulation: Reproducible {
 		this.stat = new SimulationStat(this.title, this.cwd);
 	}
 	
+	void execute() {
+		this.beforeRun();
+		this.run();
+		this.afterRun();
+	}
+	
 	override void beforeRun() {
 	}
 	
@@ -48,6 +54,7 @@ class Simulation: Reproducible {
 	}
 	
 	override void afterRun() {
+		SimulationStat.saveXML(this.stat, this.cwd, this.title ~ ".stat.xml");
 	}
 	
 	override string toString() {
@@ -61,83 +68,26 @@ class Simulation: Reproducible {
 	string cwd() {
 		return this.config.cwd;
 	}
-
+	
 	SimulationConfig config;
 	SimulationStat stat;
 }
 
-class Experiment: Reproducible {
-	this(ExperimentConfig config) {
-		this.config = config;
-		
-		this.stat = new ExperimentStat(this.title, this.cwd);
-		
-		foreach(simulationConfig; this.config.simulationConfigs) {
-			Simulation simulation = new Simulation(simulationConfig);
-			this.stat.simulationStats ~= simulation.stat;						
-			this.simulations ~= simulation;
-		}
-	}
-	
-	void execute() {
-		this.beforeRun();
-		this.run();
-		this.afterRun();
-	}
-	
-	override void beforeRun() {
-		foreach(simulation; this.simulations) {
-			simulation.beforeRun();
-		}
-	}
-	
-	override void run() {	
-		foreach(simulation; this.simulations) {
-			simulation.run();
-		}
-	}
-	
-	override void afterRun() {	
-		foreach(simulation; this.simulations) {
-			simulation.afterRun();
-		}
-		
-		ExperimentStat.saveXML(this.stat, this.cwd, this.title ~ ".stat.xml");
-	}
-	
-	override string toString() {
-		return format("Experiment[title=%s, cwd=%s, simulations.length=%d]", this.title, this.cwd, this.simulations.length);
-	}
-	
-	string title() {
-		return this.config.title;
-	}
-	
-	string cwd() {
-		return this.config.cwd;
-	}
-	
-	ExperimentConfig config;
-	ExperimentStat stat;
-	
-	Simulation[] simulations;
-}
-
-void runExperiment(string experimentName, void delegate(string) del = null) {	
-	logging.infof(LogCategory.SIMULATOR, "runExperiment(experimentName=%s)", experimentName);
+void runSimulation(string simulationName, void delegate(string) del = null) {	
+	logging.infof(LogCategory.SIMULATOR, "runSimulation(simulationName=%s)", simulationName);
 	
 	if(del !is null) {
-		del(format("runExperiment(experimentName=%s)", experimentName));
+		del(format("runSimulation(simulationName=%s)", simulationName));
 	}
 	
-	ExperimentConfig experimentConfig = ExperimentConfig.loadXML("../configs/experiments", experimentName ~ ".config.xml");
-	Experiment experiment = new Experiment(experimentConfig);
-	experiment.execute();
+	SimulationConfig simulationConfig = SimulationConfig.loadXML("../configs/simulations", simulationName ~ ".config.xml");
+	Simulation simulation = new Simulation(simulationConfig);
+	simulation.execute();
 }
 
 BenchmarkSuite[string] benchmarkSuites;
-ExperimentConfig[string] experimentConfigs;
-ExperimentStat[string] experimentStats;
+SimulationConfig[string] simulationConfigs;
+SimulationStat[string] simulationStats;
 
 void loadConfigsAndStats(void delegate(string text) del) {
     foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
@@ -147,19 +97,19 @@ void loadConfigsAndStats(void delegate(string text) del) {
 		benchmarkSuites[baseName] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
 		assert(benchmarkSuites[baseName].title == baseName);
     }
-    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
+    foreach (string name; dirEntries("../configs/simulations", SpanMode.breadth))
     {
     	string baseName = basename(name, ".config.xml");
-    	del("Loading experiment config: <b>" ~ baseName ~ "</b>");
-		experimentConfigs[baseName] = ExperimentConfig.loadXML("../configs/experiments", basename(name));
-		assert(experimentConfigs[baseName].title == baseName);
+    	del("Loading simulation config: <b>" ~ baseName ~ "</b>");
+		simulationConfigs[baseName] = SimulationConfig.loadXML("../configs/simulations", basename(name));
+		assert(simulationConfigs[baseName].title == baseName);
     }
-    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
+    foreach (string name; dirEntries("../stats/simulations", SpanMode.breadth))
     {
     	string baseName = basename(name, ".stat.xml");
-    	del("Loading experiment stat: <b>" ~ baseName ~ "</b>");
-		experimentStats[baseName] = ExperimentStat.loadXML("../stats/experiments", basename(name));
-		assert(experimentStats[baseName].title == baseName);
+    	del("Loading simulation stat: <b>" ~ baseName ~ "</b>");
+		simulationStats[baseName] = SimulationStat.loadXML("../stats/simulations", basename(name));
+		assert(simulationStats[baseName].title == baseName);
     }
 }
 
@@ -168,11 +118,11 @@ void saveConfigsAndStats() {
     {
 		std.file.remove(name);
     }
-    foreach (string name; dirEntries("../configs/experiments", SpanMode.breadth))
+    foreach (string name; dirEntries("../configs/simulations", SpanMode.breadth))
     {
 		std.file.remove(name);
     }
-    foreach (string name; dirEntries("../stats/experiments", SpanMode.breadth))
+    foreach (string name; dirEntries("../stats/simulations", SpanMode.breadth))
     {
 		std.file.remove(name);
     }
@@ -180,33 +130,33 @@ void saveConfigsAndStats() {
 	foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
 		BenchmarkSuite.saveXML(benchmarkSuite);
 	}	
-	foreach(experimentConfigTitle, experimentConfig; experimentConfigs) {
-		ExperimentConfig.saveXML(experimentConfig);
+	foreach(simulationConfigTitle, simulationConfig; simulationConfigs) {
+		SimulationConfig.saveXML(simulationConfig);
 	}
-	foreach(experimentStatTitle, experimentStat; experimentStats) {
-		ExperimentStat.saveXML(experimentStat);
+	foreach(simulationStatTitle, simulationStat; simulationStats) {
+		SimulationStat.saveXML(simulationStat);
 	}
 }
 
 /*
-void runExperimentCode() {
+void runSimulationCode() {
 	string oldButtonLabel = button.getLabel();
 	
-	core.thread.Thread threadRunExperiment = new core.thread.Thread(
+	core.thread.Thread threadRunSimulation = new core.thread.Thread(
 		{
-			runExperiment(this.selectedExperimentName, delegate void(string text)
+			runSimulation(this.selectedSimulationName, delegate void(string text)
 				{
 					this.startup.mainWindow.setTitle(text);
 				}); //TODO
 			
-			this.buttonExperimentStatView.setSensitive(true);
-			this.buttonExperimentRun.setSensitive(true);
-			this.buttonExperimentRun.setLabel(oldButtonLabel);
+			this.buttonSimulationStatView.setSensitive(true);
+			this.buttonSimulationRun.setSensitive(true);
+			this.buttonSimulationRun.setLabel(oldButtonLabel);
 		});
 
-	this.buttonExperimentStatView.setSensitive(false);
-	this.buttonExperimentRun.setSensitive(false);
-	this.buttonExperimentRun.setLabel("Simulating.. Please Wait");
-	threadRunExperiment.start();
+	this.buttonSimulationStatView.setSensitive(false);
+	this.buttonSimulationRun.setSensitive(false);
+	this.buttonSimulationRun.setLabel("Simulating.. Please Wait");
+	threadRunSimulation.start();
 }
 */

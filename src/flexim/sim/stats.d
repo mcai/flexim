@@ -403,9 +403,9 @@ class SimulationStat: Stat, PropertiesProvider {
 	
 	override string[string] properties() {
 		string[string] props;
-		props["duration"] = to!(string)(this.duration);
 		props["title"] = this.title;
 		props["cwd"] = this.cwd;
+		props["duration"] = to!(string)(this.duration);
 		
 		return props;
 	}
@@ -414,130 +414,64 @@ class SimulationStat: Stat, PropertiesProvider {
 		return format("SimulationStat[title=%s, cwd=%s]", this.title, this.cwd);
 	}
 	
-	long duration;
+	static SimulationStat loadXML(string cwd, string fileName) {
+		return SimulationStatXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(SimulationStat simulationStat) {
+		saveXML(simulationStat, "../stats/simulations", simulationStat.title ~ ".stat.xml"); 
+	}
+	
+	static void saveXML(SimulationStat simulationStat, string cwd, string fileName) {
+		SimulationStatXMLFileSerializer.singleInstance.saveXML(simulationStat, join(cwd, fileName));
+	}
 	
 	string title;
 	string cwd;
+	
+	long duration;
 	
 	ProcessorStat processorStat;
 	MemorySystemStat memorySystemStat;
 }
 
-class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
+class SimulationStatXMLFileSerializer: XMLFileSerializer!(SimulationStat) {
 	this() {
 	}
 	
-	override XMLConfig save(SimulationStat simulationStat) {
-		XMLConfig xmlConfig = new XMLConfig("SimulationStat");
-		xmlConfig["title"] = simulationStat.title;
-		xmlConfig["cwd"] = simulationStat.cwd;
-		xmlConfig["duration"] = to!(string)(simulationStat.duration);
+	override XMLConfigFile save(SimulationStat simulationStat) {
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("SimulationStat");
 		
-		xmlConfig.entries ~= ProcessorStatXMLSerializer.singleInstance.save(simulationStat.processorStat);
-		xmlConfig.entries ~= MemorySystemStatXMLSerializer.singleInstance.save(simulationStat.memorySystemStat);
+		xmlConfigFile["title"] = simulationStat.title;
+		xmlConfigFile["cwd"] = simulationStat.cwd;
+		xmlConfigFile["duration"] = to!(string)(simulationStat.duration);
 		
-		return xmlConfig;
-	}
-	
-	override SimulationStat load(XMLConfig xmlConfig) {
-		string title = xmlConfig["title"];
-		string cwd = xmlConfig["cwd"];
-		long duration = to!(long)(xmlConfig["duration"]);
-		
-		SimulationStat simulationStat = new SimulationStat(title, cwd);		
-		simulationStat.duration = duration;
-
-		ProcessorStat processorStat = ProcessorStatXMLSerializer.singleInstance.load(xmlConfig.entries[0]);
-		MemorySystemStat memorySystemStat = MemorySystemStatXMLSerializer.singleInstance.load(xmlConfig.entries[1]);
-		
-		simulationStat.processorStat = processorStat;
-		simulationStat.memorySystemStat = memorySystemStat;
-		
-		return simulationStat;
-	}
-	
-	static this() {
-		singleInstance = new SimulationStatXMLSerializer();
-	}
-	
-	static SimulationStatXMLSerializer singleInstance;
-}
-
-class ExperimentStat: Stat, PropertiesProvider {
-	this(string title, string cwd) {
-		this.title = title;
-		this.cwd = cwd;
-	}
-	
-	this(string title, string cwd, SimulationStat[] simulationStats) {
-		this.title = title;
-		this.cwd = cwd;
-		this.simulationStats = simulationStats;
-	}
-	
-	override string[string] properties() {
-		string[string] props;
-		props["title"] = this.title;
-		props["cwd"] = this.cwd;
-		
-		return props;
-	}
-	
-	override string toString() {
-		return format("ExperimentStat[title=%s, cwd=%s, simulationStats.length=%d]", this.title, this.cwd, this.simulationStats.length);
-	}
-	
-	static ExperimentStat loadXML(string cwd, string fileName) {
-		return ExperimentStatXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
-	}
-	
-	static void saveXML(ExperimentStat experimentStat) {
-		saveXML(experimentStat, "../stats/experiments", experimentStat.title ~ ".stat.xml"); 
-	}
-	
-	static void saveXML(ExperimentStat experimentStat, string cwd, string fileName) {
-		ExperimentStatXMLFileSerializer.singleInstance.saveXML(experimentStat, join(cwd, fileName));
-	}
-	
-	string title;
-	string cwd;
-	
-	SimulationStat[] simulationStats;
-}
-
-class ExperimentStatXMLFileSerializer: XMLFileSerializer!(ExperimentStat) {
-	this() {
-	}
-	
-	override XMLConfigFile save(ExperimentStat experimentStat) {
-		XMLConfigFile xmlConfigFile = new XMLConfigFile("ExperimentStat");
-		
-		xmlConfigFile["title"] = experimentStat.title;
-		xmlConfigFile["cwd"] = experimentStat.cwd;
-			
-		foreach(simulationStat; experimentStat.simulationStats) {
-			xmlConfigFile.entries ~= SimulationStatXMLSerializer.singleInstance.save(simulationStat);
-		}
+		xmlConfigFile.entries ~= ProcessorStatXMLSerializer.singleInstance.save(simulationStat.processorStat);
+		xmlConfigFile.entries ~= MemorySystemStatXMLSerializer.singleInstance.save(simulationStat.memorySystemStat);
 			
 		return xmlConfigFile;
 	}
 	
-	override ExperimentStat load(XMLConfigFile xmlConfigFile) {
+	override SimulationStat load(XMLConfigFile xmlConfigFile) {
 		string title = xmlConfigFile["title"];
 		string cwd = xmlConfigFile["cwd"];
+		long duration = to!(long)(xmlConfigFile["duration"]);
+
+		SimulationStat simulationStat = new SimulationStat(title, cwd);
+		simulationStat.duration = duration;
+
+		ProcessorStat processorStat = ProcessorStatXMLSerializer.singleInstance.load(xmlConfigFile.entries[0]);
+		MemorySystemStat memorySystemStat = MemorySystemStatXMLSerializer.singleInstance.load(xmlConfigFile.entries[1]);
 		
-		ExperimentStat experimentStat = new ExperimentStat(title, cwd);
+		simulationStat.processorStat = processorStat;
+		simulationStat.memorySystemStat = memorySystemStat;
 
-		foreach(entry; xmlConfigFile.entries) {
-			experimentStat.simulationStats ~= SimulationStatXMLSerializer.singleInstance.load(entry);
-		}
-
-		return experimentStat;
+		return simulationStat;
 	}
 	
 	static this() {
-		singleInstance = new ExperimentStatXMLFileSerializer();
+		singleInstance = new SimulationStatXMLFileSerializer();
 	}
 	
-	static ExperimentStatXMLFileSerializer singleInstance;
+	static SimulationStatXMLFileSerializer singleInstance;
 }

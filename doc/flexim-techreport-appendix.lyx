@@ -168,15 +168,15 @@ In the subdirectory build/, you can start simulation with the default simulation
 
 
 \family typewriter
-./flexim --experiment=<experiment-name>
+./flexim --simulation=<simulation-name>
 \family default
 
 \begin_inset Quotes erd
 \end_inset
 
 .
- Benchmarks and experiments are specified in the subdirectory configs/benchmarks
-/ and configs/experiments/, respectively.
+ Benchmarks and simulations are specified in the subdirectory configs/benchmarks
+/ and configs/simulations/, respectively.
 \end_layout
 
 \begin_layout Enumerate
@@ -601,7 +601,7 @@ OK
 \begin_inset Text
 
 \begin_layout Plain Layout
-Plotting and table generation for experiments
+Plotting and table generation for simulations
 \end_layout
 
 \end_inset

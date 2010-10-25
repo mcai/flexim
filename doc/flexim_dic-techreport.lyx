@@ -317,15 +317,15 @@ _dic
 
 
 \family typewriter
-./flexim_dic --experiment=<experiment-name>
+./flexim_dic --simulation=<simulation-name>
 \family default
 
 \begin_inset Quotes erd
 \end_inset
 
 .
- Benchmarks and experiments are specified in the subdirectory configs/benchmarks
-/ and configs/experiments/, respectively.
+ Benchmarks and simulations are specified in the subdirectory configs/benchmarks
+/ and configs/simulations/, respectively.
 \end_layout
 
 \begin_layout Enumerate

@@ -188,7 +188,7 @@ A powerful infrastructure that provides common functionalities such as eventing,
 \end_layout
 
 \begin_layout Itemize
-Pervasive use of XML-based I/O for architectural, workload and experiment
+Pervasive use of XML-based I/O for architectural, workload and simulation
  configurations and statistics.
  
 \end_layout
@@ -1169,7 +1169,7 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 \end_layout
 
 \begin_layout Subsection
-Plotting and Table Generation for Experiments
+Plotting and Table Generation for Simulations
 \end_layout
 
 \begin_layout Standard

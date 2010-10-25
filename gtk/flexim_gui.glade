@@ -28,7 +28,7 @@
                       <object class="GtkImageMenuItem" id="menuItemFileNew">
                         <property name="label">gtk-new</property>
                         <property name="visible">True</property>
-                        <property name="tooltip_text" translatable="yes">Create new experiment configuration</property>
+                        <property name="tooltip_text" translatable="yes">Create new simulation configuration</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -37,7 +37,7 @@
                       <object class="GtkImageMenuItem" id="menuItemFileOpen">
                         <property name="label">gtk-open</property>
                         <property name="visible">True</property>
-                        <property name="tooltip_text" translatable="yes">Open existing experiment configuration</property>
+                        <property name="tooltip_text" translatable="yes">Open existing simulation configuration</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -46,7 +46,7 @@
                       <object class="GtkImageMenuItem" id="menuItemFileSave">
                         <property name="label">gtk-save</property>
                         <property name="visible">True</property>
-                        <property name="tooltip_text" translatable="yes">Save current experiment configuration</property>
+                        <property name="tooltip_text" translatable="yes">Save current simulation configuration</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -177,9 +177,9 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="menuItemToolsExperiments">
+                      <object class="GtkMenuItem" id="menuItemToolsSimulations">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Experiment Repository...</property>
+                        <property name="label" translatable="yes">Simulation Repository...</property>
                         <property name="use_underline">True</property>
                       </object>
                     </child>
@@ -228,7 +228,7 @@
             <child>
               <object class="GtkToolButton" id="toolButtonNew">
                 <property name="visible">True</property>
-                <property name="tooltip_text" translatable="yes">Create new experiment configuration</property>
+                <property name="tooltip_text" translatable="yes">Create new simulation configuration</property>
                 <property name="label" translatable="yes">toolbutton</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-new</property>
@@ -241,7 +241,7 @@
             <child>
               <object class="GtkToolButton" id="toolButtonOpen">
                 <property name="visible">True</property>
-                <property name="tooltip_text" translatable="yes">Open existing experiment configuration</property>
+                <property name="tooltip_text" translatable="yes">Open existing simulation configuration</property>
                 <property name="label" translatable="yes">toolbutton2</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-open</property>
@@ -254,7 +254,7 @@
             <child>
               <object class="GtkToolButton" id="toolButtonSave">
                 <property name="visible">True</property>
-                <property name="tooltip_text" translatable="yes">Save current experiment configuration</property>
+                <property name="tooltip_text" translatable="yes">Save current simulation configuration</property>
                 <property name="label" translatable="yes">toolbutton3</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-save</property>
@@ -658,11 +658,11 @@
       <action-widget response="0">buttonCloseDialogEditBenchmarks</action-widget>
     </action-widgets>
   </object>
-  <object class="GtkDialog" id="dialogEditExperiments">
+  <object class="GtkDialog" id="dialogEditSimulations">
     <property name="width_request">700</property>
     <property name="height_request">400</property>
     <property name="border_width">5</property>
-    <property name="title" translatable="yes">Experiment Repository</property>
+    <property name="title" translatable="yes">Simulation Repository</property>
     <property name="window_position">center</property>
     <property name="type_hint">normal</property>
     <child internal-child="vbox">
@@ -673,13 +673,13 @@
           <object class="GtkVBox" id="vbox5">
             <property name="visible">True</property>
             <child>
-              <object class="GtkHBox" id="hboxExperimentList">
+              <object class="GtkHBox" id="hboxSimulationList">
                 <property name="visible">True</property>
                 <property name="spacing">6</property>
                 <child>
                   <object class="GtkLabel" id="label5">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Experiments:</property>
+                    <property name="label" translatable="yes">Simulations:</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -688,7 +688,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBox" id="comboBoxExperiments">
+                  <object class="GtkComboBox" id="comboBoxSimulations">
                     <property name="visible">True</property>
                   </object>
                   <packing>
@@ -696,7 +696,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="buttonAddExperiment">
+                  <object class="GtkButton" id="buttonAddSimulation">
                     <property name="label">gtk-add</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -711,7 +711,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="buttonRemoveExperiment">
+                  <object class="GtkButton" id="buttonRemoveSimulation">
                     <property name="label">gtk-remove</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -733,7 +733,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="vboxExperiment">
+              <object class="GtkVBox" id="vboxSimulation">
                 <property name="visible">True</property>
                 <child>
                   <placeholder/>
@@ -762,7 +762,7 @@
             <property name="visible">True</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="buttonCloseDialogEditExperiments">
+              <object class="GtkButton" id="buttonCloseDialogEditSimulations">
                 <property name="label">gtk-close</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -785,7 +785,7 @@
       </object>
     </child>
     <action-widgets>
-      <action-widget response="0">buttonCloseDialogEditExperiments</action-widget>
+      <action-widget response="0">buttonCloseDialogEditSimulations</action-widget>
     </action-widgets>
   </object>
 </interface>

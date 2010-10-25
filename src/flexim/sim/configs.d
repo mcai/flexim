@@ -416,6 +416,18 @@ class SimulationConfig: PropertiesProvider {
 		return format("SimulationConfig[title=%s, cwd=%s]", this.title, this.cwd);
 	}
 	
+	static SimulationConfig loadXML(string cwd, string fileName) {
+		return SimulationConfigXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
+	}
+	
+	static void saveXML(SimulationConfig simulationConfig) {
+		saveXML(simulationConfig, "../configs/simulations", simulationConfig.title ~ ".config.xml");
+	}
+	
+	static void saveXML(SimulationConfig simulationConfig, string cwd, string fileName) {
+		SimulationConfigXMLFileSerializer.singleInstance.saveXML(simulationConfig, join(cwd, fileName));
+	}
+	
 	string title;
 	string cwd;
 	
@@ -423,118 +435,40 @@ class SimulationConfig: PropertiesProvider {
 	MemorySystemConfig memorySystemConfig;
 }
 
-class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig) {
+class SimulationConfigXMLFileSerializer: XMLFileSerializer!(SimulationConfig) {
 	this() {
 	}
 	
-	override XMLConfig save(SimulationConfig simulationConfig) {
-		XMLConfig xmlConfig = new XMLConfig("SimulationConfig");
-		xmlConfig["title"] = simulationConfig.title;
-		xmlConfig["cwd"] = simulationConfig.cwd;
+	override XMLConfigFile save(SimulationConfig simulationConfig) {
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("SimulationConfig");
 		
-		xmlConfig.entries ~= ProcessorConfigXMLSerializer.singleInstance.save(simulationConfig.processorConfig);
-		xmlConfig.entries ~= MemorySystemConfigXMLSerializer.singleInstance.save(simulationConfig.memorySystemConfig);
+		xmlConfigFile["title"] = simulationConfig.title;
+		xmlConfigFile["cwd"] = simulationConfig.cwd;
 		
-		return xmlConfig;
-	}
-	
-	override SimulationConfig load(XMLConfig xmlConfig) {
-		string title = xmlConfig["title"];
-		string cwd = xmlConfig["cwd"];
-		
-		SimulationConfig simulationConfig = new SimulationConfig(title, cwd);
-
-		ProcessorConfig processorConfig = ProcessorConfigXMLSerializer.singleInstance.load(xmlConfig.entries[0]);
-		MemorySystemConfig memorySystemConfig = MemorySystemConfigXMLSerializer.singleInstance.load(xmlConfig.entries[1]);
-		
-		simulationConfig.processorConfig = processorConfig;
-		simulationConfig.memorySystemConfig = memorySystemConfig;
-		
-		return simulationConfig;
-	}
-	
-	static this() {
-		singleInstance = new SimulationConfigXMLSerializer();
-	}
-	
-	static SimulationConfigXMLSerializer singleInstance;
-}
-
-class ExperimentConfig: PropertiesProvider {
-	this(string title, string cwd) {
-		this.title = title;
-		this.cwd = cwd;
-	}
-	
-	this(string title, string cwd, SimulationConfig[] simulationConfigs) {
-		this.title = title;
-		this.cwd = cwd;
-		this.simulationConfigs = simulationConfigs;
-	}
-	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["title"] = this.title;
-		props["cwd"] = this.cwd;
-		
-		return props;
-	}
-	
-	override string toString() {
-		return format("ExperimentConfig[title=%s, cwd=%s, simulationConfigs.length=%d]", this.title, this.cwd, this.simulationConfigs.length);
-	}
-	
-	static ExperimentConfig loadXML(string cwd, string fileName) {
-		return ExperimentConfigXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
-	}
-	
-	static void saveXML(ExperimentConfig experimentConfig) {
-		saveXML(experimentConfig, "../configs/experiments", experimentConfig.title ~ ".config.xml");
-	}
-	
-	static void saveXML(ExperimentConfig experimentConfig, string cwd, string fileName) {
-		ExperimentConfigXMLFileSerializer.singleInstance.saveXML(experimentConfig, join(cwd, fileName));
-	}
-	
-	string title;
-	string cwd;
-	SimulationConfig[] simulationConfigs;
-}
-
-class ExperimentConfigXMLFileSerializer: XMLFileSerializer!(ExperimentConfig) {
-	this() {
-	}
-	
-	override XMLConfigFile save(ExperimentConfig experimentConfig) {
-		XMLConfigFile xmlConfigFile = new XMLConfigFile("ExperimentConfig");
-		
-		xmlConfigFile["title"] = experimentConfig.title;
-		xmlConfigFile["cwd"] = experimentConfig.cwd;
-			
-		foreach(simulationConfig; experimentConfig.simulationConfigs) {
-			xmlConfigFile.entries ~= SimulationConfigXMLSerializer.singleInstance.save(simulationConfig);
-		}
+		xmlConfigFile.entries ~= ProcessorConfigXMLSerializer.singleInstance.save(simulationConfig.processorConfig);
+		xmlConfigFile.entries ~= MemorySystemConfigXMLSerializer.singleInstance.save(simulationConfig.memorySystemConfig);
 			
 		return xmlConfigFile;
 	}
 	
-	override ExperimentConfig load(XMLConfigFile xmlConfigFile) {
+	override SimulationConfig load(XMLConfigFile xmlConfigFile) {
 		string title = xmlConfigFile["title"];
 		string cwd = xmlConfigFile["cwd"];
 		
-		ExperimentConfig experimentConfig = new ExperimentConfig(title, cwd);
+		SimulationConfig simulationConfig = new SimulationConfig(title, cwd);
 
-		foreach(entry; xmlConfigFile.entries) {
-			experimentConfig.simulationConfigs ~= SimulationConfigXMLSerializer.singleInstance.load(entry);
-		}
+		ProcessorConfig processorConfig = ProcessorConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[0]);
+		MemorySystemConfig memorySystemConfig = MemorySystemConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[1]);
+		
+		simulationConfig.processorConfig = processorConfig;
+		simulationConfig.memorySystemConfig = memorySystemConfig;
 
-		return experimentConfig;
+		return simulationConfig;
 	}
 	
 	static this() {
-		singleInstance = new ExperimentConfigXMLFileSerializer();
+		singleInstance = new SimulationConfigXMLFileSerializer();
 	}
 	
-	static ExperimentConfigXMLFileSerializer singleInstance;
+	static SimulationConfigXMLFileSerializer singleInstance;
 }

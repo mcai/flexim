@@ -30,7 +30,7 @@ please refer to the Flexim User Guide under the subdirectory doc/ of the distrib
      
    * A powerful infrastructure that provides common functionalities such as eventing and logging.
    
-   * Pervasive use of XML-based I/O for architectural, workload and experiment configs and stats.
+   * Pervasive use of XML-based I/O for architectural, workload and simulation configs and stats.
    
    * Support for Syscall-emulation mode simulation (i.e., application only, no need to boot an OS).
    
