@@ -24,7 +24,7 @@ module flexim.mem.timing.mem;
 import flexim.all;
 
 class MemoryController: CoherentCacheNode {
-	this(MemorySystem memorySystem, MemoryConfig config) {
+	this(MemorySystem memorySystem, MainMemoryConfig config) {
 		super(memorySystem, "mem");
 		
 		this.config = config;
@@ -60,6 +60,6 @@ class MemoryController: CoherentCacheNode {
 		this.schedule({onCompletedCallback(false);}, this.latency);
 	}
 	
-	MemoryConfig config;
+	MainMemoryConfig config;
 	MemoryStat stat;
 }

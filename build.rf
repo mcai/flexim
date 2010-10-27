@@ -31,7 +31,7 @@ src/flexim/mem/timing/mem.d
 src/flexim/mem/timing/mesi.d
 src/flexim/mem/timing/sequencer.d
 src/flexim/mem/tm/transaction.d
-src/flexim/sim/benchmark.d
+src/flexim/sim/benchmarks.d
 src/flexim/sim/configs.d
 src/flexim/sim/simulations.d
 src/flexim/sim/simulator.d

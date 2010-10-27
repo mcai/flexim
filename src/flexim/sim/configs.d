@@ -28,190 +28,7 @@ import std.path;
 abstract class Config(ConfigT) {
 }
 
-class ContextConfig: Config!(ContextConfig), PropertiesProvider {	
-	this(uint num, string binariesDir, string benchmarkSuiteName, string benchmarkName) {
-		this.num = num;
-		this.binariesDir = binariesDir;
-		this.benchmarkSuiteName = benchmarkSuiteName;
-		this.benchmarkName = benchmarkName;
-	}
-	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["num"] = to!(string)(this.num);
-		props["binariesDir"] = this.binariesDir;
-		props["benchmarkSuiteName"] = this.benchmarkSuiteName;
-		props["benchmarkName"] = this.benchmarkName;
-		
-		return props;
-	}
-	
-	override string toString() {
-		return format("ContextConfig[num=%d, binariesDir=%s, benchmarkSuiteName=%s, benchmarkName=%s]",
-			this.num, this.binariesDir, this.benchmarkSuiteName, this.benchmarkName);
-	}
-	
-	string exe() {
-		return this.benchmark.exe;
-	}
-	
-	string args() {
-		return this.benchmark.args;
-	}
-	
-	string cwd() {
-		return join(this.binariesDir, this.benchmark.suite.cwd, this.benchmark.cwd);
-	}
-	
-	string stdin() {
-		return this.benchmark.stdin;
-	}
-	
-	string stdout() {
-		return this.benchmark.stdout;
-	}
-	
-	Benchmark benchmark() {
-		if(this._benchmark is null) {
-			BenchmarkSuite benchmarkSuite = BenchmarkSuite.loadXML("../configs/benchmarks", this.benchmarkSuiteName ~ ".xml");
-			this._benchmark = benchmarkSuite[this.benchmarkName];
-		}
-		
-		return this._benchmark;
-	}
-	
-	uint num;
-	string binariesDir;
-	
-	string benchmarkSuiteName;
-	string benchmarkName;
-	
-	Benchmark _benchmark;
-}
-
-class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
-	this() {
-	}
-	
-	override XMLConfig save(ContextConfig contextConfig) {
-		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
-		xmlConfig["num"] = to!(string)(contextConfig.num);
-		xmlConfig["binariesDir"] = contextConfig.binariesDir;
-		xmlConfig["benchmarkSuiteName"] = contextConfig.benchmarkSuiteName;
-		xmlConfig["benchmarkName"] = contextConfig.benchmarkName;
-			
-		return xmlConfig;
-	}
-	
-	override ContextConfig load(XMLConfig xmlConfig) {
-		uint num = to!(uint)(xmlConfig["num"]);
-		string binariesDir = xmlConfig["binariesDir"];
-		string benchmarkSuiteName = xmlConfig["benchmarkSuiteName"];
-		string benchmarkName = xmlConfig["benchmarkName"];
-		
-		ContextConfig contextConfig = new ContextConfig(num, binariesDir, benchmarkSuiteName, benchmarkName);
-		return contextConfig;
-	}
-	
-	static this() {
-		singleInstance = new ContextConfigXMLSerializer();
-	}
-	
-	static ContextConfigXMLSerializer singleInstance;
-}
-
-class ProcessorConfig: Config!(ProcessorConfig), PropertiesProvider {	
-	this(ulong maxCycle, ulong maxInsts, ulong maxTime, uint numCores, uint numThreads) {
-		this.maxCycle = maxCycle;
-		this.maxInsts = maxInsts;
-		this.maxTime = maxTime;
-		this.numCores = numCores;
-		this.numThreads = numThreads;
-	}
-	
-	static ProcessorConfig createDefault(string binariesDir, Benchmark benchmark, ulong maxCycle, ulong maxInsts, ulong maxTime, uint numCores, uint numThreads) {
-		ProcessorConfig processorConfig = new ProcessorConfig(maxCycle, maxInsts, maxTime, numCores, numThreads);
-		
-		for(uint i = 0; i < numCores * numThreads; i++) {
-			ContextConfig contextConfig = new ContextConfig(i, binariesDir, benchmark.suite.title, benchmark.title);
-			processorConfig.contexts ~= contextConfig;
-		}
-		
-		return processorConfig;
-	}
-	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["maxCycle"] = to!(string)(this.maxCycle);
-		props["maxInsts"] = to!(string)(this.maxInsts);
-		props["maxTime"] = to!(string)(this.maxTime);
-		props["numCores"] = to!(string)(this.numCores);
-		props["numThreads"] = to!(string)(this.numThreads);
-		
-		return props;
-	}
-	
-	override string toString() {
-		return format("ProcessorConfig[maxCycle=%d, maxInsts=%d, maxTime=%d, numCores=%d, numThreads=%d, contexts.length=%d]",
-			this.maxCycle, this.maxInsts, this.maxTime, this.numCores, this.numThreads, this.contexts.length);
-	}
-	
-	ulong maxCycle;
-	ulong maxInsts;
-	ulong maxTime;
-	
-	uint numCores;
-	uint numThreads;
-	
-	ContextConfig[] contexts;
-}
-
-class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
-	this() {
-	}
-	
-	override XMLConfig save(ProcessorConfig processorConfig) {
-		XMLConfig xmlConfig = new XMLConfig("ProcessorConfig");
-		
-		xmlConfig["maxCycle"] = to!(string)(processorConfig.maxCycle);
-		xmlConfig["maxInsts"] = to!(string)(processorConfig.maxInsts);
-		xmlConfig["maxTime"] = to!(string)(processorConfig.maxTime);
-		xmlConfig["numCores"] = to!(string)(processorConfig.numCores);
-		xmlConfig["numThreads"] = to!(string)(processorConfig.numThreads);
-		
-		foreach(context; processorConfig.contexts) {
-			xmlConfig.entries ~= ContextConfigXMLSerializer.singleInstance.save(context);
-		}
-			
-		return xmlConfig;
-	}
-	
-	override ProcessorConfig load(XMLConfig xmlConfig) {
-		ulong maxCycle = to!(ulong)(xmlConfig["maxCycle"]);
-		ulong maxInsts = to!(ulong)(xmlConfig["maxInsts"]);
-		ulong maxTime = to!(ulong)(xmlConfig["maxTime"]);
-		uint numCores = to!(uint)(xmlConfig["numCores"]);
-		uint numThreads = to!(uint)(xmlConfig["numThreads"]);
-			
-		ProcessorConfig processorConfig = new ProcessorConfig(maxCycle, maxInsts, maxTime, numCores, numThreads);
-				
-		foreach(entry; xmlConfig.entries) {
-			processorConfig.contexts ~= ContextConfigXMLSerializer.singleInstance.load(entry);
-		}
-		
-		return processorConfig;
-	}
-	
-	static this() {
-		singleInstance = new ProcessorConfigXMLSerializer();
-	}
-	
-	static ProcessorConfigXMLSerializer singleInstance;
-}
-
-class CacheConfig: Config!(CacheConfig), PropertiesProvider {
+class CacheConfig: Config!(CacheConfig) {
 	this(string name, uint level, uint numSets, uint assoc, uint blockSize, uint hitLatency, uint missLatency, CacheReplacementPolicy policy) {
 		this.name = name;
 		this.level = level;
@@ -223,38 +40,19 @@ class CacheConfig: Config!(CacheConfig), PropertiesProvider {
 		this.policy = policy;
 	}
 	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["name"] = this.name;
-		props["level"] = to!(string)(this.level);
-		props["numSets"] = to!(string)(this.numSets);
-		props["assoc"] = to!(string)(this.assoc);
-		props["blockSize"] = to!(string)(this.blockSize);
-		props["hitLatency"] = to!(string)(this.hitLatency);
-		props["missLatency"] = to!(string)(this.missLatency);
-		props["policy"] = to!(string)(this.policy);
-			
-		return props;
-	}
-	
 	override string toString() {
 		return format("CacheConfig[name=%s, level=%d, numSets=%d, assoc=%d, blockSize=%d, hitLatency=%d, missLatency=%d, policy=%s]",
-			this.name, this.level, this.numSets, this.assoc, this.blockSize, this.hitLatency, this.missLatency, this.policy);
+			this.name, this.level, this.numSets, this.assoc,  this.blockSize, this.hitLatency, this.missLatency, this.policy);
 	}
-	
+
 	string name;
-	uint level;
-	uint numSets;
-	uint assoc;
-	uint blockSize;
-	uint hitLatency;
-	uint missLatency;
+	uint level, numSets, assoc, blockSize, hitLatency, missLatency;
 	CacheReplacementPolicy policy;
 }
 
-class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {	
+class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	this() {
+		
 	}
 	
 	override XMLConfig save(CacheConfig cacheConfig) {
@@ -268,7 +66,7 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 		xmlConfig["hitLatency"] = to!(string)(cacheConfig.hitLatency);
 		xmlConfig["missLatency"] = to!(string)(cacheConfig.missLatency);
 		xmlConfig["policy"] = to!(string)(cacheConfig.policy);
-		
+			
 		return xmlConfig;
 	}
 	
@@ -294,160 +92,297 @@ class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
 	static CacheConfigXMLSerializer singleInstance;
 }
 
-class MemoryConfig: Config!(MemoryConfig), PropertiesProvider {
+class MainMemoryConfig: Config!(MainMemoryConfig) {
 	this(uint latency) {
 		this.latency = latency;
 	}
 	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["latency"] = to!(string)(this.latency);
-			
-		return props;
-	}
-	
 	override string toString() {
-		return format("MemoryConfig[latency=%d]", this.latency);
+		return format("MainMemoryConfig[latency=%d]", this.latency);
 	}
-	
+
 	uint latency;
 }
 
-class MemoryConfigXMLSerializer: XMLSerializer!(MemoryConfig) {
+class MainMemoryConfigXMLSerializer: XMLSerializer!(MainMemoryConfig) {
 	this() {
 	}
 	
-	override XMLConfig save(MemoryConfig memoryConfig) {
-		XMLConfig xmlConfig = new XMLConfig("MemoryConfig");
+	override XMLConfig save(MainMemoryConfig mainMemoryConfig) {
+		XMLConfig xmlConfig = new XMLConfig("MainMemoryConfig");
 		
-		xmlConfig["latency"] = to!(string)(memoryConfig.latency);
+		xmlConfig["latency"] = to!(string)(mainMemoryConfig.latency);
 		
 		return xmlConfig;
 	}
 	
-	override MemoryConfig load(XMLConfig xmlConfig) {
+	override MainMemoryConfig load(XMLConfig xmlConfig) {
 		uint latency = to!(uint)(xmlConfig["latency"]);
 			
-		MemoryConfig memoryConfig = new MemoryConfig(latency);
+		MainMemoryConfig mainMemoryConfig = new MainMemoryConfig(latency);
 		
-		return memoryConfig;
+		return mainMemoryConfig;
 	}
 	
 	static this() {
-		singleInstance = new MemoryConfigXMLSerializer();
+		singleInstance = new MainMemoryConfigXMLSerializer();
 	}
 	
-	static MemoryConfigXMLSerializer singleInstance;
+	static MainMemoryConfigXMLSerializer singleInstance;
 }
 
-class MemorySystemConfig: Config!(MemorySystemConfig), PropertiesProvider {		
-	this() {
+class ContextConfig: Config!(ContextConfig) {
+	this(string binariesDir, Benchmark workload) {
+		this.binariesDir = binariesDir;
+		this.workload = workload;
 	}
 	
-	override string[string] properties() {
-		string[string] props;
-		
-		return props;
+	this(string binariesDir, string benchmarkSuiteTitle, string benchmarkTitle) {
+		this(binariesDir, benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle]);
+	}
+	
+	string benchmarkSuiteTitle() {
+		return this.workload.suite.title;
+	}
+	
+	string benchmarkTitle() {
+		return this.workload.title;
+	}
+	
+	string exe() {
+		return this.workload.exe;
+	}
+	
+	string args() {
+		return this.workload.args;
+	}
+	
+	string cwd() {
+		return join(this.binariesDir, this.workload.suite.cwd, this.workload.cwd);
+	}
+	
+	string stdin() {
+		return this.workload.stdin;
+	}
+	
+	string stdout() {
+		return this.workload.stdout;
 	}
 	
 	override string toString() {
-		return format("MemorySystemConfig[caches.length=%d]", this.caches.length);
+		return format("ContextConfig[binariesDir=%s, benchmarkSuiteTitle=%s, benchmarkTitle=%s]",
+			this.binariesDir, this.benchmarkSuiteTitle, this.benchmarkTitle);
 	}
-	
-	CacheConfig[string] caches;	
-	MemoryConfig mem;
+
+	string binariesDir;
+	Benchmark workload;
 }
 
-class MemorySystemConfigXMLSerializer: XMLSerializer!(MemorySystemConfig) {	
+class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	this() {
 	}
 	
-	override XMLConfig save(MemorySystemConfig memorySystemConfig) {
-		XMLConfig xmlConfig = new XMLConfig("MemorySystemConfig");
-		xmlConfig["numCaches"] = to!(string)(memorySystemConfig.caches.length);
-		
-		foreach(cacheName, cache; memorySystemConfig.caches) {
-			xmlConfig.entries ~= CacheConfigXMLSerializer.singleInstance.save(cache);
-		}
-		
-		xmlConfig.entries ~= MemoryConfigXMLSerializer.singleInstance.save(memorySystemConfig.mem);
+	override XMLConfig save(ContextConfig contextConfig) {
+		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
+		xmlConfig["binariesDir"] = contextConfig.binariesDir;
+		xmlConfig["benchmarkSuiteTitle"] = contextConfig.benchmarkSuiteTitle;
+		xmlConfig["benchmarkTitle"] = contextConfig.benchmarkTitle;
 		
 		return xmlConfig;
 	}
 	
-	override MemorySystemConfig load(XMLConfig xmlConfig) {
-		MemorySystemConfig memorySystemConfig = new MemorySystemConfig();
-		uint numCaches = to!(uint)(xmlConfig["numCaches"]);
-			
-		for(uint i = 0; i < numCaches; i++) {
-			CacheConfig cacheConfig = CacheConfigXMLSerializer.singleInstance.load(xmlConfig.entries[i]);
-			memorySystemConfig.caches[cacheConfig.name] = cacheConfig;
-		}
+	override ContextConfig load(XMLConfig xmlConfig) {
+		string binariesDir = xmlConfig["binariesDir"];
+		string benchmarkSuiteTitle = xmlConfig["benchmarkSuiteTitle"];
+		string benchmarkTitle = xmlConfig["benchmarkTitle"];
 		
-		memorySystemConfig.mem = MemoryConfigXMLSerializer.singleInstance.load(xmlConfig.entries[numCaches]);
-		
-		return memorySystemConfig;
+		ContextConfig contextConfig = new ContextConfig(binariesDir, benchmarkSuiteTitle, benchmarkTitle);
+		return contextConfig;
 	}
 	
 	static this() {
-		singleInstance = new MemorySystemConfigXMLSerializer();
+		singleInstance = new ContextConfigXMLSerializer();
 	}
 	
-	static MemorySystemConfigXMLSerializer singleInstance;
+	static ContextConfigXMLSerializer singleInstance;
 }
 
-class SimulationConfig: PropertiesProvider {
-	this(string title, string cwd) {
-		this.title = title;
-		this.cwd = cwd;
-	}
-	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["title"] = this.title;
-		props["cwd"] = this.cwd;
-		
-		return props;
+class CoreConfig: Config!(CoreConfig) {
+	this(CacheConfig iCache, CacheConfig dCache) {
+		this.iCache = iCache;
+		this.dCache = dCache;
 	}
 	
 	override string toString() {
-		return format("SimulationConfig[title=%s, cwd=%s]", this.title, this.cwd);
+		return format("CoreConfig[iCache=%s, dCache=%s]",
+			this.iCache, this.dCache);
 	}
+
+	CacheConfig iCache, dCache;
+}
+
+class CoreConfigXMLSerializer: XMLSerializer!(CoreConfig) {
+	this() {
+	}
+	
+	override XMLConfig save(CoreConfig coreConfig) {
+		XMLConfig xmlConfig = new XMLConfig("CoreConfig");
+		
+		xmlConfig.entries ~= CacheConfigXMLSerializer.singleInstance.save(coreConfig.iCache);
+		xmlConfig.entries ~= CacheConfigXMLSerializer.singleInstance.save(coreConfig.dCache);
+		
+		return xmlConfig;
+	}
+	
+	override CoreConfig load(XMLConfig xmlConfig) {
+		CacheConfig iCache = CacheConfigXMLSerializer.singleInstance.load(xmlConfig.entries[0]);
+		CacheConfig dCache = CacheConfigXMLSerializer.singleInstance.load(xmlConfig.entries[1]);
+		
+		CoreConfig coreConfig = new CoreConfig(iCache, dCache);
+		
+		return coreConfig;
+	}
+	
+	static this() {
+		singleInstance = new CoreConfigXMLSerializer();
+	}
+	
+	static CoreConfigXMLSerializer singleInstance;
+}
+
+class ProcessorConfig: Config!(ProcessorConfig) {
+	this(ulong maxCycle, ulong maxInsts, ulong maxTime, uint numThreadsPerCore) {
+		this.maxCycle = maxCycle;
+		this.maxInsts = maxInsts;
+		this.maxTime = maxTime;
+		this.numThreadsPerCore = numThreadsPerCore;
+	}
+	
+	uint numCores() {
+		return this.cores.length;
+	}
+	
+	override string toString() {
+		return format("ProcessorConfig[maxCycle=%d, maxInsts=%d, maxTime=%d, numThreadsPerCore=%d, cores.length=%d, contexts.length=%d]",
+			this.maxCycle, this.maxInsts, this.maxTime, this.numThreadsPerCore, this.cores.length, this.contexts.length);
+	}
+
+	ulong maxCycle, maxInsts, maxTime;
+	uint numThreadsPerCore;
+	CoreConfig[] cores;
+	ContextConfig[] contexts;
+}
+
+class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
+	this() {
+	}
+	
+	override XMLConfig save(ProcessorConfig processorConfig) {
+		XMLConfig xmlConfig = new XMLConfig("ProcessorConfig");
+		xmlConfig["maxCycle"] = to!(string)(processorConfig.maxCycle);
+		xmlConfig["maxInsts"] = to!(string)(processorConfig.maxInsts);
+		xmlConfig["maxTime"] = to!(string)(processorConfig.maxTime);
+		xmlConfig["numThreadsPerCore"] = to!(string)(processorConfig.numThreadsPerCore);
+			
+		foreach(core; processorConfig.cores) {
+			xmlConfig.entries ~= CoreConfigXMLSerializer.singleInstance.save(core);
+		}
+		
+		foreach(context; processorConfig.contexts) {
+			xmlConfig.entries ~= ContextConfigXMLSerializer.singleInstance.save(context);
+		}
+		
+		return xmlConfig;		
+	}
+	
+	override ProcessorConfig load(XMLConfig xmlConfig) {
+		ulong maxCycle = to!(ulong)(xmlConfig["maxCycle"]);
+		ulong maxInsts = to!(ulong)(xmlConfig["maxInsts"]);
+		ulong maxTime = to!(ulong)(xmlConfig["maxTime"]);
+		uint numThreadsPerCore = to!(uint)(xmlConfig["numThreadsPerCore"]);
+			
+		ProcessorConfig processorConfig = new ProcessorConfig(maxCycle, maxInsts, maxTime, numThreadsPerCore);
+		
+		foreach(entry; xmlConfig.entries) {
+			if(entry.typeName == "CoreConfig") {
+				processorConfig.cores ~= CoreConfigXMLSerializer.singleInstance.load(entry);
+			}
+			else if(entry.typeName == "ContextConfig") {
+				processorConfig.contexts ~= ContextConfigXMLSerializer.singleInstance.load(entry);
+			}
+			else {
+				assert(0);
+			}
+		}
+		
+		return processorConfig;
+	}
+	
+	static this() {
+		singleInstance = new ProcessorConfigXMLSerializer();
+	}
+	
+	static ProcessorConfigXMLSerializer singleInstance;
+}
+
+class SimulationConfig: Config!(SimulationConfig) {
+	this(string title, string cwd, ProcessorConfig processor, CacheConfig l2Cache, MainMemoryConfig mainMemory) {
+		this.title = title;
+		this.cwd = cwd;
+		this.processor = processor;
+		this.l2Cache = l2Cache;
+		this.mainMemory = mainMemory;
+	}
+	
+	CacheConfig[string] caches() {
+		CacheConfig[string] cacheMap;
+		
+		foreach(i, core; processor.cores) {
+			cacheMap[format("l1I-%d", i)] = core.iCache;
+			cacheMap[format("l1D-%d", i)] = core.dCache;
+		}
+		
+		cacheMap["l2"] = this.l2Cache;
+		
+		return cacheMap;
+	}
+	
+	override string toString() {
+		return format("SimulationConfig[title=%s, cwd=%s, processor=%s, l2Cache=%s, mainMemory=%s]",
+			this.title, this.cwd, this.processor, this.l2Cache, this.mainMemory);
+	}
+
+	string title, cwd;
+	ProcessorConfig processor;
+	CacheConfig l2Cache;
+	MainMemoryConfig mainMemory;
 	
 	static SimulationConfig loadXML(string cwd, string fileName) {
 		return SimulationConfigXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
-	static void saveXML(SimulationConfig simulationConfig) {
-		saveXML(simulationConfig, "../configs/simulations", simulationConfig.title ~ ".config.xml");
+	static void saveXML(SimulationConfig sharedL2MulticoreConfig, string cwd, string fileName) {
+		SimulationConfigXMLFileSerializer.singleInstance.saveXML(sharedL2MulticoreConfig, join(cwd, fileName));
 	}
 	
-	static void saveXML(SimulationConfig simulationConfig, string cwd, string fileName) {
-		SimulationConfigXMLFileSerializer.singleInstance.saveXML(simulationConfig, join(cwd, fileName));
+	static void saveXML(SimulationConfig sharedL2MulticoreConfig) {
+		saveXML(sharedL2MulticoreConfig, "../configs/simulations", sharedL2MulticoreConfig.title ~ ".config.xml");
 	}
-	
-	string title;
-	string cwd;
-	
-	ProcessorConfig processorConfig;
-	MemorySystemConfig memorySystemConfig;
 }
 
 class SimulationConfigXMLFileSerializer: XMLFileSerializer!(SimulationConfig) {
 	this() {
 	}
 	
-	override XMLConfigFile save(SimulationConfig simulationConfig) {
+	override XMLConfigFile save(SimulationConfig sharedL2MulticoreConfig) {
 		XMLConfigFile xmlConfigFile = new XMLConfigFile("SimulationConfig");
+		xmlConfigFile["title"] = sharedL2MulticoreConfig.title;
+		xmlConfigFile["cwd"] = sharedL2MulticoreConfig.cwd;
 		
-		xmlConfigFile["title"] = simulationConfig.title;
-		xmlConfigFile["cwd"] = simulationConfig.cwd;
+		xmlConfigFile.entries ~= ProcessorConfigXMLSerializer.singleInstance.save(sharedL2MulticoreConfig.processor);
+		xmlConfigFile.entries ~= CacheConfigXMLSerializer.singleInstance.save(sharedL2MulticoreConfig.l2Cache);
+		xmlConfigFile.entries ~= MainMemoryConfigXMLSerializer.singleInstance.save(sharedL2MulticoreConfig.mainMemory);
 		
-		xmlConfigFile.entries ~= ProcessorConfigXMLSerializer.singleInstance.save(simulationConfig.processorConfig);
-		xmlConfigFile.entries ~= MemorySystemConfigXMLSerializer.singleInstance.save(simulationConfig.memorySystemConfig);
-			
 		return xmlConfigFile;
 	}
 	
@@ -455,15 +390,12 @@ class SimulationConfigXMLFileSerializer: XMLFileSerializer!(SimulationConfig) {
 		string title = xmlConfigFile["title"];
 		string cwd = xmlConfigFile["cwd"];
 		
-		SimulationConfig simulationConfig = new SimulationConfig(title, cwd);
-
-		ProcessorConfig processorConfig = ProcessorConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[0]);
-		MemorySystemConfig memorySystemConfig = MemorySystemConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[1]);
+		ProcessorConfig processor = ProcessorConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[0]);
+		CacheConfig l2Cache = CacheConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[1]);
+		MainMemoryConfig mainMemory = MainMemoryConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[2]);
 		
-		simulationConfig.processorConfig = processorConfig;
-		simulationConfig.memorySystemConfig = memorySystemConfig;
-
-		return simulationConfig;
+		SimulationConfig sharedL2MulticoreConfig = new SimulationConfig(title, cwd, processor, l2Cache, mainMemory);
+		return sharedL2MulticoreConfig;
 	}
 	
 	static this() {

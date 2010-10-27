@@ -1,23 +1,25 @@
 <?xml version="1.0"?>
 <SimulationConfig title="Olden_Custom1-mst_original-2x1" cwd="../stats/simulations">
-   <ProcessorConfig maxInsts="2000000" maxTime="7200" maxCycle="2000000" numCores="2" numThreads="1">
-      <ContextConfig benchmarkName="mst_original" num="0" binariesDir="../tests/benchmarks" benchmarkSuiteName="Olden_Custom1">
+   <ProcessorConfig maxInsts="2000000" maxTime="7200" numThreadsPerCore="1" maxCycle="2000000">
+      <CoreConfig>
+         <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1I-0" numSets="64" hitLatency="1">
+         </CacheConfig>
+         <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-0" numSets="64" hitLatency="1">
+         </CacheConfig>
+      </CoreConfig>
+      <CoreConfig>
+         <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1I-1" numSets="64" hitLatency="1">
+         </CacheConfig>
+         <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-1" numSets="64" hitLatency="1">
+         </CacheConfig>
+      </CoreConfig>
+      <ContextConfig benchmarkSuiteTitle="Olden_Custom1" binariesDir="../tests/benchmarks" benchmarkTitle="mst_original">
       </ContextConfig>
-      <ContextConfig benchmarkName="mst_original" num="1" binariesDir="../tests/benchmarks" benchmarkSuiteName="Olden_Custom1">
+      <ContextConfig benchmarkSuiteTitle="Olden_Custom1" binariesDir="../tests/benchmarks" benchmarkTitle="mst_original">
       </ContextConfig>
    </ProcessorConfig>
-   <MemorySystemConfig numCaches="5">
-      <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1I-1" numSets="64" hitLatency="1">
-      </CacheConfig>
-      <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-0" numSets="64" hitLatency="1">
-      </CacheConfig>
-      <CacheConfig level="1" assoc="4" blockSize="64" missLatency="7" policy="LRU" name="l2" numSets="1024" hitLatency="4">
-      </CacheConfig>
-      <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1I-0" numSets="64" hitLatency="1">
-      </CacheConfig>
-      <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-1" numSets="64" hitLatency="1">
-      </CacheConfig>
-      <MemoryConfig latency="400">
-      </MemoryConfig>
-   </MemorySystemConfig>
+   <CacheConfig level="1" assoc="4" blockSize="64" missLatency="7" policy="LRU" name="l2" numSets="1024" hitLatency="4">
+   </CacheConfig>
+   <MainMemoryConfig latency="400">
+   </MainMemoryConfig>
 </SimulationConfig>

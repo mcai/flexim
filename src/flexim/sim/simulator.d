@@ -112,16 +112,16 @@ class CPUSimulator : Simulator {
 		
 		SimulationConfig simulationConfig = simulation.config;
 		
-		for(uint i = 0; i < simulationConfig.processorConfig.numCores; i++) {
+		for(uint i = 0; i < simulationConfig.processor.numCores; i++) {
 			Core core = new Core(this.processor, i);
 				
-			for(uint j = 0; j < simulationConfig.processorConfig.numThreads; j++) {
-				ContextConfig context = simulationConfig.processorConfig.contexts[i * simulationConfig.processorConfig.numThreads + j];
+			for(uint j = 0; j < simulationConfig.processor.numThreadsPerCore; j++) {
+				ContextConfig context = simulationConfig.processor.contexts[i * simulationConfig.processor.numThreadsPerCore + j];
 				
 				writefln("context.cwd: %s, args: %s", context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 
-				Thread thread = new Thread(core, simulation, i * simulationConfig.processorConfig.numThreads + j, process);
+				Thread thread = new Thread(core, simulation, i * simulationConfig.processor.numThreadsPerCore + j, process);
 				
 				core.threads ~= thread;
 				
@@ -170,19 +170,14 @@ class CPUSimulator : Simulator {
 class MemorySystem {
 	this(Simulation simulation) {	
 		this.simulation = simulation;		
-		this.endNodeCount = simulation.config.processorConfig.numCores;
+		this.endNodeCount = simulation.config.processor.numCores;
 		this.createMemoryHierarchy();
-	}
-	
-	CoherentCache createCache(string cacheName) {
-		CacheConfig cacheConfig = this.simulationConfig.memorySystemConfig.caches[cacheName];
-		return new CoherentCache(this, cacheConfig);
 	}
 
 	void createMemoryHierarchy() {
-		this.mem = new MemoryController(this, this.simulationConfig.memorySystemConfig.mem);
+		this.mem = new MemoryController(this, this.simulationConfig.mainMemory);
 				
-		this.l2 = this.createCache("l2");
+		this.l2 = new CoherentCache(this, this.simulationConfig.l2Cache);
 		this.l2.next = this.mem;
 
 		this.seqIs = new Sequencer[this.endNodeCount];
@@ -192,10 +187,10 @@ class MemorySystem {
 		this.l1Ds = new CoherentCache[this.endNodeCount];
 
 		for(uint i = 0; i < this.endNodeCount; i++) {
-			CoherentCache l1I = this.createCache("l1I" ~ "-" ~ to!(string)(i));
+			CoherentCache l1I = new CoherentCache(this, this.simulationConfig.processor.cores[i].iCache);
 			Sequencer seqI = new Sequencer("seqI" ~ "-" ~ to!(string)(i), l1I);
 
-			CoherentCache l1D = this.createCache("l1D" ~ "-" ~ to!(string)(i));
+			CoherentCache l1D = new CoherentCache(this, this.simulationConfig.processor.cores[i].dCache);
 			Sequencer seqD = new Sequencer("seqD" ~ "-" ~ to!(string)(i), l1D);
 
 			this.seqIs[i] = seqI;

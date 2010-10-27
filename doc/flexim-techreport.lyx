@@ -200,7 +200,7 @@ Cycle-accurate callback-based eventing is used for modeling the behavioral
 \begin_layout Enumerate
 A common infrastructure that supports logging, eventing and XML-based IO
  for configuration specification and statitistcs output that fits the needs
- required by the simulationation process as illustrated in Fig.
+ required by the simulation process as illustrated in Fig.
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:Simulation-Workflow"

@@ -1,5 +1,5 @@
 /*
- * flexim/sim/benchmark.d
+ * flexim/sim/benchmarks.d
  * 
  * Copyright (c) 2010 Min Cai <itecgo@163.com>. 
  * 
@@ -19,7 +19,7 @@
  * along with Flexim.  If not, see <http ://www.gnu.org/licenses/>.
  */
 
-module flexim.sim.benchmark;
+module flexim.sim.benchmarks;
 
 import flexim.all;
 
@@ -31,19 +31,19 @@ interface PropertiesProvider {
 }
 
 class Benchmark : PropertiesProvider {
-	this(string title, string cwd, string exe, string argsLiteral, string stdin = null, string stdout = null, uint numThreads = 1) {
+	this(string title, string cwd, string exe, string argsLiteral, string stdin = null, string stdout = null, uint numThreadsPerCore = 1) {
 		this.title = title;
 		this.cwd = cwd;
 		this.exe = exe;
 		this.argsLiteral = argsLiteral;
 		this.stdin = stdin;
 		this.stdout = stdout;
-		this.numThreads = numThreads;
+		this.numThreadsPerCore = numThreadsPerCore;
 	}
 	
 	override string toString() {
-		return format("Benchmark[title=%s, cwd=%s, exe=%s, argsLiteral=%s, stdin=%s, stdout=%s, numThreads=%d]",
-			this.title, this.cwd, this.exe, this.argsLiteral, this.stdin, this.stdout, this.numThreads);
+		return format("Benchmark[title=%s, cwd=%s, exe=%s, argsLiteral=%s, stdin=%s, stdout=%s, numThreadsPerCore=%d]",
+			this.title, this.cwd, this.exe, this.argsLiteral, this.stdin, this.stdout, this.numThreadsPerCore);
 	}
 	
 	override string[string] properties() {
@@ -55,7 +55,7 @@ class Benchmark : PropertiesProvider {
 		props["argsLiteral"] = this.argsLiteral;
 		props["stdin"] = this.stdin;
 		props["stdout"] = this.stdout;
-		props["numThreads"] = to!(string)(this.numThreads);
+		props["numThreadsPerCore"] = to!(string)(this.numThreadsPerCore);
 		
 		return props;
 	}
@@ -68,10 +68,10 @@ class Benchmark : PropertiesProvider {
 	string stdout;
 	
 	string args() {
-		return sub(this.argsLiteral, r"\$\{nthreads\}", format("%d", this.numThreads), "g");
+		return sub(this.argsLiteral, r"\$\{nthreads\}", format("%d", this.numThreadsPerCore), "g");
 	}
 	
-	uint numThreads;
+	uint numThreadsPerCore;
 	
 	BenchmarkSuite suite;
 }

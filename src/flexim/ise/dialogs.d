@@ -115,19 +115,17 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 			
 			this.notebookSets.setCurrentPage(indexOfBenchmarkSuite);
 
-			buttonSetRemove.setSensitive(true);
+			this.buttonSetRemove.setSensitive(true);
 		}
 		else {
-			buttonSetRemove.setSensitive(false);
+			this.buttonSetRemove.setSensitive(false);
 		}
 	}
 	
 	override void onButtonSetAddClicked() {
-		do
-		{
+		do {
 			currentBenchmarkSuiteId++;
-		}
-		while(format("benchmarkSuite%d", currentBenchmarkSuiteId) in benchmarkSuites);
+		} while(format("benchmarkSuite%d", currentBenchmarkSuiteId) in benchmarkSuites);
 		
 		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(format("benchmarkSuite%d", currentBenchmarkSuiteId), "");
 		benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
@@ -351,18 +349,139 @@ class DialogEditSetSimulations : DialogEditSet {
 	}
 	
 	override void onComboBoxSetChanged() {
+		string simulationConfigTitle = this.comboBoxSet.getActiveText();
 		
+		if(simulationConfigTitle != "") {
+			assert(simulationConfigTitle in simulationConfigs, simulationConfigTitle);
+			SimulationConfig simulationConfig = simulationConfigs[simulationConfigTitle];
+			assert(simulationConfig !is null);
+			
+			int indexOfSimulationConfig = this.comboBoxSet.getActive();
+			
+			this.notebookSets.setCurrentPage(indexOfSimulationConfig);
+			
+			this.buttonSetRemove.setSensitive(true);
+		}
+		else {
+			this.buttonSetRemove.setSensitive(false);
+		}
 	}
 	
 	override void onButtonSetAddClicked() {
+		do {
+			currentSimulationId++;
+		}while(format("simulation%d", currentSimulationId) in simulationConfigs);
 		
+		/*SimulationConfig simulationConfig = new SimulationConfig(format("simulation%d", currentSimulationId), "");
+		simulationConfig.processorConfig = new ProcessorConfig(2000000, 2000000, 7200, 1, 1);
+		
+		
+		simulationConfig.memorySystemConfig = new MemorySystemConfig();
+		
+		simulationConfigs[simulationConfig.title] = simulationConfig;
+		this.newSimulationConfig(simulationConfig);
+		
+		int indexOfSimulationConfig = simulationConfigs.length - 1;
+		
+		this.comboBoxSet.setActive(indexOfSimulationConfig);
+		this.notebookSets.setCurrentPage(indexOfSimulationConfig);*/
 	}
 	
 	override void onButtonSetRemoveClicked() {
+		string simulationConfigTitle = this.comboBoxSet.getActiveText();
 		
+		if(simulationConfigTitle != "") {
+			SimulationConfig simulationConfig = simulationConfigs[simulationConfigTitle];
+			assert(simulationConfig !is null);
+			
+			simulationConfigs.remove(simulationConfig.title);
+			
+			int indexOfSimulationConfig = this.comboBoxSet.getActive();
+			this.comboBoxSet.removeText(indexOfSimulationConfig);
+			
+			this.notebookSets.removePage(indexOfSimulationConfig);
+			
+			if(indexOfSimulationConfig > 0) {
+				this.comboBoxSet.setActive(indexOfSimulationConfig - 1);
+			}
+			else {
+				this.comboBoxSet.setActive(simulationConfigs.length > 0 ? 0 : -1);
+			}
+		}
 	}
 	
 	void newSimulationConfig(SimulationConfig simulationConfig) {
+		this.comboBoxSet.appendText(simulationConfig.title);
+		
+		VBox vboxSimulationConfigPropertiesContainer = new VBox(false, 0);
+		
+		HBox boxProperties = new HBox(false, 6);
+		
+		Label labelTitle = new Label("Title");
+		Entry entryTitle = new Entry(simulationConfig.title);
+		entryTitle.addOnChanged(delegate void(EditableIF)
+			{
+				simulationConfigs.remove(simulationConfig.title);
+				simulationConfig.title = entryTitle.getText();
+				simulationConfigs[simulationConfig.title] = simulationConfig;
+				
+				int index = this.comboBoxSet.getActive();
+				this.comboBoxSet.removeText(index);
+				this.comboBoxSet.insertText(index, simulationConfig.title);
+				this.comboBoxSet.setActive(index);
+			});
+		
+		Label labelCwd = new Label("Cwd");
+		Entry entryCwd = new Entry(simulationConfig.cwd);
+		entryCwd.addOnChanged(delegate void(EditableIF)
+			{
+				simulationConfig.cwd = entryCwd.getText();
+			});
+		
+		boxProperties.packStart(labelTitle, false, false, 0);
+		boxProperties.packStart(entryTitle, true, true, 0);
+		boxProperties.packStart(labelCwd, false, false, 0);
+		boxProperties.packStart(entryCwd, true, true, 0);
+		
+		VBox vboxProcessorConfig = new VBox(false, 6);
+		
+		foreach(contextConfig; simulationConfig.processor.contexts) {
+			this.newContextConfig(contextConfig, vboxProcessorConfig);
+		}
+		
+		HBox hboxButtonAddContextConfig = new HBox(false, 6);
+		
+		Button buttonAddContextConfig = new Button("Add Context");
+		buttonAddContextConfig.addOnClicked(delegate void(Button)
+			{
+				/*ContextConfig contextConfig = new ContextConfig(simulationConfig.processorConfig.contexts.length, "", "", "");
+				simulationConfig.processorConfig.contexts ~= contextConfig;
+				this.newContextConfig(contextConfig, vboxProcessorConfig);*/
+			});
+		hboxButtonAddContextConfig.packEnd(buttonAddContextConfig, false, false, 0);
+		
+		vboxSimulationConfigPropertiesContainer.packStart(boxProperties, false, true, 6);
+		vboxSimulationConfigPropertiesContainer.packStart(vboxProcessorConfig, false, true, 0);
+		vboxSimulationConfigPropertiesContainer.packStart(hboxButtonAddContextConfig, false, true, 6);
+			
+		ScrolledWindow scrolledWindow = new ScrolledWindow();
+		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+		
+		scrolledWindow.addWithViewport(vboxSimulationConfigPropertiesContainer);
+		
+		this.notebookSets.appendPage(scrolledWindow, simulationConfig.title);
+		
+		this.notebookSets.hideAll();
+		this.notebookSets.showAll();
+	}
+	
+	void newContextConfig(ContextConfig contextConfig, VBox vboxProcessorConfig) {
 		
 	}
+	
+	void newCacheConfig(CacheConfig cacheConfig, VBox vboxMemorySystemConfig) {
+		
+	}
+	
+	int currentSimulationId = -1;
 }

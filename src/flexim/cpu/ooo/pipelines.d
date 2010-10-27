@@ -155,7 +155,7 @@ class Core {
 		}
 	}
 	
-	uint numThreads() {
+	uint numThreadsPerCore() {
 		return this.threads.length;
 	}
 

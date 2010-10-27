@@ -71,7 +71,7 @@ MLP-Aware DCP:
 
 5. goto step 2.
 
-+idea: task-oriented simulationation
++idea: task-oriented simulation
 
 		GeneralAnalysis
 		PipelineBehaviorAnalysis

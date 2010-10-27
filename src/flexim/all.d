@@ -156,7 +156,7 @@ public import flexim.mem.timing.mesi;
 public import flexim.mem.timing.sequencer;
 public import flexim.mem.tm.transaction;
 
-public import flexim.sim.benchmark;
+public import flexim.sim.benchmarks;
 public import flexim.sim.configs;
 public import flexim.sim.simulations;
 public import flexim.sim.simulator;
