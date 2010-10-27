@@ -184,6 +184,7 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	
 	override XMLConfig save(ContextConfig contextConfig) {
 		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
+		
 		xmlConfig["binariesDir"] = contextConfig.binariesDir;
 		xmlConfig["benchmarkSuiteTitle"] = contextConfig.benchmarkSuiteTitle;
 		xmlConfig["benchmarkTitle"] = contextConfig.benchmarkTitle;
@@ -279,6 +280,7 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 	
 	override XMLConfig save(ProcessorConfig processorConfig) {
 		XMLConfig xmlConfig = new XMLConfig("ProcessorConfig");
+		
 		xmlConfig["maxCycle"] = to!(string)(processorConfig.maxCycle);
 		xmlConfig["maxInsts"] = to!(string)(processorConfig.maxInsts);
 		xmlConfig["maxTime"] = to!(string)(processorConfig.maxTime);
@@ -361,12 +363,12 @@ class SimulationConfig: Config!(SimulationConfig) {
 		return SimulationConfigXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
-	static void saveXML(SimulationConfig sharedL2MulticoreConfig, string cwd, string fileName) {
-		SimulationConfigXMLFileSerializer.singleInstance.saveXML(sharedL2MulticoreConfig, join(cwd, fileName));
+	static void saveXML(SimulationConfig simulationConfig, string cwd, string fileName) {
+		SimulationConfigXMLFileSerializer.singleInstance.saveXML(simulationConfig, join(cwd, fileName));
 	}
 	
-	static void saveXML(SimulationConfig sharedL2MulticoreConfig) {
-		saveXML(sharedL2MulticoreConfig, "../configs/simulations", sharedL2MulticoreConfig.title ~ ".config.xml");
+	static void saveXML(SimulationConfig simulationConfig) {
+		saveXML(simulationConfig, "../configs/simulations", simulationConfig.title ~ ".config.xml");
 	}
 }
 
@@ -374,14 +376,15 @@ class SimulationConfigXMLFileSerializer: XMLFileSerializer!(SimulationConfig) {
 	this() {
 	}
 	
-	override XMLConfigFile save(SimulationConfig sharedL2MulticoreConfig) {
+	override XMLConfigFile save(SimulationConfig simulationConfig) {
 		XMLConfigFile xmlConfigFile = new XMLConfigFile("SimulationConfig");
-		xmlConfigFile["title"] = sharedL2MulticoreConfig.title;
-		xmlConfigFile["cwd"] = sharedL2MulticoreConfig.cwd;
 		
-		xmlConfigFile.entries ~= ProcessorConfigXMLSerializer.singleInstance.save(sharedL2MulticoreConfig.processor);
-		xmlConfigFile.entries ~= CacheConfigXMLSerializer.singleInstance.save(sharedL2MulticoreConfig.l2Cache);
-		xmlConfigFile.entries ~= MainMemoryConfigXMLSerializer.singleInstance.save(sharedL2MulticoreConfig.mainMemory);
+		xmlConfigFile["title"] = simulationConfig.title;
+		xmlConfigFile["cwd"] = simulationConfig.cwd;
+		
+		xmlConfigFile.entries ~= ProcessorConfigXMLSerializer.singleInstance.save(simulationConfig.processor);
+		xmlConfigFile.entries ~= CacheConfigXMLSerializer.singleInstance.save(simulationConfig.l2Cache);
+		xmlConfigFile.entries ~= MainMemoryConfigXMLSerializer.singleInstance.save(simulationConfig.mainMemory);
 		
 		return xmlConfigFile;
 	}
@@ -394,8 +397,8 @@ class SimulationConfigXMLFileSerializer: XMLFileSerializer!(SimulationConfig) {
 		CacheConfig l2Cache = CacheConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[1]);
 		MainMemoryConfig mainMemory = MainMemoryConfigXMLSerializer.singleInstance.load(xmlConfigFile.entries[2]);
 		
-		SimulationConfig sharedL2MulticoreConfig = new SimulationConfig(title, cwd, processor, l2Cache, mainMemory);
-		return sharedL2MulticoreConfig;
+		SimulationConfig simulationConfig = new SimulationConfig(title, cwd, processor, l2Cache, mainMemory);
+		return simulationConfig;
 	}
 	
 	static this() {

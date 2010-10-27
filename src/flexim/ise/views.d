@@ -1915,11 +1915,11 @@ class Canvas: DrawingArea {
 			this.origin, this.total, this.border, this.pick, this.childToAdd);
 	}
 	
-	static Canvas loadXML(string cwd = "../configs/layouts", string fileName = "canvas" ~ ".xml") {
+	static Canvas loadXML(string cwd = "../configs/ise", string fileName = "layout" ~ ".xml") {
 		return CanvasXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
-	static void saveXML(Canvas canvas, string cwd = "../configs/layouts", string fileName = "canvas" ~ ".xml") {
+	static void saveXML(Canvas canvas, string cwd = "../configs/ise", string fileName = "layout" ~ ".xml") {
 		CanvasXMLFileSerializer.singleInstance.saveXML(canvas, join(cwd, fileName));
 	}
 	

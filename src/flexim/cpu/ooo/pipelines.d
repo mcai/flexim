@@ -231,8 +231,8 @@ class Thread {
 		
 		this.commitWidth = 4;
 		
-		this.stat = new ThreadStat(this.num);
-		simulation.stat.processorStat.threadStats ~= this.stat;
+		this.stat = new ContextStat();
+		simulation.stat.processor.contexts ~= this.stat;
 		
 		this.state = ThreadState.Active;
 		
@@ -662,7 +662,7 @@ class Thread {
 	
 	ThreadState state;
 	
-	ThreadStat stat;
+	ContextStat stat;
 	
 	DecodeBuffer decodeBuffer;
 	ReorderBuffer reorderBuffer;

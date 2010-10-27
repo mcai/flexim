@@ -28,7 +28,7 @@ class MemoryController: CoherentCacheNode {
 		super(memorySystem, "mem");
 		
 		this.config = config;
-		this.stat = new MemoryStat();
+		this.stat = new MainMemoryStat();
 	}
 	
 	override uint level() {
@@ -61,5 +61,5 @@ class MemoryController: CoherentCacheNode {
 	}
 	
 	MainMemoryConfig config;
-	MemoryStat stat;
+	MainMemoryStat stat;
 }

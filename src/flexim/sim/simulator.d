@@ -206,13 +206,13 @@ class MemorySystem {
 		this.mmu = new MMU();
 
 		for(uint i = 0; i < this.endNodeCount; i++) {
-			this.simulation.stat.memorySystemStat.cacheStats ~= this.l1Is[i].stat;
-			this.simulation.stat.memorySystemStat.cacheStats ~= this.l1Ds[i].stat;
+			this.simulation.stat.processor.cores[i].iCache = this.l1Is[i].stat;
+			this.simulation.stat.processor.cores[i].dCache = this.l1Ds[i].stat;
 		}
 
-		this.simulation.stat.memorySystemStat.cacheStats ~= this.l2.stat;
+		this.simulation.stat.l2Cache = this.l2.stat;
 		
-		this.simulation.stat.memorySystemStat.memoryStat = this.mem.stat;
+		this.simulation.stat.mainMemory = this.mem.stat;
 	}
 	
 	SimulationConfig simulationConfig() {

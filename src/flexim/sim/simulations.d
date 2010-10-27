@@ -36,7 +36,7 @@ class Simulation: Reproducible {
 	this(SimulationConfig config) {
 		this.config = config;
 		
-		this.stat = new SimulationStat(this.title, this.cwd);
+		this.stat = new SimulationStat(this.title, this.cwd, config.processor.cores.length);
 	}
 	
 	void execute() {
@@ -82,6 +82,7 @@ void runSimulation(string simulationName, void delegate(string) del = null) {
 	
 	SimulationConfig simulationConfig = SimulationConfig.loadXML("../configs/simulations", simulationName ~ ".config.xml");
 	Simulation simulation = new Simulation(simulationConfig);
+	simulationStats[simulation.stat.title] = simulation.stat;
 	simulation.execute();
 }
 
@@ -89,25 +90,28 @@ BenchmarkSuite[string] benchmarkSuites;
 SimulationConfig[string] simulationConfigs;
 SimulationStat[string] simulationStats;
 
-void loadConfigsAndStats(void delegate(string text) del) {
+void loadConfigsAndStats(void delegate(string text) del, bool useGtk = false) {
+	string boldFontBeginStr = (useGtk ? "<b>" : "");
+	string boldFontEndStr = (useGtk ? "</b>" : "");
+	
     foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
     {
     	string baseName = basename(name, ".xml");
-    	del("Loading benchmark config: <b>" ~ baseName ~ "</b>");
+    	del("Loading benchmark config: " ~ boldFontBeginStr ~ baseName ~ boldFontEndStr);
 		benchmarkSuites[baseName] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
 		assert(benchmarkSuites[baseName].title == baseName);
     }
     foreach (string name; dirEntries("../configs/simulations", SpanMode.breadth))
     {
     	string baseName = basename(name, ".config.xml");
-    	del("Loading simulation config: <b>" ~ baseName ~ "</b>");
+    	del("Loading simulation config: " ~ boldFontBeginStr ~ baseName ~ boldFontEndStr);
 		simulationConfigs[baseName] = SimulationConfig.loadXML("../configs/simulations", basename(name));
 		assert(simulationConfigs[baseName].title == baseName);
     }
     foreach (string name; dirEntries("../stats/simulations", SpanMode.breadth))
     {
     	string baseName = basename(name, ".stat.xml");
-    	del("Loading simulation stat: <b>" ~ baseName ~ "</b>");
+    	del("Loading simulation stat: " ~ boldFontBeginStr ~ baseName ~ boldFontEndStr);
 		simulationStats[baseName] = SimulationStat.loadXML("../stats/simulations", basename(name));
 		assert(simulationStats[baseName].title == baseName);
     }

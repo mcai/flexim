@@ -159,7 +159,7 @@ class Startup {
 				loadConfigsAndStats((string text){
 					labelLoading.setMarkup(text);
 					doPendingEvents();
-				});
+				}, true);
 
 				labelLoading.setLabel("Initializing Widgets");
 				doPendingEvents();

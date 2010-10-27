@@ -30,16 +30,20 @@ import std.path;
 import std.concurrency, std.stdio, std.typecons;
 
 void mainConsole(string[] args) {
-	//string simulationName = "WCETBench-fir-1x1";
+	string simulationName = "WCETBench-fir-1x1";
 	//string simulationName = "WCETBench-fir-2x1";
 	//string simulationName = "Olden_Custom1-em3d_original-1x1";
 	//string simulationName = "Olden_Custom1-mst_original-1x1";
-	string simulationName = "Olden_Custom1-mst_original-Olden_Custom1_em3d_original-2x1";
+	//string simulationName = "Olden_Custom1-mst_original-Olden_Custom1_em3d_original-2x1";
 	//string simulationName = "Olden_Custom1-mst_original-2x1";
 	
 	getopt(args, "simulation", &simulationName);
 	
+	loadConfigsAndStats(delegate void(string text){logging.info(LogCategory.SIMULATOR, text);}, false);
+	
 	runSimulation(simulationName);
+	
+	saveConfigsAndStats();
 }
 
 void main(string[] args) {
@@ -47,7 +51,7 @@ void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
 	
-	bool useBuilder = true;
+	bool useBuilder = false;
 	
 	if(useBuilder) {
 		mainGui(args);
