@@ -300,6 +300,22 @@ class DialogEditSetSimulations : DialogEditSet {
 			
 		super(dialogEditSimulations, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation, buttonCloseDialogEditSimulations);
 		
+		HBox hboxAddSimulation = getBuilderObject!(HBox, GtkHBox)(builder, "hboxAddSimulation");
+			
+		this.numCoresWhenAddSimulation = this.numThreadsPerCoreWhenAddSimulation = 2;
+		
+		HBox hbox0 = hpack(
+			newHBoxWithLabelAndEntry("Number of Cores:", to!(string)(this.numCoresWhenAddSimulation), delegate void(string entryText)
+			{
+				this.numCoresWhenAddSimulation = to!(uint)(entryText);
+			}),
+			newHBoxWithLabelAndEntry("Number of Threads per Core:", to!(string)(this.numThreadsPerCoreWhenAddSimulation), delegate void(string entryText)
+			{
+				this.numThreadsPerCoreWhenAddSimulation = to!(uint)(entryText);
+			}));
+		
+		hboxAddSimulation.packStart(hbox0, true, true, 0);
+		
 		foreach(simulationConfigTitle, simulationConfig; simulationConfigs) {
 			this.newSimulationConfig(simulationConfig);
 		}
@@ -334,11 +350,15 @@ class DialogEditSetSimulations : DialogEditSet {
 		
 		ProcessorConfig processor = new ProcessorConfig(2000000, 2000000, 7200, 1);
 		
-		CoreConfig core0 = new CoreConfig(CacheConfig.newL1("l1I-0"), CacheConfig.newL1("l1D-0"));
-		processor.cores ~= core0;
-		
-		ContextConfig context0 = new ContextConfig("../tests/benchmarks", "WCETBench", "fir");
-		processor.contexts ~= context0;
+		for(uint i = 0; i < this.numCoresWhenAddSimulation; i++) {
+			CoreConfig core = new CoreConfig(CacheConfig.newL1(format("l1I-%d", i)), CacheConfig.newL1(format("l1D-%d", i)));
+			processor.cores ~= core;
+			
+			for(uint j = 0; j < this.numThreadsPerCoreWhenAddSimulation; j++) {
+				ContextConfig context = new ContextConfig("../tests/benchmarks", "WCETBench", "fir");
+				processor.contexts ~= context;
+			}
+		}
 		
 		CacheConfig l2Cache = CacheConfig.newL2();
 		MainMemoryConfig mainMemory = new MainMemoryConfig(400);
@@ -380,10 +400,7 @@ class DialogEditSetSimulations : DialogEditSet {
 	HBox newCache(CacheConfig cache) {
 		HBox hbox0 = hpack(
 			newHBoxWithLabelAndEntry("Name:", cache.name), 
-			newHBoxWithLabelAndEntry("Level:", to!(string)(cache.level), delegate void(string entryText)
-			{
-				cache.level = to!(uint)(entryText);
-			}));
+			newHBoxWithLabelAndEntry("Level:", to!(string)(cache.level)));
 		
 		HBox hbox1 = hpack(
 			newHBoxWithLabelAndEntry("Number of Sets:", to!(string)(cache.numSets), delegate void(string entryText)
@@ -459,12 +476,11 @@ class DialogEditSetSimulations : DialogEditSet {
 			{
 				simulationConfig.processor.maxTime = to!(ulong)(entryText);
 			}),
-			newHBoxWithLabelAndEntry("Number of Threads per Core:", format("%d", simulationConfig.processor.numThreadsPerCore), delegate void(string entryText)
-			{
-				simulationConfig.processor.numThreadsPerCore = to!(uint)(entryText);
-			}));
+			newHBoxWithLabelAndEntry("Number of Threads per Core:", format("%d", simulationConfig.processor.numThreadsPerCore)));
 			
 		vboxProcessor.packStart(hbox1, false, true, 6);
+		
+		vboxProcessor.packStart(new HSeparator(), false, true, 4);
 		
 		//////////////////////
 		
@@ -480,6 +496,8 @@ class DialogEditSetSimulations : DialogEditSet {
 		VBox vboxCores = vpack2(vboxesCore);
 			
 		vboxProcessor.packStart(vboxCores, false, true, 6);
+		
+		vboxProcessor.packStart(new HSeparator(), false, true, 4);
 		
 		Widget[] vboxesContext;
 		
@@ -540,5 +558,6 @@ class DialogEditSetSimulations : DialogEditSet {
 		this.notebookSets.showAll();
 	}
 	
+	uint numCoresWhenAddSimulation, numThreadsPerCoreWhenAddSimulation;
 	int currentSimulationId = -1;
 }

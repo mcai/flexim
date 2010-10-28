@@ -85,6 +85,8 @@ HBox newHBoxWithLabelAndEntry(string labelText, string entryText, void delegate(
 				entryChangedAction(entry.getText());
 			}
 		});
+
+	entry.setSensitive(entryChangedAction !is null);
 	
 	return hpack(label, entry);
 }
