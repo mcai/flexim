@@ -91,6 +91,23 @@ HBox newHBoxWithLabelAndEntry(string labelText, string entryText, void delegate(
 	return hpack(label, entry);
 }
 
+HBox newHBoxWithLabelAndSpinButton(T)(string labelText, T minEntryValue, T maxEntryValue, T entryStep, T initialEntryValue, void delegate(T newText) spinButtonValueChangedAction = null) {
+	Label label = new Label(labelText);
+	SpinButton spinButton = new SpinButton(cast(double) minEntryValue, cast(double) maxEntryValue, entryStep);
+	spinButton.setValue(cast(double) initialEntryValue);
+	spinButton.setDigits(0);
+	spinButton.addOnValueChanged(delegate void(SpinButton)
+		{
+			if(spinButtonValueChangedAction !is null) {
+				spinButtonValueChangedAction(cast(T) (spinButton.getValue()));
+			}
+		});
+
+	spinButton.setSensitive(spinButtonValueChangedAction !is null);
+	
+	return hpack(label, spinButton);
+}
+
 void setupTextComboBox(ComboBox comboBox) {
 	GType[] types;
 	types ~= GType.STRING;

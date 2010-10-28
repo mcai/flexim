@@ -94,7 +94,9 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 		Button buttonCloseDialogEditBenchmarks = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditBenchmarks");
 			
 		super(dialogEditBenchmarks, comboBoxBenchmarkSuites, buttonAddBenchmarkSuite, buttonRemoveBenchmarkSuite, vboxBenchmarks, buttonCloseDialogEditBenchmarks);
-			
+		
+		dialogEditBenchmarks.maximize();
+		
 		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
 			this.newBenchmarkSuite(benchmarkSuite);
 		}
@@ -299,19 +301,21 @@ class DialogEditSetSimulations : DialogEditSet {
 		Button buttonCloseDialogEditSimulations = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditSimulations");
 			
 		super(dialogEditSimulations, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation, buttonCloseDialogEditSimulations);
+
+		dialogEditSimulations.maximize();
 		
 		HBox hboxAddSimulation = getBuilderObject!(HBox, GtkHBox)(builder, "hboxAddSimulation");
 			
 		this.numCoresWhenAddSimulation = this.numThreadsPerCoreWhenAddSimulation = 2;
 		
 		HBox hbox0 = hpack(
-			newHBoxWithLabelAndEntry("Number of Cores:", to!(string)(this.numCoresWhenAddSimulation), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Number of Cores:", 1, 8, 1, 2, delegate void(uint newValue)
 			{
-				this.numCoresWhenAddSimulation = to!(uint)(entryText);
+				this.numCoresWhenAddSimulation = newValue;
 			}),
-			newHBoxWithLabelAndEntry("Number of Threads per Core:", to!(string)(this.numThreadsPerCoreWhenAddSimulation), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Number of Threads per Core:", 1, 8, 1, 2, delegate void(uint newValue)
 			{
-				this.numThreadsPerCoreWhenAddSimulation = to!(uint)(entryText);
+				this.numThreadsPerCoreWhenAddSimulation = newValue;
 			}));
 		
 		hboxAddSimulation.packStart(hbox0, true, true, 0);
@@ -363,7 +367,7 @@ class DialogEditSetSimulations : DialogEditSet {
 		CacheConfig l2Cache = CacheConfig.newL2();
 		MainMemoryConfig mainMemory = new MainMemoryConfig(400);
 		
-		SimulationConfig simulationConfig = new SimulationConfig(format("simulation%d", currentSimulationId), "", processor, l2Cache, mainMemory);
+		SimulationConfig simulationConfig = new SimulationConfig(format("simulation%d", currentSimulationId), "../stats/simulations", processor, l2Cache, mainMemory);
 		
 		simulationConfigs[simulationConfig.title] = simulationConfig;
 		this.newSimulationConfig(simulationConfig);
@@ -403,27 +407,27 @@ class DialogEditSetSimulations : DialogEditSet {
 			newHBoxWithLabelAndEntry("Level:", to!(string)(cache.level)));
 		
 		HBox hbox1 = hpack(
-			newHBoxWithLabelAndEntry("Number of Sets:", to!(string)(cache.numSets), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Number of Sets:", 1, 1024, 1, cache.numSets, delegate void(uint newValue)
 			{
-				cache.numSets = to!(uint)(entryText);
+				cache.numSets = newValue;
 			}),
-			newHBoxWithLabelAndEntry("Associativity:", to!(string)(cache.assoc), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Associativity:", 1, 1024, 1, cache.assoc, delegate void(uint newValue)
 			{
-				cache.assoc = to!(uint)(entryText);
+				cache.assoc = newValue;
 			}), 
-			newHBoxWithLabelAndEntry("Block Size:", to!(string)(cache.blockSize), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Block Size:", 1, 1024, 1, cache.blockSize, delegate void(uint newValue)
 			{
-				cache.blockSize = to!(uint)(entryText);
+				cache.blockSize = newValue;
 			}));
 		
 		HBox hbox2 = hpack(
-			newHBoxWithLabelAndEntry("Hit Latency:", to!(string)(cache.hitLatency), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Hit Latency:", 1, 1024, 1, cache.hitLatency, delegate void(uint newValue)
 			{
-				cache.hitLatency = to!(uint)(entryText);
+				cache.hitLatency = newValue;
 			}),
-			newHBoxWithLabelAndEntry("Miss Latency:", to!(string)(cache.missLatency), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Miss Latency:", 1, 1024, 1, cache.missLatency, delegate void(uint newValue)
 			{
-				cache.missLatency = to!(uint)(entryText);
+				cache.missLatency = newValue;
 			}),
 			newHBoxWithLabelAndEntry("Replacement Policy", to!(string)(cache.policy), delegate void(string entryText)
 			{
@@ -464,19 +468,19 @@ class DialogEditSetSimulations : DialogEditSet {
 		VBox vboxProcessor = new VBox(false, 6);
 		
 		HBox hbox1 = hpack(
-			newHBoxWithLabelAndEntry("Max Cycle:", format("%d", simulationConfig.processor.maxCycle), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(ulong)("Max Cycle:", 1, 2000000, 1000, simulationConfig.processor.maxCycle, delegate void(ulong newValue)
 			{
-				simulationConfig.processor.maxCycle = to!(ulong)(entryText);
+				simulationConfig.processor.maxCycle = newValue;
 			}),
-			newHBoxWithLabelAndEntry("Max Insts:", format("%d", simulationConfig.processor.maxInsts), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(ulong)("Max Insts:", 1, 2000000, 1000, simulationConfig.processor.maxInsts, delegate void(ulong newValue)
 			{
-				simulationConfig.processor.maxInsts = to!(ulong)(entryText);
+				simulationConfig.processor.maxInsts = newValue;
 			}),
-			newHBoxWithLabelAndEntry("Max Time:", format("%d", simulationConfig.processor.maxTime), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(ulong)("Max Time:", 1, 7200, 100, simulationConfig.processor.maxTime, delegate void(ulong newValue)
 			{
-				simulationConfig.processor.maxTime = to!(ulong)(entryText);
+				simulationConfig.processor.maxTime = newValue;
 			}),
-			newHBoxWithLabelAndEntry("Number of Threads per Core:", format("%d", simulationConfig.processor.numThreadsPerCore)));
+			newHBoxWithLabelAndSpinButton!(uint)("Number of Threads per Core:", 1, 8, 1, simulationConfig.processor.numThreadsPerCore));
 			
 		vboxProcessor.packStart(hbox1, false, true, 6);
 		
@@ -534,9 +538,9 @@ class DialogEditSetSimulations : DialogEditSet {
 		//////////////////////
 		
 		HBox hbox13 = hpack(
-			newHBoxWithLabelAndEntry("Latency:", to!(string)(simulationConfig.mainMemory.latency), delegate void(string entryText)
+			newHBoxWithLabelAndSpinButton!(uint)("Latency:", 1, 1024, 1, simulationConfig.mainMemory.latency, delegate void(uint newValue)
 			{
-				simulationConfig.mainMemory.latency = to!(uint)(entryText);
+				simulationConfig.mainMemory.latency = newValue;
 			}));
 			
 		HBox hboxMainMemory = hpack(new Label("Main Memory"), new VSeparator(), vpack(hbox13));
