@@ -45,15 +45,19 @@ class DialogEditSet {
 			});
 		this.comboBoxSet.setActive(0);
 		
-		this.buttonSetAdd.addOnClicked(delegate void(Button)
-			{
-				this.onButtonSetAddClicked();
-			});
-			
-		this.buttonSetRemove.addOnClicked(delegate void(Button)
-			{
-				this.onButtonSetRemoveClicked();
-			});
+		if(this.buttonSetAdd !is null) {
+			this.buttonSetAdd.addOnClicked(delegate void(Button)
+				{
+					this.onButtonSetAddClicked();
+				});
+		}
+		
+		if(this.buttonSetRemove !is null) {	
+			this.buttonSetRemove.addOnClicked(delegate void(Button)
+				{
+					this.onButtonSetRemoveClicked();
+				});
+		}
 			
 		this.notebookSets = new Notebook();
 		this.notebookSets.setShowTabs(false);
@@ -86,16 +90,16 @@ class DialogEditSet {
 
 class DialogEditSetBenchmarkSuites : DialogEditSet {
 	this(Builder builder) {
-		Dialog dialogEditBenchmarks = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditBenchmarks");
+		Dialog dialogEditBenchmarkConfigs = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditBenchmarkConfigs");
 		ComboBox comboBoxBenchmarkSuites = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxBenchmarkSuites");
 		Button buttonAddBenchmarkSuite = getBuilderObject!(Button, GtkButton)(builder, "buttonAddBenchmarkSuite");
 		Button buttonRemoveBenchmarkSuite = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveBenchmarkSuite");
 		VBox vboxBenchmarks = getBuilderObject!(VBox, GtkVBox)(builder, "vboxBenchmarks");
 		Button buttonCloseDialogEditBenchmarks = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditBenchmarks");
 			
-		super(dialogEditBenchmarks, comboBoxBenchmarkSuites, buttonAddBenchmarkSuite, buttonRemoveBenchmarkSuite, vboxBenchmarks, buttonCloseDialogEditBenchmarks);
+		super(dialogEditBenchmarkConfigs, comboBoxBenchmarkSuites, buttonAddBenchmarkSuite, buttonRemoveBenchmarkSuite, vboxBenchmarks, buttonCloseDialogEditBenchmarks);
 		
-		dialogEditBenchmarks.maximize();
+		dialogEditBenchmarkConfigs.maximize();
 		
 		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
 			this.newBenchmarkSuite(benchmarkSuite);
@@ -293,16 +297,16 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 
 class DialogEditSetSimulations : DialogEditSet {
 	this(Builder builder) {		
-		Dialog dialogEditSimulations = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditSimulations");
+		Dialog dialogEditSimulationConfigs = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditSimulationConfigs");
 		ComboBox comboBoxSimulations = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulations");
 		Button buttonAddSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonAddSimulation");
 		Button buttonRemoveSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveSimulation");
 		VBox vboxSimulation = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulation");
 		Button buttonCloseDialogEditSimulations = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditSimulations");
 			
-		super(dialogEditSimulations, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation, buttonCloseDialogEditSimulations);
+		super(dialogEditSimulationConfigs, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation, buttonCloseDialogEditSimulations);
 
-		dialogEditSimulations.maximize();
+		dialogEditSimulationConfigs.maximize();
 		
 		HBox hboxAddSimulation = getBuilderObject!(HBox, GtkHBox)(builder, "hboxAddSimulation");
 			
@@ -443,7 +447,7 @@ class DialogEditSetSimulations : DialogEditSet {
 		VBox vboxSimulation = new VBox(false, 6);
 		
 		HBox hbox0 = hpack(
-			newHBoxWithLabelAndEntry("Title: ", simulationConfig.title, delegate void(string entryText)
+			newHBoxWithLabelAndEntry("Title:", simulationConfig.title, delegate void(string entryText)
 				{
 					simulationConfigs.remove(simulationConfig.title);
 					simulationConfig.title = entryText;
@@ -454,7 +458,7 @@ class DialogEditSetSimulations : DialogEditSet {
 					this.comboBoxSet.insertText(index, simulationConfig.title);
 					this.comboBoxSet.setActive(index);
 				}),
-			newHBoxWithLabelAndEntry("Cwd: ", simulationConfig.cwd, delegate void(string entryText)
+			newHBoxWithLabelAndEntry("Cwd:", simulationConfig.cwd, delegate void(string entryText)
 				{
 					simulationConfig.cwd = entryText;
 				}));
@@ -494,7 +498,7 @@ class DialogEditSetSimulations : DialogEditSet {
 			vboxesCore ~= hpack(
 				new Label(format("core-%d", i)),
 				new VSeparator(),
-				vpack(newCache(core.iCache), newCache(core.dCache)));
+				vpack(this.newCache(core.iCache), this.newCache(core.dCache)));
 		}
 		
 		VBox vboxCores = vpack2(vboxesCore);
@@ -564,4 +568,165 @@ class DialogEditSetSimulations : DialogEditSet {
 	
 	uint numCoresWhenAddSimulation, numThreadsPerCoreWhenAddSimulation;
 	int currentSimulationId = -1;
+}
+
+class DialogEditSetSimulationStats: DialogEditSet {
+	this(Builder builder) {		
+		Dialog dialogSimulationStats = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogSimulationStats");
+		ComboBox comboBoxSimulationStats = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulationStats");
+		VBox vboxSimulationStat = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulationStat");
+		Button buttonCloseDialogSimulationStats = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogSimulationStats");
+			
+		super(dialogSimulationStats, comboBoxSimulationStats, null, null, vboxSimulationStat, buttonCloseDialogSimulationStats);
+
+		dialogSimulationStats.maximize();
+		
+		foreach(simulationStatTitle, simulationStat; simulationStats) {
+			this.newSimulationStat(simulationStat);
+		}
+		
+		this.notebookSets.setCurrentPage(0);
+		this.comboBoxSet.setActive(0);
+	}
+	
+	override void onComboBoxSetChanged() {
+		string simulationStatTitle = this.comboBoxSet.getActiveText();
+		
+		if(simulationStatTitle != "") {
+			assert(simulationStatTitle in simulationStats, simulationStatTitle);
+			SimulationStat simulationStat = simulationStats[simulationStatTitle];
+			assert(simulationStat !is null);
+			
+			int indexOfSimulationStat = this.comboBoxSet.getActive();
+			
+			this.notebookSets.setCurrentPage(indexOfSimulationStat);
+		}
+	}
+	
+	override void onButtonSetAddClicked() {
+		assert(0);
+	}
+	
+	override void onButtonSetRemoveClicked() {
+		assert(0);
+	}
+	
+	HBox newCache(CacheStat cache) {
+		HBox hbox0 = hpack(
+			newHBoxWithLabelAndEntry("Name:", cache.name));
+			
+		HBox hbox1 = hpack(
+			newHBoxWithLabelAndEntry("Accesses", to!(string)(cache.accesses)),
+			newHBoxWithLabelAndEntry("Hits", to!(string)(cache.hits)),
+			newHBoxWithLabelAndEntry("Evictions", to!(string)(cache.evictions)));
+				
+		HBox hbox2 = hpack(
+			newHBoxWithLabelAndEntry("Reads", to!(string)(cache.reads)),
+			newHBoxWithLabelAndEntry("Blocking Reads", to!(string)(cache.blockingReads)),
+			newHBoxWithLabelAndEntry("Nonblocking Reads", to!(string)(cache.nonblockingReads)),
+			newHBoxWithLabelAndEntry("Read Hits", to!(string)(cache.readHits)));
+				
+		HBox hbox3 = hpack(
+			newHBoxWithLabelAndEntry("Writes", to!(string)(cache.writes)),
+			newHBoxWithLabelAndEntry("Blocking Writes", to!(string)(cache.blockingWrites)),
+			newHBoxWithLabelAndEntry("Nonblocking Writes", to!(string)(cache.nonblockingWrites)),
+			newHBoxWithLabelAndEntry("Write Hits", to!(string)(cache.writeHits)));
+				
+		HBox hbox4 = hpack(
+			newHBoxWithLabelAndEntry("Read Retries", to!(string)(cache.readRetries)),
+			newHBoxWithLabelAndEntry("Write Retries", to!(string)(cache.writeRetries)));
+				
+		HBox hbox5 = hpack(
+			newHBoxWithLabelAndEntry("No-Retry Accesses", to!(string)(cache.noRetryAccesses)),
+			newHBoxWithLabelAndEntry("No-Retry Hits", to!(string)(cache.noRetryHits)));
+				
+		HBox hbox6 = hpack(
+			newHBoxWithLabelAndEntry("No-Retry Reads", to!(string)(cache.noRetryReads)),
+			newHBoxWithLabelAndEntry("No-Retry Read Hits", to!(string)(cache.noRetryReadHits)));
+					
+		HBox hbox7 = hpack(
+			newHBoxWithLabelAndEntry("No-Retry Writes", to!(string)(cache.noRetryWrites)),
+			newHBoxWithLabelAndEntry("No-Retry Write Hits", to!(string)(cache.noRetryWriteHits)));
+	
+		return hpack(new Label(cache.name), new VSeparator(), vpack(hbox0, hbox1, hbox2, hbox3, hbox4, hbox5, hbox6, hbox7));
+	}
+	
+	void newSimulationStat(SimulationStat simulationStat) {
+		this.comboBoxSet.appendText(simulationStat.title);
+		
+		VBox vboxSimulation = new VBox(false, 6);
+		
+		HBox hbox0 = hpack(
+			newHBoxWithLabelAndEntry("Title:", simulationStat.title),
+			newHBoxWithLabelAndEntry("Cwd:", simulationStat.cwd));
+		
+		vboxSimulation.packStart(hbox0, false, true, 0);
+		
+		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+		
+		//////////////////////
+		
+		VBox vboxProcessor = new VBox(false, 6);
+		
+		Widget[] vboxesCore;
+		
+		foreach(i, core; simulationStat.processor.cores) {
+			vboxesCore ~= hpack(
+				new Label(format("core-%d", i)),
+				new VSeparator(),
+				vpack(this.newCache(core.iCache), this.newCache(core.dCache)));
+		}
+		
+		VBox vboxCores = vpack2(vboxesCore);
+		
+		vboxProcessor.packStart(vboxCores, false, true, 6);
+	
+		vboxProcessor.packStart(new HSeparator(), false, true, 4);
+		
+		Widget[] vboxesContext;
+		
+		foreach(i, context; simulationStat.processor.contexts) {
+			vboxesContext ~= hpack(
+				new Label(format("context-%d", i)),
+				new VSeparator(),
+				newHBoxWithLabelAndEntry("Total Instructions Committed:", to!(string)(context.totalInsts))); 		
+		}
+		
+		VBox vboxContexts = vpack2(vboxesContext);
+		
+		vboxProcessor.packStart(vboxContexts, false, true, 6);
+		
+		vboxSimulation.packStart(vboxProcessor, false, true, 6);
+			
+		//////////////////////
+		
+		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+		
+		vboxSimulation.packStart(newCache(simulationStat.l2Cache), false, true, 6);
+			
+		//////////////////////
+		
+		HBox hbox13 = hpack(
+			newHBoxWithLabelAndEntry("Reads:", to!(string)(simulationStat.mainMemory.reads)),
+			newHBoxWithLabelAndEntry("Writes:", to!(string)(simulationStat.mainMemory.writes)),
+			newHBoxWithLabelAndEntry("Accesses:", to!(string)(simulationStat.mainMemory.accesses)));
+		
+		HBox hboxMainMemory = hpack(new Label("Main Memory"), new VSeparator(), vpack(hbox13));
+		
+		vboxSimulation.packStart(hboxMainMemory, false, true, 6);
+		
+		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+			
+		//////////////////////
+			
+		ScrolledWindow scrolledWindow = new ScrolledWindow();
+		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
+		
+		scrolledWindow.addWithViewport(vboxSimulation);
+		
+		this.notebookSets.appendPage(scrolledWindow, simulationStat.title);
+		
+		this.notebookSets.hideAll();
+		this.notebookSets.showAll();
+	}
 }

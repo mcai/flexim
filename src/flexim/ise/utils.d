@@ -77,7 +77,8 @@ VBox vpack2(T)(T[] widgets) {
 }
 
 HBox newHBoxWithLabelAndEntry(string labelText, string entryText, void delegate(string) entryChangedAction = null) {
-	Label label = new Label(labelText);
+	Label label = new Label("<b>" ~ labelText ~ "</b>");
+	label.setUseMarkup(true);
 	Entry entry = new Entry(entryText);
 	entry.addOnChanged(delegate void(EditableIF)
 		{
@@ -86,13 +87,14 @@ HBox newHBoxWithLabelAndEntry(string labelText, string entryText, void delegate(
 			}
 		});
 
-	entry.setSensitive(entryChangedAction !is null);
+	entry.setEditable(entryChangedAction !is null);
 	
 	return hpack(label, entry);
 }
 
 HBox newHBoxWithLabelAndSpinButton(T)(string labelText, T minEntryValue, T maxEntryValue, T entryStep, T initialEntryValue, void delegate(T newText) spinButtonValueChangedAction = null) {
-	Label label = new Label(labelText);
+	Label label = new Label("<b>" ~ labelText ~ "</b>");
+	label.setUseMarkup(true);
 	SpinButton spinButton = new SpinButton(cast(double) minEntryValue, cast(double) maxEntryValue, entryStep);
 	spinButton.setValue(cast(double) initialEntryValue);
 	spinButton.setDigits(0);
@@ -103,7 +105,7 @@ HBox newHBoxWithLabelAndSpinButton(T)(string labelText, T minEntryValue, T maxEn
 			}
 		});
 
-	spinButton.setSensitive(spinButtonValueChangedAction !is null);
+	spinButton.setEditable(spinButtonValueChangedAction !is null);
 	
 	return hpack(label, spinButton);
 }
