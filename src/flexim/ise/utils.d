@@ -38,6 +38,57 @@ void guiActionNotImplemented(Window parent, string text) {
 	d.destroy();
 }
 
+HBox hpack(T...)(T widgets) {
+	HBox hbox = new HBox(false, 6);
+	
+	foreach(widget; widgets) {
+		if(is(typeof(widget) == Label) || is(typeof(widget) == VSeparator)) {
+			hbox.packStart(widget, false, false, 0);
+		}
+		else if(is(typeof(widget) == Entry)) {
+			hbox.packStart(widget, true, true, 0);
+		}
+		else {
+			hbox.packStart(widget, true, true, 0);
+		}
+	}
+	
+	return hbox;
+}
+
+VBox vpack(T...)(T widgets) {
+	VBox vbox = new VBox(false, 6);
+	
+	foreach(widget; widgets) {
+		vbox.packStart(widget, false, true, 0);
+	}
+	
+	return vbox;
+}
+
+VBox vpack2(T)(T[] widgets) {
+	VBox vbox = new VBox(false, 6);
+	
+	foreach(widget; widgets) {
+		vbox.packStart(widget, false, true, 0);
+	}
+	
+	return vbox;
+}
+
+HBox newHBoxWithLabelAndEntry(string labelText, string entryText, void delegate(string) entryChangedAction = null) {
+	Label label = new Label(labelText);
+	Entry entry = new Entry(entryText);
+	entry.addOnChanged(delegate void(EditableIF)
+		{
+			if(entryChangedAction !is null) {
+				entryChangedAction(entry.getText());
+			}
+		});
+	
+	return hpack(label, entry);
+}
+
 void setupTextComboBox(ComboBox comboBox) {
 	GType[] types;
 	types ~= GType.STRING;

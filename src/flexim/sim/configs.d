@@ -48,6 +48,14 @@ class CacheConfig: Config!(CacheConfig) {
 	string name;
 	uint level, numSets, assoc, blockSize, hitLatency, missLatency;
 	CacheReplacementPolicy policy;
+	
+	static CacheConfig newL1(string name) {
+		return new CacheConfig(name, 0, 64, 4, 64, 1, 3, CacheReplacementPolicy.LRU);
+	}
+	
+	static CacheConfig newL2() {
+		return new CacheConfig("l2", 1, 1024, 4, 64, 4, 7, CacheReplacementPolicy.LRU);
+	}
 }
 
 class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) {
@@ -133,20 +141,17 @@ class MainMemoryConfigXMLSerializer: XMLSerializer!(MainMemoryConfig) {
 
 class ContextConfig: Config!(ContextConfig) {
 	this(string binariesDir, Benchmark workload) {
-		this.binariesDir = binariesDir;
-		this.workload = workload;
+		this(binariesDir, workload.suite.title, workload.title);
 	}
 	
 	this(string binariesDir, string benchmarkSuiteTitle, string benchmarkTitle) {
-		this(binariesDir, benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle]);
+		this.binariesDir = binariesDir;
+		this.benchmarkSuiteTitle = benchmarkSuiteTitle;
+		this.benchmarkTitle = benchmarkTitle;
 	}
 	
-	string benchmarkSuiteTitle() {
-		return this.workload.suite.title;
-	}
-	
-	string benchmarkTitle() {
-		return this.workload.title;
+	Benchmark workload() {
+		return benchmarkSuites[this.benchmarkSuiteTitle][this.benchmarkTitle];
 	}
 	
 	string exe() {
@@ -174,8 +179,7 @@ class ContextConfig: Config!(ContextConfig) {
 			this.binariesDir, this.benchmarkSuiteTitle, this.benchmarkTitle);
 	}
 
-	string binariesDir;
-	Benchmark workload;
+	string binariesDir, benchmarkSuiteTitle, benchmarkTitle;
 }
 
 class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {

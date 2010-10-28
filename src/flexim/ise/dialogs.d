@@ -162,41 +162,30 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 	
 	void newBenchmarkSuite(BenchmarkSuite benchmarkSuite) {
 		this.comboBoxSet.appendText(benchmarkSuite.title);
+		
+		VBox vboxBenchmarkSuite = new VBox(false, 6);
+		
+		HBox hbox0 = hpack(
+			newHBoxWithLabelAndEntry("Title: ", benchmarkSuite.title, delegate void(string entryText)
+				{
+					benchmarkSuites.remove(benchmarkSuite.title);
+					benchmarkSuite.title = entryText;
+					benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
 					
-		VBox vboxBenchmarkListContainer = new VBox(false, 0);
+					int index = this.comboBoxSet.getActive();
+					this.comboBoxSet.removeText(index);
+					this.comboBoxSet.insertText(index, benchmarkSuite.title);
+					this.comboBoxSet.setActive(index);
+				}),
+			newHBoxWithLabelAndEntry("Cwd: ", benchmarkSuite.cwd, delegate void(string entryText)
+				{
+					benchmarkSuite.cwd = entryText;
+				}));
 		
-		HBox boxProperties = new HBox(false, 6);
-		
-		Label labelTitle = new Label("Title");
-		Entry entryTitle = new Entry(benchmarkSuite.title);
-		entryTitle.addOnChanged(delegate void(EditableIF)
-			{
-				benchmarkSuites.remove(benchmarkSuite.title);
-				benchmarkSuite.title = entryTitle.getText();
-				benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
-				
-				int index = this.comboBoxSet.getActive();
-				this.comboBoxSet.removeText(index);
-				this.comboBoxSet.insertText(index, benchmarkSuite.title);
-				this.comboBoxSet.setActive(index);
-			});
-		
-		Label labelCwd = new Label("Cwd");
-		Entry entryCwd = new Entry(benchmarkSuite.cwd);
-		entryCwd.addOnChanged(delegate void(EditableIF)
-			{
-				benchmarkSuite.cwd = entryCwd.getText();
-			});
-		
-		boxProperties.packStart(labelTitle, false, false, 0);
-		boxProperties.packStart(entryTitle, true, true, 0);
-		boxProperties.packStart(labelCwd, false, false, 0);
-		boxProperties.packStart(entryCwd, true, true, 0);
-		
-		VBox vboxBenchmarkList = new VBox(false, 6);
+		VBox vboxBenchmarks = new VBox(false, 6);
 		
 		foreach(benchmark; benchmarkSuite.benchmarks) {
-			this.newBenchmark(benchmark, vboxBenchmarkList);
+			this.newBenchmark(benchmark, vboxBenchmarks);
 		}
 		
 		HBox hboxButtonAdd = new HBox(false, 6);
@@ -212,18 +201,18 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 				
 				Benchmark benchmark = new Benchmark(format("benchmark%d", currentBenchmarkId), "", "", "", "", "");
 				benchmarkSuite.register(benchmark);
-				this.newBenchmark(benchmark, vboxBenchmarkList);
+				this.newBenchmark(benchmark, vboxBenchmarks);
 			});
 		hboxButtonAdd.packEnd(buttonAdd, false, false, 0);
 		
-		vboxBenchmarkListContainer.packStart(boxProperties, false, true, 6);
-		vboxBenchmarkListContainer.packStart(vboxBenchmarkList, false, true, 0);
-		vboxBenchmarkListContainer.packStart(hboxButtonAdd, false, true, 6);
+		vboxBenchmarkSuite.packStart(hbox0, false, true, 6);
+		vboxBenchmarkSuite.packStart(vboxBenchmarks, false, true, 0);
+		vboxBenchmarkSuite.packStart(hboxButtonAdd, false, true, 6);
 		
 		ScrolledWindow scrolledWindow = new ScrolledWindow();
 		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
 		
-		scrolledWindow.addWithViewport(vboxBenchmarkListContainer);
+		scrolledWindow.addWithViewport(vboxBenchmarkSuite);
 		
 		this.notebookSets.appendPage(scrolledWindow, benchmarkSuite.title);
 		
@@ -249,67 +238,38 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 		vbox2.packStart(labelBenchmarkTitle, false, false, 0);
 		vbox2.packStart(buttonRemoveBenchmark, false, false, 0);
 		
-		HBox hbox1 = new HBox(false, 6);
-		
-		Label labelTitle = new Label("Title: ");
-		Entry entryTitle = new Entry(benchmark.title);
-		entryTitle.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.suite.benchmarks.remove(benchmark.title);
-				benchmark.title = entryTitle.getText();
-				benchmark.suite.register(benchmark);
-				labelBenchmarkTitle.setText(benchmark.title);
-			});
-		
-		Label labelCwd = new Label("Cwd: ");
-		Entry entryCwd = new Entry(benchmark.cwd);
-		entryCwd.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.cwd = entryCwd.getText();
-			});
-		
-		hbox1.packStart(labelTitle, false, false, 0);
-		hbox1.packStart(entryTitle, true, true, 0);
-		hbox1.packStart(labelCwd, false, false, 0);
-		hbox1.packStart(entryCwd, true, true, 0);
-		
-		HBox hbox2 = new HBox(false, 6);
-		
-		Label labelExe = new Label("Exe: ");
-		Entry entryExe = new Entry(benchmark.exe);
-		
-		Label labelArgsLiteral = new Label("Args in Literal: ");
-		Entry entryArgsLiteral = new Entry(benchmark.argsLiteral);
-		entryArgsLiteral.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.argsLiteral = entryArgsLiteral.getText();
-			});
-		
-		hbox2.packStart(labelExe, false, false, 0);
-		hbox2.packStart(entryExe, true, true, 0);
-		hbox2.packStart(labelArgsLiteral, false, false, 0);
-		hbox2.packStart(entryArgsLiteral, true, true, 0);
-		
-		HBox hbox3 = new HBox(false, 6);
-		
-		Label labelStdin = new Label("Stdin: ");
-		Entry entryStdin = new Entry(benchmark.stdin);
-		entryStdin.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.stdin = entryStdin.getText();
-			});
-		
-		Label labelStdout = new Label("Stdout: ");
-		Entry entryStdout = new Entry(benchmark.stdout);
-		entryStdout.addOnChanged(delegate void(EditableIF)
-			{
-				benchmark.stdout = entryStdout.getText();
-			});
-		
-		hbox3.packStart(labelStdin, false, false, 0);
-		hbox3.packStart(entryStdin, true, true, 0);
-		hbox3.packStart(labelStdout, false, false, 0);
-		hbox3.packStart(entryStdout, true, true, 0);
+		HBox hbox1 = hpack(
+			newHBoxWithLabelAndEntry("Title: ", benchmark.title, delegate void(string entryText)
+				{
+					benchmark.suite.benchmarks.remove(benchmark.title);
+					benchmark.title = entryText;
+					benchmark.suite.register(benchmark);
+					labelBenchmarkTitle.setText(benchmark.title);
+				}),
+			newHBoxWithLabelAndEntry("Cwd: ", benchmark.cwd, delegate void(string entryText)
+				{
+					benchmark.cwd = entryText;
+				}));
+				
+		HBox hbox2 = hpack(
+			newHBoxWithLabelAndEntry("Exe: ", benchmark.exe, delegate void(string entryText)
+				{
+					benchmark.exe = entryText;
+				}),
+			newHBoxWithLabelAndEntry("Args in Literal: ", benchmark.argsLiteral, delegate void(string entryText)
+				{
+					benchmark.argsLiteral = entryText;
+				}));
+						
+		HBox hbox3 = hpack(
+			newHBoxWithLabelAndEntry("Stdin: ", benchmark.stdin, delegate void(string entryText)
+				{
+					benchmark.stdin = entryText;
+				}),
+			newHBoxWithLabelAndEntry("Stdout: ", benchmark.stdout, delegate void(string entryText)
+				{
+					benchmark.stdout = entryText;
+				}));
 		
 		VBox vbox = new VBox(false, 6);
 		vbox.packStart(hbox1, false, true, 0);
@@ -372,11 +332,18 @@ class DialogEditSetSimulations : DialogEditSet {
 			currentSimulationId++;
 		}while(format("simulation%d", currentSimulationId) in simulationConfigs);
 		
-		/*SimulationConfig simulationConfig = new SimulationConfig(format("simulation%d", currentSimulationId), "");
-		simulationConfig.processorConfig = new ProcessorConfig(2000000, 2000000, 7200, 1, 1);
+		ProcessorConfig processor = new ProcessorConfig(2000000, 2000000, 7200, 1);
 		
+		CoreConfig core0 = new CoreConfig(CacheConfig.newL1("l1I-0"), CacheConfig.newL1("l1D-0"));
+		processor.cores ~= core0;
 		
-		simulationConfig.memorySystemConfig = new MemorySystemConfig();
+		ContextConfig context0 = new ContextConfig("../tests/benchmarks", "WCETBench", "fir");
+		processor.contexts ~= context0;
+		
+		CacheConfig l2Cache = CacheConfig.newL2();
+		MainMemoryConfig mainMemory = new MainMemoryConfig(400);
+		
+		SimulationConfig simulationConfig = new SimulationConfig(format("simulation%d", currentSimulationId), "", processor, l2Cache, mainMemory);
 		
 		simulationConfigs[simulationConfig.title] = simulationConfig;
 		this.newSimulationConfig(simulationConfig);
@@ -384,7 +351,7 @@ class DialogEditSetSimulations : DialogEditSet {
 		int indexOfSimulationConfig = simulationConfigs.length - 1;
 		
 		this.comboBoxSet.setActive(indexOfSimulationConfig);
-		this.notebookSets.setCurrentPage(indexOfSimulationConfig);*/
+		this.notebookSets.setCurrentPage(indexOfSimulationConfig);
 	}
 	
 	override void onButtonSetRemoveClicked() {
@@ -410,77 +377,167 @@ class DialogEditSetSimulations : DialogEditSet {
 		}
 	}
 	
+	HBox newCache(CacheConfig cache) {
+		HBox hbox0 = hpack(
+			newHBoxWithLabelAndEntry("Name:", cache.name), 
+			newHBoxWithLabelAndEntry("Level:", to!(string)(cache.level), delegate void(string entryText)
+			{
+				cache.level = to!(uint)(entryText);
+			}));
+		
+		HBox hbox1 = hpack(
+			newHBoxWithLabelAndEntry("Number of Sets:", to!(string)(cache.numSets), delegate void(string entryText)
+			{
+				cache.numSets = to!(uint)(entryText);
+			}),
+			newHBoxWithLabelAndEntry("Associativity:", to!(string)(cache.assoc), delegate void(string entryText)
+			{
+				cache.assoc = to!(uint)(entryText);
+			}), 
+			newHBoxWithLabelAndEntry("Block Size:", to!(string)(cache.blockSize), delegate void(string entryText)
+			{
+				cache.blockSize = to!(uint)(entryText);
+			}));
+		
+		HBox hbox2 = hpack(
+			newHBoxWithLabelAndEntry("Hit Latency:", to!(string)(cache.hitLatency), delegate void(string entryText)
+			{
+				cache.hitLatency = to!(uint)(entryText);
+			}),
+			newHBoxWithLabelAndEntry("Miss Latency:", to!(string)(cache.missLatency), delegate void(string entryText)
+			{
+				cache.missLatency = to!(uint)(entryText);
+			}),
+			newHBoxWithLabelAndEntry("Replacement Policy", to!(string)(cache.policy), delegate void(string entryText)
+			{
+				cache.policy = cast(CacheReplacementPolicy) entryText;
+			}));
+				
+		return hpack(new Label(cache.name), new VSeparator(), vpack(hbox0, hbox1, hbox2));
+	}
+	
 	void newSimulationConfig(SimulationConfig simulationConfig) {
 		this.comboBoxSet.appendText(simulationConfig.title);
 		
-		VBox vboxSimulationConfigPropertiesContainer = new VBox(false, 0);
+		VBox vboxSimulation = new VBox(false, 6);
 		
-		HBox boxProperties = new HBox(false, 6);
+		HBox hbox0 = hpack(
+			newHBoxWithLabelAndEntry("Title: ", simulationConfig.title, delegate void(string entryText)
+				{
+					simulationConfigs.remove(simulationConfig.title);
+					simulationConfig.title = entryText;
+					simulationConfigs[simulationConfig.title] = simulationConfig;
+					
+					int index = this.comboBoxSet.getActive();
+					this.comboBoxSet.removeText(index);
+					this.comboBoxSet.insertText(index, simulationConfig.title);
+					this.comboBoxSet.setActive(index);
+				}),
+			newHBoxWithLabelAndEntry("Cwd: ", simulationConfig.cwd, delegate void(string entryText)
+				{
+					simulationConfig.cwd = entryText;
+				}));
 		
-		Label labelTitle = new Label("Title");
-		Entry entryTitle = new Entry(simulationConfig.title);
-		entryTitle.addOnChanged(delegate void(EditableIF)
+		vboxSimulation.packStart(hbox0, false, true, 6);
+		
+		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+		
+		//////////////////////
+		
+		VBox vboxProcessor = new VBox(false, 6);
+		
+		HBox hbox1 = hpack(
+			newHBoxWithLabelAndEntry("Max Cycle:", format("%d", simulationConfig.processor.maxCycle), delegate void(string entryText)
 			{
-				simulationConfigs.remove(simulationConfig.title);
-				simulationConfig.title = entryTitle.getText();
-				simulationConfigs[simulationConfig.title] = simulationConfig;
-				
-				int index = this.comboBoxSet.getActive();
-				this.comboBoxSet.removeText(index);
-				this.comboBoxSet.insertText(index, simulationConfig.title);
-				this.comboBoxSet.setActive(index);
-			});
-		
-		Label labelCwd = new Label("Cwd");
-		Entry entryCwd = new Entry(simulationConfig.cwd);
-		entryCwd.addOnChanged(delegate void(EditableIF)
+				simulationConfig.processor.maxCycle = to!(ulong)(entryText);
+			}),
+			newHBoxWithLabelAndEntry("Max Insts:", format("%d", simulationConfig.processor.maxInsts), delegate void(string entryText)
 			{
-				simulationConfig.cwd = entryCwd.getText();
-			});
+				simulationConfig.processor.maxInsts = to!(ulong)(entryText);
+			}),
+			newHBoxWithLabelAndEntry("Max Time:", format("%d", simulationConfig.processor.maxTime), delegate void(string entryText)
+			{
+				simulationConfig.processor.maxTime = to!(ulong)(entryText);
+			}),
+			newHBoxWithLabelAndEntry("Number of Threads per Core:", format("%d", simulationConfig.processor.numThreadsPerCore), delegate void(string entryText)
+			{
+				simulationConfig.processor.numThreadsPerCore = to!(uint)(entryText);
+			}));
+			
+		vboxProcessor.packStart(hbox1, false, true, 6);
 		
-		boxProperties.packStart(labelTitle, false, false, 0);
-		boxProperties.packStart(entryTitle, true, true, 0);
-		boxProperties.packStart(labelCwd, false, false, 0);
-		boxProperties.packStart(entryCwd, true, true, 0);
+		//////////////////////
 		
-		VBox vboxProcessorConfig = new VBox(false, 6);
+		Widget[] vboxesCore;
 		
-		foreach(contextConfig; simulationConfig.processor.contexts) {
-			this.newContextConfig(contextConfig, vboxProcessorConfig);
+		foreach(i, core; simulationConfig.processor.cores) {
+			vboxesCore ~= hpack(
+				new Label(format("core-%d", i)),
+				new VSeparator(),
+				vpack(newCache(core.iCache), newCache(core.dCache)));
 		}
 		
-		HBox hboxButtonAddContextConfig = new HBox(false, 6);
+		VBox vboxCores = vpack2(vboxesCore);
+			
+		vboxProcessor.packStart(vboxCores, false, true, 6);
 		
-		Button buttonAddContextConfig = new Button("Add Context");
-		buttonAddContextConfig.addOnClicked(delegate void(Button)
+		Widget[] vboxesContext;
+		
+		foreach(i, context; simulationConfig.processor.contexts) {
+			vboxesContext ~= hpack(
+				new Label(format("context-%d", i)),
+				new VSeparator(), 
+				newHBoxWithLabelAndEntry("Binaries Directory:", context.binariesDir, delegate void(string entryText)
+				{
+					context.binariesDir = entryText;
+				}),
+				newHBoxWithLabelAndEntry("Benchmark Suite Title:", context.benchmarkSuiteTitle, delegate void(string entryText)
+				{
+					context.benchmarkSuiteTitle = entryText;
+				}),
+				newHBoxWithLabelAndEntry("Benchmark Title:", context.benchmarkTitle, delegate void(string entryText)
+				{
+					context.benchmarkTitle = entryText;
+				}));
+		}
+		
+		VBox vboxContexts = vpack2(vboxesContext);
+		
+		vboxProcessor.packStart(vboxContexts, false, true, 6);
+		
+		vboxSimulation.packStart(vboxProcessor, false, true, 6);
+			
+		//////////////////////
+		
+		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+		
+		vboxSimulation.packStart(newCache(simulationConfig.l2Cache), false, true, 6);
+			
+		//////////////////////
+		
+		HBox hbox13 = hpack(
+			newHBoxWithLabelAndEntry("Latency:", to!(string)(simulationConfig.mainMemory.latency), delegate void(string entryText)
 			{
-				/*ContextConfig contextConfig = new ContextConfig(simulationConfig.processorConfig.contexts.length, "", "", "");
-				simulationConfig.processorConfig.contexts ~= contextConfig;
-				this.newContextConfig(contextConfig, vboxProcessorConfig);*/
-			});
-		hboxButtonAddContextConfig.packEnd(buttonAddContextConfig, false, false, 0);
+				simulationConfig.mainMemory.latency = to!(uint)(entryText);
+			}));
+			
+		HBox hboxMainMemory = hpack(new Label("Main Memory"), new VSeparator(), vpack(hbox13));
 		
-		vboxSimulationConfigPropertiesContainer.packStart(boxProperties, false, true, 6);
-		vboxSimulationConfigPropertiesContainer.packStart(vboxProcessorConfig, false, true, 0);
-		vboxSimulationConfigPropertiesContainer.packStart(hboxButtonAddContextConfig, false, true, 6);
+		vboxSimulation.packStart(hboxMainMemory, false, true, 6);
+		
+		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+			
+		//////////////////////
 			
 		ScrolledWindow scrolledWindow = new ScrolledWindow();
 		scrolledWindow.setPolicy(GtkPolicyType.AUTOMATIC, GtkPolicyType.AUTOMATIC);
 		
-		scrolledWindow.addWithViewport(vboxSimulationConfigPropertiesContainer);
+		scrolledWindow.addWithViewport(vboxSimulation);
 		
 		this.notebookSets.appendPage(scrolledWindow, simulationConfig.title);
 		
 		this.notebookSets.hideAll();
 		this.notebookSets.showAll();
-	}
-	
-	void newContextConfig(ContextConfig contextConfig, VBox vboxProcessorConfig) {
-		
-	}
-	
-	void newCacheConfig(CacheConfig cacheConfig, VBox vboxMemorySystemConfig) {
-		
 	}
 	
 	int currentSimulationId = -1;
