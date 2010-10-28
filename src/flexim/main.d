@@ -29,6 +29,14 @@ import std.path;
 
 import std.concurrency, std.stdio, std.typecons;
 
+Simulation runSimulation(string simulationName) {	
+	logging.infof(LogCategory.SIMULATOR, "runSimulation(simulationName=%s)", simulationName);
+	SimulationConfig simulationConfig = SimulationConfig.loadXML("../configs/simulations", simulationName ~ ".config.xml");
+	Simulation simulation = new Simulation(simulationConfig);
+	simulation.execute();
+	return simulation;
+}
+
 void mainConsole(string[] args) {
 	string simulationName = "WCETBench-fir-1x1";
 	//string simulationName = "WCETBench-fir-2x1";
@@ -40,8 +48,12 @@ void mainConsole(string[] args) {
 	getopt(args, "simulation", &simulationName);
 	
 	loadConfigsAndStats(delegate void(string text){logging.info(LogCategory.SIMULATOR, text);}, false);
-	
-	runSimulation(simulationName);
+
+	logging.infof(LogCategory.SIMULATOR, "runSimulation(simulationName=%s)", simulationName);
+
+	SimulationConfig simulationConfig = SimulationConfig.loadXML("../configs/simulations", simulationName ~ ".config.xml");
+	Simulation simulation = new Simulation(simulationConfig);
+	simulation.execute();
 	
 	saveConfigsAndStats();
 }

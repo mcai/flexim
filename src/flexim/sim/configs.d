@@ -150,10 +150,6 @@ class ContextConfig: Config!(ContextConfig) {
 		this.benchmarkTitle = benchmarkTitle;
 	}
 	
-	Benchmark workload() {
-		return benchmarkSuites[this.benchmarkSuiteTitle][this.benchmarkTitle];
-	}
-	
 	string exe() {
 		return this.workload.exe;
 	}
@@ -178,8 +174,20 @@ class ContextConfig: Config!(ContextConfig) {
 		return format("ContextConfig[binariesDir=%s, benchmarkSuiteTitle=%s, benchmarkTitle=%s]",
 			this.binariesDir, this.benchmarkSuiteTitle, this.benchmarkTitle);
 	}
+	
+	string benchmarkTitle() {
+		return this.m_benchmarkTitle;
+	}
+	
+	void benchmarkTitle(string value) {
+		this.m_benchmarkTitle = value;
+		
+		this.workload = benchmarkSuites[this.benchmarkSuiteTitle][this.benchmarkTitle];
+	}
 
-	string binariesDir, benchmarkSuiteTitle, benchmarkTitle;
+	string binariesDir, benchmarkSuiteTitle;
+	private string m_benchmarkTitle;
+	Benchmark workload;
 }
 
 class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {

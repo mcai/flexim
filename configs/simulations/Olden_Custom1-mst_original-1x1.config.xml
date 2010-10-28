@@ -2,9 +2,9 @@
 <SimulationConfig title="Olden_Custom1-mst_original-1x1" cwd="../stats/simulations">
    <ProcessorConfig maxInsts="2000000" maxTime="7200" numThreadsPerCore="1" maxCycle="2000000">
       <CoreConfig>
-         <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-0" numSets="64" hitLatency="1">
-         </CacheConfig>
          <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1I-0" numSets="64" hitLatency="1">
+         </CacheConfig>
+         <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-0" numSets="64" hitLatency="1">
          </CacheConfig>
       </CoreConfig>
       <ContextConfig benchmarkSuiteTitle="Olden_Custom1" binariesDir="../tests/benchmarks" benchmarkTitle="mst_original">

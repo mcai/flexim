@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/simulations" duration="64217">
+   <ProcessorStat>
+      <CoreStat>
+         <CacheStat hits="280068" noRetryWrites="0" noRetryAccesses="280358" writeHits="0" evictions="53" nonblockingReads="280358" reads="280358" blockingReads="0" name="l1I-0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="280068" nonblockingWrites="0" blockingWrites="0" noRetryReads="280358" noRetryHits="280068" readRetries="0" accesses="280358" noRetryReadHits="280068">
+         </CacheStat>
+         <CacheStat hits="2256250" noRetryWrites="205542" noRetryAccesses="660383" writeHits="1616736" evictions="19070" nonblockingReads="657835" reads="657835" blockingReads="0" name="l1D-0" writeRetries="0" writes="1622097" noRetryWriteHits="203374" readHits="639514" nonblockingWrites="1622097" blockingWrites="0" noRetryReads="454841" noRetryHits="641005" readRetries="0" accesses="2279932" noRetryReadHits="437631">
+         </CacheStat>
+      </CoreStat>
+      <ContextStat totalInsts="2316082">
+      </ContextStat>
+   </ProcessorStat>
+   <CacheStat hits="36343" noRetryWrites="21252" noRetryAccesses="38739" writeHits="19170" evictions="0" nonblockingReads="17487" reads="17487" blockingReads="0" name="l2" writeRetries="0" writes="21252" noRetryWriteHits="19170" readHits="17173" nonblockingWrites="21252" blockingWrites="0" noRetryReads="17487" noRetryHits="36343" readRetries="0" accesses="38739" noRetryReadHits="17173">
+   </CacheStat>
+   <MainMemoryStat writes="2082" reads="314" accesses="2396">
+   </MainMemoryStat>
+</SimulationStat>

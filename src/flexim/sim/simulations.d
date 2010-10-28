@@ -36,7 +36,7 @@ class Simulation: Reproducible {
 	this(SimulationConfig config) {
 		this.config = config;
 		
-		this.stat = new SimulationStat(this.title, this.cwd, config.processor.cores.length);
+		simulationStats[this.config.title] = this.stat = new SimulationStat(this.title, this.cwd, config.processor.cores.length);
 	}
 	
 	void execute() {
@@ -54,7 +54,6 @@ class Simulation: Reproducible {
 	}
 	
 	override void afterRun() {
-		SimulationStat.saveXML(this.stat, this.cwd, this.title ~ ".stat.xml");
 	}
 	
 	override string toString() {
@@ -71,19 +70,6 @@ class Simulation: Reproducible {
 	
 	SimulationConfig config;
 	SimulationStat stat;
-}
-
-void runSimulation(string simulationName, void delegate(string) del = null) {	
-	logging.infof(LogCategory.SIMULATOR, "runSimulation(simulationName=%s)", simulationName);
-	
-	if(del !is null) {
-		del(format("runSimulation(simulationName=%s)", simulationName));
-	}
-	
-	SimulationConfig simulationConfig = SimulationConfig.loadXML("../configs/simulations", simulationName ~ ".config.xml");
-	Simulation simulation = new Simulation(simulationConfig);
-	simulationStats[simulation.stat.title] = simulation.stat;
-	simulation.execute();
 }
 
 BenchmarkSuite[string] benchmarkSuites;
@@ -141,26 +127,3 @@ void saveConfigsAndStats() {
 		SimulationStat.saveXML(simulationStat);
 	}
 }
-
-/*
-void runSimulationCode() {
-	string oldButtonLabel = button.getLabel();
-	
-	core.thread.Thread threadRunSimulation = new core.thread.Thread(
-		{
-			runSimulation(this.selectedSimulationName, delegate void(string text)
-				{
-					this.startup.mainWindow.setTitle(text);
-				}); //TODO
-			
-			this.buttonSimulationStatView.setSensitive(true);
-			this.buttonSimulationRun.setSensitive(true);
-			this.buttonSimulationRun.setLabel(oldButtonLabel);
-		});
-
-	this.buttonSimulationStatView.setSensitive(false);
-	this.buttonSimulationRun.setSensitive(false);
-	this.buttonSimulationRun.setLabel("Simulating.. Please Wait");
-	threadRunSimulation.start();
-}
-*/

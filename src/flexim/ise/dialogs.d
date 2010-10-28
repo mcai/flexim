@@ -302,6 +302,7 @@ class DialogEditSetSimulations : DialogEditSet {
 		Button buttonAddSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonAddSimulation");
 		Button buttonRemoveSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveSimulation");
 		VBox vboxSimulation = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulation");
+		this.buttonSimulate = getBuilderObject!(Button, GtkButton)(builder, "buttonSimulate");
 		Button buttonCloseDialogEditSimulations = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditSimulations");
 			
 		super(dialogEditSimulationConfigs, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation, buttonCloseDialogEditSimulations);
@@ -327,6 +328,29 @@ class DialogEditSetSimulations : DialogEditSet {
 		foreach(simulationConfigTitle, simulationConfig; simulationConfigs) {
 			this.newSimulationConfig(simulationConfig);
 		}
+
+		this.buttonSimulate.addOnClicked(delegate void(Button)
+			{
+				string oldButtonLabel = this.buttonSimulate.getLabel();
+				
+				string simulationConfigTitle = this.comboBoxSet.getActiveText();
+				SimulationConfig simulationConfig = simulationConfigs[simulationConfigTitle];
+				
+				Simulation simulation = new Simulation(simulationConfig);
+				
+				core.thread.Thread threadRunSimulation = new core.thread.Thread(
+					{
+						simulation.execute();
+								
+						this.buttonSimulate.setSensitive(true);
+						this.buttonSimulate.setLabel(oldButtonLabel);
+					});
+	
+				this.buttonSimulate.setSensitive(false);
+				this.buttonSimulate.setLabel("Simulating.. Please Wait");
+				
+				threadRunSimulation.start();
+			});
 		
 		this.notebookSets.setCurrentPage(0);
 		this.comboBoxSet.setActive(0);
@@ -345,9 +369,11 @@ class DialogEditSetSimulations : DialogEditSet {
 			this.notebookSets.setCurrentPage(indexOfSimulationConfig);
 			
 			this.buttonSetRemove.setSensitive(true);
+			this.buttonSimulate.setSensitive(true);
 		}
 		else {
 			this.buttonSetRemove.setSensitive(false);
+			this.buttonSimulate.setSensitive(false);
 		}
 	}
 	
@@ -568,6 +594,8 @@ class DialogEditSetSimulations : DialogEditSet {
 	
 	uint numCoresWhenAddSimulation, numThreadsPerCoreWhenAddSimulation;
 	int currentSimulationId = -1;
+	
+	Button buttonSimulate;
 }
 
 class DialogEditSetSimulationStats: DialogEditSet {

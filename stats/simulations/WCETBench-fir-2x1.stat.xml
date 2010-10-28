@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<SimulationStat title="WCETBench-fir-2x1" cwd="../stats/simulations" duration="222">
+   <ProcessorStat>
+      <CoreStat>
+         <CacheStat hits="116" noRetryWrites="0" noRetryAccesses="164" writeHits="0" evictions="0" nonblockingReads="117" reads="165" blockingReads="48" name="l1I-0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="116" nonblockingWrites="0" blockingWrites="0" noRetryReads="164" noRetryHits="115" readRetries="0" accesses="165" noRetryReadHits="115">
+         </CacheStat>
+         <CacheStat hits="9461" noRetryWrites="117" noRetryAccesses="697" writeHits="5534" evictions="1" nonblockingReads="3934" reads="3946" blockingReads="12" name="l1D-0" writeRetries="0" writes="5556" noRetryWriteHits="97" readHits="3927" nonblockingWrites="5532" blockingWrites="24" noRetryReads="580" noRetryHits="658" readRetries="0" accesses="9502" noRetryReadHits="561">
+         </CacheStat>
+      </CoreStat>
+      <CoreStat>
+         <CacheStat hits="67" noRetryWrites="0" noRetryAccesses="115" writeHits="0" evictions="0" nonblockingReads="115" reads="115" blockingReads="0" name="l1I-1" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="67" nonblockingWrites="0" blockingWrites="0" noRetryReads="115" noRetryHits="67" readRetries="0" accesses="115" noRetryReadHits="67">
+         </CacheStat>
+         <CacheStat hits="9303" noRetryWrites="107" noRetryAccesses="681" writeHits="5396" evictions="0" nonblockingReads="3913" reads="3919" blockingReads="6" name="l1D-1" writeRetries="0" writes="5420" noRetryWriteHits="85" readHits="3907" nonblockingWrites="5404" blockingWrites="16" noRetryReads="574" noRetryHits="647" readRetries="0" accesses="9339" noRetryReadHits="562">
+         </CacheStat>
+      </CoreStat>
+      <ContextStat totalInsts="2687">
+      </ContextStat>
+      <ContextStat totalInsts="2684">
+      </ContextStat>
+   </ProcessorStat>
+   <CacheStat hits="4457" noRetryWrites="53" noRetryAccesses="181" writeHits="716" evictions="0" nonblockingReads="3802" reads="3802" blockingReads="0" name="l2" writeRetries="0" writes="727" noRetryWriteHits="42" readHits="3741" nonblockingWrites="727" blockingWrites="0" noRetryReads="128" noRetryHits="109" readRetries="0" accesses="4529" noRetryReadHits="67">
+   </CacheStat>
+   <MainMemoryStat writes="11" reads="61" accesses="72">
+   </MainMemoryStat>
+</SimulationStat>
