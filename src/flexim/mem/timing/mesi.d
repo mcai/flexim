@@ -24,12 +24,12 @@ module flexim.mem.timing.mesi;
 import flexim.all;
 
 class CoherentCache: CoherentCacheNode {
-	this(MemorySystem memorySystem, CacheConfig config) {
+	this(MemorySystem memorySystem, CacheConfig config, CacheStat stat) {
 		super(memorySystem, config.name);
 
 		this.cache = new Cache(config);
 		this.config = config;
-		this.stat = new CacheStat(this.name);
+		this.stat = stat;
 	}
 	
 	uint retryLat() {
@@ -56,39 +56,49 @@ class CoherentCache: CoherentCacheNode {
 		
 		bool hit = this.cache.findBlock(addr, set, way, tag, state, true);
 		
-		this.stat.accesses++;
+		this.stat.accesses.value = this.stat.accesses.value + 1;
 		if(hit) {
-			this.stat.hits++;
+			this.stat.hits.value = this.stat.hits.value + 1;
 		}
 		if(isRead) {
-			this.stat.reads++;
-			isBlocking ? this.stat.blockingReads++ : this.stat.nonblockingReads++;
+			this.stat.reads.value = this.stat.reads.value + 1;
+			if(isBlocking) {
+				this.stat.blockingReads.value = this.stat.blockingReads.value + 1;
+			}
+			else {
+				this.stat.nonblockingReads.value = this.stat.nonblockingReads.value + 1;
+			}
 			if(hit) {
-				this.stat.readHits++;
+				this.stat.readHits.value = this.stat.readHits.value + 1;
 			}
 		}
 		else {
-			this.stat.writes++;
-			isBlocking ? this.stat.blockingWrites++ : this.stat.nonblockingWrites++;
+			this.stat.writes.value = this.stat.writes.value + 1;
+			if(isBlocking) {
+				this.stat.blockingWrites.value = this.stat.blockingWrites.value + 1;
+			}
+			else {
+				this.stat.nonblockingWrites.value = this.stat.nonblockingWrites.value + 1;
+			}
 			if(hit) {
-				this.stat.writeHits++;
+				this.stat.writeHits.value = this.stat.writeHits.value + 1;
 			}
 		}
 		if(!isRetry) {
-			this.stat.noRetryAccesses++;
+			this.stat.noRetryAccesses.value = this.stat.noRetryAccesses.value + 1;
 			if(hit) {
-				this.stat.noRetryHits++;
+				this.stat.noRetryHits.value = this.stat.noRetryHits.value + 1;
 			}
 			if(isRead) {
-				this.stat.noRetryReads++;
+				this.stat.noRetryReads.value = this.stat.noRetryReads.value + 1;
 				if(hit) {
-					this.stat.noRetryReadHits++;
+					this.stat.noRetryReadHits.value = this.stat.noRetryReadHits.value + 1;
 				}
 			}
 			else {
-				this.stat.noRetryWrites++;
+				this.stat.noRetryWrites.value = this.stat.noRetryWrites.value + 1;
 				if(hit) {
-					this.stat.noRetryWriteHits++;
+					this.stat.noRetryWriteHits.value = this.stat.noRetryWriteHits.value + 1;
 				}
 			}
 		}
@@ -121,7 +131,7 @@ class CoherentCache: CoherentCacheNode {
 								uint dumbTag;
 								
 								if(!hasError) {
-									this.stat.evictions++;
+									this.stat.evictions.value = this.stat.evictions.value + 1;
 									this.cache.getBlock(set, way, dumbTag, state);
 									onCompletedCallback(false, set, way, state, tag, dirLock);
 								}
@@ -161,7 +171,7 @@ class CoherentCache: CoherentCacheNode {
 								onCompletedCallback();
 							}
 							else {
-								this.stat.readRetries++;
+								this.stat.readRetries.value = this.stat.readRetries.value + 1;
 								dirLock.unlock();
 								this.retry({this.load(addr, true, onCompletedCallback);});
 							}
@@ -174,7 +184,7 @@ class CoherentCache: CoherentCacheNode {
 					}
 				}
 				else {
-					this.stat.readRetries++;
+					this.stat.readRetries.value = this.stat.readRetries.value + 1;
 					this.retry({this.load(addr, true, onCompletedCallback);});
 				}
 			});
@@ -197,7 +207,7 @@ class CoherentCache: CoherentCacheNode {
 									onCompletedCallback();
 								}
 								else {
-									this.stat.writeRetries++;
+									this.stat.writeRetries.value = this.stat.writeRetries.value + 1;
 									dirLock.unlock();
 									this.retry({this.store(addr, true, onCompletedCallback);});
 								}
@@ -211,7 +221,7 @@ class CoherentCache: CoherentCacheNode {
 					}
 				}
 				else {
-					this.stat.writeRetries++;
+					this.stat.writeRetries.value = this.stat.writeRetries.value + 1;
 					this.retry({this.store(addr, true, onCompletedCallback);});
 				}
 			});

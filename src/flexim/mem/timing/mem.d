@@ -24,11 +24,11 @@ module flexim.mem.timing.mem;
 import flexim.all;
 
 class MemoryController: CoherentCacheNode {
-	this(MemorySystem memorySystem, MainMemoryConfig config) {
+	this(MemorySystem memorySystem, MainMemoryConfig config, MainMemoryStat stat) {
 		super(memorySystem, "mem");
 		
 		this.config = config;
-		this.stat = new MainMemoryStat();
+		this.stat = stat;
 	}
 	
 	override uint level() {
@@ -41,22 +41,22 @@ class MemoryController: CoherentCacheNode {
 	
 	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, void delegate(bool hasError) onReceiveReplyCallback) {
 		//logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
-		this.stat.accesses++;
-		this.stat.writes++;
+		this.stat.accesses.value = this.stat.accesses.value + 1;
+		this.stat.writes.value = this.stat.writes.value + 1;
 		this.schedule({onReceiveReplyCallback(false);}, this.latency);
 	}
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) {
 		//logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
-		this.stat.accesses++;
-		this.stat.reads++;
+		this.stat.accesses.value = this.stat.accesses.value + 1;
+		this.stat.reads.value = this.stat.reads.value + 1;
 		this.schedule({onCompletedCallback(false, false);}, this.latency);
 	}
 	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) {
 		//logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
-		this.stat.accesses++;
-		this.stat.writes++;
+		this.stat.accesses.value = this.stat.accesses.value + 1;
+		this.stat.writes.value = this.stat.writes.value + 1;
 		this.schedule({onCompletedCallback(false);}, this.latency);
 	}
 	

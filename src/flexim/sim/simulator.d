@@ -121,7 +121,10 @@ class CPUSimulator : Simulator {
 				writefln("context.cwd: %s, args: %s", context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 
-				Thread thread = new Thread(core, simulation, i * simulationConfig.processor.numThreadsPerCore + j, process);
+				uint threadNum = i * simulationConfig.processor.numThreadsPerCore + j;
+				ContextStat contextStat = simulation.stat.processor.contexts[threadNum];
+				
+				Thread thread = new Thread(core, contextStat, threadNum, process);
 				
 				core.threads ~= thread;
 				
@@ -153,12 +156,12 @@ class CPUSimulator : Simulator {
 		this.duration = counter.milliseconds();
 	}
 	
-	long duration() {
-		return this.simulation.stat.duration;
+	ulong duration() {
+		return this.simulation.stat.duration.value;
 	}
 	
-	void duration(long value) {
-		this.simulation.stat.duration = value;
+	void duration(ulong value) {
+		this.simulation.stat.duration.value = value;
 	}
 
 	Processor processor;
@@ -175,9 +178,9 @@ class MemorySystem {
 	}
 
 	void createMemoryHierarchy() {
-		this.mem = new MemoryController(this, this.simulationConfig.mainMemory);
+		this.mem = new MemoryController(this, this.simulationConfig.mainMemory, this.simulationStat.mainMemory);
 				
-		this.l2 = new CoherentCache(this, this.simulationConfig.l2Cache);
+		this.l2 = new CoherentCache(this, this.simulationConfig.l2Cache, this.simulationStat.l2Cache);
 		this.l2.next = this.mem;
 
 		this.seqIs = new Sequencer[this.endNodeCount];
@@ -187,10 +190,10 @@ class MemorySystem {
 		this.l1Ds = new CoherentCache[this.endNodeCount];
 
 		for(uint i = 0; i < this.endNodeCount; i++) {
-			CoherentCache l1I = new CoherentCache(this, this.simulationConfig.processor.cores[i].iCache);
+			CoherentCache l1I = new CoherentCache(this, this.simulationConfig.processor.cores[i].iCache, this.simulationStat.processor.cores[i].iCache);
 			Sequencer seqI = new Sequencer("seqI" ~ "-" ~ to!(string)(i), l1I);
 
-			CoherentCache l1D = new CoherentCache(this, this.simulationConfig.processor.cores[i].dCache);
+			CoherentCache l1D = new CoherentCache(this, this.simulationConfig.processor.cores[i].dCache, this.simulationStat.processor.cores[i].dCache);
 			Sequencer seqD = new Sequencer("seqD" ~ "-" ~ to!(string)(i), l1D);
 
 			this.seqIs[i] = seqI;
@@ -204,19 +207,14 @@ class MemorySystem {
 		}
 		
 		this.mmu = new MMU();
-
-		for(uint i = 0; i < this.endNodeCount; i++) {
-			this.simulation.stat.processor.cores[i].iCache = this.l1Is[i].stat;
-			this.simulation.stat.processor.cores[i].dCache = this.l1Ds[i].stat;
-		}
-
-		this.simulation.stat.l2Cache = this.l2.stat;
-		
-		this.simulation.stat.mainMemory = this.mem.stat;
 	}
 	
 	SimulationConfig simulationConfig() {
 		return this.simulation.config;
+	}
+	
+	SimulationStat simulationStat() {
+		return this.simulation.stat;
 	}
 
 	uint endNodeCount;

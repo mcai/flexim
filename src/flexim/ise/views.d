@@ -1401,7 +1401,7 @@ class Canvas: DrawingArea {
 		this.pick = false;
 		this.selectedChild = null;
 
-		this.addEvents(GdkEventMask.BUTTON_PRESS_MASK);
+		/*this.addEvents(GdkEventMask.BUTTON_PRESS_MASK);
 		this.addEvents(GdkEventMask.BUTTON_RELEASE_MASK);
 		this.addEvents(GdkEventMask.POINTER_MOTION_MASK);
 		this.addEvents(GdkEventMask.BUTTON_MOTION_MASK);
@@ -1416,7 +1416,7 @@ class Canvas: DrawingArea {
 		this.addOnSelected(delegate void(DrawableObject child)
 			{
 				this.selectedChild = child;
-			});
+			});*/
 		
 		this.paper.rect.x = 5;
 		this.paper.rect.y = 5;

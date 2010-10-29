@@ -344,6 +344,8 @@ class DialogEditSetSimulations : DialogEditSet {
 								
 						this.buttonSimulate.setSensitive(true);
 						this.buttonSimulate.setLabel(oldButtonLabel);
+						
+						simulation.stat.dispatch();
 					});
 	
 				this.buttonSimulate.setSensitive(false);
@@ -662,44 +664,44 @@ class DialogEditSetSimulationStats: DialogEditSet {
 		assert(0);
 	}
 	
-	HBox newCache(CacheStat cache) {
+	HBox newCache(CacheStat cache, string cacheName) {
 		HBox hbox0 = hpack(
-			newHBoxWithLabelAndEntry("Name:", cache.name));
+			newHBoxWithLabelAndEntry("Name:", cacheName));
 			
 		HBox hbox1 = hpack(
-			newHBoxWithLabelAndEntry("Accesses", to!(string)(cache.accesses)),
-			newHBoxWithLabelAndEntry("Hits", to!(string)(cache.hits)),
-			newHBoxWithLabelAndEntry("Evictions", to!(string)(cache.evictions)));
+			newHBoxWithLabelAndEntry2!(ulong)("Accesses", cache.accesses),
+			newHBoxWithLabelAndEntry2!(ulong)("Hits", cache.hits),
+			newHBoxWithLabelAndEntry2!(ulong)("Evictions", cache.evictions));
 				
 		HBox hbox2 = hpack(
-			newHBoxWithLabelAndEntry("Reads", to!(string)(cache.reads)),
-			newHBoxWithLabelAndEntry("Blocking Reads", to!(string)(cache.blockingReads)),
-			newHBoxWithLabelAndEntry("Nonblocking Reads", to!(string)(cache.nonblockingReads)),
-			newHBoxWithLabelAndEntry("Read Hits", to!(string)(cache.readHits)));
+			newHBoxWithLabelAndEntry2!(ulong)("Reads", cache.reads),
+			newHBoxWithLabelAndEntry2!(ulong)("Blocking Reads", cache.blockingReads),
+			newHBoxWithLabelAndEntry2!(ulong)("Nonblocking Reads", cache.nonblockingReads),
+			newHBoxWithLabelAndEntry2!(ulong)("Read Hits", cache.readHits));
 				
 		HBox hbox3 = hpack(
-			newHBoxWithLabelAndEntry("Writes", to!(string)(cache.writes)),
-			newHBoxWithLabelAndEntry("Blocking Writes", to!(string)(cache.blockingWrites)),
-			newHBoxWithLabelAndEntry("Nonblocking Writes", to!(string)(cache.nonblockingWrites)),
-			newHBoxWithLabelAndEntry("Write Hits", to!(string)(cache.writeHits)));
+			newHBoxWithLabelAndEntry2!(ulong)("Writes", cache.writes),
+			newHBoxWithLabelAndEntry2!(ulong)("Blocking Writes", cache.blockingWrites),
+			newHBoxWithLabelAndEntry2!(ulong)("Nonblocking Writes", cache.nonblockingWrites),
+			newHBoxWithLabelAndEntry2!(ulong)("Write Hits", cache.writeHits));
 				
 		HBox hbox4 = hpack(
-			newHBoxWithLabelAndEntry("Read Retries", to!(string)(cache.readRetries)),
-			newHBoxWithLabelAndEntry("Write Retries", to!(string)(cache.writeRetries)));
+			newHBoxWithLabelAndEntry2!(ulong)("Read Retries", cache.readRetries),
+			newHBoxWithLabelAndEntry2!(ulong)("Write Retries", cache.writeRetries));
 				
 		HBox hbox5 = hpack(
-			newHBoxWithLabelAndEntry("No-Retry Accesses", to!(string)(cache.noRetryAccesses)),
-			newHBoxWithLabelAndEntry("No-Retry Hits", to!(string)(cache.noRetryHits)));
+			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Accesses", cache.noRetryAccesses),
+			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Hits", cache.noRetryHits));
 				
 		HBox hbox6 = hpack(
-			newHBoxWithLabelAndEntry("No-Retry Reads", to!(string)(cache.noRetryReads)),
-			newHBoxWithLabelAndEntry("No-Retry Read Hits", to!(string)(cache.noRetryReadHits)));
+			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Reads", cache.noRetryReads),
+			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Read Hits", cache.noRetryReadHits));
 					
 		HBox hbox7 = hpack(
-			newHBoxWithLabelAndEntry("No-Retry Writes", to!(string)(cache.noRetryWrites)),
-			newHBoxWithLabelAndEntry("No-Retry Write Hits", to!(string)(cache.noRetryWriteHits)));
+			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Writes", cache.noRetryWrites),
+			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Write Hits", cache.noRetryWriteHits));
 	
-		return hpack(new Label(cache.name), new VSeparator(), vpack(hbox0, hbox1, hbox2, hbox3, hbox4, hbox5, hbox6, hbox7));
+		return hpack(new Label(cacheName), new VSeparator(), vpack(hbox0, hbox1, hbox2, hbox3, hbox4, hbox5, hbox6, hbox7));
 	}
 	
 	void newSimulationStat(SimulationStat simulationStat) {
@@ -710,7 +712,7 @@ class DialogEditSetSimulationStats: DialogEditSet {
 		HBox hbox0 = hpack(
 			newHBoxWithLabelAndEntry("Title:", simulationStat.title),
 			newHBoxWithLabelAndEntry("Cwd:", simulationStat.cwd),
-			newHBoxWithLabelAndEntry("Duration:", to!(string)(simulationStat.duration)));
+			newHBoxWithLabelAndEntry2!(ulong)("Duration:", simulationStat.duration));
 		
 		vboxSimulation.packStart(hbox0, false, true, 0);
 		
@@ -726,7 +728,7 @@ class DialogEditSetSimulationStats: DialogEditSet {
 			vboxesCore ~= hpack(
 				new Label(format("core-%d", i)),
 				new VSeparator(),
-				vpack(this.newCache(core.iCache), this.newCache(core.dCache)));
+				vpack(this.newCache(core.iCache, format("l1I-%d", i)), this.newCache(core.dCache, format("l1D-%d", i))));
 		}
 		
 		VBox vboxCores = vpack2(vboxesCore);
@@ -741,7 +743,7 @@ class DialogEditSetSimulationStats: DialogEditSet {
 			vboxesContext ~= hpack(
 				new Label(format("context-%d", i)),
 				new VSeparator(),
-				newHBoxWithLabelAndEntry("Total Instructions Committed:", to!(string)(context.totalInsts))); 		
+				newHBoxWithLabelAndEntry2!(ulong)("Total Instructions Committed:", context.totalInsts)); 		
 		}
 		
 		VBox vboxContexts = vpack2(vboxesContext);
@@ -754,14 +756,14 @@ class DialogEditSetSimulationStats: DialogEditSet {
 		
 		vboxSimulation.packStart(new HSeparator(), false, true, 4);
 		
-		vboxSimulation.packStart(newCache(simulationStat.l2Cache), false, true, 6);
+		vboxSimulation.packStart(newCache(simulationStat.l2Cache, "l2"), false, true, 6);
 			
 		//////////////////////
 		
 		HBox hbox13 = hpack(
-			newHBoxWithLabelAndEntry("Reads:", to!(string)(simulationStat.mainMemory.reads)),
-			newHBoxWithLabelAndEntry("Writes:", to!(string)(simulationStat.mainMemory.writes)),
-			newHBoxWithLabelAndEntry("Accesses:", to!(string)(simulationStat.mainMemory.accesses)));
+			newHBoxWithLabelAndEntry2!(ulong)("Reads:", simulationStat.mainMemory.reads),
+			newHBoxWithLabelAndEntry2!(ulong)("Writes:", simulationStat.mainMemory.writes),
+			newHBoxWithLabelAndEntry2!(ulong)("Accesses:", simulationStat.mainMemory.accesses));
 		
 		HBox hboxMainMemory = hpack(new Label("Main Memory"), new VSeparator(), vpack(hbox13));
 		

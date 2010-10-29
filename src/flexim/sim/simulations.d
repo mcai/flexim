@@ -36,7 +36,14 @@ class Simulation: Reproducible {
 	this(SimulationConfig config) {
 		this.config = config;
 		
-		simulationStats[this.config.title] = this.stat = new SimulationStat(this.title, this.cwd, config.processor.cores.length);
+		if(this.config.title in simulationStats) {
+			this.stat = simulationStats[this.config.title];
+			this.stat.reset();
+		}
+		else {
+			assert(0);
+			simulationStats[this.config.title] = this.stat = new SimulationStat(this.title, this.cwd, this.config.processor.cores.length, this.config.processor.numThreadsPerCore);
+		}
 	}
 	
 	void execute() {

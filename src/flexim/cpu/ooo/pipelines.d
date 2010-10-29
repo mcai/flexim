@@ -212,7 +212,7 @@ enum ThreadState: string {
 }
 
 class Thread {
-	this(Core core, Simulation simulation, uint num, Process process) {
+	this(Core core, ContextStat stat, uint num, Process process) {
 		this.core = core;
 		
 		this.num = num;
@@ -231,8 +231,7 @@ class Thread {
 		
 		this.commitWidth = 4;
 		
-		this.stat = new ContextStat();
-		simulation.stat.processor.contexts ~= this.stat;
+		this.stat = stat;
 		
 		this.state = ThreadState.Active;
 		
@@ -556,7 +555,7 @@ class Thread {
 			
 			this.reorderBuffer.popFront();
 
-			this.stat.totalInsts++;
+			this.stat.totalInsts.value = this.stat.totalInsts.value + 1;
 			
 			this.lastCommitCycle = Simulator.singleInstance.currentCycle;
 			

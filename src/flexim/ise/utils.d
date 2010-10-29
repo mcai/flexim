@@ -111,6 +111,28 @@ HBox newHBoxWithLabelAndComboBox(string labelText, void delegate(ComboBox) combo
 	return hpack(label, comboBox);
 }
 
+HBox newHBoxWithLabelAndEntry2(T)(string labelText, flexim.sim.stats.Property!(T) property, void delegate(string) entryChangedAction = null) {
+	Label label = new Label("<b>" ~ labelText ~ "</b>");
+	label.setUseMarkup(true);
+	Entry entry = new Entry(to!(string)(property));
+	entry.addOnChanged(delegate void(EditableIF)
+		{
+			if(entryChangedAction !is null) {
+				entryChangedAction(entry.getText());
+			}
+		});
+
+	entry.setEditable(entryChangedAction !is null);
+
+	property.addListener(delegate void(T newValue)
+		{
+			entry.setText(to!(string)(newValue));
+			entry.showAll();
+		});
+	
+	return hpack(label, entry);
+}
+
 HBox newHBoxWithLabelAndEntry(string labelText, string entryText, void delegate(string) entryChangedAction = null) {
 	Label label = new Label("<b>" ~ labelText ~ "</b>");
 	label.setUseMarkup(true);

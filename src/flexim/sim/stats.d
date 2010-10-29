@@ -25,41 +25,144 @@ import flexim.all;
 
 import std.path;
 
-abstract class Stat(StatT) {
+import std.signals;
+
+class Property(T) {
+	this(T v) {
+		this.value = v;
+	}
+	
+	void addListener(void delegate(T) listener) {
+		this.listeners ~= listener;
+	}
+    
+    void dispatch() {
+		foreach(listener; this.listeners) {
+			listener(this.value);
+		}
+    }
+	
+    T value() { 
+    	return this._value;
+    }
+
+    void value(T v) {
+        if (v != this._value) {
+			this._value = v;
+        }
+    }
+    
+    override string toString() {
+    	return to!(string)(this.value);
+    }
+    
+	void delegate(T)[] listeners;
+	private T _value;
+}
+
+abstract class Stat(StatT) {	
+	abstract void reset();
+	abstract void dispatch();
 }
 
 class CacheStat: Stat!(CacheStat) {
-	this(string name) {
-		this.name = name;
+	this() {		
+		this.accesses = new Property!(ulong)(0);
+		this.hits = new Property!(ulong)(0);
+		this.evictions = new Property!(ulong)(0);
+		this.reads = new Property!(ulong)(0);
+		this.blockingReads = new Property!(ulong)(0);
+		this.nonblockingReads = new Property!(ulong)(0);
+		this.readHits = new Property!(ulong)(0);
+		this.writes = new Property!(ulong)(0);
+		this.blockingWrites = new Property!(ulong)(0);
+		this.nonblockingWrites = new Property!(ulong)(0);
+		this.writeHits = new Property!(ulong)(0);
+	
+		this.readRetries = new Property!(ulong)(0);
+		this.writeRetries = new Property!(ulong)(0);
+	
+		this.noRetryAccesses = new Property!(ulong)(0);
+		this.noRetryHits = new Property!(ulong)(0);
+		this.noRetryReads = new Property!(ulong)(0);
+		this.noRetryReadHits = new Property!(ulong)(0);
+		this.noRetryWrites = new Property!(ulong)(0);
+		this.noRetryWriteHits = new Property!(ulong)(0);
+	}
+	
+	override void reset() {
+		this.accesses.value = 0;
+		this.hits.value = 0;
+		this.evictions.value = 0;
+		this.reads.value = 0;
+		this.blockingReads.value = 0;
+		this.nonblockingReads.value = 0;
+		this.readHits.value = 0;
+		this.writes.value = 0;
+		this.blockingWrites.value = 0;
+		this.nonblockingWrites.value = 0;
+		this.writeHits.value = 0;
+	
+		this.readRetries.value = 0;
+		this.writeRetries.value = 0;
+	
+		this.noRetryAccesses.value = 0;
+		this.noRetryHits.value = 0;
+		this.noRetryReads.value = 0;
+		this.noRetryReadHits.value = 0;
+		this.noRetryWrites.value = 0;
+		this.noRetryWriteHits.value = 0;
+	}
+	
+	override void dispatch() {
+		this.accesses.dispatch();
+		this.hits.dispatch();
+		this.evictions.dispatch();
+		this.reads.dispatch();
+		this.blockingReads.dispatch();
+		this.nonblockingReads.dispatch();
+		this.readHits.dispatch();
+		this.writes.dispatch();
+		this.blockingWrites.dispatch();
+		this.nonblockingWrites.dispatch();
+		this.writeHits.dispatch();
+	
+		this.readRetries.dispatch();
+		this.writeRetries.dispatch();
+	
+		this.noRetryAccesses.dispatch();
+		this.noRetryHits.dispatch();
+		this.noRetryReads.dispatch();
+		this.noRetryReadHits.dispatch();
+		this.noRetryWrites.dispatch();
+		this.noRetryWriteHits.dispatch();
 	}
 	
 	override string toString() {
-		return format("CacheStat[name=%s]", this.name);
+		return format("CacheStat");
 	}
 	
-	string name;
-	
-	ulong accesses;
-	ulong hits;
-	ulong evictions;
-	ulong reads;
-	ulong blockingReads;
-	ulong nonblockingReads;
-	ulong readHits;
-	ulong writes;
-	ulong blockingWrites;
-	ulong nonblockingWrites;
-	ulong writeHits;
+	Property!(ulong) accesses;
+	Property!(ulong) hits;
+	Property!(ulong) evictions;
+	Property!(ulong) reads;
+	Property!(ulong) blockingReads;
+	Property!(ulong) nonblockingReads;
+	Property!(ulong) readHits;
+	Property!(ulong) writes;
+	Property!(ulong) blockingWrites;
+	Property!(ulong) nonblockingWrites;
+	Property!(ulong) writeHits;
 
-	ulong readRetries;
-	ulong writeRetries;
+	Property!(ulong) readRetries;
+	Property!(ulong) writeRetries;
 
-	ulong noRetryAccesses;
-	ulong noRetryHits;
-	ulong noRetryReads;
-	ulong noRetryReadHits;
-	ulong noRetryWrites;
-	ulong noRetryWriteHits;
+	Property!(ulong) noRetryAccesses;
+	Property!(ulong) noRetryHits;
+	Property!(ulong) noRetryReads;
+	Property!(ulong) noRetryReadHits;
+	Property!(ulong) noRetryWrites;
+	Property!(ulong) noRetryWriteHits;
 }
 
 class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
@@ -70,34 +173,32 @@ class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
 	override XMLConfig save(CacheStat cacheStat) {
 		XMLConfig xmlConfig = new XMLConfig("CacheStat");
 
-		xmlConfig["name"] = cacheStat.name;
-		xmlConfig["accesses"] = to!(string)(cacheStat.accesses);
-		xmlConfig["hits"] = to!(string)(cacheStat.hits);
-		xmlConfig["evictions"] = to!(string)(cacheStat.evictions);
-		xmlConfig["reads"] = to!(string)(cacheStat.reads);
-		xmlConfig["blockingReads"] = to!(string)(cacheStat.blockingReads);
-		xmlConfig["nonblockingReads"] = to!(string)(cacheStat.nonblockingReads);
-		xmlConfig["readHits"] = to!(string)(cacheStat.readHits);
-		xmlConfig["writes"] = to!(string)(cacheStat.writes);
-		xmlConfig["blockingWrites"] = to!(string)(cacheStat.blockingWrites);
-		xmlConfig["nonblockingWrites"] = to!(string)(cacheStat.nonblockingWrites);
-		xmlConfig["writeHits"] = to!(string)(cacheStat.writeHits);
+		xmlConfig["accesses"] = to!(string)(cacheStat.accesses.value);
+		xmlConfig["hits"] = to!(string)(cacheStat.hits.value);
+		xmlConfig["evictions"] = to!(string)(cacheStat.evictions.value);
+		xmlConfig["reads"] = to!(string)(cacheStat.reads.value);
+		xmlConfig["blockingReads"] = to!(string)(cacheStat.blockingReads.value);
+		xmlConfig["nonblockingReads"] = to!(string)(cacheStat.nonblockingReads.value);
+		xmlConfig["readHits"] = to!(string)(cacheStat.readHits.value);
+		xmlConfig["writes"] = to!(string)(cacheStat.writes.value);
+		xmlConfig["blockingWrites"] = to!(string)(cacheStat.blockingWrites.value);
+		xmlConfig["nonblockingWrites"] = to!(string)(cacheStat.nonblockingWrites.value);
+		xmlConfig["writeHits"] = to!(string)(cacheStat.writeHits.value);
 		
-		xmlConfig["readRetries"] = to!(string)(cacheStat.readRetries);
-		xmlConfig["writeRetries"] = to!(string)(cacheStat.writeRetries);
+		xmlConfig["readRetries"] = to!(string)(cacheStat.readRetries.value);
+		xmlConfig["writeRetries"] = to!(string)(cacheStat.writeRetries.value);
 		
-		xmlConfig["noRetryAccesses"] = to!(string)(cacheStat.noRetryAccesses);
-		xmlConfig["noRetryHits"] = to!(string)(cacheStat.noRetryHits);
-		xmlConfig["noRetryReads"] = to!(string)(cacheStat.noRetryReads);
-		xmlConfig["noRetryReadHits"] = to!(string)(cacheStat.noRetryReadHits);
-		xmlConfig["noRetryWrites"] = to!(string)(cacheStat.noRetryWrites);
-		xmlConfig["noRetryWriteHits"] = to!(string)(cacheStat.noRetryWriteHits);
+		xmlConfig["noRetryAccesses"] = to!(string)(cacheStat.noRetryAccesses.value);
+		xmlConfig["noRetryHits"] = to!(string)(cacheStat.noRetryHits.value);
+		xmlConfig["noRetryReads"] = to!(string)(cacheStat.noRetryReads.value);
+		xmlConfig["noRetryReadHits"] = to!(string)(cacheStat.noRetryReadHits.value);
+		xmlConfig["noRetryWrites"] = to!(string)(cacheStat.noRetryWrites.value);
+		xmlConfig["noRetryWriteHits"] = to!(string)(cacheStat.noRetryWriteHits.value);
 			
 		return xmlConfig;
 	}
 	
 	override CacheStat load(XMLConfig xmlConfig) {
-		string name = xmlConfig["name"];
 		ulong accesses = to!(ulong)(xmlConfig["accesses"]);
 		ulong hits = to!(ulong)(xmlConfig["hits"]);
 		ulong evictions = to!(ulong)(xmlConfig["evictions"]);
@@ -120,29 +221,29 @@ class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
 		ulong noRetryWrites = to!(ulong)(xmlConfig["noRetryWrites"]);
 		ulong noRetryWriteHits = to!(ulong)(xmlConfig["noRetryWriteHits"]);
 
-		CacheStat cacheStat = new CacheStat(name);
+		CacheStat cacheStat = new CacheStat();
 		
-		cacheStat.accesses = accesses;
-		cacheStat.hits = hits;
-		cacheStat.evictions = evictions;
-		cacheStat.reads = reads;
-		cacheStat.blockingReads = blockingReads;
-		cacheStat.nonblockingReads = nonblockingReads;
-		cacheStat.readHits = readHits;
-		cacheStat.writes = writes;
-		cacheStat.blockingWrites = blockingWrites;
-		cacheStat.nonblockingWrites = nonblockingWrites;
-		cacheStat.writeHits = writeHits;
+		cacheStat.accesses.value = accesses;
+		cacheStat.hits.value = hits;
+		cacheStat.evictions.value = evictions;
+		cacheStat.reads.value = reads;
+		cacheStat.blockingReads.value = blockingReads;
+		cacheStat.nonblockingReads.value = nonblockingReads;
+		cacheStat.readHits.value = readHits;
+		cacheStat.writes.value = writes;
+		cacheStat.blockingWrites.value = blockingWrites;
+		cacheStat.nonblockingWrites.value = nonblockingWrites;
+		cacheStat.writeHits.value = writeHits;
 		
-		cacheStat.readRetries = readRetries;
-		cacheStat.writeRetries = writeRetries;
+		cacheStat.readRetries.value = readRetries;
+		cacheStat.writeRetries.value = writeRetries;
 		
-		cacheStat.noRetryAccesses = noRetryAccesses;
-		cacheStat.noRetryHits = noRetryHits;
-		cacheStat.noRetryReads = noRetryReads;
-		cacheStat.noRetryReadHits = noRetryReadHits;
-		cacheStat.noRetryWrites = noRetryWrites;
-		cacheStat.noRetryWriteHits = noRetryWriteHits;
+		cacheStat.noRetryAccesses.value = noRetryAccesses;
+		cacheStat.noRetryHits.value = noRetryHits;
+		cacheStat.noRetryReads.value = noRetryReads;
+		cacheStat.noRetryReadHits.value = noRetryReadHits;
+		cacheStat.noRetryWrites.value = noRetryWrites;
+		cacheStat.noRetryWriteHits.value = noRetryWriteHits;
 		
 		return cacheStat;
 	}
@@ -156,15 +257,30 @@ class CacheStatXMLSerializer: XMLSerializer!(CacheStat) {
 
 class MainMemoryStat: Stat!(MainMemoryStat) {
 	this() {
+		this.accesses = new Property!(ulong)(0);
+		this.reads = new Property!(ulong)(0);
+		this.writes = new Property!(ulong)(0);
+	}
+	
+	override void reset() {
+		this.accesses.value = 0;
+		this.reads.value = 0;
+		this.writes.value = 0;
+	}
+	
+	override void dispatch() {
+		this.accesses.dispatch();
+		this.reads.dispatch();
+		this.writes.dispatch();
 	}
 	
 	override string toString() {
 		return format("MainMemoryStat[]");
 	}
 
-	ulong accesses;
-	ulong reads;
-	ulong writes;
+	Property!(ulong) accesses;
+	Property!(ulong) reads;
+	Property!(ulong) writes;
 }
 
 class MainMemoryStatXMLSerializer: XMLSerializer!(MainMemoryStat) {
@@ -174,9 +290,9 @@ class MainMemoryStatXMLSerializer: XMLSerializer!(MainMemoryStat) {
 	override XMLConfig save(MainMemoryStat mainMemoryStat) {
 		XMLConfig xmlConfig = new XMLConfig("MainMemoryStat");
 		
-		xmlConfig["accesses"] = to!(string)(mainMemoryStat.accesses);
-		xmlConfig["reads"] = to!(string)(mainMemoryStat.reads);
-		xmlConfig["writes"] = to!(string)(mainMemoryStat.writes);
+		xmlConfig["accesses"] = to!(string)(mainMemoryStat.accesses.value);
+		xmlConfig["reads"] = to!(string)(mainMemoryStat.reads.value);
+		xmlConfig["writes"] = to!(string)(mainMemoryStat.writes.value);
 		
 		return xmlConfig;
 	}
@@ -187,9 +303,9 @@ class MainMemoryStatXMLSerializer: XMLSerializer!(MainMemoryStat) {
 		ulong writes = to!(ulong)(xmlConfig["writes"]);
 					
 		MainMemoryStat mainMemoryStat = new MainMemoryStat();
-		mainMemoryStat.accesses = accesses;
-		mainMemoryStat.reads = reads;
-		mainMemoryStat.writes = writes;
+		mainMemoryStat.accesses.value = accesses;
+		mainMemoryStat.reads.value = reads;
+		mainMemoryStat.writes.value = writes;
 		
 		return mainMemoryStat;
 	}
@@ -203,13 +319,22 @@ class MainMemoryStatXMLSerializer: XMLSerializer!(MainMemoryStat) {
 
 class ContextStat: Stat!(ContextStat) {
 	this() {
+		this.totalInsts = new Property!(ulong)(0);
+	}
+	
+	override void reset() {
+		this.totalInsts.value = 0;
+	}
+	
+	override void dispatch() {
+		this.totalInsts.dispatch();
 	}
 	
 	override string toString() {
 		return format("ContextStat[]");
 	}
 	
-	ulong totalInsts;
+	Property!(ulong) totalInsts;
 }
 
 class ContextStatXMLSerializer: XMLSerializer!(ContextStat) {
@@ -219,7 +344,7 @@ class ContextStatXMLSerializer: XMLSerializer!(ContextStat) {
 	override XMLConfig save(ContextStat contextStat) {
 		XMLConfig xmlConfig = new XMLConfig("ContextStat");
 		
-		xmlConfig["totalInsts"] = to!(string)(contextStat.totalInsts);
+		xmlConfig["totalInsts"] = to!(string)(contextStat.totalInsts.value);
 		
 		return xmlConfig;
 	}
@@ -228,7 +353,7 @@ class ContextStatXMLSerializer: XMLSerializer!(ContextStat) {
 		ulong totalInsts = to!(ulong)(xmlConfig["totalInsts"]);
 				
 		ContextStat contextStat = new ContextStat();
-		contextStat.totalInsts = totalInsts;
+		contextStat.totalInsts.value = totalInsts;
 		
 		return contextStat;
 	}
@@ -242,6 +367,18 @@ class ContextStatXMLSerializer: XMLSerializer!(ContextStat) {
 
 class CoreStat: Stat!(CoreStat) {
 	this() {
+		this.iCache = new CacheStat();
+		this.dCache = new CacheStat();
+	}
+	
+	override void reset() {
+		this.iCache.reset();
+		this.dCache.reset();
+	}
+	
+	override void dispatch() {
+		this.iCache.dispatch();
+		this.dCache.dispatch();
 	}
 	
 	override string toString() {
@@ -287,8 +424,28 @@ class ProcessorStat: Stat!(ProcessorStat) {
 	this() {
 	}
 	
+	override void reset() {
+		foreach(core; this.cores) {
+			core.reset();
+		}
+		
+		foreach(context; this.contexts) {
+			context.reset();
+		}
+	}
+	
+	override void dispatch() {
+		foreach(core; this.cores) {
+			core.dispatch();
+		}
+		
+		foreach(context; this.contexts) {
+			context.dispatch();
+		}
+	}
+	
 	override string toString() {
-		return format("ProcessorStat[cores.length=%d, threads.length=%d]",
+		return format("ProcessorStat[cores.length=%d, contexts.length=%d]",
 			this.cores.length, this.contexts.length);
 	}
 	
@@ -340,10 +497,17 @@ class ProcessorStatXMLSerializer: XMLSerializer!(ProcessorStat) {
 }
 
 class SimulationStat: Stat!(SimulationStat) {
-	this(string title, string cwd, uint numCores) {
+	this(string title, string cwd, uint numCores, uint numThreadsPerCore) {
 		ProcessorStat processor = new ProcessorStat();
 		for(uint i = 0; i < numCores; i++) {
-			processor.cores ~= new CoreStat();
+			CoreStat core = new CoreStat();
+			
+			for(uint j = 0; j < numThreadsPerCore; j++) {
+				ContextStat context = new ContextStat();
+				processor.contexts ~= context;
+			}
+			
+			processor.cores ~= core;
 		}
 		
 		this(title, cwd, processor);
@@ -353,6 +517,27 @@ class SimulationStat: Stat!(SimulationStat) {
 		this.title = title;
 		this.cwd = cwd;
 		this.processor = processor;
+		
+		this.l2Cache = new CacheStat();
+		this.mainMemory = new MainMemoryStat();
+		
+		this.duration = new Property!(ulong)(0);
+	}
+	
+	override void reset() {
+		this.processor.reset();
+		this.l2Cache.reset();
+		this.mainMemory.reset();
+		
+		this.duration.value = 0;
+	}
+	
+	override void dispatch() {
+		this.processor.dispatch();
+		this.l2Cache.dispatch();
+		this.mainMemory.dispatch();
+		
+		this.duration.dispatch();
 	}
 	
 	override string toString() {
@@ -364,8 +549,8 @@ class SimulationStat: Stat!(SimulationStat) {
 	ProcessorStat processor;
 	CacheStat l2Cache;
 	MainMemoryStat mainMemory;
-	
-	ulong duration;
+
+	Property!(ulong) duration;
 	
 	static SimulationStat loadXML(string cwd, string fileName) {
 		return SimulationStatXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
@@ -389,7 +574,7 @@ class SimulationStatXMLFileSerializer: XMLFileSerializer!(SimulationStat) {
 		
 		xmlConfigFile["title"] = simulationStat.title;
 		xmlConfigFile["cwd"] = simulationStat.cwd;
-		xmlConfigFile["duration"] = to!(string)(simulationStat.duration);
+		xmlConfigFile["duration"] = to!(string)(simulationStat.duration.value);
 			
 		xmlConfigFile.entries ~= ProcessorStatXMLSerializer.singleInstance.save(simulationStat.processor);
 		xmlConfigFile.entries ~= CacheStatXMLSerializer.singleInstance.save(simulationStat.l2Cache);
@@ -410,7 +595,7 @@ class SimulationStatXMLFileSerializer: XMLFileSerializer!(SimulationStat) {
 		SimulationStat simulationStat = new SimulationStat(title, cwd, processor);
 		simulationStat.l2Cache = l2Cache;
 		simulationStat.mainMemory = mainMemory;
-		simulationStat.duration = duration;
+		simulationStat.duration.value = duration;
 		
 		return simulationStat;
 	}
