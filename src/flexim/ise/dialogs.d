@@ -535,7 +535,30 @@ class DialogEditSetSimulations : DialogEditSet {
 		
 		Widget[] vboxesContext;
 		
-		foreach(i, context; simulationConfig.processor.contexts) {
+		foreach(i, context; simulationConfig.processor.contexts) {			
+			ComboBox comboBoxBenchmark = new ComboBox();
+			
+			foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
+				foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
+					comboBoxBenchmark.appendText(format("%s (%s)", benchmarkTitle, benchmarkSuiteTitle));
+				}
+			}
+			
+			comboBoxBenchmark.addOnChanged(delegate void(ComboBox)
+				{
+					string benchmarkName = comboBoxBenchmark.getActiveText();
+					
+					if(benchmarkName != "") {
+						int index1 = std.algorithm.indexOf(benchmarkName, '(');
+						int index2 = std.algorithm.indexOf(benchmarkName, ')');
+						string benchmarkSuiteTitle = benchmarkName[(index1 + 1)..index2];
+						string benchmarkTitle = benchmarkName[0..(index1 - 1)];
+						
+						context.benchmarkSuiteTitle = benchmarkSuiteTitle;
+						context.benchmarkTitle = benchmarkTitle;
+					}
+				});
+			
 			vboxesContext ~= hpack(
 				new Label(format("context-%d", i)),
 				new VSeparator(), 
@@ -543,14 +566,9 @@ class DialogEditSetSimulations : DialogEditSet {
 				{
 					context.binariesDir = entryText;
 				}),
-				newHBoxWithLabelAndEntry("Benchmark Suite Title:", context.benchmarkSuiteTitle, delegate void(string entryText)
-				{
-					context.benchmarkSuiteTitle = entryText;
-				}),
-				newHBoxWithLabelAndEntry("Benchmark Title:", context.benchmarkTitle, delegate void(string entryText)
-				{
-					context.benchmarkTitle = entryText;
-				}));
+				newHBoxWithLabelAndWidget("Benchmark:", comboBoxBenchmark));
+					
+			comboBoxBenchmark.setActive(comboBoxBenchmark.getIndex(format("%s (%s)", context.benchmarkTitle, context.benchmarkSuiteTitle)));
 		}
 		
 		VBox vboxContexts = vpack2(vboxesContext);

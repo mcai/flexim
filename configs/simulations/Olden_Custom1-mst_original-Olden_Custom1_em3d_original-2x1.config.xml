@@ -15,7 +15,7 @@
       </CoreConfig>
       <ContextConfig benchmarkSuiteTitle="WCETBench" binariesDir="../tests/benchmarks" benchmarkTitle="fir">
       </ContextConfig>
-      <ContextConfig benchmarkSuiteTitle="Olden_Custom1" binariesDir="../tests/benchmarks" benchmarkTitle="mst_original">
+      <ContextConfig benchmarkSuiteTitle="Olden_Custom1" binariesDir="../tests/benchmarks" benchmarkTitle="em3d_original">
       </ContextConfig>
    </ProcessorConfig>
    <CacheConfig level="1" assoc="4" blockSize="64" missLatency="7" policy="LRU" name="l2" numSets="1024" hitLatency="4">

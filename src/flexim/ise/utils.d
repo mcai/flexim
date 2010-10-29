@@ -76,6 +76,41 @@ VBox vpack2(T)(T[] widgets) {
 	return vbox;
 }
 
+HBox newHBoxWithLabelAndWidget(string labelText, Widget widget) {
+	Label label = new Label("<b>" ~ labelText ~ "</b>");
+	label.setUseMarkup(true);
+
+	return hpack(label, widget);
+}
+
+HBox newHBoxWithLabelAndComboBox(string labelText, void delegate(ComboBox) comboBoxInitAction = null, void delegate() comboBoxChangedAction = null) {
+	Label label = new Label("<b>" ~ labelText ~ "</b>");
+	label.setUseMarkup(true);
+
+	GType[] types;
+	types ~= GType.STRING;
+	
+	ListStore listStore = new ListStore(types);
+	
+	ComboBox comboBox = new ComboBox(listStore);
+	
+	if(comboBoxInitAction !is null) {
+		comboBoxInitAction(comboBox);
+	}
+	
+	comboBox.addOnChanged(delegate void(ComboBox)
+		{
+			if(comboBoxChangedAction !is null) {
+				comboBoxChangedAction();
+			}
+		});
+	comboBox.setActive(0);
+	
+	comboBox.setSensitive(comboBoxChangedAction !is null);
+
+	return hpack(label, comboBox);
+}
+
 HBox newHBoxWithLabelAndEntry(string labelText, string entryText, void delegate(string) entryChangedAction = null) {
 	Label label = new Label("<b>" ~ labelText ~ "</b>");
 	label.setUseMarkup(true);
