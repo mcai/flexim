@@ -389,7 +389,8 @@ class DialogEditSetSimulations : DialogEditSet {
 			processor.cores ~= core;
 			
 			for(uint j = 0; j < this.numThreadsPerCoreWhenAddSimulation; j++) {
-				ContextConfig context = new ContextConfig("../tests/benchmarks", "WCETBench", "fir");
+				Benchmark workload = benchmarkSuites["WCETBench"]["fir"];
+				ContextConfig context = new ContextConfig("../tests/benchmarks", workload);
 				processor.contexts ~= context;
 			}
 		}
@@ -467,6 +468,35 @@ class DialogEditSetSimulations : DialogEditSet {
 		return hpack(new Label(cache.name), new VSeparator(), vpack(hbox0, hbox1, hbox2));
 	}
 	
+	ComboBox newContext(ContextConfig context) {
+		ComboBox comboBoxBenchmark = new ComboBox();
+		
+		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
+			foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
+				comboBoxBenchmark.appendText(format("%s (%s)", benchmarkTitle, benchmarkSuiteTitle));
+			}
+		}
+		
+		comboBoxBenchmark.addOnChanged(delegate void(ComboBox comboBox)
+			{
+				string benchmarkName = comboBox.getActiveText();
+				
+				if(benchmarkName != "") {
+					int index1 = std.algorithm.indexOf(benchmarkName, '(');
+					int index2 = std.algorithm.indexOf(benchmarkName, ')');
+					string benchmarkSuiteTitle = benchmarkName[(index1 + 1)..index2];
+					string benchmarkTitle = benchmarkName[0..(index1 - 1)];
+					
+					Benchmark workload = benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle];
+					context.workload = workload;
+				}
+			});
+					
+		comboBoxBenchmark.setActive(comboBoxBenchmark.getIndex(format("%s (%s)", context.workload.title, context.workload.suite.title)));
+			
+		return comboBoxBenchmark;
+	}
+	
 	void newSimulationConfig(SimulationConfig simulationConfig) {
 		this.comboBoxSet.appendText(simulationConfig.title);
 		
@@ -536,29 +566,6 @@ class DialogEditSetSimulations : DialogEditSet {
 		Widget[] vboxesContext;
 		
 		foreach(i, context; simulationConfig.processor.contexts) {			
-			ComboBox comboBoxBenchmark = new ComboBox();
-			
-			foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
-				foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
-					comboBoxBenchmark.appendText(format("%s (%s)", benchmarkTitle, benchmarkSuiteTitle));
-				}
-			}
-			
-			comboBoxBenchmark.addOnChanged(delegate void(ComboBox)
-				{
-					string benchmarkName = comboBoxBenchmark.getActiveText();
-					
-					if(benchmarkName != "") {
-						int index1 = std.algorithm.indexOf(benchmarkName, '(');
-						int index2 = std.algorithm.indexOf(benchmarkName, ')');
-						string benchmarkSuiteTitle = benchmarkName[(index1 + 1)..index2];
-						string benchmarkTitle = benchmarkName[0..(index1 - 1)];
-						
-						context.benchmarkSuiteTitle = benchmarkSuiteTitle;
-						context.benchmarkTitle = benchmarkTitle;
-					}
-				});
-			
 			vboxesContext ~= hpack(
 				new Label(format("context-%d", i)),
 				new VSeparator(), 
@@ -566,9 +573,7 @@ class DialogEditSetSimulations : DialogEditSet {
 				{
 					context.binariesDir = entryText;
 				}),
-				newHBoxWithLabelAndWidget("Benchmark:", comboBoxBenchmark));
-					
-			comboBoxBenchmark.setActive(comboBoxBenchmark.getIndex(format("%s (%s)", context.benchmarkTitle, context.benchmarkSuiteTitle)));
+				newHBoxWithLabelAndWidget("Benchmark:", this.newContext(context)));
 		}
 		
 		VBox vboxContexts = vpack2(vboxesContext);
@@ -704,7 +709,8 @@ class DialogEditSetSimulationStats: DialogEditSet {
 		
 		HBox hbox0 = hpack(
 			newHBoxWithLabelAndEntry("Title:", simulationStat.title),
-			newHBoxWithLabelAndEntry("Cwd:", simulationStat.cwd));
+			newHBoxWithLabelAndEntry("Cwd:", simulationStat.cwd),
+			newHBoxWithLabelAndEntry("Duration:", to!(string)(simulationStat.duration)));
 		
 		vboxSimulation.packStart(hbox0, false, true, 0);
 		

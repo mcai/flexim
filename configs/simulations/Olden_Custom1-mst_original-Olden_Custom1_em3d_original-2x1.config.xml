@@ -13,7 +13,7 @@
          <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-1" numSets="64" hitLatency="1">
          </CacheConfig>
       </CoreConfig>
-      <ContextConfig benchmarkSuiteTitle="WCETBench" binariesDir="../tests/benchmarks" benchmarkTitle="fir">
+      <ContextConfig benchmarkSuiteTitle="Olden_Custom1" binariesDir="../tests/benchmarks" benchmarkTitle="mst_original">
       </ContextConfig>
       <ContextConfig benchmarkSuiteTitle="Olden_Custom1" binariesDir="../tests/benchmarks" benchmarkTitle="em3d_original">
       </ContextConfig>

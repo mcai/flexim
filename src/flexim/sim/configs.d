@@ -141,13 +141,8 @@ class MainMemoryConfigXMLSerializer: XMLSerializer!(MainMemoryConfig) {
 
 class ContextConfig: Config!(ContextConfig) {
 	this(string binariesDir, Benchmark workload) {
-		this(binariesDir, workload.suite.title, workload.title);
-	}
-	
-	this(string binariesDir, string benchmarkSuiteTitle, string benchmarkTitle) {
 		this.binariesDir = binariesDir;
-		this.benchmarkSuiteTitle = benchmarkSuiteTitle;
-		this.benchmarkTitle = benchmarkTitle;
+		this.workload = workload;
 	}
 	
 	string exe() {
@@ -171,22 +166,11 @@ class ContextConfig: Config!(ContextConfig) {
 	}
 	
 	override string toString() {
-		return format("ContextConfig[binariesDir=%s, benchmarkSuiteTitle=%s, benchmarkTitle=%s]",
-			this.binariesDir, this.benchmarkSuiteTitle, this.benchmarkTitle);
-	}
-	
-	string benchmarkTitle() {
-		return this.m_benchmarkTitle;
-	}
-	
-	void benchmarkTitle(string value) {
-		this.m_benchmarkTitle = value;
-		
-		this.workload = benchmarkSuites[this.benchmarkSuiteTitle][this.benchmarkTitle];
+		return format("ContextConfig[binariesDir=%s, workload=%s]",
+			this.binariesDir, this.workload);
 	}
 
-	string binariesDir, benchmarkSuiteTitle;
-	private string m_benchmarkTitle;
+	string binariesDir;
 	Benchmark workload;
 }
 
@@ -198,8 +182,8 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
 		
 		xmlConfig["binariesDir"] = contextConfig.binariesDir;
-		xmlConfig["benchmarkSuiteTitle"] = contextConfig.benchmarkSuiteTitle;
-		xmlConfig["benchmarkTitle"] = contextConfig.benchmarkTitle;
+		xmlConfig["benchmarkSuiteTitle"] = contextConfig.workload.suite.title;
+		xmlConfig["benchmarkTitle"] = contextConfig.workload.title;
 		
 		return xmlConfig;
 	}
@@ -209,7 +193,9 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 		string benchmarkSuiteTitle = xmlConfig["benchmarkSuiteTitle"];
 		string benchmarkTitle = xmlConfig["benchmarkTitle"];
 		
-		ContextConfig contextConfig = new ContextConfig(binariesDir, benchmarkSuiteTitle, benchmarkTitle);
+		Benchmark workload = benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle];
+		
+		ContextConfig contextConfig = new ContextConfig(binariesDir, workload);
 		return contextConfig;
 	}
 	
