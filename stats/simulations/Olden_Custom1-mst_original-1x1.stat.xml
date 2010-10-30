@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
-<SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/simulations" duration="88314" totalCycles="3316496">
+<SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/simulations" duration="541083" totalCycles="20448606">
    <ProcessorStat>
       <CoreStat>
-         <CacheStat hits="280068" noRetryWrites="0" noRetryAccesses="280358" writeHits="0" evictions="53" nonblockingReads="280358" reads="280358" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="280068" nonblockingWrites="0" blockingWrites="0" noRetryReads="280358" noRetryHits="280068" readRetries="0" accesses="280358" noRetryReadHits="280068">
+         <CacheStat hits="1119625" noRetryWrites="425" noRetryAccesses="1120230" writeHits="425" evictions="36" nonblockingReads="1119805" reads="1119805" blockingReads="0" writeRetries="0" writes="425" noRetryWriteHits="425" readHits="1119200" nonblockingWrites="0" blockingWrites="425" noRetryReads="1119805" noRetryHits="1119625" readRetries="0" accesses="1120230" noRetryReadHits="1119200">
          </CacheStat>
-         <CacheStat hits="2258814" noRetryWrites="205542" noRetryAccesses="660383" writeHits="1619081" evictions="19070" nonblockingReads="657985" reads="657985" blockingReads="0" writeRetries="0" writes="1624424" noRetryWriteHits="203374" readHits="639733" nonblockingWrites="1624424" blockingWrites="0" noRetryReads="454841" noRetryHits="641005" readRetries="0" accesses="2282409" noRetryReadHits="437631">
+         <CacheStat hits="15716287" noRetryWrites="815344" noRetryAccesses="2631093" writeHits="11618458" evictions="97718" nonblockingReads="4288393" reads="4288393" blockingReads="0" writeRetries="0" writes="11630147" noRetryWriteHits="806899" readHits="4097829" nonblockingWrites="11630138" blockingWrites="9" noRetryReads="1815749" noRetryHits="2532775" readRetries="0" accesses="15918540" noRetryReadHits="1725876">
          </CacheStat>
       </CoreStat>
-      <ContextStat totalInsts="2316082">
+      <ContextStat totalInsts="9255927">
       </ContextStat>
    </ProcessorStat>
-   <CacheStat hits="36343" noRetryWrites="21252" noRetryAccesses="38739" writeHits="19170" evictions="0" nonblockingReads="17487" reads="17487" blockingReads="0" writeRetries="0" writes="21252" noRetryWriteHits="19170" readHits="17173" nonblockingWrites="21252" blockingWrites="0" noRetryReads="17487" noRetryHits="36343" readRetries="0" accesses="38739" noRetryReadHits="17173">
+   <CacheStat hits="171563" noRetryWrites="106103" noRetryAccesses="196333" writeHits="97900" evictions="22402" nonblockingReads="94460" reads="94460" blockingReads="0" writeRetries="0" writes="106103" noRetryWriteHits="97900" readHits="73663" nonblockingWrites="106103" blockingWrites="0" noRetryReads="90230" noRetryHits="169868" readRetries="0" accesses="200563" noRetryReadHits="71968">
    </CacheStat>
-   <MainMemoryStat writes="2082" reads="314" accesses="2396">
+   <MainMemoryStat writes="30599" reads="18299" accesses="48898">
    </MainMemoryStat>
 </SimulationStat>

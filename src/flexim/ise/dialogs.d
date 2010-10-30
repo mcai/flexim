@@ -338,12 +338,7 @@ class DialogEditSetSimulations : DialogEditSet {
 				string simulationConfigTitle = this.comboBoxSet.getActiveText();
 				SimulationConfig simulationConfig = simulationConfigs[simulationConfigTitle];
 				
-				Simulation simulation = new Simulation(simulationConfig, 
-					delegate void(Simulation simulation){
-						gdkThreadsEnter();
-						simulation.stat.dispatch();
-						gdkThreadsLeave();
-					});
+				Simulation simulation = new Simulation(simulationConfig);
 				
 				core.thread.Thread threadRunSimulation = new core.thread.Thread(
 					{
@@ -355,11 +350,25 @@ class DialogEditSetSimulations : DialogEditSet {
 						simulation.stat.dispatch();
 						gdkThreadsLeave();
 					});
+					
+				core.thread.Thread threadUpdateGui = new core.thread.Thread(
+					{
+						while(simulation.isRunning) {
+							gdkThreadsEnter();
+							simulation.stat.dispatch();
+							gdkThreadsLeave();
+							
+							core.thread.Thread.sleep(30000);
+						}
+					});
 	
 				this.buttonSimulate.setSensitive(false);
 				this.buttonSimulate.setLabel("Simulating.. Please Wait");
-				
+
+				simulation.stat.reset();
+					
 				threadRunSimulation.start();
+				threadUpdateGui.start();
 			});
 		
 		this.notebookSets.setCurrentPage(0);

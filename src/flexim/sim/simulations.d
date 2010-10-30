@@ -44,11 +44,19 @@ class Simulation: Reproducible, EventProcessor {
 		else {
 			simulationStats[this.config.title] = this.stat = new SimulationStat(this.title, this.cwd, this.config.processor.cores.length, this.config.processor.numThreadsPerCore);
 		}
+		
+		this.isRunning = false;
 	}
 	
 	void execute() {
 		this.beforeRun();
+		
+		this.isRunning = true;
+		
 		this.run();
+		
+		this.isRunning = false;
+		
 		this.afterRun();
 	}
 	
@@ -85,6 +93,8 @@ class Simulation: Reproducible, EventProcessor {
 	SimulationStat stat;
 	
 	void delegate(Simulation) del;
+	
+	bool isRunning;
 }
 
 BenchmarkSuite[string] benchmarkSuites;
