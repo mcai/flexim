@@ -521,6 +521,7 @@ class SimulationStat: Stat!(SimulationStat) {
 		this.l2Cache = new CacheStat();
 		this.mainMemory = new MainMemoryStat();
 		
+		this.totalCycles = new Property!(ulong)(0);
 		this.duration = new Property!(ulong)(0);
 	}
 	
@@ -529,6 +530,7 @@ class SimulationStat: Stat!(SimulationStat) {
 		this.l2Cache.reset();
 		this.mainMemory.reset();
 		
+		this.totalCycles.value = 0;
 		this.duration.value = 0;
 	}
 	
@@ -537,12 +539,13 @@ class SimulationStat: Stat!(SimulationStat) {
 		this.l2Cache.dispatch();
 		this.mainMemory.dispatch();
 		
+		this.totalCycles.dispatch();
 		this.duration.dispatch();
 	}
 	
 	override string toString() {
-		return format("SimulationStat[title=%s, cwd=%s, duration=%d, processor=%s, l2Cache=%s, mainMemory=%s]",
-			this.title, this.cwd, this.duration, this.processor, this.l2Cache, this.mainMemory);
+		return format("SimulationStat[title=%s, cwd=%s, totalCycles=%d, duration=%d, processor=%s, l2Cache=%s, mainMemory=%s]",
+			this.title, this.cwd, this.totalCycles, this.duration, this.processor, this.l2Cache, this.mainMemory);
 	}
 	
 	string title, cwd;
@@ -550,6 +553,7 @@ class SimulationStat: Stat!(SimulationStat) {
 	CacheStat l2Cache;
 	MainMemoryStat mainMemory;
 
+	Property!(ulong) totalCycles;
 	Property!(ulong) duration;
 	
 	static SimulationStat loadXML(string cwd, string fileName) {
@@ -574,6 +578,7 @@ class SimulationStatXMLFileSerializer: XMLFileSerializer!(SimulationStat) {
 		
 		xmlConfigFile["title"] = simulationStat.title;
 		xmlConfigFile["cwd"] = simulationStat.cwd;
+		xmlConfigFile["totalCycles"] = to!(string)(simulationStat.totalCycles.value);
 		xmlConfigFile["duration"] = to!(string)(simulationStat.duration.value);
 			
 		xmlConfigFile.entries ~= ProcessorStatXMLSerializer.singleInstance.save(simulationStat.processor);
@@ -586,6 +591,7 @@ class SimulationStatXMLFileSerializer: XMLFileSerializer!(SimulationStat) {
 	override SimulationStat load(XMLConfigFile xmlConfigFile) {
 		string title = xmlConfigFile["title"];
 		string cwd = xmlConfigFile["cwd"];
+		ulong totalCycles = to!(ulong)(xmlConfigFile["totalCycles"]);
 		ulong duration = to!(ulong)(xmlConfigFile["duration"]);
 			
 		ProcessorStat processor = ProcessorStatXMLSerializer.singleInstance.load(xmlConfigFile.entries[0]);
@@ -595,6 +601,7 @@ class SimulationStatXMLFileSerializer: XMLFileSerializer!(SimulationStat) {
 		SimulationStat simulationStat = new SimulationStat(title, cwd, processor);
 		simulationStat.l2Cache = l2Cache;
 		simulationStat.mainMemory = mainMemory;
+		simulationStat.totalCycles.value = totalCycles;
 		simulationStat.duration.value = duration;
 		
 		return simulationStat;

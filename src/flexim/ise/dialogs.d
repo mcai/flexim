@@ -23,6 +23,8 @@ module flexim.ise.dialogs;
 
 import flexim.all;
 
+import gdk.Threads;
+
 class DialogEditSet {
 	this(
 		Dialog dialogEditSet, 
@@ -336,16 +338,22 @@ class DialogEditSetSimulations : DialogEditSet {
 				string simulationConfigTitle = this.comboBoxSet.getActiveText();
 				SimulationConfig simulationConfig = simulationConfigs[simulationConfigTitle];
 				
-				Simulation simulation = new Simulation(simulationConfig);
+				Simulation simulation = new Simulation(simulationConfig, 
+					delegate void(Simulation simulation){
+						gdkThreadsEnter();
+						simulation.stat.dispatch();
+						gdkThreadsLeave();
+					});
 				
 				core.thread.Thread threadRunSimulation = new core.thread.Thread(
 					{
 						simulation.execute();
-								
+		
+						gdkThreadsEnter();
 						this.buttonSimulate.setSensitive(true);
 						this.buttonSimulate.setLabel(oldButtonLabel);
-						
 						simulation.stat.dispatch();
+						gdkThreadsLeave();
 					});
 	
 				this.buttonSimulate.setSensitive(false);
@@ -712,6 +720,7 @@ class DialogEditSetSimulationStats: DialogEditSet {
 		HBox hbox0 = hpack(
 			newHBoxWithLabelAndEntry("Title:", simulationStat.title),
 			newHBoxWithLabelAndEntry("Cwd:", simulationStat.cwd),
+			newHBoxWithLabelAndEntry2!(ulong)("Total Cycles:", simulationStat.totalCycles),
 			newHBoxWithLabelAndEntry2!(ulong)("Duration:", simulationStat.duration));
 		
 		vboxSimulation.packStart(hbox0, false, true, 0);

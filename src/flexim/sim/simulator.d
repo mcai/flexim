@@ -83,8 +83,6 @@ class SimulatorEventQueue: EventQueue!(SimulatorEventType, SimulatorEventContext
 
 abstract class Simulator {
 	this() {
-		this.currentCycle = 0;
-		
 		this.eventQueue = new SimulatorEventQueue(this);
 		this.addEventProcessor(this.eventQueue);
 		
@@ -100,7 +98,8 @@ abstract class Simulator {
 	SimulatorEventQueue eventQueue;
 	
 	EventProcessor[] eventProcessors;
-	ulong currentCycle;
+	
+	abstract ulong currentCycle();
 
 	static Simulator singleInstance;
 }
@@ -108,6 +107,7 @@ abstract class Simulator {
 class CPUSimulator : Simulator {	
 	this(Simulation simulation) {
 		this.simulation = simulation;
+		this.addEventProcessor(this.simulation);
 		this.processor = new Processor(this);
 		
 		SimulationConfig simulationConfig = simulation.config;
@@ -135,6 +135,8 @@ class CPUSimulator : Simulator {
 		}
 
 		this.memorySystem = new MemorySystem(simulation);
+		
+		this.simulation.stat.totalCycles.value = 0;
 	}
 
 	override void run() {		
@@ -148,7 +150,7 @@ class CPUSimulator : Simulator {
 				eventProcessor.processEvents();
 			}
 
-			this.currentCycle++;
+			this.simulation.stat.totalCycles.value = this.simulation.stat.totalCycles.value + 1;
 		}
 		
 		counter.stop();
@@ -162,6 +164,10 @@ class CPUSimulator : Simulator {
 	
 	void duration(ulong value) {
 		this.simulation.stat.duration.value = value;
+	}
+	
+	override ulong currentCycle() {
+		return this.simulation.stat.totalCycles.value;
 	}
 
 	Processor processor;

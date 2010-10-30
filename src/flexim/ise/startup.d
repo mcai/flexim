@@ -25,6 +25,9 @@ import flexim.all;
 
 import core.thread;
 
+import gthread.Thread;
+import gdk.Threads;
+
 class Startup {
 	this(string[] args) {
 		Main.init(args);
@@ -182,6 +185,9 @@ class Startup {
 				this.splashScreen.destroy();
 				
 				this.mainWindow.showAll();
+				
+				gthread.Thread.Thread.init(null);
+				gdkThreadsInit();
 				
 				return false;
 			}, false);

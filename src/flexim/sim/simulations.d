@@ -32,16 +32,16 @@ interface Reproducible {
 	void afterRun();
 }
 
-class Simulation: Reproducible {
-	this(SimulationConfig config) {
+class Simulation: Reproducible, EventProcessor {
+	this(SimulationConfig config, void delegate(Simulation) del = null) {
 		this.config = config;
+		this.del = del;
 		
 		if(this.config.title in simulationStats) {
 			this.stat = simulationStats[this.config.title];
 			this.stat.reset();
 		}
 		else {
-			assert(0);
 			simulationStats[this.config.title] = this.stat = new SimulationStat(this.title, this.cwd, this.config.processor.cores.length, this.config.processor.numThreadsPerCore);
 		}
 	}
@@ -63,6 +63,12 @@ class Simulation: Reproducible {
 	override void afterRun() {
 	}
 	
+	override void processEvents() {
+		if(this.del !is null) {
+			this.del(this);
+		}
+	}
+	
 	override string toString() {
 		return format("Simulation[title=%s, cwd=%s]", this.title, this.cwd);
 	}
@@ -77,6 +83,8 @@ class Simulation: Reproducible {
 	
 	SimulationConfig config;
 	SimulationStat stat;
+	
+	void delegate(Simulation) del;
 }
 
 BenchmarkSuite[string] benchmarkSuites;
