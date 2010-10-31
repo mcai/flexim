@@ -1,5 +1,6 @@
 --------------------------------
 Flexim - A modular and highly configurable multicore simulator written in D
+(version: 0.1 Prerelease)
 --------------------------------
 
 This README briefly describes what Flexim is and how to setup & run Flexim. For more details, 
@@ -47,6 +48,11 @@ please refer to the Flexim User Guide under the subdirectory doc/ of the distrib
  2. Make sure that you have the latest DMD 2.0 compiler installed.
    If not, go to this page and download "dmd D 2.0 compiler 1-click install for Ubuntu"
    http://www.digitalmars.com/d/download.html
+   
+ 3. Make sure that you have the latest GtkD installed.
+   If not, please type the command from console: 'svn co http://svn.dsource.org/projects/gtkd/trunk'.
+   Then follow the instructions that provided to compile and install GtkD.
+   Hints: The latest GtkD SVN version can be slightly modified to make it compile under the latest DMD 2.0 compiler.
 
 == How to compile Benchmarks for Flexim ==
    Flexim supports the statically linked MIPS32 LE binaries. It supports the full set of wcet_bench benchmarks.

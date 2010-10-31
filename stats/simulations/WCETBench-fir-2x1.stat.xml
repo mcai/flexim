@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
-<SimulationStat title="WCETBench-fir-2x1" cwd="../stats/simulations" duration="234" totalCycles="23046">
+<SimulationStat title="WCETBench-fir-2x1" cwd="../stats/simulations" duration="16794096" totalCycles="23051">
    <ProcessorStat>
       <CoreStat>
          <CacheStat hits="115" noRetryWrites="0" noRetryAccesses="164" writeHits="0" evictions="0" nonblockingReads="116" reads="164" blockingReads="48" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="115" nonblockingWrites="0" blockingWrites="0" noRetryReads="164" noRetryHits="115" readRetries="0" accesses="164" noRetryReadHits="115">
          </CacheStat>
-         <CacheStat hits="9423" noRetryWrites="116" noRetryAccesses="697" writeHits="5550" evictions="1" nonblockingReads="3881" reads="3894" blockingReads="13" writeRetries="0" writes="5570" noRetryWriteHits="97" readHits="3873" nonblockingWrites="5547" blockingWrites="23" noRetryReads="581" noRetryHits="657" readRetries="0" accesses="9464" noRetryReadHits="560">
+         <CacheStat hits="9370" noRetryWrites="116" noRetryAccesses="696" writeHits="5487" evictions="0" nonblockingReads="3888" reads="3900" blockingReads="12" writeRetries="0" writes="5509" noRetryWriteHits="96" readHits="3883" nonblockingWrites="5486" blockingWrites="23" noRetryReads="580" noRetryHits="659" readRetries="0" accesses="9409" noRetryReadHits="563">
          </CacheStat>
       </CoreStat>
       <CoreStat>
          <CacheStat hits="67" noRetryWrites="0" noRetryAccesses="115" writeHits="0" evictions="0" nonblockingReads="115" reads="115" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="67" nonblockingWrites="0" blockingWrites="0" noRetryReads="115" noRetryHits="67" readRetries="0" accesses="115" noRetryReadHits="67">
          </CacheStat>
-         <CacheStat hits="9353" noRetryWrites="107" noRetryAccesses="683" writeHits="5446" evictions="1" nonblockingReads="3912" reads="3920" blockingReads="8" writeRetries="0" writes="5469" noRetryWriteHits="85" readHits="3907" nonblockingWrites="5453" blockingWrites="16" noRetryReads="576" noRetryHits="648" readRetries="0" accesses="9389" noRetryReadHits="563">
+         <CacheStat hits="9290" noRetryWrites="106" noRetryAccesses="679" writeHits="5401" evictions="0" nonblockingReads="3896" reads="3901" blockingReads="5" writeRetries="0" writes="5423" noRetryWriteHits="86" readHits="3889" nonblockingWrites="5408" blockingWrites="15" noRetryReads="573" noRetryHits="647" readRetries="0" accesses="9324" noRetryReadHits="561">
          </CacheStat>
       </CoreStat>
       <ContextStat totalInsts="2687">
@@ -18,7 +18,7 @@
       <ContextStat totalInsts="2684">
       </ContextStat>
    </ProcessorStat>
-   <CacheStat hits="4443" noRetryWrites="53" noRetryAccesses="184" writeHits="709" evictions="0" nonblockingReads="3795" reads="3795" blockingReads="0" writeRetries="0" writes="720" noRetryWriteHits="42" readHits="3734" nonblockingWrites="720" blockingWrites="0" noRetryReads="131" noRetryHits="112" readRetries="0" accesses="4515" noRetryReadHits="70">
+   <CacheStat hits="4467" noRetryWrites="49" noRetryAccesses="175" writeHits="713" evictions="0" nonblockingReads="3815" reads="3815" blockingReads="0" writeRetries="0" writes="724" noRetryWriteHits="38" readHits="3754" nonblockingWrites="724" blockingWrites="0" noRetryReads="126" noRetryHits="103" readRetries="0" accesses="4539" noRetryReadHits="65">
    </CacheStat>
    <MainMemoryStat writes="11" reads="61" accesses="72">
    </MainMemoryStat>
