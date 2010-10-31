@@ -1,7 +1,6 @@
 src/flexim/all.d
 src/flexim/cpu.d
 src/flexim/gui.d
-src/flexim/io.d
 src/flexim/isa.d
 src/flexim/kernel.d
 src/flexim/mem.d

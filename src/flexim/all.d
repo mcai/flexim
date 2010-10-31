@@ -33,7 +33,6 @@ public import std.string;
 public import std.typecons;
 
 public import flexim.cpu;
-public import flexim.io;
 public import flexim.isa;
 public import flexim.gui;
 public import flexim.kernel;
