@@ -1395,9 +1395,9 @@ class CPUSimulator : Simulator {
 			}
 
 			this.simulation.stat.totalCycles.value = ++currentCycle;
+			
+			this.duration = (apptime() - beginTime).toMilliseconds!(ulong);
 		}
-		
-		this.duration = (apptime() - beginTime).toMilliseconds!(ulong);
 	}
 	
 	ulong duration() {

@@ -127,6 +127,15 @@ T getBuilderObject(T, K)(Builder builder, string name) {
 	return getBuilderObject!(T, K)(builder.getObject(name));
 }
 
+class GladeFile {
+	this(string fileName, string dirName = "../res/glade/", string fileExt = ".glade") {
+		this.builder = new Builder();
+		this.builder.addFromFile(join(dirName, fileName ~ fileExt));
+	}
+	
+	Builder builder;
+}
+
 void guiActionNotImplemented(Window parent, string text) {
 	MessageDialog d = new MessageDialog(parent, GtkDialogFlags.MODAL, MessageType.INFO, ButtonsType.OK, text);
 	d.run();
@@ -277,7 +286,7 @@ void setupTextComboBox(ComboBox comboBox) {
 
 string registerStockId(string name, string label, string key, string fileName = null) {
 	if(fileName is null) {
-		fileName = format("../gtk/stock/%s.svg", name);
+		fileName = format("../res/stock/%s.svg", name);
 	}
 	string domain = "slow";
 	string id = format("%s-%s", domain, name);
@@ -340,7 +349,7 @@ MenuItem bindMenuItem(MenuItem menuItem, void delegate() action) {
 }
 
 MenuItem bindMenuItem(Builder builder, string menuItemName, void delegate() action) {
-	MenuItem menuItem = getBuilderObject!(ImageMenuItem, GtkImageMenuItem)(builder, menuItemName);
+	MenuItem menuItem = getBuilderObject!(MenuItem, GtkMenuItem)(builder, menuItemName);
 	return bindMenuItem(menuItem, action);
 }
 
@@ -418,7 +427,10 @@ class DialogEditSet {
 }
 
 class DialogEditSetBenchmarkSuites : DialogEditSet {
-	this(Builder builder) {
+	this() {
+		GladeFile gladeFile = new GladeFile("dialogEditBenchmarkConfigs");
+		Builder builder = gladeFile.builder;
+		
 		Dialog dialogEditBenchmarkConfigs = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditBenchmarkConfigs");
 		ComboBox comboBoxBenchmarkSuites = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxBenchmarkSuites");
 		Button buttonAddBenchmarkSuite = getBuilderObject!(Button, GtkButton)(builder, "buttonAddBenchmarkSuite");
@@ -625,7 +637,10 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 }
 
 class DialogEditSetSimulations : DialogEditSet {
-	this(Builder builder) {		
+	this() {		
+		GladeFile gladeFile = new GladeFile("dialogEditSimulationConfigs");
+		Builder builder = gladeFile.builder;
+		
 		Dialog dialogEditSimulationConfigs = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditSimulationConfigs");
 		ComboBox comboBoxSimulations = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulations");
 		Button buttonAddSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonAddSimulation");
@@ -973,7 +988,10 @@ class DialogEditSetSimulations : DialogEditSet {
 }
 
 class DialogEditSetSimulationStats: DialogEditSet {
-	this(Builder builder) {		
+	this() {
+		GladeFile gladeFile = new GladeFile("dialogSimulationStats");
+		Builder builder = gladeFile.builder;
+		
 		Dialog dialogSimulationStats = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogSimulationStats");
 		ComboBox comboBoxSimulationStats = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulationStats");
 		VBox vboxSimulationStat = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulationStat");
@@ -1798,17 +1816,17 @@ class CursorSet {
 		gdk.Screen.Screen screen = invisible.getScreen();
 		gdk.Display.Display display = screen.getDisplay();
 		
-		this.normal = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "pointer.png"), 4, 2);
-		this.northwest = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-northwest.png"), 6, 6);
-		this.north = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-north.png"), 12, 6);
-		this.northeast = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-northeast.png"), 18, 6);
-		this.west = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-west.png"), 6, 12);
-		this.east = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-east.png"), 18, 12);
-		this.southwest = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-southwest.png"), 6, 18);
-		this.south = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-south.png"), 12, 18);
-		this.southeast = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-southeast.png"), 18, 18);
-		this.cross = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "stroke.png"), 2, 20);
-		this.move = new Cursor(display, new Pixbuf("../gtk/cursors" ~ "/" ~ this.category ~ "/" ~ "move.png"), 11, 11);
+		this.normal = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "pointer.png"), 4, 2);
+		this.northwest = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-northwest.png"), 6, 6);
+		this.north = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-north.png"), 12, 6);
+		this.northeast = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-northeast.png"), 18, 6);
+		this.west = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-west.png"), 6, 12);
+		this.east = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-east.png"), 18, 12);
+		this.southwest = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-southwest.png"), 6, 18);
+		this.south = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-south.png"), 12, 18);
+		this.southeast = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "direction-southeast.png"), 18, 18);
+		this.cross = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "stroke.png"), 2, 20);
+		this.move = new Cursor(display, new Pixbuf("../res/cursors" ~ "/" ~ this.category ~ "/" ~ "move.png"), 11, 11);
 	}
 	
 	override string toString() {
@@ -3857,8 +3875,9 @@ class PuffEffect: Effect {
 }
 
 class FrameDrawingManager {
-	this(Builder builder) {
-		this.builder = builder;
+	this() {
+		GladeFile gladeFile = new GladeFile("mainWindow");
+		this.builder = gladeFile.builder;
 		
 		this.frameDrawing = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameDrawing");
 					
@@ -3958,27 +3977,27 @@ class FrameDrawingManager {
 	
 	void populatePalette() {		
 		ToolItemGroup groupArchitectures = addItemGroup(this.palette, "Architectures");
-		string ARCH_SHARED_CACHE_MULTICORE = registerStockId("archSharedCacheMulticore", "Shared Cache Multicore", "X", "../gtk/canvas/arch_shared_cache_multicore.svg");
+		string ARCH_SHARED_CACHE_MULTICORE = registerStockId("archSharedCacheMulticore", "Shared Cache Multicore", "X", "../res/canvas/arch_shared_cache_multicore.svg");
 		addItem(groupArchitectures, ARCH_SHARED_CACHE_MULTICORE, "archSharedCacheMulticore", "Shared Cache Multicore Architecture");
 			
 		ToolItemGroup groupProcessorCores = addItemGroup(this.palette, "Processor Cores");
-		string CPU_SIMPLE = registerStockId("cpuSimple", "Simple CPU", "X", "../gtk/canvas/cpu_simple.svg");
-		string CPU_OOO = registerStockId("cpuOOO", "OoO CPU", "X", "../gtk/canvas/cpu_ooo.svg");
+		string CPU_SIMPLE = registerStockId("cpuSimple", "Simple CPU", "X", "../res/canvas/cpu_simple.svg");
+		string CPU_OOO = registerStockId("cpuOOO", "OoO CPU", "X", "../res/canvas/cpu_ooo.svg");
 		addItem(groupProcessorCores, CPU_SIMPLE, "cpuSimple", "Simple CPU Core");
 		addItem(groupProcessorCores, CPU_OOO, "cpuOoO", "Out-of-Order CPU Core");
 		
 		ToolItemGroup groupCaches = addItemGroup(this.palette, "Memory Hierarchy Objects");
-		string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../gtk/canvas/cache_l1i.svg");
-		string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../gtk/canvas/cache_l1d.svg");
-		string CACHE_L2 = registerStockId("cacheL2", "Shared L2 Cache", "X", "../gtk/canvas/cache_l2.svg");
-		string DRAM_FIXED = registerStockId("dramFixed", "Fixed Latency DRAM", "X", "../gtk/canvas/dram_fixed.svg");
+		string CACHE_L1I = registerStockId("cacheL1I", "L1 Instruction Cache", "X", "../res/canvas/cache_l1i.svg");
+		string CACHE_L1D = registerStockId("cacheL1d", "L1 Data Cache", "X", "../res/canvas/cache_l1d.svg");
+		string CACHE_L2 = registerStockId("cacheL2", "Shared L2 Cache", "X", "../res/canvas/cache_l2.svg");
+		string DRAM_FIXED = registerStockId("dramFixed", "Fixed Latency DRAM", "X", "../res/canvas/dram_fixed.svg");
 		addItem(groupCaches, CACHE_L1I, "cacheL1I", "L1 Instruction Cache");
 		addItem(groupCaches, CACHE_L1D, "cacheL1D", "L1 Data Cache");
 		addItem(groupCaches, CACHE_L2, "cacheL2", "Shared L2 Cache");
 		addItem(groupCaches, DRAM_FIXED, "dramFixed", "Fixed Latency DRAM");
 		
 		ToolItemGroup groupInterconnects = addItemGroup(this.palette, "Interconnects");
-		string INTERCONNECT_FIXED_P2P = registerStockId("interconnectFixedP2P", "Fixed Latency P2P Interconnect", "X", "../gtk/canvas/interconnect_fixed_p2p.svg");			
+		string INTERCONNECT_FIXED_P2P = registerStockId("interconnectFixedP2P", "Fixed Latency P2P Interconnect", "X", "../res/canvas/interconnect_fixed_p2p.svg");			
 		addItem(groupInterconnects, INTERCONNECT_FIXED_P2P, "interconnectFixedP2P", "Fixed Latency P2P Interconnect");
 	}
 	
@@ -4188,13 +4207,12 @@ class TreeViewArchitecturalSpecificationProperties: TreeView {
 	Canvas canvas;
 }
 
-class Startup {
+class Startup {	
 	this(string[] args) {
 		Main.init(args);
 		
-		this.builder = new Builder();
-		this.builder.addFromFile("../gtk/flexim_gui.glade");
-		this.builder.connectSignals(null); 
+		GladeFile gladeFile = new GladeFile("mainWindow");
+		this.builder = gladeFile.builder;
 
 		this.buildSplashScreen();
 		
@@ -4263,9 +4281,9 @@ class Startup {
 	}
 	
 	void buildDialogs() {
-		this.dialogEditSetBenchmarkSuites = new DialogEditSetBenchmarkSuites(this.builder);
-		this.dialogEditSetSimulations = new DialogEditSetSimulations(this.builder);
-		this.dialogEditSetSimulationStats = new DialogEditSetSimulationStats(this.builder);
+		this.dialogEditSetBenchmarkSuites = new DialogEditSetBenchmarkSuites();
+		this.dialogEditSetSimulations = new DialogEditSetSimulations();
+		this.dialogEditSetSimulationStats = new DialogEditSetSimulationStats();
 	}
 	
 	void buildToolbars() {
@@ -4287,7 +4305,7 @@ class Startup {
 				aboutDialog.setProgramName("Flexim ISE");
 				aboutDialog.setVersion("0.1 Prelease");
 				aboutDialog.setCopyright("Copyright (c) 2010 Min Cai <itecgo@163.com>");
-				aboutDialog.setLogo(new Pixbuf("../gtk/flexim.png"));
+				aboutDialog.setLogo(new Pixbuf("../res/flexim.png"));
 				aboutDialog.setAuthors(authors);
 				aboutDialog.setDocumenters(documenters);
 				aboutDialog.setArtists(artists);
@@ -4304,14 +4322,16 @@ class Startup {
 	}
 	
 	void buildFrameDrawing() {
-		this.frameDrawingManager = new FrameDrawingManager(this.builder);
+		this.frameDrawingManager = new FrameDrawingManager();
 	}
 	
 	void buildSplashScreen() {
-		this.splashScreen = getBuilderObject!(Window, GtkWindow)(this.builder, "splashScreen");
+		GladeFile gladeFile = new GladeFile("splashScreen");
+		
+		this.splashScreen = getBuilderObject!(Window, GtkWindow)(gladeFile.builder, "splashScreen");
 		this.splashScreen.showAll();
 		
-		Label labelLoading = getBuilderObject!(Label, GtkLabel)(this.builder, "labelLoading");
+		Label labelLoading = getBuilderObject!(Label, GtkLabel)(gladeFile.builder, "labelLoading");
 			
 		void doPendingEvents() {
 			while(Main.eventsPending) {

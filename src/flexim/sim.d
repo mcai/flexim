@@ -1394,6 +1394,6 @@ void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
 	
-	bool gui = false;
+	bool gui = true;
 	gui ? mainGui(args) : mainConsole(args);
 }
