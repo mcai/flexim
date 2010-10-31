@@ -118,6 +118,15 @@ import pango.PgCairo;
 import pango.PgLayout;
 import pango.PgFontDescription;
 
+class GladeFile {
+	this(string fileName, string dirName = "../res/glade/", string fileExt = ".glade") {
+		this.builder = new Builder();
+		this.builder.addFromFile(join(dirName, fileName ~ fileExt));
+	}
+	
+	Builder builder;
+}
+
 T getBuilderObject(T, K)(ObjectG obj) {
 	obj.setData("GObject", null);
 	return new T(cast(K*)obj.getObjectGStruct());
@@ -127,13 +136,8 @@ T getBuilderObject(T, K)(Builder builder, string name) {
 	return getBuilderObject!(T, K)(builder.getObject(name));
 }
 
-class GladeFile {
-	this(string fileName, string dirName = "../res/glade/", string fileExt = ".glade") {
-		this.builder = new Builder();
-		this.builder.addFromFile(join(dirName, fileName ~ fileExt));
-	}
-	
-	Builder builder;
+T getBuilderObject(T, K)(GladeFile gladeFile, string name) {
+	return getBuilderObject!(T, K)(gladeFile.builder, name);
 }
 
 void guiActionNotImplemented(Window parent, string text) {
@@ -361,20 +365,18 @@ void hideOnDelete(Dialog dialog) {
 		});
 }
 
-class DialogEditSet {
+class FrameEditSet {
 	this(
-		Dialog dialogEditSet, 
+		Frame frameEditSet, 
 		ComboBox comboBoxSet, 
 		Button buttonSetAdd, 
 		Button buttonSetRemove, 
-		VBox vboxContent, 
-		Button buttonClose) {
-		this.dialogEditSet = dialogEditSet;
+		VBox vboxContent) {
+		this.frameEditSet = frameEditSet;
 		this.comboBoxSet = comboBoxSet;
 		this.buttonSetAdd = buttonSetAdd;
 		this.buttonSetRemove = buttonSetRemove;
 		this.vboxContent = vboxContent;
-		this.buttonClose = buttonClose;
 
 		setupTextComboBox(this.comboBoxSet);
 		this.comboBoxSet.addOnChanged(delegate void(ComboBox)
@@ -402,45 +404,35 @@ class DialogEditSet {
 		this.notebookSets.setBorderWidth(2);
 		this.notebookSets.setCurrentPage(0);
 		this.vboxContent.packStart(this.notebookSets, true, true, 0);
-			
-		this.buttonClose.addOnClicked(delegate void(Button)
-			{
-				this.dialogEditSet.hideAll();
-			});
-		hideOnDelete(this.dialogEditSet);
 	}
 	
-	void showDialog() {
-		this.dialogEditSet.showAll();
+	void showFrame() {
+		this.frameEditSet.showAll();
 	}
 	
 	abstract void onComboBoxSetChanged();
 	abstract void onButtonSetAddClicked();
 	abstract void onButtonSetRemoveClicked();
 	
-	Dialog dialogEditSet;
+	Frame frameEditSet;
 	ComboBox comboBoxSet;
 	Button buttonSetAdd, buttonSetRemove;
 	VBox vboxContent;
 	Notebook notebookSets;
-	Button buttonClose;
 }
 
-class DialogEditSetBenchmarkSuites : DialogEditSet {
+class FrameBenchmarkConfigs : FrameEditSet {
 	this() {
-		GladeFile gladeFile = new GladeFile("dialogEditBenchmarkConfigs");
+		GladeFile gladeFile = new GladeFile("frameBenchmarkConfigs");
 		Builder builder = gladeFile.builder;
 		
-		Dialog dialogEditBenchmarkConfigs = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditBenchmarkConfigs");
+		Frame frameBenchmarkConfigs = getBuilderObject!(Frame, GtkFrame)(builder, "frameBenchmarkConfigs");
 		ComboBox comboBoxBenchmarkSuites = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxBenchmarkSuites");
 		Button buttonAddBenchmarkSuite = getBuilderObject!(Button, GtkButton)(builder, "buttonAddBenchmarkSuite");
 		Button buttonRemoveBenchmarkSuite = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveBenchmarkSuite");
 		VBox vboxBenchmarks = getBuilderObject!(VBox, GtkVBox)(builder, "vboxBenchmarks");
-		Button buttonCloseDialogEditBenchmarks = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditBenchmarks");
 			
-		super(dialogEditBenchmarkConfigs, comboBoxBenchmarkSuites, buttonAddBenchmarkSuite, buttonRemoveBenchmarkSuite, vboxBenchmarks, buttonCloseDialogEditBenchmarks);
-		
-		dialogEditBenchmarkConfigs.maximize();
+		super(frameBenchmarkConfigs, comboBoxBenchmarkSuites, buttonAddBenchmarkSuite, buttonRemoveBenchmarkSuite, vboxBenchmarks);
 		
 		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
 			this.newBenchmarkSuite(benchmarkSuite);
@@ -632,22 +624,19 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 	int currentBenchmarkId = -1;
 }
 
-class DialogEditSetSimulations : DialogEditSet {
+class FrameSimulationConfigs : FrameEditSet {
 	this() {		
-		GladeFile gladeFile = new GladeFile("dialogEditSimulationConfigs");
+		GladeFile gladeFile = new GladeFile("frameSimulationConfigs");
 		Builder builder = gladeFile.builder;
 		
-		Dialog dialogEditSimulationConfigs = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogEditSimulationConfigs");
+		Frame frameSimulationConfigs = getBuilderObject!(Frame, GtkFrame)(builder, "frameSimulationConfigs");
 		ComboBox comboBoxSimulations = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulations");
 		Button buttonAddSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonAddSimulation");
 		Button buttonRemoveSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveSimulation");
 		VBox vboxSimulation = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulation");
 		this.buttonSimulate = getBuilderObject!(Button, GtkButton)(builder, "buttonSimulate");
-		Button buttonCloseDialogEditSimulations = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogEditSimulations");
 			
-		super(dialogEditSimulationConfigs, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation, buttonCloseDialogEditSimulations);
-
-		dialogEditSimulationConfigs.maximize();
+		super(frameSimulationConfigs, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation);
 		
 		HBox hboxAddSimulation = getBuilderObject!(HBox, GtkHBox)(builder, "hboxAddSimulation");
 			
@@ -979,19 +968,16 @@ class DialogEditSetSimulations : DialogEditSet {
 	Button buttonSimulate;
 }
 
-class DialogEditSetSimulationStats: DialogEditSet {
+class FrameSimulationStats: FrameEditSet {
 	this() {
-		GladeFile gladeFile = new GladeFile("dialogSimulationStats");
+		GladeFile gladeFile = new GladeFile("frameSimulationStats");
 		Builder builder = gladeFile.builder;
 		
-		Dialog dialogSimulationStats = getBuilderObject!(Dialog, GtkDialog)(builder, "dialogSimulationStats");
+		Frame frameSimulationStats = getBuilderObject!(Frame, GtkFrame)(builder, "frameSimulationStats");
 		ComboBox comboBoxSimulationStats = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulationStats");
 		VBox vboxSimulationStat = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulationStat");
-		Button buttonCloseDialogSimulationStats = getBuilderObject!(Button, GtkButton)(builder, "buttonCloseDialogSimulationStats");
 			
-		super(dialogSimulationStats, comboBoxSimulationStats, null, null, vboxSimulationStat, buttonCloseDialogSimulationStats);
-
-		dialogSimulationStats.maximize();
+		super(frameSimulationStats, comboBoxSimulationStats, null, null, vboxSimulationStat);
 		
 		foreach(simulationStatTitle, simulationStat; simulationStats) {
 			this.newSimulationStat(simulationStat);
@@ -4211,7 +4197,7 @@ class Startup {
 		Main.run();
 	}
 	
-	bool keyPressed(GdkEventKey* event, Widget widget) {
+	/*bool keyPressed(GdkEventKey* event, Widget widget) {
 		if(event.state & ModifierType.CONTROL_MASK && event.keyval == GdkKeysyms.GDK_c) {
 			this.canvas.copySelected();
 			return  true;
@@ -4257,7 +4243,7 @@ class Startup {
 		}
 		
 		dialog.destroy();
-	}
+	}*/
 	
 	void buildMainWindow() {
 		this.mainWindow = getBuilderObject!(Window, GtkWindow)(this.builder, "mainWindow");
@@ -4265,17 +4251,25 @@ class Startup {
 		this.mainWindow.addOnDestroy(delegate void(ObjectGtk)
 			{
 				saveConfigsAndStats();
-				Canvas.saveXML(this.canvas);
+				//Canvas.saveXML(this.canvas);
 				Main.exit(0);
 			});
 			
-		this.mainWindow.addOnKeyPress(&this.keyPressed);
+		//this.mainWindow.addOnKeyPress(&this.keyPressed);
 	}
 	
-	void buildDialogs() {
-		this.dialogEditSetBenchmarkSuites = new DialogEditSetBenchmarkSuites();
-		this.dialogEditSetSimulations = new DialogEditSetSimulations();
-		this.dialogEditSetSimulationStats = new DialogEditSetSimulationStats();
+	void buildFrames() {		
+		this.frameBenchmarkConfigs = new FrameBenchmarkConfigs();
+		this.frameSimulationConfigs = new FrameSimulationConfigs();
+		this.frameSimulationStats = new FrameSimulationStats();
+		
+		Frame frameBenchmarks = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameBenchmarks");
+		Frame frameArchitectures = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameArchitectures");
+		Frame frameSimulations = getBuilderObject!(Frame, GtkFrame)(this.builder, "frameSimulations");
+		
+		frameBenchmarks.add(this.frameBenchmarkConfigs.frameEditSet);
+		frameArchitectures.add(this.frameSimulationConfigs.frameEditSet);
+		frameSimulations.add(this.frameSimulationStats.frameEditSet);
 	}
 	
 	void buildToolbars() {
@@ -4284,7 +4278,7 @@ class Startup {
 	
 	void buildMenus() {
 		bindMenuItem(this.builder, "menuItemFileQuit", {Main.quit();});
-		bindMenuItem(this.builder, "menuItemFileExportToPDF", {this.exportToPdf();});
+		//bindMenuItem(this.builder, "menuItemFileExportToPDF", {this.exportToPdf();});
 		bindMenuItem(this.builder, "menuItemHelpAbout", 
 			{
 				string[] authors, documenters, artists;
@@ -4308,14 +4302,14 @@ class Startup {
 				aboutDialog.run();
 				aboutDialog.destroy();
 			});
-		bindMenuItem(this.builder, "menuItemToolsBenchmarks", {this.dialogEditSetBenchmarkSuites.showDialog();});
-		bindMenuItem(this.builder, "menuItemToolsSimulations", {this.dialogEditSetSimulations.showDialog();});
-		bindMenuItem(this.builder, "menuItemToolsSimulationStats", {this.dialogEditSetSimulationStats.showDialog();});
+		//bindMenuItem(this.builder, "menuItemToolsBenchmarks", {this.dialogEditSetBenchmarkSuites.showDialog();});
+		//bindMenuItem(this.builder, "menuItemToolsSimulations", {this.dialogEditSetSimulations.showDialog();});
+		//bindMenuItem(this.builder, "menuItemToolsSimulationStats", {this.dialogEditSetSimulationStats.showDialog();});
 	}
 	
-	void buildFrameDrawing() {
+	/*void buildFrameDrawing() {
 		this.frameDrawingManager = new FrameDrawingManager();
-	}
+	}*/
 	
 	void buildSplashScreen() {
 		GladeFile gladeFile = new GladeFile("splashScreen");
@@ -4343,7 +4337,7 @@ class Startup {
 				
 				this.buildMainWindow();
 				
-				this.buildDialogs();
+				this.buildFrames();
 				
 				this.buildToolbars();
 				
@@ -4352,7 +4346,7 @@ class Startup {
 				labelLoading.setLabel("Initializing designer");
 				doPendingEvents();
 				
-				this.buildFrameDrawing();
+				//this.buildFrameDrawing();
 				
 				this.splashScreen.destroy();
 				
@@ -4365,15 +4359,16 @@ class Startup {
 			}, false);
 	}
 	
-	Canvas canvas() {
+	/*Canvas canvas() {
 		return this.frameDrawingManager.canvas;
-	}
+	}*/
 	
 	Builder builder;
 	Window mainWindow;
 	Window splashScreen;
-	FrameDrawingManager frameDrawingManager;
-	DialogEditSetBenchmarkSuites dialogEditSetBenchmarkSuites;
-	DialogEditSetSimulations dialogEditSetSimulations;
-	DialogEditSetSimulationStats dialogEditSetSimulationStats;
+	//FrameDrawingManager frameDrawingManager;
+	
+	FrameBenchmarkConfigs frameBenchmarkConfigs;
+	FrameSimulationConfigs frameSimulationConfigs;
+	FrameSimulationStats frameSimulationStats;
 }

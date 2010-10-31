@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
-<SimulationStat title="WCETBench-fir-1x1" cwd="../stats/simulations" duration="14223" totalCycles="23003">
+<SimulationStat title="WCETBench-fir-1x1" cwd="../stats/simulations" duration="17873" totalCycles="23002">
    <ProcessorStat>
       <CoreStat>
          <CacheStat hits="61" noRetryWrites="0" noRetryAccesses="109" writeHits="0" evictions="0" nonblockingReads="109" reads="109" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="61" nonblockingWrites="0" blockingWrites="0" noRetryReads="109" noRetryHits="61" readRetries="0" accesses="109" noRetryReadHits="61">
          </CacheStat>
-         <CacheStat hits="8687" noRetryWrites="91" noRetryAccesses="656" writeHits="5437" evictions="0" nonblockingReads="3262" reads="3262" blockingReads="0" writeRetries="0" writes="5448" noRetryWriteHits="80" readHits="3250" nonblockingWrites="5448" blockingWrites="0" noRetryReads="565" noRetryHits="633" readRetries="0" accesses="8710" noRetryReadHits="553">
+         <CacheStat hits="8642" noRetryWrites="91" noRetryAccesses="656" writeHits="5362" evictions="0" nonblockingReads="3292" reads="3292" blockingReads="0" writeRetries="0" writes="5373" noRetryWriteHits="80" readHits="3280" nonblockingWrites="5373" blockingWrites="0" noRetryReads="565" noRetryHits="633" readRetries="0" accesses="8665" noRetryReadHits="553">
          </CacheStat>
       </CoreStat>
       <ContextStat totalInsts="2666">
