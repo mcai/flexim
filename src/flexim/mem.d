@@ -1822,3 +1822,67 @@ class Transaction {
 	uint pc;
 	uint lastLoad;
 }
+
+class MemorySystem {
+	this(Simulation simulation) {	
+		this.simulation = simulation;		
+		this.endNodeCount = simulation.config.processor.numCores;
+		this.createMemoryHierarchy();
+	}
+
+	void createMemoryHierarchy() {
+		this.mem = new MemoryController(this, this.simulationConfig.mainMemory, this.simulationStat.mainMemory);
+				
+		this.l2 = new CoherentCache(this, this.simulationConfig.l2Cache, this.simulationStat.l2Cache);
+		this.l2.next = this.mem;
+
+		this.seqIs = new Sequencer[this.endNodeCount];
+		this.l1Is = new CoherentCache[this.endNodeCount];
+
+		this.seqDs = new Sequencer[this.endNodeCount];
+		this.l1Ds = new CoherentCache[this.endNodeCount];
+
+		for(uint i = 0; i < this.endNodeCount; i++) {
+			CoherentCache l1I = new CoherentCache(this, this.simulationConfig.processor.cores[i].iCache, this.simulationStat.processor.cores[i].iCache);
+			Sequencer seqI = new Sequencer("seqI" ~ "-" ~ to!(string)(i), l1I);
+
+			CoherentCache l1D = new CoherentCache(this, this.simulationConfig.processor.cores[i].dCache, this.simulationStat.processor.cores[i].dCache);
+			Sequencer seqD = new Sequencer("seqD" ~ "-" ~ to!(string)(i), l1D);
+
+			this.seqIs[i] = seqI;
+			this.l1Is[i] = l1I;
+
+			this.seqDs[i] = seqD;
+			this.l1Ds[i] = l1D;
+			
+			l1I.next = this.l2;
+			l1D.next = this.l2;
+		}
+		
+		this.mmu = new MMU();
+	}
+	
+	SimulationConfig simulationConfig() {
+		return this.simulation.config;
+	}
+	
+	SimulationStat simulationStat() {
+		return this.simulation.stat;
+	}
+
+	uint endNodeCount;
+
+	Sequencer[] seqIs;
+	Sequencer[] seqDs;
+
+	CoherentCache[] l1Is;
+	CoherentCache[] l1Ds;
+
+	CoherentCache l2;
+	
+	MemoryController mem;
+	
+	MMU mmu;
+	
+	Simulation simulation;
+}

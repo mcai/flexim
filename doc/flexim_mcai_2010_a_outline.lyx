@@ -1,0 +1,162 @@
+#LyX 1.6.7 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass paper
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Facilitating User-Friendly Cycle-Accurate Simulation of Multicore Processors
+\end_layout
+
+\begin_layout Author
+Min Cai, Zhimin Gu
+\end_layout
+
+\begin_layout Institution
+Beijing Institute of Technology, Beijing 100081, P.R.China
+\end_layout
+
+\begin_layout Abstract
+Good cycle-accurate simulators are critical for conducting successful multicore
+ processor architecture research nowadays.
+ However, most of the existing simulators are written in C or C++ for speed
+ considerations and the modeled computer structures and functionalities
+ are too complicated to be implemented in a clear yet efficient way.
+ The resulting unreadable code makes the simulator hard to use and extend.
+ As a niche market, other not-so-realistic simulators are mostly used for
+ educational and visualization purposes that they are written in traditional
+ object-oriented languages such as Java or C#, which omit many machine details
+ that are necessary for architectural study.
+ Oftentimes, users need to use a dozen of auxiliary tools and advanced scripting
+ to automate the simulation process and do the housekeeping work such as
+ statistics collection and reporting.
+ There is a permanent need of balancing speed and elegance while simulating
+ multicore architectures.
+ 
+\end_layout
+
+\begin_layout Abstract
+In this paper, we present key design methodology and implementation techiques
+ that developed during the development of Flexim, a user-friendly cycle-accurate
+ multicore simulator.
+ Flexim consists of the simulator core, a console frontend and a graphical
+ frontend.
+ Within the core, Flexim remodels the core functionalities of the classic
+ SimpleScalar simulator and extends it to enable configurable timing simulation
+ of out-of-order cores and multi-level cache hierarchies of multicore processors.
+ Interface-based hierarchical componentization is used for improving the
+ reusability, extensibility and maintainability of the simulator.
+ Monitoring based techniques are exploited to provide customizable simulation
+ control and visualization.
+ The multithreaded power of the multicore host machine is exploited to provide
+ efficient and responsive graphical frontend.
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Enumerate
+Use "interface-based" hierarchical componentization instead of non-modular
+ procedural calls.
+\end_layout
+
+\begin_layout Enumerate
+Use "monitoring based" techniques to fulfill customizable simulation control
+ and visualization needs.
+\end_layout
+
+\begin_layout Enumerate
+Provides "multicore-supportive" GUI interface instead of single-threaded
+ console-only simulator interface.
+\end_layout
+
+\begin_layout Section
+Related Work
+\end_layout
+
+\begin_layout Paragraph
+Object Oriented Simulators.
+\end_layout
+
+\begin_layout Paragraph
+Monitoring-Based Techinques in Architectural Simulation.
+\end_layout
+
+\begin_layout Paragraph
+GUI-Frontend and Visualization in Architectural Simulation.
+\end_layout
+
+\begin_layout Section
+Flexim Simulator Facilitating User-Friendly Cycle-Accurate Simulation of
+ Multicore Processors
+\end_layout
+
+\begin_layout Section
+Experimental Setup and Results
+\end_layout
+
+\begin_layout Subsection
+Overview
+\end_layout
+
+\begin_layout Subsection
+Implementation Details
+\end_layout
+
+\begin_layout Enumerate
+Use implicit callbacks instead of expliciting pending queues for asynchronous
+ eventing.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Use XML files instead of INI files or scripting to provide standardized
+ yet simple configuration and statistics output.
+ 
+\end_layout
+
+\begin_layout Subsection
+Results
+\end_layout
+
+\end_body
+\end_document

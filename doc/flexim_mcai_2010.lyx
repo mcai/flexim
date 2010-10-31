@@ -89,14 +89,15 @@ Good cycle-accurate simulators are critical for conducting successful multicore
 \begin_layout Abstract
 In this paper, we present Flexim, a streamlined cycle-accurate multicore
  architectural simulation platform, which consists of the simulator core
- and the GUI based Integrated Simulation Environment (ISE) .
+ and the GUI frontend for setting up and running simulations within the
+ simulator .
  Within the core, Flexim remodels the core functionalities of the classic
  SimpleScalar simulator and extends it to enable configurable timing simulation
  of out-of-order cores and multi-level cache hierarchies of multicore processors.
  It exploits interface-based object orientation and cycle-accurate callback-base
 d eventing to improve the modularity and extensibility of the simulator
  core.
- The GUI-based ISE uses componentization and visualization techniques to
+ The GUI frontend uses componentization and visualization techniques to
  streamline the typical simulation life-cycle of architectural planning,
  simulator configuration and statistics collection & reporting.
  Various static and dynamic views are provided to show the user a consistent
@@ -104,7 +105,7 @@ d eventing to improve the modularity and extensibility of the simulator
  under simulation.
  The pervasive use of XML files provide human readable and machine-friendly
  configuration and statistics representation that bridges the simulator
- core and the ISE.
+ core and the GUI frontend.
  Simulations of a few popular benchmark suites such as Olden and CPU2006
  are shown for illustrative purposes.
 \end_layout
