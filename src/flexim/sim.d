@@ -79,9 +79,8 @@ class Benchmark : PropertiesProvider {
 }
 
 class BenchmarkSuite : PropertiesProvider {	
-	this(string title, string cwd) {
+	this(string title) {
 		this.title = title;
-		this.cwd = cwd;
 	}
 	
 	void register(Benchmark benchmark) {
@@ -95,7 +94,7 @@ class BenchmarkSuite : PropertiesProvider {
 	}
 	
 	override string toString() {
-		return format("BenchmarkSuite[title=%s, cwd=%s, benchmarks.length=%d]", this.title, this.cwd, this.benchmarks.length);
+		return format("BenchmarkSuite[title=%s, benchmarks.length=%d]", this.title, this.benchmarks.length);
 	}
 	
 	static BenchmarkSuite loadXML(string cwd, string fileName) {
@@ -114,13 +113,11 @@ class BenchmarkSuite : PropertiesProvider {
 		string[string] props;
 		
 		props["title"] = this.title;
-		props["cwd"] = this.cwd;
 		
 		return props;
 	}
 	
 	string title;
-	string cwd;
 	
 	Benchmark[string] benchmarks;
 }
@@ -133,7 +130,6 @@ class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite) {
 		XMLConfigFile xmlConfigFile = new XMLConfigFile("BenchmarkSuite");
 		
 		xmlConfigFile["title"] = benchmarkSuite.title;
-		xmlConfigFile["cwd"] = benchmarkSuite.cwd;
 		
 		foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
 			XMLConfig xmlConfig = new XMLConfig("Benchmark");
@@ -152,9 +148,8 @@ class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite) {
 	
 	override BenchmarkSuite load(XMLConfigFile xmlConfigFile) {
 		string bs_title = xmlConfigFile["title"];
-		string bs_cwd = xmlConfigFile["cwd"];
 		
-		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(bs_title, bs_cwd);
+		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(bs_title);
 		
 		foreach(entry; xmlConfigFile.entries) {
 			string title = entry["title"];
@@ -293,8 +288,7 @@ class MainMemoryConfigXMLSerializer: XMLSerializer!(MainMemoryConfig) {
 }
 
 class ContextConfig: Config!(ContextConfig) {
-	this(string binariesDir, Benchmark workload) {
-		this.binariesDir = binariesDir;
+	this(Benchmark workload) {
 		this.workload = workload;
 	}
 	
@@ -307,7 +301,7 @@ class ContextConfig: Config!(ContextConfig) {
 	}
 	
 	string cwd() {
-		return join(this.binariesDir, this.workload.suite.cwd, this.workload.cwd);
+		return this.workload.cwd;
 	}
 	
 	string stdin() {
@@ -319,11 +313,9 @@ class ContextConfig: Config!(ContextConfig) {
 	}
 	
 	override string toString() {
-		return format("ContextConfig[binariesDir=%s, workload=%s]",
-			this.binariesDir, this.workload);
+		return format("ContextConfig[workload=%s]", this.workload);
 	}
 
-	string binariesDir;
 	Benchmark workload;
 }
 
@@ -334,7 +326,6 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	override XMLConfig save(ContextConfig contextConfig) {
 		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
 		
-		xmlConfig["binariesDir"] = contextConfig.binariesDir;
 		xmlConfig["benchmarkSuiteTitle"] = contextConfig.workload.suite.title;
 		xmlConfig["benchmarkTitle"] = contextConfig.workload.title;
 		
@@ -342,13 +333,12 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) {
 	}
 	
 	override ContextConfig load(XMLConfig xmlConfig) {
-		string binariesDir = xmlConfig["binariesDir"];
 		string benchmarkSuiteTitle = xmlConfig["benchmarkSuiteTitle"];
 		string benchmarkTitle = xmlConfig["benchmarkTitle"];
 		
 		Benchmark workload = benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle];
 		
-		ContextConfig contextConfig = new ContextConfig(binariesDir, workload);
+		ContextConfig contextConfig = new ContextConfig(workload);
 		return contextConfig;
 	}
 	

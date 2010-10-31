@@ -7,4 +7,4 @@ EXTRA_LIBS = -lm
 PROG = $(EXE)
 OBJS = $(EXE).o
 
-include ../../../Makefile.include
+include ../Makefile.include

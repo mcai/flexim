@@ -474,7 +474,7 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 			currentBenchmarkSuiteId++;
 		} while(format("benchmarkSuite%d", currentBenchmarkSuiteId) in benchmarkSuites);
 		
-		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(format("benchmarkSuite%d", currentBenchmarkSuiteId), "");
+		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(format("benchmarkSuite%d", currentBenchmarkSuiteId));
 		benchmarkSuites[benchmarkSuite.title] = benchmarkSuite;
 		this.newBenchmarkSuite(benchmarkSuite);
 		
@@ -523,10 +523,6 @@ class DialogEditSetBenchmarkSuites : DialogEditSet {
 					this.comboBoxSet.removeText(index);
 					this.comboBoxSet.insertText(index, benchmarkSuite.title);
 					this.comboBoxSet.setActive(index);
-				}),
-			newHBoxWithLabelAndEntry("Cwd: ", benchmarkSuite.cwd, delegate void(string entryText)
-				{
-					benchmarkSuite.cwd = entryText;
 				}));
 		
 		VBox vboxBenchmarks = new VBox(false, 6);
@@ -756,7 +752,7 @@ class DialogEditSetSimulations : DialogEditSet {
 			
 			for(uint j = 0; j < this.numThreadsPerCoreWhenAddSimulation; j++) {
 				Benchmark workload = benchmarkSuites["WCETBench"]["fir"];
-				ContextConfig context = new ContextConfig("../tests/benchmarks", workload);
+				ContextConfig context = new ContextConfig(workload);
 				processor.contexts ~= context;
 			}
 		}
@@ -935,10 +931,6 @@ class DialogEditSetSimulations : DialogEditSet {
 			vboxesContext ~= hpack(
 				new Label(format("context-%d", i)),
 				new VSeparator(), 
-				newHBoxWithLabelAndEntry("Binaries Directory:", context.binariesDir, delegate void(string entryText)
-				{
-					context.binariesDir = entryText;
-				}),
 				newHBoxWithLabelAndWidget("Benchmark:", this.newContext(context)));
 		}
 		

@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
-<BenchmarkSuite title="PARSEC" cwd="PARSEC">
-   <Benchmark title="swaptions" cwd="swaptions" stdin="" exe="swaptions" argsLiteral="-ns 32 -sm 10000 -nt ${nthreads}" stdout="">
+<BenchmarkSuite title="PARSEC">
+   <Benchmark title="swaptions" cwd="../tests/benchmarks/PARSEC/swaptions" stdin="" exe="swaptions" argsLiteral="-ns 32 -sm 10000 -nt ${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="bodytrack" cwd="bodytrack" stdin="" exe="bodytrack" argsLiteral="sequenceB_2 4 2 2000 5 0 ${nthreads}" stdout="">
+   <Benchmark title="bodytrack" cwd="../tests/benchmarks/PARSEC/bodytrack" stdin="" exe="bodytrack" argsLiteral="sequenceB_2 4 2 2000 5 0 ${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="canneal" cwd="canneal" stdin="" exe="canneal" argsLiteral="${nthreads} 15000 2000 200000.nets" stdout="">
+   <Benchmark title="canneal" cwd="../tests/benchmarks/PARSEC/canneal" stdin="" exe="canneal" argsLiteral="${nthreads} 15000 2000 200000.nets" stdout="">
    </Benchmark>
-   <Benchmark title="dedup" cwd="dedup" stdin="" exe="dedup" argsLiteral="-c -p -f -t ${nthreads} -i media.dat -o output.dat.ddp" stdout="">
+   <Benchmark title="dedup" cwd="../tests/benchmarks/PARSEC/dedup" stdin="" exe="dedup" argsLiteral="-c -p -f -t ${nthreads} -i media.dat -o output.dat.ddp" stdout="">
    </Benchmark>
-   <Benchmark title="streamcluster" cwd="streamcluster" stdin="" exe="streamcluster" argsLiteral="10 20 64 8192 8192 1000 none output.txt ${nthreads}" stdout="">
+   <Benchmark title="streamcluster" cwd="../tests/benchmarks/PARSEC/streamcluster" stdin="" exe="streamcluster" argsLiteral="10 20 64 8192 8192 1000 none output.txt ${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="fluidanimate" cwd="fluidanimate" stdin="" exe="fluidanimate" argsLiteral="${nthreads} 5 in_100K.fluid out.fluid" stdout="">
+   <Benchmark title="fluidanimate" cwd="../tests/benchmarks/PARSEC/fluidanimate" stdin="" exe="fluidanimate" argsLiteral="${nthreads} 5 in_100K.fluid out.fluid" stdout="">
    </Benchmark>
 </BenchmarkSuite>

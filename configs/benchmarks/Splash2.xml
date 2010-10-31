@@ -1,25 +1,25 @@
 <?xml version="1.0"?>
-<BenchmarkSuite title="Splash2" cwd="Splash2">
-   <Benchmark title="fft" cwd="fft" stdin="" exe="fft.i386" argsLiteral="-m18 -p${nthreads} -n65536 -l4" stdout="">
+<BenchmarkSuite title="Splash2">
+   <Benchmark title="fft" cwd="../tests/benchmarks/Splash2/fft" stdin="" exe="fft.i386" argsLiteral="-m18 -p${nthreads} -n65536 -l4" stdout="">
    </Benchmark>
-   <Benchmark title="radix" cwd="radix" stdin="" exe="radix.i386" argsLiteral="-p${nthreads} -r4096 -n262144 -m524288" stdout="">
+   <Benchmark title="radix" cwd="../tests/benchmarks/Splash2/radix" stdin="" exe="radix.i386" argsLiteral="-p${nthreads} -r4096 -n262144 -m524288" stdout="">
    </Benchmark>
-   <Benchmark title="lu" cwd="lu" stdin="" exe="lu.i386" argsLiteral="-p${nthreads} -n2048 -b16" stdout="">
+   <Benchmark title="lu" cwd="../tests/benchmarks/Splash2/lu" stdin="" exe="lu.i386" argsLiteral="-p${nthreads} -n2048 -b16" stdout="">
    </Benchmark>
-   <Benchmark title="barnes" cwd="barnes" stdin="input" exe="barnes.i386" argsLiteral="${nthreads}" stdout="">
+   <Benchmark title="barnes" cwd="../tests/benchmarks/Splash2/barnes" stdin="input" exe="barnes.i386" argsLiteral="${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="ocean" cwd="ocean" stdin="" exe="ocean.i386" argsLiteral="-n258 -p${nthreads} -e1e-07 -r20000 -t28800" stdout="">
+   <Benchmark title="ocean" cwd="../tests/benchmarks/Splash2/ocean" stdin="" exe="ocean.i386" argsLiteral="-n258 -p${nthreads} -e1e-07 -r20000 -t28800" stdout="">
    </Benchmark>
-   <Benchmark title="water-spatial" cwd="water-spatial" stdin="input" exe="water-spatial.i386" argsLiteral="${nthreads}" stdout="">
+   <Benchmark title="water-spatial" cwd="../tests/benchmarks/Splash2/water-spatial" stdin="input" exe="water-spatial.i386" argsLiteral="${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="fmm" cwd="fmm" stdin="input" exe="fmm.i386" argsLiteral="${nthreads}" stdout="">
+   <Benchmark title="fmm" cwd="../tests/benchmarks/Splash2/fmm" stdin="input" exe="fmm.i386" argsLiteral="${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="cholesky" cwd="cholesky" stdin="tk14.O" exe="cholesky.i386" argsLiteral="-p${nthreads}" stdout="">
+   <Benchmark title="cholesky" cwd="../tests/benchmarks/Splash2/cholesky" stdin="tk14.O" exe="cholesky.i386" argsLiteral="-p${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="radiosity" cwd="radiosity" stdin="" exe="radiosity.i386" argsLiteral="-batch -room -p${nthreads}" stdout="">
+   <Benchmark title="radiosity" cwd="../tests/benchmarks/Splash2/radiosity" stdin="" exe="radiosity.i386" argsLiteral="-batch -room -p${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="water-nsquared" cwd="water-nsquared" stdin="input" exe="water-nsquared.i386" argsLiteral="${nthreads}" stdout="">
+   <Benchmark title="water-nsquared" cwd="../tests/benchmarks/Splash2/water-nsquared" stdin="input" exe="water-nsquared.i386" argsLiteral="${nthreads}" stdout="">
    </Benchmark>
-   <Benchmark title="raytrace" cwd="raytrace" stdin="" exe="raytrace.i386" argsLiteral="-p${nthreads} balls4.env" stdout="">
+   <Benchmark title="raytrace" cwd="../tests/benchmarks/Splash2/raytrace" stdin="" exe="raytrace.i386" argsLiteral="-p${nthreads} balls4.env" stdout="">
    </Benchmark>
 </BenchmarkSuite>

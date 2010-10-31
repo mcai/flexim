@@ -1,35 +1,35 @@
 <?xml version="1.0"?>
-<BenchmarkSuite title="MediaBench" cwd="MediaBench">
-   <Benchmark title="adpcm-dec" cwd="adpcm-dec" stdin="clinton.adpcm" exe="rawdaudio" argsLiteral="" stdout="out.pcm">
+<BenchmarkSuite title="MediaBench">
+   <Benchmark title="adpcm-dec" cwd="../tests/benchmarks/MediaBench/adpcm-dec" stdin="clinton.adpcm" exe="rawdaudio" argsLiteral="" stdout="out.pcm">
    </Benchmark>
-   <Benchmark title="adpcm-enc" cwd="adpcm-enc" stdin="clinton.pcm" exe="rawcaudio" argsLiteral="" stdout="out.adpcm">
+   <Benchmark title="adpcm-enc" cwd="../tests/benchmarks/MediaBench/adpcm-enc" stdin="clinton.pcm" exe="rawcaudio" argsLiteral="" stdout="out.adpcm">
    </Benchmark>
-   <Benchmark title="g721-dec" cwd="g721-dec" stdin="" exe="decode" argsLiteral="-4 -l -f clinton.g721" stdout="">
+   <Benchmark title="g721-dec" cwd="../tests/benchmarks/MediaBench/g721-dec" stdin="" exe="decode" argsLiteral="-4 -l -f clinton.g721" stdout="">
    </Benchmark>
-   <Benchmark title="g721-enc" cwd="g721-enc" stdin="" exe="encode" argsLiteral="-4 -l -f clinton.pcm" stdout="">
+   <Benchmark title="g721-enc" cwd="../tests/benchmarks/MediaBench/g721-enc" stdin="" exe="encode" argsLiteral="-4 -l -f clinton.pcm" stdout="">
    </Benchmark>
-   <Benchmark title="jpeg-dec" cwd="jpeg-dec" stdin="" exe="djpeg" argsLiteral="-dct int -ppm -outfile testout.ppm testimg.jpg" stdout="">
+   <Benchmark title="jpeg-dec" cwd="../tests/benchmarks/MediaBench/jpeg-dec" stdin="" exe="djpeg" argsLiteral="-dct int -ppm -outfile testout.ppm testimg.jpg" stdout="">
    </Benchmark>
-   <Benchmark title="jpeg-enc" cwd="jpeg-enc" stdin="" exe="cjpeg" argsLiteral="-dct int -progressive -opt -outfile testout.jpg testimg.ppm" stdout="">
+   <Benchmark title="jpeg-enc" cwd="../tests/benchmarks/MediaBench/jpeg-enc" stdin="" exe="cjpeg" argsLiteral="-dct int -progressive -opt -outfile testout.jpg testimg.ppm" stdout="">
    </Benchmark>
-   <Benchmark title="pegwit-dec" cwd="pegwit-dec" stdin="my.sec" exe="pegwit" argsLiteral="-d pegwit.enc pegwit.dec" stdout="">
+   <Benchmark title="pegwit-dec" cwd="../tests/benchmarks/MediaBench/pegwit-dec" stdin="my.sec" exe="pegwit" argsLiteral="-d pegwit.enc pegwit.dec" stdout="">
    </Benchmark>
-   <Benchmark title="pegwit-enc" cwd="pegwit-enc" stdin="encryption_junk" exe="pegwit" argsLiteral="-e my.pub pgptest.plain pegwit.enc" stdout="">
+   <Benchmark title="pegwit-enc" cwd="../tests/benchmarks/MediaBench/pegwit-enc" stdin="encryption_junk" exe="pegwit" argsLiteral="-e my.pub pgptest.plain pegwit.enc" stdout="">
    </Benchmark>
-   <Benchmark title="rasta" cwd="rasta" stdin="ex5_c1.wav" exe="rasta" argsLiteral="-z -A -J -S 8000 -n 12 -f map_weights.dat" stdout="ex5.asc">
+   <Benchmark title="rasta" cwd="../tests/benchmarks/MediaBench/rasta" stdin="ex5_c1.wav" exe="rasta" argsLiteral="-z -A -J -S 8000 -n 12 -f map_weights.dat" stdout="ex5.asc">
    </Benchmark>
-   <Benchmark title="epic-dec" cwd="epic-dec" stdin="" exe="unepic" argsLiteral="test_image.E" stdout="">
+   <Benchmark title="epic-dec" cwd="../tests/benchmarks/MediaBench/epic-dec" stdin="" exe="unepic" argsLiteral="test_image.E" stdout="">
    </Benchmark>
-   <Benchmark title="epic-enc" cwd="epic-enc" stdin="" exe="epic" argsLiteral="test_image.pgm -b 25" stdout="">
+   <Benchmark title="epic-enc" cwd="../tests/benchmarks/MediaBench/epic-enc" stdin="" exe="epic" argsLiteral="test_image.pgm -b 25" stdout="">
    </Benchmark>
-   <Benchmark title="ghostscript" cwd="ghostscript" stdin="" exe="gs" argsLiteral="-sDEVICE=ppm -sOutputFile=test.ppm -dNOPAUSE -q -- tiger.ps" stdout="">
+   <Benchmark title="ghostscript" cwd="../tests/benchmarks/MediaBench/ghostscript" stdin="" exe="gs" argsLiteral="-sDEVICE=ppm -sOutputFile=test.ppm -dNOPAUSE -q -- tiger.ps" stdout="">
    </Benchmark>
-   <Benchmark title="gsm-dec" cwd="gsm-dec" stdin="" exe="untoast" argsLiteral="-fpl clinton.pcm.gsm" stdout="">
+   <Benchmark title="gsm-dec" cwd="../tests/benchmarks/MediaBench/gsm-dec" stdin="" exe="untoast" argsLiteral="-fpl clinton.pcm.gsm" stdout="">
    </Benchmark>
-   <Benchmark title="gsm-enc" cwd="gsm-enc" stdin="" exe="toast" argsLiteral="-fpl clinton.pcm" stdout="">
+   <Benchmark title="gsm-enc" cwd="../tests/benchmarks/MediaBench/gsm-enc" stdin="" exe="toast" argsLiteral="-fpl clinton.pcm" stdout="">
    </Benchmark>
-   <Benchmark title="mpeg-dec" cwd="mpeg-dec" stdin="" exe="mpeg2decode" argsLiteral="-b mei16v2.m2v -r -f -o0 rec%d" stdout="">
+   <Benchmark title="mpeg-dec" cwd="../tests/benchmarks/MediaBench/mpeg-dec" stdin="" exe="mpeg2decode" argsLiteral="-b mei16v2.m2v -r -f -o0 rec%d" stdout="">
    </Benchmark>
-   <Benchmark title="mpeg-enc" cwd="mpeg-enc" stdin="" exe="mpeg2encode" argsLiteral="options.par out.m2v" stdout="">
+   <Benchmark title="mpeg-enc" cwd="../tests/benchmarks/MediaBench/mpeg-enc" stdin="" exe="mpeg2encode" argsLiteral="options.par out.m2v" stdout="">
    </Benchmark>
 </BenchmarkSuite>

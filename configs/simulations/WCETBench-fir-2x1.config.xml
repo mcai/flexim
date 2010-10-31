@@ -13,9 +13,9 @@
          <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1D-1" numSets="64" hitLatency="1">
          </CacheConfig>
       </CoreConfig>
-      <ContextConfig benchmarkSuiteTitle="WCETBench" binariesDir="../tests/benchmarks" benchmarkTitle="fir">
+      <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
       </ContextConfig>
-      <ContextConfig benchmarkSuiteTitle="WCETBench" binariesDir="../tests/benchmarks" benchmarkTitle="fir">
+      <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
       </ContextConfig>
    </ProcessorConfig>
    <CacheConfig level="1" assoc="4" blockSize="64" missLatency="7" policy="LRU" name="l2" numSets="1024" hitLatency="4">
