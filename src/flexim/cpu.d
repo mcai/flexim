@@ -1352,21 +1352,20 @@ class Thread {
 class CPUSimulator : Simulator {	
 	this(Simulation simulation) {
 		this.simulation = simulation;
-		this.addEventProcessor(this.simulation);
 		this.processor = new Processor(this);
 		
 		SimulationConfig simulationConfig = simulation.config;
 		
-		for(uint i = 0; i < simulationConfig.processor.numCores; i++) {
+		for(uint i = 0; i < simulationConfig.architecture.processor.numCores; i++) {
 			Core core = new Core(this.processor, i);
 				
-			for(uint j = 0; j < simulationConfig.processor.numThreadsPerCore; j++) {
-				ContextConfig context = simulationConfig.processor.contexts[i * simulationConfig.processor.numThreadsPerCore + j];
+			for(uint j = 0; j < simulationConfig.architecture.processor.numThreadsPerCore; j++) {
+				ContextConfig context = simulationConfig.contexts[i * simulationConfig.architecture.processor.numThreadsPerCore + j];
 				
 				writefln("context.cwd: %s, args: %s", context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
 
-				uint threadNum = i * simulationConfig.processor.numThreadsPerCore + j;
+				uint threadNum = i * simulationConfig.architecture.processor.numThreadsPerCore + j;
 				ContextStat contextStat = simulation.stat.processor.contexts[threadNum];
 				
 				Thread thread = new Thread(core, contextStat, threadNum, process);

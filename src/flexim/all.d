@@ -32,9 +32,10 @@ public import std.stdio;
 public import std.string;
 public import std.typecons;
 
+public import flexim.canvas;
 public import flexim.cpu;
-public import flexim.isa;
 public import flexim.gui;
+public import flexim.isa;
 public import flexim.kernel;
 public import flexim.mem;
 public import flexim.misc;

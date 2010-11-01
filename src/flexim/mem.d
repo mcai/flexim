@@ -1826,14 +1826,14 @@ class Transaction {
 class MemorySystem {
 	this(Simulation simulation) {	
 		this.simulation = simulation;		
-		this.endNodeCount = simulation.config.processor.numCores;
+		this.endNodeCount = this.simulation.config.architecture.processor.numCores;
 		this.createMemoryHierarchy();
 	}
 
 	void createMemoryHierarchy() {
-		this.mem = new MemoryController(this, this.simulationConfig.mainMemory, this.simulationStat.mainMemory);
+		this.mem = new MemoryController(this, this.simulation.config.architecture.mainMemory, this.simulation.stat.mainMemory);
 				
-		this.l2 = new CoherentCache(this, this.simulationConfig.l2Cache, this.simulationStat.l2Cache);
+		this.l2 = new CoherentCache(this, this.simulation.config.architecture.l2Cache, this.simulation.stat.l2Cache);
 		this.l2.next = this.mem;
 
 		this.seqIs = new Sequencer[this.endNodeCount];
@@ -1843,10 +1843,10 @@ class MemorySystem {
 		this.l1Ds = new CoherentCache[this.endNodeCount];
 
 		for(uint i = 0; i < this.endNodeCount; i++) {
-			CoherentCache l1I = new CoherentCache(this, this.simulationConfig.processor.cores[i].iCache, this.simulationStat.processor.cores[i].iCache);
+			CoherentCache l1I = new CoherentCache(this, this.simulation.config.architecture.processor.cores[i].iCache, this.simulation.stat.processor.cores[i].iCache);
 			Sequencer seqI = new Sequencer("seqI" ~ "-" ~ to!(string)(i), l1I);
 
-			CoherentCache l1D = new CoherentCache(this, this.simulationConfig.processor.cores[i].dCache, this.simulationStat.processor.cores[i].dCache);
+			CoherentCache l1D = new CoherentCache(this, this.simulation.config.architecture.processor.cores[i].dCache, this.simulation.stat.processor.cores[i].dCache);
 			Sequencer seqD = new Sequencer("seqD" ~ "-" ~ to!(string)(i), l1D);
 
 			this.seqIs[i] = seqI;
@@ -1860,14 +1860,6 @@ class MemorySystem {
 		}
 		
 		this.mmu = new MMU();
-	}
-	
-	SimulationConfig simulationConfig() {
-		return this.simulation.config;
-	}
-	
-	SimulationStat simulationStat() {
-		return this.simulation.stat;
 	}
 
 	uint endNodeCount;

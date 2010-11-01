@@ -1,4 +1,5 @@
 src/flexim/all.d
+src/flexim/canvas.d
 src/flexim/cpu.d
 src/flexim/gui.d
 src/flexim/isa.d
