@@ -617,13 +617,12 @@ class FrameArchitectureConfigs : FrameEditSet {
 		
 		Frame frameArchitectureConfigs = getBuilderObject!(Frame, GtkFrame)(builder, "frameArchitectureConfigs");
 		ComboBox comboBoxArchitectures = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxArchitectures");
+		HBox hboxAddArchitecture = getBuilderObject!(HBox, GtkHBox)(builder, "hboxAddArchitecture");
 		Button buttonAddArchitecture = getBuilderObject!(Button, GtkButton)(builder, "buttonAddArchitecture");
 		Button buttonRemoveArchitecture = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveArchitecture");
 		VBox vboxArchitecture = getBuilderObject!(VBox, GtkVBox)(builder, "vboxArchitecture");
 			
 		super(frameArchitectureConfigs, comboBoxArchitectures, buttonAddArchitecture, buttonRemoveArchitecture, vboxArchitecture);
-		
-		HBox hboxAddArchitecture = getBuilderObject!(HBox, GtkHBox)(builder, "hboxAddArchitecture");
 			
 		this.numCoresWhenAddArchitecture = this.numThreadsPerCoreWhenAddArchitecture = 2;
 		
@@ -671,17 +670,11 @@ class FrameArchitectureConfigs : FrameEditSet {
 			currentArchitectureId++;
 		}while(format("architecture%d", currentArchitectureId) in architectureConfigs);
 		
-		ProcessorConfig processor = new ProcessorConfig(2000000, 2000000, 7200, 1);
+		ProcessorConfig processor = new ProcessorConfig(2000000, 2000000, 7200, this.numThreadsPerCoreWhenAddArchitecture);
 		
 		for(uint i = 0; i < this.numCoresWhenAddArchitecture; i++) {
 			CoreConfig core = new CoreConfig(CacheConfig.newL1(format("l1I-%d", i)), CacheConfig.newL1(format("l1D-%d", i)));
 			processor.cores ~= core;
-			
-			for(uint j = 0; j < this.numThreadsPerCoreWhenAddArchitecture; j++) {
-				Benchmark workload = benchmarkSuites["WCETBench"]["fir"];
-				ContextConfig context = new ContextConfig(workload);
-				//processor.contexts ~= context;
-			}
 		}
 		
 		CacheConfig l2Cache = CacheConfig.newL2();
@@ -757,35 +750,6 @@ class FrameArchitectureConfigs : FrameEditSet {
 		return hpack(new Label(cache.name), new VSeparator(), vpack(hbox0, hbox1, hbox2));
 	}
 	
-	ComboBox newContext(ContextConfig context) {
-		ComboBox comboBoxBenchmark = new ComboBox();
-		
-		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
-			foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
-				comboBoxBenchmark.appendText(format("%s (%s)", benchmarkTitle, benchmarkSuiteTitle));
-			}
-		}
-		
-		comboBoxBenchmark.addOnChanged(delegate void(ComboBox comboBox)
-			{
-				string benchmarkName = comboBox.getActiveText();
-				
-				if(benchmarkName != "") {
-					int index1 = std.algorithm.indexOf(benchmarkName, '(');
-					int index2 = std.algorithm.indexOf(benchmarkName, ')');
-					string benchmarkSuiteTitle = benchmarkName[(index1 + 1)..index2];
-					string benchmarkTitle = benchmarkName[0..(index1 - 1)];
-					
-					Benchmark workload = benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle];
-					context.workload = workload;
-				}
-			});
-					
-		comboBoxBenchmark.setActive(comboBoxBenchmark.getIndex(format("%s (%s)", context.workload.title, context.workload.suite.title)));
-			
-		return comboBoxBenchmark;
-	}
-	
 	void newArchitectureConfig(ArchitectureConfig architectureConfig) {
 		this.comboBoxSet.appendText(architectureConfig.title);
 		
@@ -802,11 +766,7 @@ class FrameArchitectureConfigs : FrameEditSet {
 					this.comboBoxSet.removeText(index);
 					this.comboBoxSet.insertText(index, architectureConfig.title);
 					this.comboBoxSet.setActive(index);
-				})/*,
-			newHBoxWithLabelAndEntry("Cwd:", architectureConfig.cwd, delegate void(string entryText)
-				{
-					architectureConfig.cwd = entryText;
-				})*/);
+				}));
 		
 		vboxArchitecture.packStart(hbox0, false, true, 6);
 		
@@ -829,7 +789,10 @@ class FrameArchitectureConfigs : FrameEditSet {
 			{
 				architectureConfig.processor.maxTime = newValue;
 			}),
-			newHBoxWithLabelAndSpinButton!(uint)("Number of Threads per Core:", 1, 8, 1, architectureConfig.processor.numThreadsPerCore));
+			newHBoxWithLabelAndSpinButton!(uint)("Number of Threads per Core:", 1, 8, 1, architectureConfig.processor.numThreadsPerCore, delegate void(uint newValue)
+			{
+				architectureConfig.processor.numThreadsPerCore = newValue;
+			}));
 			
 		vboxProcessor.packStart(hbox1, false, true, 6);
 		
@@ -849,21 +812,6 @@ class FrameArchitectureConfigs : FrameEditSet {
 		VBox vboxCores = vpack2(vboxesCore);
 			
 		vboxProcessor.packStart(vboxCores, false, true, 6);
-		
-		vboxProcessor.packStart(new HSeparator(), false, true, 4);
-		
-		/*Widget[] vboxesContext;
-		
-		foreach(i, context; architectureConfig.processor.contexts) {			
-			vboxesContext ~= hpack(
-				new Label(format("context-%d", i)),
-				new VSeparator(), 
-				newHBoxWithLabelAndWidget("Benchmark:", this.newContext(context)));
-		}
-		
-		VBox vboxContexts = vpack2(vboxesContext);
-		
-		vboxProcessor.packStart(vboxContexts, false, true, 6);*/
 		
 		vboxArchitecture.packStart(vboxProcessor, false, true, 6);
 			
@@ -904,17 +852,24 @@ class FrameArchitectureConfigs : FrameEditSet {
 	int currentArchitectureId = -1;
 }
 
-class FrameSimulations: FrameEditSet {
+class FrameSimulations: FrameEditSet {	
 	this() {
 		GladeFile gladeFile = new GladeFile("frameSimulations");
 		Builder builder = gladeFile.builder;
 		
 		Frame frameSimulations = getBuilderObject!(Frame, GtkFrame)(builder, "frameSimulations");
 		ComboBox comboBoxSimulations = getBuilderObject!(ComboBox, GtkComboBox)(builder, "comboBoxSimulations");
-		VBox vboxSimulation = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulation");
+		HBox hboxAddSimulation = getBuilderObject!(HBox, GtkHBox)(builder, "hboxAddSimulation");
+		Button buttonAddSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonAddSimulation");
+		Button buttonRemoveSimulation = getBuilderObject!(Button, GtkButton)(builder, "buttonRemoveSimulation");
 		this.buttonSimulate = getBuilderObject!(Button, GtkButton)(builder, "buttonSimulate");
+		VBox vboxSimulation = getBuilderObject!(VBox, GtkVBox)(builder, "vboxSimulation");
 			
-		super(frameSimulations, comboBoxSimulations, null, null, vboxSimulation);
+		super(frameSimulations, comboBoxSimulations, buttonAddSimulation, buttonRemoveSimulation, vboxSimulation);
+		
+		HBox hbox0 = hpack(new Label("Architecture:"), this.newArchitetureWhenAddSimulation());
+		
+		hboxAddSimulation.packStart(hbox0, true, true, 0);
 		
 		foreach(simulationTitle, simulation; simulations) {
 			this.newSimulation(simulation);
@@ -930,12 +885,6 @@ class FrameSimulations: FrameEditSet {
 				core.thread.Thread threadRunSimulation = new core.thread.Thread(
 					{
 						simulation.execute();
-		
-						gdkThreadsEnter();
-						this.buttonSimulate.setSensitive(true);
-						this.buttonSimulate.setLabel(oldButtonLabel);
-						simulation.stat.dispatch();
-						gdkThreadsLeave();
 					});
 					
 				core.thread.Thread threadUpdateGui = new core.thread.Thread(
@@ -947,15 +896,21 @@ class FrameSimulations: FrameEditSet {
 							
 							core.thread.Thread.sleep(30000);
 						}
+		
+						gdkThreadsEnter();
+						this.buttonSimulate.setSensitive(true);
+						this.buttonSimulate.setLabel(oldButtonLabel);
+						simulation.stat.dispatch();
+						gdkThreadsLeave();
 					});
 	
 				this.buttonSimulate.setSensitive(false);
 				this.buttonSimulate.setLabel("Simulating.. Please Wait");
 
 				simulation.stat.reset();
-					
-				threadRunSimulation.start();
+
 				threadUpdateGui.start();
+				threadRunSimulation.start();
 			});
 		
 		this.notebookSets.setCurrentPage(0);
@@ -974,20 +929,131 @@ class FrameSimulations: FrameEditSet {
 			
 			this.notebookSets.setCurrentPage(indexOfSimulation);
 			
-			//this.buttonSetRemove.setSensitive(true);
+			this.buttonSetRemove.setSensitive(true);
 			this.buttonSimulate.setSensitive(true);
 		}
 		else {
-			//this.buttonSetRemove.setSensitive(false);
+			this.buttonSetRemove.setSensitive(false);
 			this.buttonSimulate.setSensitive(false);
 		}
 	}
 	override void onButtonSetAddClicked() {
-		assert(0);
+		do {
+			currentSimulationId++;
+		}
+		while(format("simulation%d", currentSimulationId) in simulations);
+		
+		Simulation simulation = new Simulation(format("simulation%d", currentSimulationId), "../stats/simulations", this.selectedArchitectureConfigWhenAddSimulation);
+		
+		for(uint i = 0; i < simulation.config.architecture.processor.numCores * simulation.config.architecture.processor.numThreadsPerCore; i++) {
+			Benchmark benchmark = defaultBenchmark();
+			ContextConfig contextConfig = new ContextConfig(benchmark);
+			simulation.config.contexts ~= contextConfig;
+		}
+		
+		simulations[simulation.title] = simulation;
+		this.newSimulation(simulation);
+		
+		int indexOfSimulation = simulations.length - 1;
+		
+		this.comboBoxSet.setActive(indexOfSimulation);
+		this.notebookSets.setCurrentPage(indexOfSimulation);
 	}
 	
 	override void onButtonSetRemoveClicked() {
-		assert(0);
+		string simulationTitle = this.comboBoxSet.getActiveText();
+		
+		if(simulationTitle != "") {
+			Simulation simulation = simulations[simulationTitle];
+			assert(simulation !is null);
+			
+			simulations.remove(simulation.title);
+			
+			int indexOfSimulation = this.comboBoxSet.getActive();
+			this.comboBoxSet.removeText(indexOfSimulation);
+			
+			this.notebookSets.removePage(indexOfSimulation);
+			
+			if(indexOfSimulation > 0) {
+				this.comboBoxSet.setActive(indexOfSimulation - 1);
+			}
+			else {
+				this.comboBoxSet.setActive(simulations.length > 0 ? 0 : -1);
+			}
+		}
+	}
+	
+	ComboBox newArchitetureWhenAddSimulation() {
+		ComboBox comboBoxArchitectureConfig = new ComboBox();
+				
+		foreach(architectureConfigTitle, architectureConfig; architectureConfigs) {
+			comboBoxArchitectureConfig.appendText(architectureConfigTitle);
+		}
+		
+		comboBoxArchitectureConfig.addOnChanged(delegate void(ComboBox comboBox)
+			{
+				string architectureConfigTitle = comboBox.getActiveText();
+				
+				if(architectureConfigTitle != "") {
+					ArchitectureConfig architectureConfig = architectureConfigs[architectureConfigTitle];
+					this.selectedArchitectureConfigWhenAddSimulation = architectureConfig;
+				}
+			});
+						
+		comboBoxArchitectureConfig.setActive(0);
+		
+		return comboBoxArchitectureConfig;
+	}
+	
+	ComboBox newArchitecture(Simulation simulation) {
+		ComboBox comboBoxArchitectureConfig = new ComboBox();
+		
+		foreach(architectureConfigTitle, architectureConfig; architectureConfigs) {
+			comboBoxArchitectureConfig.appendText(architectureConfigTitle);
+		}
+		
+		comboBoxArchitectureConfig.addOnChanged(delegate void(ComboBox comboBox)
+			{
+				string architectureConfigTitle = comboBox.getActiveText();
+				
+				if(architectureConfigTitle != "") {
+					ArchitectureConfig architectureConfig = architectureConfigs[architectureConfigTitle];
+					simulation.config.architecture = architectureConfig;
+				}
+			});
+						
+		comboBoxArchitectureConfig.setActiveText(simulation.config.architecture.title);
+		
+		return comboBoxArchitectureConfig;
+	}
+	
+	ComboBox newContext(ContextConfig context) {
+		ComboBox comboBoxBenchmark = new ComboBox();
+		
+		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
+			foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
+				comboBoxBenchmark.appendText(format("%s (%s)", benchmarkTitle, benchmarkSuiteTitle));
+			}
+		}
+		
+		comboBoxBenchmark.addOnChanged(delegate void(ComboBox comboBox)
+			{
+				string benchmarkName = comboBox.getActiveText();
+				
+				if(benchmarkName != "") {
+					int index1 = std.algorithm.indexOf(benchmarkName, '(');
+					int index2 = std.algorithm.indexOf(benchmarkName, ')');
+					string benchmarkSuiteTitle = benchmarkName[(index1 + 1)..index2];
+					string benchmarkTitle = benchmarkName[0..(index1 - 1)];
+					
+					Benchmark workload = benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle];
+					context.workload = workload;
+				}
+			});
+					
+		comboBoxBenchmark.setActive(comboBoxBenchmark.getIndex(format("%s (%s)", context.workload.title, context.workload.suite.title)));
+			
+		return comboBoxBenchmark;
 	}
 	
 	HBox newCache(CacheStat cache, string cacheName) {
@@ -1037,9 +1103,42 @@ class FrameSimulations: FrameEditSet {
 		
 		VBox vboxSimulation = new VBox(false, 6);
 		
+		HBox hbox1 = hpack(
+			newHBoxWithLabelAndEntry("Title:", simulation.title, delegate void(string entryText)
+				{
+					simulations.remove(simulation.title);
+					simulation.title = entryText;
+					simulations[simulation.title] = simulation;
+					
+					int index = this.comboBoxSet.getActive();
+					this.comboBoxSet.removeText(index);
+					this.comboBoxSet.insertText(index, simulation.title);
+					this.comboBoxSet.setActive(index);
+				}),
+			newHBoxWithLabelAndEntry("Cwd:", simulation.cwd, delegate void(string entryText)
+				{
+					simulation.cwd = entryText;
+				}),
+			newHBoxWithLabelAndWidget("Architecture:", this.newArchitecture(simulation)));
+		
+		vboxSimulation.packStart(hbox1, false, true, 0);
+		
+		Widget[] vboxesContextConfig;
+		
+		foreach(i, context; simulation.config.contexts) {			
+			vboxesContextConfig ~= hpack(
+				new Label(format("context-%d", i)),
+				new VSeparator(), 
+				newHBoxWithLabelAndWidget("Benchmark:", this.newContext(context)));
+		}
+		
+		VBox vboxContextConfigs = vpack2(vboxesContextConfig);
+		
+		vboxSimulation.packStart(vboxContextConfigs, false, true, 6);
+		
+		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+		
 		HBox hbox0 = hpack(
-			newHBoxWithLabelAndEntry("Title:", simulation.title),
-			newHBoxWithLabelAndEntry("Cwd:", simulation.cwd),
 			newHBoxWithLabelAndEntry2!(ulong)("Total Cycles:", simulationStat.totalCycles),
 			newHBoxWithLabelAndEntry2!(ulong)("Duration:", simulationStat.duration));
 		
@@ -1112,8 +1211,10 @@ class FrameSimulations: FrameEditSet {
 		this.notebookSets.hideAll();
 		this.notebookSets.showAll();
 	}
-	
+
 	Button buttonSimulate;
+	int currentSimulationId = -1;
+	ArchitectureConfig selectedArchitectureConfigWhenAddSimulation;
 }
 
 class Startup {	

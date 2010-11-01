@@ -28,11 +28,7 @@ import std.getopt;
 import std.path;
 import std.regexp;
 
-interface PropertiesProvider {
-	string[string] properties();
-}
-
-class Benchmark : PropertiesProvider {
+class Benchmark {
 	this(string title, string cwd, string exe, string argsLiteral, string stdin = null, string stdout = null, uint numThreadsPerCore = 1) {
 		this.title = title;
 		this.cwd = cwd;
@@ -43,23 +39,13 @@ class Benchmark : PropertiesProvider {
 		this.numThreadsPerCore = numThreadsPerCore;
 	}
 	
+	string args() {
+		return sub(this.argsLiteral, r"\$\{nthreads\}", format("%d", this.numThreadsPerCore), "g");
+	}
+	
 	override string toString() {
 		return format("Benchmark[title=%s, cwd=%s, exe=%s, argsLiteral=%s, stdin=%s, stdout=%s, numThreadsPerCore=%d]",
 			this.title, this.cwd, this.exe, this.argsLiteral, this.stdin, this.stdout, this.numThreadsPerCore);
-	}
-	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["title"] = this.title;
-		props["cwd"] = this.cwd;
-		props["exe"] = this.exe;
-		props["argsLiteral"] = this.argsLiteral;
-		props["stdin"] = this.stdin;
-		props["stdout"] = this.stdout;
-		props["numThreadsPerCore"] = to!(string)(this.numThreadsPerCore);
-		
-		return props;
 	}
 	
 	string title;
@@ -69,16 +55,11 @@ class Benchmark : PropertiesProvider {
 	string stdin;
 	string stdout;
 	
-	string args() {
-		return sub(this.argsLiteral, r"\$\{nthreads\}", format("%d", this.numThreadsPerCore), "g");
-	}
-	
 	uint numThreadsPerCore;
-	
 	BenchmarkSuite suite;
 }
 
-class BenchmarkSuite : PropertiesProvider {	
+class BenchmarkSuite {	
 	this(string title) {
 		this.title = title;
 	}
@@ -109,16 +90,7 @@ class BenchmarkSuite : PropertiesProvider {
 		BenchmarkSuiteXMLFileSerializer.singleInstance.saveXML(benchmarkSuite, join(cwd, fileName));
 	}
 	
-	override string[string] properties() {
-		string[string] props;
-		
-		props["title"] = this.title;
-		
-		return props;
-	}
-	
 	string title;
-	
 	Benchmark[string] benchmarks;
 }
 
@@ -1168,19 +1140,14 @@ class Simulation: Reproducible {
 		this.isRunning = false;
 	}
 	
-	deprecated
-	this(SimulationConfig config) {
-		this.config = config;
+	this(string title, string cwd, ArchitectureConfig architectureConfig) {
+		SimulationConfig simulationConfig = new SimulationConfig(architectureConfig);
 		
-		if(this.title in simulations) {
-			//this.stat = simulationStats[this.title];
-			//this.stat.reset();
-		}
-		else {
-			//simulationStats[this.config.title] = this.stat = new SimulationStat(this.title, this.cwd, this.config.processor.cores.length, this.config.processor.numThreadsPerCore);
-		}
-		
-		this.isRunning = false;
+		SimulationStat simulationStat = new SimulationStat(
+			architectureConfig.processor.cores.length, 
+			architectureConfig.processor.numThreadsPerCore);
+			
+		this(title, cwd, simulationConfig, simulationStat);
 	}
 	
 	void execute() {
@@ -1266,6 +1233,10 @@ class SimulationXMLFileSerializer: XMLFileSerializer!(Simulation) {
 BenchmarkSuite[string] benchmarkSuites;
 ArchitectureConfig[string] architectureConfigs;
 Simulation[string] simulations;
+
+Benchmark defaultBenchmark() {
+	return benchmarkSuites["WCETBench"]["fir"];
+}
 
 void loadConfigsAndStats(void delegate(string text) del, bool useGtk = false) {
 	string boldFontBeginStr = (useGtk ? "<b>" : "");
