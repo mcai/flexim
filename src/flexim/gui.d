@@ -667,7 +667,9 @@ class FrameArchitectureConfigs : FrameEditSet {
 			currentArchitectureId++;
 		}while(format("architecture%d", currentArchitectureId) in architectureConfigs);
 		
-		ProcessorConfig processor = new ProcessorConfig(2000000, 2000000, 7200, this.numThreadsPerCoreWhenAddArchitecture);
+		ProcessorConfig processor = new ProcessorConfig(2000000, 2000000, 7200, this.numThreadsPerCoreWhenAddArchitecture,
+			128,
+			4, 4, 96, 32);
 		
 		for(uint i = 0; i < this.numCoresWhenAddArchitecture; i++) {
 			CoreConfig core = new CoreConfig(CacheConfig.newL1(format("l1I-%d", i)), CacheConfig.newL1(format("l1D-%d", i)));
@@ -793,6 +795,30 @@ class FrameArchitectureConfigs : FrameEditSet {
 			
 		vboxProcessor.packStart(hbox1, false, true, 6);
 		
+		HBox hbox2 = hpack(
+			newHBoxWithLabelAndSpinButton!(uint)("Physical Register File Capacity:", 1, 256, 1, architectureConfig.processor.physicalRegisterFileCapacity, delegate void(uint newValue)
+			{
+				architectureConfig.processor.physicalRegisterFileCapacity = newValue;
+			}),
+			newHBoxWithLabelAndSpinButton!(uint)("Commit Width:", 1, 16, 1, architectureConfig.processor.commitWidth, delegate void(uint newValue)
+			{
+				architectureConfig.processor.commitWidth = newValue;
+			}),
+			newHBoxWithLabelAndSpinButton!(uint)("Decode Buffer Capacity:", 1, 256, 1, architectureConfig.processor.decodeBufferCapacity, delegate void(uint newValue)
+			{
+				architectureConfig.processor.decodeBufferCapacity = newValue;
+			}),
+			newHBoxWithLabelAndSpinButton!(uint)("Reorder Buffer Capacity:", 1, 256, 1, architectureConfig.processor.reorderBufferCapacity, delegate void(uint newValue)
+			{
+				architectureConfig.processor.reorderBufferCapacity = newValue;
+			}),
+			newHBoxWithLabelAndSpinButton!(uint)("Load Store Queue Capacity:", 1, 256, 1, architectureConfig.processor.loadStoreQueueCapacity, delegate void(uint newValue)
+			{
+				architectureConfig.processor.loadStoreQueueCapacity = newValue;
+			}));
+			
+		vboxProcessor.packStart(hbox2, false, true, 6);
+		
 		vboxProcessor.packStart(new HSeparator(), false, true, 4);
 		
 		//////////////////////
@@ -847,6 +873,37 @@ class FrameArchitectureConfigs : FrameEditSet {
 	
 	uint numCoresWhenAddArchitecture, numThreadsPerCoreWhenAddArchitecture;
 	int currentArchitectureId = -1;
+}
+
+class FrameSimulationState {
+	this() {
+		GladeFile gladeFile = new GladeFile("frameSimulationState");
+		Builder builder = gladeFile.builder;
+		
+		this.frame = getBuilderObject!(Frame, GtkFrame)(builder, "frameSimulationState");
+			
+		this.frameReorderBuffers = getBuilderObject!(Frame, GtkFrame)(builder, "frameReorderBuffers");
+		this.frameLoadStoreQueues = getBuilderObject!(Frame, GtkFrame)(builder, "frameLoadStoreQueues");
+			
+		this.frameDecodeBuffers = getBuilderObject!(Frame, GtkFrame)(builder, "frameDecodeBuffers");
+		this.frameRegisterMappings = getBuilderObject!(Frame, GtkFrame)(builder, "frameRegisterMappings");
+		this.frameRenameTables = getBuilderObject!(Frame, GtkFrame)(builder, "frameRenameTables");
+		this.frameFunctionalUnitPool = getBuilderObject!(Frame, GtkFrame)(builder, "frameFunctionalUnitPool");
+		this.frameInstructionsToCommit = getBuilderObject!(Frame, GtkFrame)(builder, "frameInstructionsToCommit");
+			
+		this.frameL1Caches = getBuilderObject!(Frame, GtkFrame)(builder, "frameL1Caches");
+		this.frameL2Cache = getBuilderObject!(Frame, GtkFrame)(builder, "frameL2Cache");
+		this.frameMainMemory = getBuilderObject!(Frame, GtkFrame)(builder, "frameMainMemory");
+	}
+	
+	void showFrame() {
+		this.frame.showAll();
+	}
+	
+	Frame frame;
+	Frame frameReorderBuffers, frameLoadStoreQueues;
+	Frame frameDecodeBuffers, frameRegisterMappings, frameRenameTables, frameFunctionalUnitPool, frameInstructionsToCommit;
+	Frame frameL1Caches, frameL2Cache, frameMainMemory;
 }
 
 class FrameSimulations: FrameEditSet {	
@@ -945,7 +1002,7 @@ class FrameSimulations: FrameEditSet {
 		
 		Simulation simulation = new Simulation(format("simulation%d", currentSimulationId), "../stats/simulations", this.selectedArchitectureConfigWhenAddSimulation);
 		
-		for(uint i = 0; i < simulation.config.architecture.processor.numCores * simulation.config.architecture.processor.numThreadsPerCore; i++) {
+		for(uint i = 0; i < simulation.config.architecture.processor.cores.length * simulation.config.architecture.processor.numThreadsPerCore; i++) {
 			Benchmark benchmark = defaultBenchmark();
 			ContextConfig contextConfig = new ContextConfig(benchmark);
 			simulation.config.contexts ~= contextConfig;
@@ -987,6 +1044,14 @@ class FrameSimulations: FrameEditSet {
 		Button button = new Button(coreName, delegate void(Button button)
 			{
 				writefln("go to the state view of %s", coreName);
+			});
+		return button;
+	}
+	
+	Button newGotoStateViewOfContextButton(ContextStat context, string contextName) {
+		Button button = new Button(contextName, delegate void(Button button)
+			{
+				writefln("go to the state view of %s", contextName);
 			});
 		return button;
 	}
@@ -1270,6 +1335,9 @@ class FrameSimulations: FrameEditSet {
 		vboxSimulation.packStart(hboxMainMemory, false, true, 6);
 		
 		vboxSimulation.packStart(new HSeparator(), false, true, 4);
+		
+		FrameSimulationState frameSimulationState = new FrameSimulationState();
+		vboxSimulation.packStart(frameSimulationState.frame, false, true, 6);
 			
 		//////////////////////
 			

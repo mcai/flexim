@@ -1826,7 +1826,7 @@ class Transaction {
 class MemorySystem {
 	this(Simulation simulation) {	
 		this.simulation = simulation;		
-		this.endNodeCount = this.simulation.config.architecture.processor.numCores;
+		this.endNodeCount = this.simulation.config.architecture.processor.cores.length;
 		this.createMemoryHierarchy();
 	}
 

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ArchitectureConfig title="shared_l2_cmp_1x2">
-   <ProcessorConfig maxInsts="2000000" maxTime="7200" numThreadsPerCore="2" maxCycle="2000000">
+   <ProcessorConfig physicalRegisterFileCapacity="128" decodeBufferCapacity="4" loadStoreQueueCapacity="32" maxInsts="2000000" maxTime="7200" numThreadsPerCore="2" reorderBufferCapacity="96" maxCycle="2000000" commitWidth="4">
       <CoreConfig>
          <CacheConfig level="0" assoc="4" blockSize="64" missLatency="3" policy="LRU" name="l1I-0" numSets="64" hitLatency="1">
          </CacheConfig>

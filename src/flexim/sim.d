@@ -365,25 +365,36 @@ class CoreConfigXMLSerializer: XMLSerializer!(CoreConfig) {
 }
 
 class ProcessorConfig: Config!(ProcessorConfig) {
-	this(ulong maxCycle, ulong maxInsts, ulong maxTime, uint numThreadsPerCore) {
+	this(ulong maxCycle, ulong maxInsts, ulong maxTime, uint numThreadsPerCore,
+		uint physicalRegisterFileCapacity,
+		uint commitWidth, uint decodeBufferCapacity, uint reorderBufferCapacity, uint loadStoreQueueCapacity) {
 		this.maxCycle = maxCycle;
 		this.maxInsts = maxInsts;
 		this.maxTime = maxTime;
 		this.numThreadsPerCore = numThreadsPerCore;
-	}
-	
-	uint numCores() {
-		return this.cores.length;
+		
+		this.physicalRegisterFileCapacity = physicalRegisterFileCapacity;
+		this.commitWidth = commitWidth;
+		this.decodeBufferCapacity = decodeBufferCapacity;
+		this.reorderBufferCapacity = reorderBufferCapacity;
+		this.loadStoreQueueCapacity = loadStoreQueueCapacity;
 	}
 	
 	override string toString() {
-		return format("ProcessorConfig[maxCycle=%d, maxInsts=%d, maxTime=%d, numThreadsPerCore=%d, cores.length=%d]",
-			this.maxCycle, this.maxInsts, this.maxTime, this.numThreadsPerCore, this.cores.length);
+		return format("ProcessorConfig[maxCycle=%d, maxInsts=%d, maxTime=%d, numThreadsPerCore=%d, cores.length=%d, " ~
+			"physicalRegisterFileCapacity=%d, " ~
+			"commitWidth=%d, decodeBufferCapacity=%d, reorderBufferCapacity=%d, loadStoreQueueCapacity=%d]",
+			this.maxCycle, this.maxInsts, this.maxTime, this.numThreadsPerCore, this.cores.length,
+			this.physicalRegisterFileCapacity,
+			this.commitWidth, this.decodeBufferCapacity, this.reorderBufferCapacity, this.loadStoreQueueCapacity);
 	}
 
 	ulong maxCycle, maxInsts, maxTime;
 	uint numThreadsPerCore;
 	CoreConfig[] cores;
+	
+	uint physicalRegisterFileCapacity;
+	uint commitWidth, decodeBufferCapacity, reorderBufferCapacity, loadStoreQueueCapacity;
 }
 
 class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
@@ -398,6 +409,12 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 		xmlConfig["maxTime"] = to!(string)(processorConfig.maxTime);
 		xmlConfig["numThreadsPerCore"] = to!(string)(processorConfig.numThreadsPerCore);
 			
+		xmlConfig["physicalRegisterFileCapacity"] = to!(string)(processorConfig.physicalRegisterFileCapacity);
+		xmlConfig["commitWidth"] = to!(string)(processorConfig.commitWidth);
+		xmlConfig["decodeBufferCapacity"] = to!(string)(processorConfig.decodeBufferCapacity);
+		xmlConfig["reorderBufferCapacity"] = to!(string)(processorConfig.reorderBufferCapacity);
+		xmlConfig["loadStoreQueueCapacity"] = to!(string)(processorConfig.loadStoreQueueCapacity);
+			
 		foreach(core; processorConfig.cores) {
 			xmlConfig.entries ~= CoreConfigXMLSerializer.singleInstance.save(core);
 		}
@@ -411,7 +428,15 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 		ulong maxTime = to!(ulong)(xmlConfig["maxTime"]);
 		uint numThreadsPerCore = to!(uint)(xmlConfig["numThreadsPerCore"]);
 			
-		ProcessorConfig processorConfig = new ProcessorConfig(maxCycle, maxInsts, maxTime, numThreadsPerCore);
+		uint physicalRegisterFileCapacity = to!(uint)(xmlConfig["physicalRegisterFileCapacity"]);
+		uint commitWidth = to!(uint)(xmlConfig["commitWidth"]);
+		uint decodeBufferCapacity = to!(uint)(xmlConfig["decodeBufferCapacity"]);
+		uint reorderBufferCapacity = to!(uint)(xmlConfig["reorderBufferCapacity"]);
+		uint loadStoreQueueCapacity = to!(uint)(xmlConfig["loadStoreQueueCapacity"]);
+			
+		ProcessorConfig processorConfig = new ProcessorConfig(maxCycle, maxInsts, maxTime, numThreadsPerCore,
+			physicalRegisterFileCapacity,
+			commitWidth, decodeBufferCapacity, reorderBufferCapacity, loadStoreQueueCapacity);
 		
 		foreach(entry; xmlConfig.entries) {
 			processorConfig.cores ~= CoreConfigXMLSerializer.singleInstance.load(entry);

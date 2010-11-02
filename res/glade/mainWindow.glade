@@ -292,7 +292,7 @@
             <child type="tab">
               <object class="GtkLabel" id="label1">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Benchmark</property>
+                <property name="label" translatable="yes">Benchmarks</property>
               </object>
               <packing>
                 <property name="tab_fill">False</property>
@@ -317,7 +317,7 @@
             <child type="tab">
               <object class="GtkLabel" id="label2">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Architecture</property>
+                <property name="label" translatable="yes">Architectures</property>
               </object>
               <packing>
                 <property name="position">1</property>
@@ -343,7 +343,7 @@
             <child type="tab">
               <object class="GtkLabel" id="label3">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Simulation</property>
+                <property name="label" translatable="yes">Simulations</property>
               </object>
               <packing>
                 <property name="position">2</property>

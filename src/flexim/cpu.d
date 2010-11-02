@@ -530,7 +530,7 @@ class PhysicalRegister {
 }
 
 class PhysicalRegisterFile {
-	this(Core core, uint capacity = 128) {
+	this(Core core, uint capacity) {
 		this.core = core;
 		this.capacity = capacity;
 		
@@ -621,7 +621,7 @@ class DecodeBufferEntry {
 }
 
 class DecodeBuffer: Queue!(DecodeBufferEntry) {
-	this(uint capacity = 4) {
+	this(uint capacity) {
 		super("decodeBuffer", capacity);
 	}
 }
@@ -691,13 +691,13 @@ class WaitingQueue: List!(ReorderBufferEntry) {
 }
 
 class ReorderBuffer: Queue!(ReorderBufferEntry) {
-	this(uint capacity = 96) {
+	this(uint capacity) {
 		super("reorderBuffer", capacity);
 	}
 }
 
 class LoadStoreQueue: Queue!(ReorderBufferEntry) {
-	this(uint capacity = 32) {
+	this(uint capacity) {
 		super("loadStoreQueue", capacity);
 	}
 }
@@ -759,8 +759,8 @@ class Processor {
 		int activeThreadCount;
 }
 
-class Core {	
-	this(Processor processor, uint num) {
+class Core {
+	this(Processor processor, ProcessorConfig config, uint num) {
 		this.processor = processor;
 		this.num = num;
 	
@@ -768,9 +768,9 @@ class Core {
 		this.decodeWidth = 4;
 		this.issueWidth = 4;
 		
-		this.intRegFile = new PhysicalRegisterFile(this);
-		this.fpRegFile = new PhysicalRegisterFile(this);
-		this.miscRegFile = new PhysicalRegisterFile(this);
+		this.intRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
+		this.fpRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
+		this.miscRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
 		
 		this.fuPool = new FunctionalUnitPool();
 		
@@ -889,7 +889,7 @@ enum ThreadState: string {
 }
 
 class Thread {
-	this(Core core, ContextStat stat, uint num, Process process) {
+	this(Core core, ProcessorConfig config, ContextStat stat, uint num, Process process) {
 		this.core = core;
 		
 		this.num = num;
@@ -905,8 +905,6 @@ class Thread {
 		this.clearArchRegs();
 
 		this.process.load(this);
-		
-		this.commitWidth = 4;
 		
 		this.stat = stat;
 		
@@ -930,9 +928,11 @@ class Thread {
 			this.renameTable[RegisterDependencyType.MISC, i] = physReg;
 		}
 		
-		this.decodeBuffer = new DecodeBuffer();
-		this.reorderBuffer = new ReorderBuffer();
-		this.loadStoreQueue = new LoadStoreQueue();
+		this.commitWidth = config.commitWidth;
+		
+		this.decodeBuffer = new DecodeBuffer(config.decodeBufferCapacity);
+		this.reorderBuffer = new ReorderBuffer(config.reorderBufferCapacity);
+		this.loadStoreQueue = new LoadStoreQueue(config.loadStoreQueueCapacity);
 		
 		this.fetchNpc = this.npc;
 		this.fetchNnpc = this.nnpc;
@@ -1356,8 +1356,8 @@ class CPUSimulator : Simulator {
 		
 		SimulationConfig simulationConfig = simulation.config;
 		
-		for(uint i = 0; i < simulationConfig.architecture.processor.numCores; i++) {
-			Core core = new Core(this.processor, i);
+		for(uint i = 0; i < simulationConfig.architecture.processor.cores.length; i++) {
+			Core core = new Core(this.processor, simulationConfig.architecture.processor, i);
 				
 			for(uint j = 0; j < simulationConfig.architecture.processor.numThreadsPerCore; j++) {
 				ContextConfig context = simulationConfig.contexts[i * simulationConfig.architecture.processor.numThreadsPerCore + j];
@@ -1368,7 +1368,7 @@ class CPUSimulator : Simulator {
 				uint threadNum = i * simulationConfig.architecture.processor.numThreadsPerCore + j;
 				ContextStat contextStat = simulation.stat.processor.contexts[threadNum];
 				
-				Thread thread = new Thread(core, contextStat, threadNum, process);
+				Thread thread = new Thread(core, simulation.config.architecture.processor, contextStat, threadNum, process);
 				
 				core.threads ~= thread;
 				
