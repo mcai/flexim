@@ -1386,7 +1386,7 @@ class CPUSimulator : Simulator {
 	override void run() {		
 		Ticks beginTime = apptime();
 
-		while(!this.eventQueue.halted && this.processor.canRun) {
+		while(!this.eventQueue.halted && this.processor.canRun && this.simulation.isRunning) {
 			this.processor.run();
 
 			foreach(eventProcessor; this.eventProcessors) {

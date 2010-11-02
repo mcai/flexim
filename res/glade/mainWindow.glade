@@ -275,7 +275,7 @@
           <object class="GtkNotebook" id="notebookCenter">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="tab_pos">left</property>
+            <property name="tab_pos">bottom</property>
             <child>
               <object class="GtkFrame" id="frameBenchmarks">
                 <property name="visible">True</property>

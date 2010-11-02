@@ -136,11 +136,8 @@ HBox hpack(T...)(T widgets) {
 	HBox hbox = new HBox(false, 6);
 	
 	foreach(widget; widgets) {
-		if(is(typeof(widget) == Label) || is(typeof(widget) == VSeparator)) {
+		if(is(typeof(widget) == Label) || is(typeof(widget) == Button) || is(typeof(widget) == VSeparator)) {
 			hbox.packStart(widget, false, false, 0);
-		}
-		else if(is(typeof(widget) == Entry)) {
-			hbox.packStart(widget, true, true, 0);
 		}
 		else {
 			hbox.packStart(widget, true, true, 0);
@@ -734,11 +731,11 @@ class FrameArchitectureConfigs : FrameEditSet {
 			}));
 		
 		HBox hbox2 = hpack(
-			newHBoxWithLabelAndSpinButton!(uint)("Hit Latency:", 1, 1024, 1, cache.hitLatency, delegate void(uint newValue)
+			newHBoxWithLabelAndSpinButton!(uint)("Hit Latency (Cycles):", 1, 1024, 1, cache.hitLatency, delegate void(uint newValue)
 			{
 				cache.hitLatency = newValue;
 			}),
-			newHBoxWithLabelAndSpinButton!(uint)("Miss Latency:", 1, 1024, 1, cache.missLatency, delegate void(uint newValue)
+			newHBoxWithLabelAndSpinButton!(uint)("Miss Latency (Cycles):", 1, 1024, 1, cache.missLatency, delegate void(uint newValue)
 			{
 				cache.missLatency = newValue;
 			}),
@@ -785,7 +782,7 @@ class FrameArchitectureConfigs : FrameEditSet {
 			{
 				architectureConfig.processor.maxInsts = newValue;
 			}),
-			newHBoxWithLabelAndSpinButton!(ulong)("Max Time:", 1, 7200, 100, architectureConfig.processor.maxTime, delegate void(ulong newValue)
+			newHBoxWithLabelAndSpinButton!(ulong)("Max Time (Seconds):", 1, 7200, 100, architectureConfig.processor.maxTime, delegate void(ulong newValue)
 			{
 				architectureConfig.processor.maxTime = newValue;
 			}),
@@ -824,7 +821,7 @@ class FrameArchitectureConfigs : FrameEditSet {
 		//////////////////////
 		
 		HBox hbox13 = hpack(
-			newHBoxWithLabelAndSpinButton!(uint)("Latency:", 1, 1024, 1, architectureConfig.mainMemory.latency, delegate void(uint newValue)
+			newHBoxWithLabelAndSpinButton!(uint)("Latency (Cycles):", 1, 1024, 1, architectureConfig.mainMemory.latency, delegate void(uint newValue)
 			{
 				architectureConfig.mainMemory.latency = newValue;
 			}));
@@ -876,41 +873,44 @@ class FrameSimulations: FrameEditSet {
 		}
 		
 		this.buttonSimulate.addOnClicked(delegate void(Button)
-			{
-				string oldButtonLabel = this.buttonSimulate.getLabel();
-				
+			{	
 				string simulationTitle = this.comboBoxSet.getActiveText();
 				Simulation simulation = simulations[simulationTitle];
 				
-				core.thread.Thread threadRunSimulation = new core.thread.Thread(
-					{
-						simulation.execute();
-					});
-					
-				core.thread.Thread threadUpdateGui = new core.thread.Thread(
-					{
-						while(simulation.isRunning) {
+				if(!simulation.isRunning) {
+					core.thread.Thread threadRunSimulation = new core.thread.Thread(
+						{
+							simulation.run();
+							simulation.afterRun();
+						});
+						
+					core.thread.Thread threadUpdateGui = new core.thread.Thread(
+						{
+							while(simulation.isRunning) {
+								gdkThreadsEnter();
+								simulation.stat.dispatch();
+								gdkThreadsLeave();
+								
+								core.thread.Thread.sleep(100000);
+							}
+			
 							gdkThreadsEnter();
 							simulation.stat.dispatch();
+							this.buttonSimulate.setLabel("Simulate");
 							gdkThreadsLeave();
-							
-							core.thread.Thread.sleep(30000);
-						}
+						});
 		
-						gdkThreadsEnter();
-						this.buttonSimulate.setSensitive(true);
-						this.buttonSimulate.setLabel(oldButtonLabel);
-						simulation.stat.dispatch();
-						gdkThreadsLeave();
-					});
-	
-				this.buttonSimulate.setSensitive(false);
-				this.buttonSimulate.setLabel("Simulating.. Please Wait");
+					this.buttonSimulate.setLabel("Abort Simulation");
+					
+					simulation.beforeRun();
 
-				simulation.stat.reset();
-
-				threadUpdateGui.start();
-				threadRunSimulation.start();
+					threadRunSimulation.start();
+					threadUpdateGui.start();
+				}
+				else {
+					simulation.abort();
+					this.buttonSimulate.setLabel("Simulate");
+				}
 			});
 		
 		this.notebookSets.setCurrentPage(0);
@@ -983,6 +983,30 @@ class FrameSimulations: FrameEditSet {
 		}
 	}
 	
+	Button newGotoStateViewOfCoreButton(CoreStat core, string coreName) {
+		Button button = new Button(coreName, delegate void(Button button)
+			{
+				writefln("go to the state view of %s", coreName);
+			});
+		return button;
+	}
+	
+	Button newGotoStateViewOfCacheButton(CacheStat cache, string cacheName) {
+		Button button = new Button(cacheName, delegate void(Button button)
+			{
+				writefln("go to the state view of %s", cacheName);
+			});
+		return button;
+	}
+	
+	Button newGotoStateViewOfMainMemoryButton(MainMemoryStat mainMemory) {
+		Button button = new Button("Main Memory", delegate void(Button button)
+			{
+				writefln("go to the state view of %s", "Main Memory");
+			});
+		return button;
+	}
+	
 	ComboBox newArchitetureWhenAddSimulation() {
 		ComboBox comboBoxArchitectureConfig = new ComboBox();
 				
@@ -1028,31 +1052,76 @@ class FrameSimulations: FrameEditSet {
 	}
 	
 	ComboBox newContext(ContextConfig context) {
-		ComboBox comboBoxBenchmark = new ComboBox();
-		
-		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
-			foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
-				comboBoxBenchmark.appendText(format("%s (%s)", benchmarkTitle, benchmarkSuiteTitle));
+		class ComboStore: TreeStore
+		{
+			this()
+			{
+				GType[] columns;
+				columns ~= GType.STRING;
+				columns ~= GType.STRING;
+				super(columns);
 			}
 		}
 		
+		ComboStore comboStore = new ComboStore();
+		
+		Benchmark[string] iters;
+		TreeIter[Benchmark] itersMap;
+		
+		int i = 0;
+	
+		foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) {
+			TreeIter iterBenchmarkSuite = comboStore.createIter();
+			comboStore.setValue(iterBenchmarkSuite, 0, benchmarkSuiteTitle);
+			
+			int j = 0;
+			
+			foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) {
+				TreeIter iterBenchmark = comboStore.append(iterBenchmarkSuite);
+				comboStore.setValue(iterBenchmark, 0, benchmarkTitle);
+				
+				string pathString = format("%d:%d", i, j);
+				
+				iters[pathString] = benchmark;
+				itersMap[benchmark] = iterBenchmark;
+				
+				j++;
+			}
+			
+			i++;
+		}
+		
+		ComboBox comboBoxBenchmark = new ComboBox(comboStore);
+		CellRenderer renderer = new CellRendererText();
+		comboBoxBenchmark.packStart(renderer, true);
+		comboBoxBenchmark.addAttribute(renderer, "text", 0);
+		
 		comboBoxBenchmark.addOnChanged(delegate void(ComboBox comboBox)
 			{
-				string benchmarkName = comboBox.getActiveText();
+				TreeIter iter = new TreeIter();
+				iter.setModel(comboStore);
+				comboBox.getActiveIter(iter);
+				string path = format("%s", iter.getTreePath());
 				
-				if(benchmarkName != "") {
-					int index1 = std.algorithm.indexOf(benchmarkName, '(');
-					int index2 = std.algorithm.indexOf(benchmarkName, ')');
-					string benchmarkSuiteTitle = benchmarkName[(index1 + 1)..index2];
-					string benchmarkTitle = benchmarkName[0..(index1 - 1)];
-					
-					Benchmark workload = benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle];
+			    if(path in iters) {
+					Benchmark workload = iters[path];
 					context.workload = workload;
+			    }
+				else {
+					if(!path.canFind(':')) {
+						path ~= ":0";
+						
+					    if(path in iters) {
+							Benchmark workload = iters[path];
+							context.workload = workload;
+							comboBoxBenchmark.setActiveIter(itersMap[context.workload]);
+					    }
+					}
 				}
 			});
-					
-		comboBoxBenchmark.setActive(comboBoxBenchmark.getIndex(format("%s (%s)", context.workload.title, context.workload.suite.title)));
-			
+
+		comboBoxBenchmark.setActiveIter(itersMap[context.workload]);
+		
 		return comboBoxBenchmark;
 	}
 	
@@ -1093,7 +1162,10 @@ class FrameSimulations: FrameEditSet {
 			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Writes", cache.noRetryWrites),
 			newHBoxWithLabelAndEntry2!(ulong)("No-Retry Write Hits", cache.noRetryWriteHits));
 	
-		return hpack(new Label(cacheName), new VSeparator(), vpack(hbox0, hbox1, hbox2, hbox3, hbox4, hbox5, hbox6, hbox7));
+		return hpack(
+			newGotoStateViewOfCacheButton(cache, cacheName), 
+			new VSeparator(), 
+			vpack(hbox0, hbox1, hbox2, hbox3, hbox4, hbox5, hbox6, hbox7));
 	}
 	
 	void newSimulation(Simulation simulation) {
@@ -1140,7 +1212,7 @@ class FrameSimulations: FrameEditSet {
 		
 		HBox hbox0 = hpack(
 			newHBoxWithLabelAndEntry2!(ulong)("Total Cycles:", simulationStat.totalCycles),
-			newHBoxWithLabelAndEntry2!(ulong)("Duration:", simulationStat.duration));
+			newHBoxWithLabelAndEntry2!(ulong)("Duration (milliseconds):", simulationStat.duration));
 		
 		vboxSimulation.packStart(hbox0, false, true, 0);
 		
@@ -1154,7 +1226,7 @@ class FrameSimulations: FrameEditSet {
 		
 		foreach(i, core; simulationStat.processor.cores) {
 			vboxesCore ~= hpack(
-				new Label(format("core-%d", i)),
+				newGotoStateViewOfCoreButton(core, format("core-%d", i)),
 				new VSeparator(),
 				vpack(this.newCache(core.iCache, format("l1I-%d", i)), this.newCache(core.dCache, format("l1D-%d", i))));
 		}
@@ -1193,7 +1265,7 @@ class FrameSimulations: FrameEditSet {
 			newHBoxWithLabelAndEntry2!(ulong)("Writes:", simulationStat.mainMemory.writes),
 			newHBoxWithLabelAndEntry2!(ulong)("Accesses:", simulationStat.mainMemory.accesses));
 		
-		HBox hboxMainMemory = hpack(new Label("Main Memory"), new VSeparator(), vpack(hbox13));
+		HBox hboxMainMemory = hpack(newGotoStateViewOfMainMemoryButton(simulationStat.mainMemory), new VSeparator(), vpack(hbox13));
 		
 		vboxSimulation.packStart(hboxMainMemory, false, true, 6);
 		

@@ -1136,8 +1136,6 @@ class Simulation: Reproducible {
 		this.cwd = cwd;
 		this.config = config;
 		this.stat = stat;
-		
-		this.isRunning = false;
 	}
 	
 	this(string title, string cwd, ArchitectureConfig architectureConfig) {
@@ -1152,17 +1150,13 @@ class Simulation: Reproducible {
 	
 	void execute() {
 		this.beforeRun();
-		
-		this.isRunning = true;
-		
 		this.run();
-		
-		this.isRunning = false;
-		
 		this.afterRun();
 	}
 	
 	override void beforeRun() {
+		this.isRunning = true;
+		this.stat.reset();
 	}
 	
 	override void run() {
@@ -1170,7 +1164,12 @@ class Simulation: Reproducible {
 		simulator.run();
 	}
 	
+	void abort() {
+		this.isRunning = false;
+	}
+	
 	override void afterRun() {
+		this.isRunning = false;
 	}
 	
 	override string toString() {
@@ -1180,6 +1179,7 @@ class Simulation: Reproducible {
 	string title, cwd;
 	SimulationConfig config;
 	SimulationStat stat;
+	
 	bool isRunning;
 	
 	static Simulation loadXML(string cwd, string fileName) {
