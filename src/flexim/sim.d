@@ -1404,10 +1404,10 @@ void executeEvent(SimulatorEventType eventType, SimulatorEventContext context) {
 }
 
 void mainConsole(string[] args) {
-	string simulationTitle = "WCETBench-fir-1x1";
+	//string simulationTitle = "WCETBench-fir-1x1";
 	//string simulationTitle = "WCETBench-fir-2x1";
 	//string simulationTitle = "Olden_Custom1-em3d_original-1x1";
-	//string simulationTitle = "Olden_Custom1-mst_original-1x1";
+	string simulationTitle = "Olden_Custom1-mst_original-1x1";
 	//string simulationTitle = "Olden_Custom1-mst_original-Olden_Custom1_em3d_original-2x1";
 	//string simulationTitle = "Olden_Custom1-mst_original-2x1";
 	
@@ -1435,6 +1435,6 @@ void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
 	
-	bool gui = true;
+	bool gui = false;
 	gui ? mainGui(args) : mainConsole(args);
 }

@@ -217,11 +217,24 @@ class List(EntryT) {
 		return result;
 	}
 	
-	void popFront() {
+	int opApplyReverse(int delegate(ref EntryT) dg) {
+		int result;
+
+		foreach_reverse(ref EntryT p; this.entries) {
+			result = dg(p);
+			if(result)
+				break;
+		}
+		return result;
+	}
+	
+	void takeFront() {
+		//writefln("%s.takeFront() = %s", this.name, this.front);
 		this.entries.takeFront();
 	}
 	
-	void popBack() {
+	void takeBack() {
+		//writefln("%s.takeBack() = %s", this.name, this.back);
 		this.entries.takeBack();
 	}
 	
@@ -240,13 +253,15 @@ class List(EntryT) {
 	}
 	
 	void remove(EntryT value) {
+		//writefln("%s.remove(%s)", this.name, value);
 		auto c = find(this.entries[], value).begin;
 		this.entries.remove(c);
 	}
 	
-	void opOpAssign(string op, EntryT)(EntryT entry)
+	void opOpAssign(string op, EntryT)(EntryT value)
 		if(op == "~") {
-		this.entries ~= entry;
+		//writefln("%s ~= %s", this.name, value);
+		this.entries ~= value;
 	}
 	
 	void clear() {
@@ -271,12 +286,14 @@ class Queue(EntryT): List!(EntryT) {
 		return this.size >= this.capacity;
 	}
 
-	void opOpAssign(string op, EntryT)(EntryT entry)
+	void opOpAssign(string op, EntryT)(EntryT value)
 		if(op == "~") {
 		if(this.size >= this.capacity) {
 			logging.fatalf(LogCategory.MISC, "%s", this);
 		}
-		this.entries ~= entry;
+
+		//writefln("%s ~= %s", this.name, value);
+		this.entries ~= value;
 	}
 	
 	override string toString() {

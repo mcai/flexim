@@ -28,6 +28,7 @@ public import std.conv;
 public import std.datetime;
 public import std.math;
 public import std.random;
+public import std.range;
 public import std.stdio;
 public import std.string;
 public import std.typecons;

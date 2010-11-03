@@ -40,7 +40,7 @@
                     <child type="label">
                       <object class="GtkLabel" id="label1">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;b&gt;Reorder Buffers&lt;/b&gt; (Per Thread)</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Reorder Buffers&lt;/b&gt; (Up to reorderBufferCapacity entries per Thread)</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
@@ -72,7 +72,7 @@
                     <child type="label">
                       <object class="GtkLabel" id="label2">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;b&gt;Load Store Queues&lt;/b&gt; (Per Thread)</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Load Store Queues&lt;/b&gt; (Up to loadStoreQueueCapacity entries per Thread)</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
@@ -112,7 +112,7 @@
                     <child type="label">
                       <object class="GtkLabel" id="label3">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;b&gt;Decode Buffers&lt;/b&gt; (Per Thread)</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Decode Buffers&lt;/b&gt; (Up to decodeBufferCapacity entries per Thread)</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
@@ -240,7 +240,7 @@
                     <child type="label">
                       <object class="GtkLabel" id="label7">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;b&gt;Instructions to Commit&lt;/b&gt; (Per Thread)</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Instructions to Commit&lt;/b&gt; (Up to commitWidth entries per Thread)</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>

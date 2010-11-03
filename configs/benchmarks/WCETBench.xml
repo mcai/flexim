@@ -18,9 +18,9 @@
    </Benchmark>
    <Benchmark title="edn" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="edn" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="nsichneu" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="nsichneu" argsLiteral="" stdout="">
-   </Benchmark>
    <Benchmark title="fft1" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="fft1" argsLiteral="" stdout="">
+   </Benchmark>
+   <Benchmark title="nsichneu" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="nsichneu" argsLiteral="" stdout="">
    </Benchmark>
    <Benchmark title="bs" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="bs" argsLiteral="" stdout="">
    </Benchmark>
@@ -28,9 +28,9 @@
    </Benchmark>
    <Benchmark title="qurt" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="qurt" argsLiteral="" stdout="">
    </Benchmark>
-   <Benchmark title="minver" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="minver" argsLiteral="" stdout="">
-   </Benchmark>
    <Benchmark title="lcdnum" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="lcdnum" argsLiteral="" stdout="">
+   </Benchmark>
+   <Benchmark title="minver" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="minver" argsLiteral="" stdout="">
    </Benchmark>
    <Benchmark title="fdct" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="fdct" argsLiteral="" stdout="">
    </Benchmark>
