@@ -518,15 +518,40 @@ class PhysicalRegister {
 		this.state = PhysicalRegisterState.FREE;
 	}
 	
+	void alloc(ReorderBufferEntry reorderBufferEntry) {
+		this.state = PhysicalRegisterState.ALLOC;
+		this.reorderBufferEntry = reorderBufferEntry;
+	}
+	
+	void writeback() {
+		this.state = PhysicalRegisterState.WB;
+	}
+	
+	void commit() {
+		this.state = PhysicalRegisterState.ARCH;
+	}
+	
+	void dealloc() {
+		this.state = PhysicalRegisterState.FREE;
+		this.reorderBufferEntry = null;
+	}
+	
 	bool isReady() {
 		return this.state == PhysicalRegisterState.WB || this.state == PhysicalRegisterState.ARCH;
 	}
 	
 	override string toString() {
-		return format("PhysicalRegister[state=%s]", this.state);
+		return format("PhysicalRegister[state=%s, reorderBufferEntry=%s]", this.state, this.reorderBufferEntry);
 	}
 	
 	PhysicalRegisterState state;
+	ReorderBufferEntry reorderBufferEntry;
+}
+
+class NoFreePhysicalRegisterException: Exception {
+	this() {
+		super("NoFreePhysicalRegisterException");
+	}
 }
 
 class PhysicalRegisterFile {
@@ -545,10 +570,14 @@ class PhysicalRegisterFile {
 		return !res.empty ? res.front : null;
 	}
 	
-	PhysicalRegister alloc() {
+	PhysicalRegister alloc(ReorderBufferEntry reorderBufferEntry) {
 		PhysicalRegister freeReg = this.findFree();
-		assert(freeReg !is null); //TODO
-		freeReg.state = PhysicalRegisterState.ALLOC;
+		
+		if(freeReg is null) {
+			throw new NoFreePhysicalRegisterException();
+		}
+		
+		freeReg.alloc(reorderBufferEntry);
 		return freeReg;
 	}
 	
@@ -628,6 +657,7 @@ class DecodeBuffer: Queue!(DecodeBufferEntry) {
 
 class ReorderBufferEntry {
 	this(DynamicInst dynamicInst, RegisterDependency[] iDeps, RegisterDependency[] oDeps) {
+		this.id = currentId++;
 		this.dynamicInst = dynamicInst;
 		this.iDeps = iDeps;
 		this.oDeps = oDeps;
@@ -635,6 +665,20 @@ class ReorderBufferEntry {
 	
 	bool allOperandsReady() {
 		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(this.iDeps).empty;
+	}
+	
+	bool storeAddressReady() {
+		MemoryOp memOp = (cast(MemoryOp)(this.dynamicInst.staticInst));		
+		assert(memOp !is null);	
+		
+		return this.srcPhysRegs[memOp.memIDeps[0]].isReady;
+	}
+	
+	bool storeOperandsReady() {
+		MemoryOp memOp = (cast(MemoryOp)(this.dynamicInst.staticInst));		
+		assert(memOp !is null);	
+		
+		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(memOp.memIDeps[1..$]).empty;
 	}
 	
 	bool isInLoadStoreQueue() {
@@ -656,8 +700,8 @@ class ReorderBufferEntry {
 			return str;
 		}
 		
-		return format("ReorderBufferEntry(dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s) %s",
-			this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted,
+		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s) %s",
+			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted,
 				operandsReadyToString);
 	}
 	
@@ -676,6 +720,14 @@ class ReorderBufferEntry {
 	bool isRecoverInst;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
+	
+	ulong id;
+	
+	static this() {
+		currentId = 0;
+	}
+	
+	static ulong currentId;
 }
 
 class ReadyQueue: List!(ReorderBufferEntry) {
@@ -687,6 +739,12 @@ class ReadyQueue: List!(ReorderBufferEntry) {
 class WaitingQueue: List!(ReorderBufferEntry) {
 	this() {
 		super("waitingQueue");
+	}
+}
+
+class OoOEventQueue: List!(ReorderBufferEntry) {
+	this() {
+		super("oooEventQueue");
 	}
 }
 
@@ -778,6 +836,7 @@ class Core {
 		
 		this.readyQueue = new ReadyQueue();
 		this.waitingQueue = new WaitingQueue();
+		this.oooEventQueue = new OoOEventQueue();
 		
 		this.mem = new Memory();
 	}
@@ -788,9 +847,9 @@ class Core {
 		}
 	}
 	
-	uint findNextThreadIdToDecode(ref bool allStalled) {
+	uint findNextThreadIdToDecode(ref bool allStalled, ref bool[uint] decodeStalled) {
 		foreach(i, thread; this.threads) {
-			if(!thread.decodeBuffer.empty && !thread.reorderBuffer.full && !thread.loadStoreQueue.full) {
+			if(!decodeStalled[i] && !thread.decodeBuffer.empty && !thread.reorderBuffer.full && !thread.loadStoreQueue.full) {
 				allStalled = false;
 				return i;
 			}
@@ -818,7 +877,7 @@ class Core {
 		while(numRenamed < this.decodeWidth) {
 			bool allStalled = true;
 			
-			decodeThreadId = this.findNextThreadIdToDecode(allStalled);
+			decodeThreadId = this.findNextThreadIdToDecode(allStalled, decodeStalled);
 			
 			if(allStalled) {
 				break;
@@ -860,14 +919,18 @@ class Core {
 					reorderBufferEntry.srcPhysRegs[iDep] = this.threads[decodeThreadId].renameTable[iDep];
 				}
 				
-				foreach(oDep; reorderBufferEntry.oDeps) {
-					PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
-					reorderBufferEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
-					reorderBufferEntry.physRegs[oDep] = regFile.alloc();
-					this.threads[decodeThreadId].renameTable[oDep] = reorderBufferEntry.physRegs[oDep];
+				try {
+					foreach(oDep; reorderBufferEntry.oDeps) {
+						PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
+						reorderBufferEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
+						reorderBufferEntry.physRegs[oDep] = regFile.alloc(reorderBufferEntry);
+						this.threads[decodeThreadId].renameTable[oDep] = reorderBufferEntry.physRegs[oDep];
+					}
 				}
-				
-				this.threads[decodeThreadId].reorderBuffer ~= reorderBufferEntry;
+				catch(NoFreePhysicalRegisterException ex) {
+					decodeStalled[decodeThreadId] = true;
+					continue;
+				}
 				
 				if(dynamicInst.staticInst.isMem) {					
 					ReorderBufferEntry loadStoreQueueEntry = new ReorderBufferEntry(dynamicInst, 
@@ -890,15 +953,23 @@ class Core {
 						loadStoreQueueEntry.srcPhysRegs[iDep] = this.threads[decodeThreadId].renameTable[iDep];
 					}
 					
-					foreach(oDep; loadStoreQueueEntry.oDeps) {
-						PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
-						loadStoreQueueEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep]; //TODO: is it correct?
-						loadStoreQueueEntry.physRegs[oDep] = regFile.alloc();
-						this.threads[decodeThreadId].renameTable[oDep] = loadStoreQueueEntry.physRegs[oDep];
+					try {
+						foreach(oDep; loadStoreQueueEntry.oDeps) {
+							PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
+							loadStoreQueueEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
+							loadStoreQueueEntry.physRegs[oDep] = regFile.alloc(loadStoreQueueEntry);
+							this.threads[decodeThreadId].renameTable[oDep] = loadStoreQueueEntry.physRegs[oDep];
+						}
+					}
+					catch(NoFreePhysicalRegisterException ex) {
+						decodeStalled[decodeThreadId] = true;
+						continue;
 					}
 					
 					this.threads[decodeThreadId].loadStoreQueue ~= loadStoreQueueEntry;
 				}
+				
+				this.threads[decodeThreadId].reorderBuffer ~= reorderBufferEntry;
 			}
 			
 			this.threads[decodeThreadId].decodeBuffer.takeFront();
@@ -1012,7 +1083,7 @@ class Core {
 						
 						if(hitInLoadStoreQueue) {
 							foreach(oDep; readyQueueEntry.oDeps) {
-								readyQueueEntry.physRegs[oDep].state = PhysicalRegisterState.WB;
+								readyQueueEntry.physRegs[oDep].writeback();
 							}
 							
 							readyQueueEntry.isCompleted = true;
@@ -1021,11 +1092,13 @@ class Core {
 							this.seqD.load(this.mmu.translate(readyQueueEntry.ea), false, readyQueueEntry,
 								(ReorderBufferEntry readyQueueEntry)
 								{
-									foreach(oDep; readyQueueEntry.oDeps) {
-										readyQueueEntry.physRegs[oDep].state = PhysicalRegisterState.WB;
+									if(!readyQueueEntry.isEAComputation) {
+										foreach(oDep; readyQueueEntry.oDeps) {
+											readyQueueEntry.physRegs[oDep].writeback();
+										}
+										
+										readyQueueEntry.isCompleted = true;
 									}
-									
-									readyQueueEntry.isCompleted = true;
 								});
 						}
 					});
@@ -1038,7 +1111,7 @@ class Core {
 						(ReorderBufferEntry readyQueueEntry)
 						{
 							foreach(oDep; readyQueueEntry.oDeps) {
-								readyQueueEntry.physRegs[oDep].state = PhysicalRegisterState.WB;
+								readyQueueEntry.physRegs[oDep].writeback();
 							}
 							
 							readyQueueEntry.isCompleted = true;
@@ -1058,6 +1131,33 @@ class Core {
 		}
 	}
 	
+	void writeback() {
+		while(!this.oooEventQueue.empty) {
+			ReorderBufferEntry reorderBufferEntry = this.oooEventQueue.front;
+			
+			reorderBufferEntry.isCompleted = true;
+			
+			if(reorderBufferEntry.isEAComputation) {
+				foreach(oDep; reorderBufferEntry.oDeps) {
+					reorderBufferEntry.physRegs[oDep].writeback();
+				}
+			}
+			
+			if(reorderBufferEntry.isRecoverInst) {
+				assert(0);
+				//TODO: recover
+			}
+			
+			this.oooEventQueue.takeFront();
+		}
+	}
+	
+	void refreshLoadStoreQueue() {
+		foreach(thread; this.threads) {
+			thread.refreshLoadStoreQueue();
+		}
+	}
+	
 	void commit() {
 		foreach(thread; this.threads) {
 			thread.commit();
@@ -1065,11 +1165,13 @@ class Core {
 	}
 	
 	void run() {
-		this.fetch();
-		this.registerRename();
-		this.dispatch();
-		this.issue();
 		this.commit();
+		this.writeback();
+		this.refreshLoadStoreQueue();
+		this.issue();
+		this.dispatch();
+		this.registerRename();
+		this.fetch();
 	}
 	
 	PhysicalRegisterFile getPhysicalRegisterFile(RegisterDependencyType type) {
@@ -1132,6 +1234,7 @@ class Core {
 	
 	ReadyQueue readyQueue;
 	WaitingQueue waitingQueue;
+	OoOEventQueue oooEventQueue;
 }
 
 enum ThreadState: string {
@@ -1164,19 +1267,19 @@ class Thread {
 		
 		for(uint i = 0; i < NumIntRegs; i++) {
 			PhysicalRegister physReg = this.core.intRegFile[this.num * NumIntRegs + i];
-			physReg.state = PhysicalRegisterState.ARCH;
+			physReg.commit();
 			this.renameTable[RegisterDependencyType.INT, i] = physReg;
 		}
 		
 		for(uint i = 0; i < NumFloatRegs; i++) {
 			PhysicalRegister physReg = this.core.intRegFile[this.num * NumFloatRegs + i];
-			physReg.state = PhysicalRegisterState.ARCH;
+			physReg.commit();
 			this.renameTable[RegisterDependencyType.FP, i] = physReg;
 		}
 		
 		for(uint i = 0; i < NumMiscRegs; i++) {
 			PhysicalRegister physReg = this.core.intRegFile[this.num * NumMiscRegs + i];
-			physReg.state = PhysicalRegisterState.ARCH;
+			physReg.commit();
 			this.renameTable[RegisterDependencyType.MISC, i] = physReg;
 		}
 		
@@ -1256,6 +1359,7 @@ class Thread {
 			
 			if(!this.isSpeculative && this.npc != this.fetchNpc) { //TODO:???
 				this.isSpeculative = true;
+				assert(0);
 				decodeBufferEntry.isRecoverInst = true;
 			}
 			
@@ -1273,6 +1377,40 @@ class Thread {
 		
 		dispatchStalled = true;
 		return null;
+	}
+	
+	void refreshLoadStoreQueue() {
+		uint[] stdUnknowns;
+		
+		foreach(loadStoreQueueEntry; this.loadStoreQueue) {
+			if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) {
+				if(loadStoreQueueEntry.storeAddressReady) {
+					break;
+				}
+				else if(!loadStoreQueueEntry.allOperandsReady) {
+					stdUnknowns ~= loadStoreQueueEntry.ea;
+				}
+				else {
+					foreach(ref addr; stdUnknowns) {
+						if(addr == loadStoreQueueEntry.ea) {
+							addr = 0;
+						}
+					}
+				}
+			}
+			
+			if(loadStoreQueueEntry.dynamicInst.staticInst.isLoad &&
+				loadStoreQueueEntry.isDispatched &&
+				!loadStoreQueueEntry.isInReadyQueue &&
+				!loadStoreQueueEntry.isIssued &&
+				!loadStoreQueueEntry.isCompleted &&
+				loadStoreQueueEntry.allOperandsReady) {
+				if(count(stdUnknowns, loadStoreQueueEntry.ea) == 0) {
+					this.core.readyQueue ~= loadStoreQueueEntry;
+					loadStoreQueueEntry.isInReadyQueue = true;
+				}
+			}
+		}
 	}
 	
 	void commit() {
@@ -1316,16 +1454,16 @@ class Thread {
 				}
 				
 				foreach(oDep; loadStoreQueueEntry.oDeps) {
-					loadStoreQueueEntry.oldPhysRegs[oDep].state = PhysicalRegisterState.FREE;
-					loadStoreQueueEntry.physRegs[oDep].state = PhysicalRegisterState.ARCH;
+					loadStoreQueueEntry.oldPhysRegs[oDep].dealloc();
+					loadStoreQueueEntry.physRegs[oDep].commit();
 				}
 				
 				this.loadStoreQueue.takeFront();
 			}
 			
 			foreach(oDep; reorderBufferEntry.oDeps) {
-				reorderBufferEntry.oldPhysRegs[oDep].state = PhysicalRegisterState.FREE;
-				reorderBufferEntry.physRegs[oDep].state = PhysicalRegisterState.ARCH;
+				reorderBufferEntry.oldPhysRegs[oDep].dealloc();
+				reorderBufferEntry.physRegs[oDep].commit();
 			}
 			
 			if(reorderBufferEntry.dynamicInst.staticInst.isControl) {
@@ -1348,8 +1486,7 @@ class Thread {
 			
 			numCommitted++;
 			
-			logging.infof(LogCategory.DEBUG, "t%d one instruction committed (dynamicInst=%s) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", this.num, 
-				reorderBufferEntry.dynamicInst);
+			//logging.infof(LogCategory.DEBUG, "t%d instruction committed (dynamicInst=%s)", this.num,  reorderBufferEntry.dynamicInst);
 		}
 	}
 	
@@ -1368,7 +1505,7 @@ class Thread {
 			}
 			
 			foreach(oDep; reorderBufferEntry.dynamicInst.staticInst.oDeps) {
-				reorderBufferEntry.physRegs[oDep].state = PhysicalRegisterState.FREE;
+				reorderBufferEntry.physRegs[oDep].dealloc();
 				this.renameTable[oDep] = reorderBufferEntry.oldPhysRegs[oDep];
 			}
 			

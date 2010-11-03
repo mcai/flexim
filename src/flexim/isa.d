@@ -584,108 +584,104 @@ class RegisterDependency {
 }
 
 abstract class StaticInst {
-	public:		
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
-			this.mnemonic = mnemonic;
-			this.machInst = machInst;
-			this.flags = flags;
-			this.fuType = fuType;
-			
-			this.setupDeps();
-		}
+	this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this.mnemonic = mnemonic;
+		this.machInst = machInst;
+		this.flags = flags;
+		this.fuType = fuType;
 		
-		uint targetPc(Thread thread) {
-			return 0;
-		}
-		
-		abstract void setupDeps();
-		
-		abstract void execute(Thread thread);
+		this.setupDeps();
+	}
+	
+	uint targetPc(Thread thread) {
+		return 0;
+	}
+	
+	abstract void setupDeps();
+	
+	abstract void execute(Thread thread);
 
-		uint opIndex(BitField field) {
-			return this.machInst[field];
-		}
-		
-		bool isLongLat() {
-			return (this.flags & StaticInstFlag.LONGLAT) == StaticInstFlag.LONGLAT;
-		}
-		
-		bool isTrap() {
-			return (this.flags & StaticInstFlag.TRAP) == StaticInstFlag.TRAP;
-		}
-		
-		bool isMem() {
-			return (this.flags & StaticInstFlag.MEM) == StaticInstFlag.MEM;
-		}
-		
-		bool isLoad() {
-			return this.isMem && (this.flags & StaticInstFlag.LOAD) == StaticInstFlag.LOAD;
-		}
-		
-		bool isStore() {
-			return this.isMem && (this.flags & StaticInstFlag.STORE) == StaticInstFlag.STORE;
-		}
+	uint opIndex(BitField field) {
+		return this.machInst[field];
+	}
+	
+	bool isLongLat() {
+		return (this.flags & StaticInstFlag.LONGLAT) == StaticInstFlag.LONGLAT;
+	}
+	
+	bool isTrap() {
+		return (this.flags & StaticInstFlag.TRAP) == StaticInstFlag.TRAP;
+	}
+	
+	bool isMem() {
+		return (this.flags & StaticInstFlag.MEM) == StaticInstFlag.MEM;
+	}
+	
+	bool isLoad() {
+		return this.isMem && (this.flags & StaticInstFlag.LOAD) == StaticInstFlag.LOAD;
+	}
+	
+	bool isStore() {
+		return this.isMem && (this.flags & StaticInstFlag.STORE) == StaticInstFlag.STORE;
+	}
 
-		bool isConditional() {
-			return (this.flags & StaticInstFlag.COND) == StaticInstFlag.COND;
-		}
+	bool isConditional() {
+		return (this.flags & StaticInstFlag.COND) == StaticInstFlag.COND;
+	}
 
-		bool isUnconditional() {
-			return (this.flags & StaticInstFlag.UNCOND) == StaticInstFlag.UNCOND;
-		}
-		
-		bool isDirectJump() {
-			return (this.flags & StaticInstFlag.DIRJMP) != StaticInstFlag.DIRJMP;
-		}
+	bool isUnconditional() {
+		return (this.flags & StaticInstFlag.UNCOND) == StaticInstFlag.UNCOND;
+	}
+	
+	bool isDirectJump() {
+		return (this.flags & StaticInstFlag.DIRJMP) != StaticInstFlag.DIRJMP;
+	}
 
-		bool isControl() {
-			return (this.flags & StaticInstFlag.CTRL) == StaticInstFlag.CTRL;
-		}
+	bool isControl() {
+		return (this.flags & StaticInstFlag.CTRL) == StaticInstFlag.CTRL;
+	}
 
-		bool isCall() {
-			return (this.flags & StaticInstFlag.CALL) == StaticInstFlag.CALL;
-		}
+	bool isCall() {
+		return (this.flags & StaticInstFlag.CALL) == StaticInstFlag.CALL;
+	}
 
-		bool isReturn() {
-			return (this.flags & StaticInstFlag.RET) == StaticInstFlag.RET;
-		}
-		
-		bool isNop() {
-			return (cast(Nop)this) !is null;
-		}
-		
-		RegisterDependency[] iDeps;
-		RegisterDependency[] oDeps;
-		
-		MachInst machInst;
-		string mnemonic;
-		StaticInstFlag flags;
-		FunctionalUnitType fuType;
+	bool isReturn() {
+		return (this.flags & StaticInstFlag.RET) == StaticInstFlag.RET;
+	}
+	
+	bool isNop() {
+		return (cast(Nop)this) !is null;
+	}
+	
+	RegisterDependency[] iDeps;
+	RegisterDependency[] oDeps;
+	
+	MachInst machInst;
+	string mnemonic;
+	StaticInstFlag flags;
+	FunctionalUnitType fuType;
 }
 
 class DynamicInst {
-	public:		
-		this(Thread thread, uint pc, StaticInst staticInst) {
-			this.thread = thread;
-			this.pc = pc;
-			this.staticInst = staticInst;
-		}
+	this(Thread thread, uint pc, StaticInst staticInst) {
+		this.thread = thread;
+		this.pc = pc;
+		this.staticInst = staticInst;
+	}
+	
+	void execute() {
+		this.thread.intRegs[ZeroReg] = 0;
 		
-		void execute() {
-			this.thread.intRegs[ZeroReg] = 0;
-			
-			this.staticInst.execute(this.thread);
-		}
-		
-		override string toString() {
-			return disassemble(this.staticInst.machInst, this.pc, this.thread);
-		}
-		
-		uint pc;
-		
-		StaticInst staticInst;
-		
-		Thread thread;
+		this.staticInst.execute(this.thread);
+	}
+	
+	override string toString() {
+		return disassemble(this.staticInst.machInst, this.pc, this.thread);
+	}
+	
+	uint pc;
+	StaticInst staticInst;
+	Thread thread;
 }
 
 class MipsISA : ISA {

@@ -4,15 +4,15 @@
       <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
       </ContextConfig>
    </SimulationConfig>
-   <SimulationStat duration="94" totalCycles="23006">
+   <SimulationStat duration="1486" totalCycles="23185">
       <ProcessorStat>
          <CoreStat>
             <CacheStat hits="61" noRetryWrites="0" noRetryAccesses="109" writeHits="0" evictions="0" nonblockingReads="109" reads="109" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="61" nonblockingWrites="0" blockingWrites="0" noRetryReads="109" noRetryHits="61" readRetries="0" accesses="109" noRetryReadHits="61">
             </CacheStat>
-            <CacheStat hits="8565" noRetryWrites="91" noRetryAccesses="656" writeHits="5356" evictions="0" nonblockingReads="3221" reads="3221" blockingReads="0" writeRetries="0" writes="5367" noRetryWriteHits="80" readHits="3209" nonblockingWrites="5367" blockingWrites="0" noRetryReads="565" noRetryHits="633" readRetries="0" accesses="8588" noRetryReadHits="553">
+            <CacheStat hits="14108" noRetryWrites="89" noRetryAccesses="1173" writeHits="5616" evictions="0" nonblockingReads="8533" reads="8533" blockingReads="0" writeRetries="0" writes="5627" noRetryWriteHits="78" readHits="8492" nonblockingWrites="5627" blockingWrites="0" noRetryReads="1084" noRetryHits="1148" readRetries="0" accesses="14160" noRetryReadHits="1070">
             </CacheStat>
          </CoreStat>
-         <ContextStat totalInsts="2666">
+         <ContextStat totalInsts="2667">
          </ContextStat>
       </ProcessorStat>
       <CacheStat hits="0" noRetryWrites="11" noRetryAccesses="71" writeHits="0" evictions="0" nonblockingReads="60" reads="60" blockingReads="0" writeRetries="0" writes="11" noRetryWriteHits="0" readHits="0" nonblockingWrites="11" blockingWrites="0" noRetryReads="60" noRetryHits="0" readRetries="0" accesses="71" noRetryReadHits="0">

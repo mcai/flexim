@@ -6,26 +6,26 @@
       <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
       </ContextConfig>
    </SimulationConfig>
-   <SimulationStat duration="243" totalCycles="23020">
+   <SimulationStat duration="1400" totalCycles="23612">
       <ProcessorStat>
          <CoreStat>
-            <CacheStat hits="109" noRetryWrites="0" noRetryAccesses="158" writeHits="0" evictions="0" nonblockingReads="110" reads="158" blockingReads="48" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="109" nonblockingWrites="0" blockingWrites="0" noRetryReads="158" noRetryHits="109" readRetries="0" accesses="158" noRetryReadHits="109">
+            <CacheStat hits="58" noRetryWrites="0" noRetryAccesses="94" writeHits="0" evictions="0" nonblockingReads="58" reads="94" blockingReads="36" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="58" nonblockingWrites="0" blockingWrites="0" noRetryReads="94" noRetryHits="58" readRetries="0" accesses="94" noRetryReadHits="58">
             </CacheStat>
-            <CacheStat hits="8770" noRetryWrites="117" noRetryAccesses="695" writeHits="5462" evictions="1" nonblockingReads="3315" reads="3328" blockingReads="13" writeRetries="0" writes="5482" noRetryWriteHits="97" readHits="3308" nonblockingWrites="5458" blockingWrites="24" noRetryReads="578" noRetryHits="655" readRetries="0" accesses="8810" noRetryReadHits="558">
+            <CacheStat hits="11794" noRetryWrites="77" noRetryAccesses="324" writeHits="4203" evictions="0" nonblockingReads="7626" reads="7638" blockingReads="12" writeRetries="0" writes="4214" noRetryWriteHits="66" readHits="7591" nonblockingWrites="4200" blockingWrites="14" noRetryReads="247" noRetryHits="296" readRetries="0" accesses="11852" noRetryReadHits="230">
             </CacheStat>
          </CoreStat>
          <CoreStat>
-            <CacheStat hits="61" noRetryWrites="0" noRetryAccesses="109" writeHits="0" evictions="0" nonblockingReads="109" reads="109" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="61" nonblockingWrites="0" blockingWrites="0" noRetryReads="109" noRetryHits="61" readRetries="0" accesses="109" noRetryReadHits="61">
+            <CacheStat hits="62" noRetryWrites="0" noRetryAccesses="111" writeHits="0" evictions="0" nonblockingReads="111" reads="111" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="62" nonblockingWrites="0" blockingWrites="0" noRetryReads="111" noRetryHits="62" readRetries="0" accesses="111" noRetryReadHits="62">
             </CacheStat>
-            <CacheStat hits="8778" noRetryWrites="106" noRetryAccesses="678" writeHits="5455" evictions="1" nonblockingReads="3329" reads="3336" blockingReads="7" writeRetries="0" writes="5476" noRetryWriteHits="85" readHits="3323" nonblockingWrites="5461" blockingWrites="15" noRetryReads="572" noRetryHits="644" readRetries="0" accesses="8812" noRetryReadHits="559">
+            <CacheStat hits="14104" noRetryWrites="100" noRetryAccesses="1183" writeHits="5527" evictions="0" nonblockingReads="8625" reads="8629" blockingReads="4" writeRetries="0" writes="5543" noRetryWriteHits="85" readHits="8577" nonblockingWrites="5537" blockingWrites="6" noRetryReads="1083" noRetryHits="1153" readRetries="0" accesses="14172" noRetryReadHits="1068">
             </CacheStat>
          </CoreStat>
-         <ContextStat totalInsts="2669">
+         <ContextStat totalInsts="518">
          </ContextStat>
-         <ContextStat totalInsts="2666">
+         <ContextStat totalInsts="2677">
          </ContextStat>
       </ProcessorStat>
-      <CacheStat hits="4441" noRetryWrites="52" noRetryAccesses="182" writeHits="718" evictions="0" nonblockingReads="3784" reads="3784" blockingReads="0" writeRetries="0" writes="729" noRetryWriteHits="41" readHits="3723" nonblockingWrites="729" blockingWrites="0" noRetryReads="130" noRetryHits="110" readRetries="0" accesses="4513" noRetryReadHits="69">
+      <CacheStat hits="3424" noRetryWrites="31" noRetryAccesses="144" writeHits="449" evictions="0" nonblockingReads="3036" reads="3036" blockingReads="0" writeRetries="0" writes="460" noRetryWriteHits="20" readHits="2975" nonblockingWrites="460" blockingWrites="0" noRetryReads="113" noRetryHits="72" readRetries="0" accesses="3496" noRetryReadHits="52">
       </CacheStat>
       <MainMemoryStat writes="11" reads="61" accesses="72">
       </MainMemoryStat>
