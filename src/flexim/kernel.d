@@ -649,7 +649,7 @@ class Process {
 
 		stack_ptr = STACK_BASE - MAX_ENVIRON;
 
-		thread.intRegs[StackPointerReg] = stack_ptr;
+		thread.regs.intRegs.set(StackPointerReg, stack_ptr);
 
 		/*write argc to stack*/
 		thread.mem.writeWord(stack_ptr, this.argc);
@@ -697,8 +697,8 @@ class Process {
 
 		this.mmap_brk = MMAP_BASE;
 
-		thread.npc = this.prog_entry;
-		thread.nnpc = thread.npc + uint.sizeof;
+		thread.regs.npc = this.prog_entry;
+		thread.regs.nnpc = thread.regs.npc + uint.sizeof;
 	}
 
 	bool load(Thread thread) {

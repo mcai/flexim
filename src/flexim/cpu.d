@@ -185,11 +185,11 @@ class BpredUpdate {
 }
 
 interface Bpred {
-	uint lookup(uint baddr, uint btarget, StaticInst staticInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx);
+	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx);
 
 	void recover(uint baddr, uint stackRecoverIdx);
 	
-	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, StaticInst staticInst, ref BpredUpdate dirUpdate);	
+	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate);	
 }
 
 class CombinedBpred : Bpred {
@@ -207,7 +207,9 @@ class CombinedBpred : Bpred {
 	}
 
 	// btarget is for static predictors such taken or not taken, so here it is not used at all
-	uint lookup(uint baddr, uint btarget, StaticInst staticInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) {		
+	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) {
+		StaticInst staticInst = dynamicInst.staticInst;
+				
 		if(!staticInst.isControl) {
 			return 0;
 		}
@@ -293,7 +295,9 @@ class CombinedBpred : Bpred {
 		this.retStack.tos = stackRecoverIdx;
 	}
 
-	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, StaticInst staticInst, ref BpredUpdate dirUpdate) {
+	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate) {
+		StaticInst staticInst = dynamicInst.staticInst;
+		
 		BpredBtbEntry btbEntry = null;
 		
 		if(!staticInst.isControl) {
@@ -637,7 +641,7 @@ class DecodeBufferEntry {
 	uint npc, nnpc, predNpc, predNnpc;
 	DynamicInst dynamicInst;
 	
-	bool isRecoverInst;
+	bool isSpeculative;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
 	
@@ -660,6 +664,8 @@ class ReorderBufferEntry {
 		this.dynamicInst = dynamicInst;
 		this.iDeps = iDeps;
 		this.oDeps = oDeps;
+		
+		this.isValid = true;
 	}
 	
 	void signalExecutionCompleted() {
@@ -692,6 +698,10 @@ class ReorderBufferEntry {
 		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry !is null;
 	}
 	
+	void invalidate() {
+		this.isValid = false;
+	}
+	
 	override string toString() {
 		string operandsReadyToString() {
 			string str = "\n";
@@ -703,8 +713,8 @@ class ReorderBufferEntry {
 			return str;
 		}
 		
-		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s) %s",
-			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted,
+		return format("ReorderBufferEntry(id=%d, dynamicInst=%s, isEAComputation=%s, isDispatched=%s, isInReadyQueue=%s, isIssued=%s, isCompleted=%s, isValid=%s) %s",
+			this.id, this.dynamicInst, this.isEAComputation, this.isDispatched, this.isInReadyQueue, this.isIssued, this.isCompleted, this.isValid,
 				operandsReadyToString);
 	}
 	
@@ -714,12 +724,12 @@ class ReorderBufferEntry {
 	RegisterDependency[] iDeps, oDeps;
 	PhysicalRegister[RegisterDependency] oldPhysRegs, physRegs, srcPhysRegs;
 	
-	bool isDispatched, isInReadyQueue, isIssued, isCompleted;
+	bool isDispatched, isInReadyQueue, isIssued, isCompleted, isValid;
 	
 	ReorderBufferEntry loadStoreQueueEntry;
 	uint ea;
 	
-	bool isRecoverInst;
+	bool isSpeculative;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
 	
@@ -886,7 +896,7 @@ class Core {
 			DecodeBufferEntry decodeBufferEntry = this.threads[decodeThreadId].decodeBuffer.front;
 	
 			/* maintain $r0 semantics */
-			this.threads[decodeThreadId].intRegs[ZeroReg] = 0;
+			this.threads[decodeThreadId].regs.intRegs.set(ZeroReg, 0);
 			
 			DynamicInst dynamicInst = decodeBufferEntry.dynamicInst;
 	
@@ -899,7 +909,7 @@ class Core {
 				reorderBufferEntry.predNnpc = decodeBufferEntry.predNnpc;
 				reorderBufferEntry.stackRecoverIndex = decodeBufferEntry.stackRecoverIndex;
 				reorderBufferEntry.dirUpdate = decodeBufferEntry.dirUpdate;
-				reorderBufferEntry.isRecoverInst = decodeBufferEntry.isRecoverInst;
+				reorderBufferEntry.isSpeculative = decodeBufferEntry.isSpeculative;
 				
 				foreach(iDep; reorderBufferEntry.iDeps) {
 					reorderBufferEntry.srcPhysRegs[iDep] = this.threads[decodeThreadId].renameTable[iDep];
@@ -929,7 +939,7 @@ class Core {
 					loadStoreQueueEntry.predNnpc = decodeBufferEntry.predNnpc;
 					loadStoreQueueEntry.stackRecoverIndex = 0;
 					loadStoreQueueEntry.dirUpdate = null;
-					loadStoreQueueEntry.isRecoverInst = false;
+					loadStoreQueueEntry.isSpeculative = false;
 					
 					loadStoreQueueEntry.ea = (cast(MemoryOp) dynamicInst.staticInst).ea(this.threads[decodeThreadId]);
 					
@@ -1040,6 +1050,11 @@ class Core {
 		while(!this.waitingQueue.empty) {
 			ReorderBufferEntry waitingQueueEntry = this.waitingQueue.front;
 			
+			if(!waitingQueueEntry.isValid) {
+				this.waitingQueue.takeFront();
+				continue;
+			}
+			
 			if(waitingQueueEntry.allOperandsReady) {
 				this.readyQueue ~= waitingQueueEntry;
 				waitingQueueEntry.isInReadyQueue = true;
@@ -1118,10 +1133,29 @@ class Core {
 		while(!this.oooEventQueue.empty) {
 			ReorderBufferEntry reorderBufferEntry = this.oooEventQueue.front;
 			
+			if(!reorderBufferEntry.isValid) {
+				this.oooEventQueue.takeFront();
+				continue;
+			}
+			
 			reorderBufferEntry.isCompleted = true;
 
 			foreach(oDep; reorderBufferEntry.oDeps) {
 				reorderBufferEntry.physRegs[oDep].writeback();
+			}
+	
+			/* if this is the first instruction in spec mode, empty reorder buffer */
+			if(reorderBufferEntry.isSpeculative) {				
+				reorderBufferEntry.dynamicInst.thread.bpred.recover(reorderBufferEntry.dynamicInst.physPc, reorderBufferEntry.stackRecoverIndex);
+
+				/* regenerate fetch stage status */
+				reorderBufferEntry.dynamicInst.thread.regs.isSpeculative = reorderBufferEntry.dynamicInst.thread.isSpeculative = false;
+				reorderBufferEntry.dynamicInst.thread.fetchNpc = reorderBufferEntry.dynamicInst.thread.regs.npc;
+				reorderBufferEntry.dynamicInst.thread.fetchNnpc = reorderBufferEntry.dynamicInst.thread.regs.nnpc;
+				
+				/* squash pipeline and stop commit */
+				reorderBufferEntry.dynamicInst.thread.recoverReorderBuffer(reorderBufferEntry);
+				break;
 			}
 			
 			this.oooEventQueue.takeFront();
@@ -1215,6 +1249,18 @@ enum ThreadState: string {
 	Halted = "Halted"
 }
 
+class AlwaysTakenBpred: Bpred {
+	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) {
+		return dynamicInst.staticInst.targetPc(dynamicInst.thread);
+	}
+
+	void recover(uint baddr, uint stackRecoverIdx) {
+	}
+	
+	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate) {
+	}
+}
+
 class Thread {
 	this(Core core, ProcessorConfig config, ContextStat stat, uint num, Process process) {
 		this.core = core;
@@ -1225,7 +1271,8 @@ class Thread {
 		
 		this.syscallEmul = new SyscallEmul();
 
-		this.bpred = new CombinedBpred();
+		//this.bpred = new CombinedBpred();
+		this.bpred = new AlwaysTakenBpred();
 		
 		this.renameTable = new RegisterRenameTable();
 
@@ -1261,18 +1308,31 @@ class Thread {
 		this.reorderBuffer = new ReorderBuffer(config.reorderBufferCapacity);
 		this.loadStoreQueue = new LoadStoreQueue(config.loadStoreQueueCapacity);
 		
-		this.fetchNpc = this.npc;
-		this.fetchNnpc = this.nnpc;
+		this.fetchNpc = this.regs.npc;
+		this.fetchNnpc = this.regs.nnpc;
+	}
+	
+	DynamicInst decodeAndExecute() {
+		this.regs.pc = this.regs.npc;
+		this.regs.npc = this.regs.nnpc;
+		this.regs.nnpc += uint.sizeof;
+
+		/* fetch instruction from memory */
+		StaticInst staticInst = this.core.isa.decode(this.regs.pc, this.mem);
+		DynamicInst dynamicInst = new DynamicInst(this, this.regs.pc, staticInst);
+
+		/* functional simulation */
+		dynamicInst.execute();
 		
-		this.isSpeculative = false;
+		return dynamicInst;
 	}
 	
 	void fetch() {
-		uint blockToFetch = aligned(this.npc, this.core.seqI.blockSize);
+		uint blockToFetch = aligned(this.fetchNpc, this.core.seqI.blockSize);
 		if(blockToFetch != this.lastFetchedBlock) {
 			this.lastFetchedBlock = blockToFetch;
 			
-			this.core.seqI.load(this.core.mmu.translate(this.npc), false, 
+			this.core.seqI.load(this.core.mmu.translate(this.fetchNpc), false, 
 				{
 					this.fetchStalled = false;
 				});
@@ -1284,56 +1344,59 @@ class Thread {
 	
 		/* fetch instructions */
 		while(!done && !this.decodeBuffer.full && !this.fetchStalled) {
+			bool setNpc() {
+				if(this.regs.npc == this.fetchNpc) {
+					return false;
+				}
+				
+				if(this.isSpeculative) {
+					this.regs.npc = this.fetchNpc;
+					return false;
+				}
+				
+				return true;
+			}
+			
+			if(setNpc()) {
+				this.regs.isSpeculative = this.isSpeculative = true;
+			}
+			
+			this.fetchPc = this.fetchNpc;
+			this.fetchNpc = this.fetchNnpc;
+			
+			DynamicInst dynamicInst = this.decodeAndExecute();
+			
 			if(this.fetchNpc != this.fetchPc + uint.sizeof) {
 				done = true;
 			}
-			
-			if(aligned(this.npc, this.core.seqI.blockSize) == blockToFetch) {
+	
+			if((this.fetchPc + uint.sizeof) % this.core.seqI.blockSize == 0) {
 				done = true;
 			}
-				
-			this.fetchPc = this.fetchNpc;
-			this.fetchNpc = this.fetchNnpc;			
-	
-			/* fetch instruction from memory */
-			StaticInst staticInst = this.core.isa.decode(this.fetchPc, this.mem);
-			DynamicInst dynamicInst = new DynamicInst(this, this.fetchPc, staticInst);
-				
-			this.npc = this.fetchNpc;
-				
-			this.pc = this.npc;
-			this.npc = this.nnpc;
-			this.nnpc += uint.sizeof;
-	
-			/* functional simulation */
-			dynamicInst.execute();
-				
-			this.fetchNpc = this.npc;
-			this.fetchNnpc = this.nnpc;
 			
 			uint stackRecoverIndex;
 			BpredUpdate dirUpdate = new BpredUpdate();
 	
 			/* calculate fetch nnpc */
 			uint dest = this.bpred.lookup(
-				this.fetchPc,
+				this.core.mmu.translate(this.fetchPc),
 				0,
-				staticInst,
+				dynamicInst,
 				dirUpdate,
 				stackRecoverIndex);
 			this.fetchNnpc = dest <= 1 ? this.fetchNpc + uint.sizeof : dest;
-			
-			this.isSpeculative = (this.npc != this.fetchNpc);
+	
+			this.fetchNnpc = this.regs.nnpc; //TODO: remove it
 	
 			/* insert instruction in decode buffer */
 			DecodeBufferEntry decodeBufferEntry = new DecodeBufferEntry(dynamicInst);
-			decodeBufferEntry.npc = this.npc;
-			decodeBufferEntry.nnpc = this.nnpc;
+			decodeBufferEntry.npc = this.regs.npc;
+			decodeBufferEntry.nnpc = this.regs.nnpc;
 			decodeBufferEntry.predNpc = this.fetchNpc;
 			decodeBufferEntry.predNnpc = this.fetchNnpc;
 			decodeBufferEntry.stackRecoverIndex = stackRecoverIndex;
 			decodeBufferEntry.dirUpdate = dirUpdate;
-			decodeBufferEntry.isRecoverInst = this.isSpeculative;
+			decodeBufferEntry.isSpeculative = this.isSpeculative;
 			
 			this.decodeBuffer ~= decodeBufferEntry;
 		}
@@ -1391,7 +1454,13 @@ class Thread {
 	}
 	
 	void commit() {
-		if(currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {			
+		if(currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {
+			logging.infof(LogCategory.SIMULATOR, "this.reorderBuffer.size=%d", this.reorderBuffer.size);
+			
+			foreach(reorderBufferEntry; this.reorderBuffer) {
+				logging.infof(LogCategory.SIMULATOR, "%s", reorderBufferEntry);
+			}
+			
 			logging.fatalf(LogCategory.SIMULATOR, "No instruction committed for %d cycles.", COMMIT_TIMEOUT);
 		}
 		
@@ -1402,21 +1471,6 @@ class Thread {
 	
 			/* head of line blocking if inst not completed */
 			if(!reorderBufferEntry.isCompleted) {
-				break;
-			}
-	
-			/* if this is the first instruction in spec mode, empty reorder buffer */
-			if(reorderBufferEntry.isRecoverInst) {
-				this.bpred.recover(reorderBufferEntry.dynamicInst.pc, reorderBufferEntry.stackRecoverIndex);
-				
-				this.isSpeculative = false;
-	
-				/* regenerate fetch stage status */
-				this.fetchNpc = this.npc;
-				this.fetchNnpc = this.nnpc;
-	
-				/* squash pipeline and stop commit */
-				this.recoverReorderBuffer(reorderBufferEntry);
 				break;
 			}
 	
@@ -1456,12 +1510,12 @@ class Thread {
 			/* update branch predictor */
 			if(reorderBufferEntry.dynamicInst.staticInst.isControl) {
 				this.bpred.update(
-					/* branch address */ reorderBufferEntry.dynamicInst.pc,
+					/* branch address */ reorderBufferEntry.dynamicInst.physPc,
 					/* actual target address */ reorderBufferEntry.nnpc,
 				    /* taken? */ reorderBufferEntry.nnpc != (reorderBufferEntry.npc + uint.sizeof),
 					/* pred taken? */ reorderBufferEntry.predNnpc != (reorderBufferEntry.npc + uint.sizeof),
 					/* correct pred? */ reorderBufferEntry.predNnpc == reorderBufferEntry.nnpc,
-					/* static inst */ reorderBufferEntry.dynamicInst.staticInst,
+					/* dynamic inst */ reorderBufferEntry.dynamicInst,
 					/* dir predictor update */ reorderBufferEntry.dirUpdate
 				);
 			}
@@ -1474,25 +1528,40 @@ class Thread {
 			
 			numCommitted++;
 			
-			//logging.infof(LogCategory.DEBUG, "t%d instruction committed (dynamicInst=%s)", this.num,  reorderBufferEntry.dynamicInst);
+			logging.infof(LogCategory.DEBUG, "t%d instruction committed (dynamicInst=%s)", this.num,  reorderBufferEntry.dynamicInst);
 		}
 	}
 	
 	void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry) {
+		logging.infof(LogCategory.SIMULATOR, "recovering at %s", branchReorderBufferEntry);
+		
 		ReorderBufferEntry[] toSquash;
 		
 		while(!this.reorderBuffer.empty) {
 			ReorderBufferEntry reorderBufferEntry = this.reorderBuffer.back;
 			
-			if(reorderBufferEntry == branchReorderBufferEntry) {
+			if(!reorderBufferEntry.isSpeculative) {
 				break;
 			}
 			
 			if(reorderBufferEntry.isEAComputation) {
-				this.loadStoreQueue.remove(reorderBufferEntry);
+				ReorderBufferEntry loadStoreQueueEntry = this.loadStoreQueue.back;
+				
+				loadStoreQueueEntry.invalidate();
+				
+				foreach(oDep; loadStoreQueueEntry.oDeps) { //TODO: is it necessary or correct?
+					loadStoreQueueEntry.physRegs[oDep].dealloc();
+					this.renameTable[oDep] = loadStoreQueueEntry.oldPhysRegs[oDep];
+				}
+				
+				loadStoreQueueEntry.physRegs.clear(); //TODO: is it necessary or correct?
+				
+				this.loadStoreQueue.takeBack();
 			}
 			
-			foreach(oDep; reorderBufferEntry.dynamicInst.staticInst.oDeps) {
+			reorderBufferEntry.invalidate();
+			
+			foreach(oDep; reorderBufferEntry.oDeps) {
 				reorderBufferEntry.physRegs[oDep].dealloc();
 				this.renameTable[oDep] = reorderBufferEntry.oldPhysRegs[oDep];
 			}
@@ -1501,21 +1570,24 @@ class Thread {
 			
 			this.reorderBuffer.takeBack();
 		}
+		
+		// FIXME: could reset functional units at squash time
+		// TODO: when branch misprediction, empty speculative instructions from decode buffer
 	}
 
 	uint getSyscallArg(int i) {
 		assert(i < 6);
-		return this.intRegs[FirstArgumentReg + i];
+		return this.regs.intRegs.get(FirstArgumentReg + i);
 	}
 
 	void setSyscallArg(int i, uint val) {
 		assert(i < 6);
-		this.intRegs[FirstArgumentReg + i] = val;
+		this.regs.intRegs.set(FirstArgumentReg + i, val);
 	}
 
 	void setSyscallReturn(uint return_value) {
-		this.intRegs[ReturnValueReg] = return_value;
-		this.intRegs[SyscallSuccessReg] = (return_value == cast(uint) -EINVAL ? 1 : 0);
+		this.regs.intRegs.set(ReturnValueReg, return_value);
+		this.regs.intRegs.set(SyscallSuccessReg, (return_value == cast(uint) -EINVAL ? 1 : 0));
 	}
 
 	void syscall(uint callnum) {
@@ -1523,13 +1595,10 @@ class Thread {
 	}
 
 	void clearArchRegs() {
-		this.pc = 0;
-		this.npc = 0;
-		this.nnpc = 0;
-		
-		this.intRegs = new IntRegisterFile();
-		this.floatRegs = new FloatRegisterFile();
-		this.miscRegs = new MiscRegisterFile();
+		this.regs = new CombinedRegisterFile();
+		this.regs.pc = 0;
+		this.regs.npc = 0;
+		this.regs.nnpc = 0;
 	}
 	
 	void halt(int exitCode) {
@@ -1553,14 +1622,11 @@ class Thread {
 
 	Core core;
 	
-	IntRegisterFile intRegs;
-	FloatRegisterFile floatRegs;
-	MiscRegisterFile miscRegs;
-	
 	Process process;
 	SyscallEmul syscallEmul;
-
-	uint pc, npc, nnpc;
+	
+	CombinedRegisterFile regs;
+	
 	uint fetchPc, fetchNpc, fetchNnpc;
 	
 	bool fetchStalled;

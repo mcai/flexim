@@ -1410,10 +1410,10 @@ void executeEvent(SimulatorEventType eventType, SimulatorEventContext context) {
 }
 
 void mainConsole(string[] args) {
-	string simulationTitle = "WCETBench-fir-1x1";
+	//string simulationTitle = "WCETBench-fir-1x1";
 	//string simulationTitle = "WCETBench-fir-2x1";
 	//string simulationTitle = "Olden_Custom1-em3d_original-1x1";
-	//string simulationTitle = "Olden_Custom1-mst_original-1x1";
+	string simulationTitle = "Olden_Custom1-mst_original-1x1";
 	//string simulationTitle = "Olden_Custom1-mst_original-Olden_Custom1_em3d_original-2x1";
 	//string simulationTitle = "Olden_Custom1-mst_original-2x1";
 	

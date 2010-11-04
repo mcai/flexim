@@ -344,39 +344,102 @@ const int ReturnAddressReg = 31;
 
 const int SyscallPseudoReturnReg = 3;
 
-interface RegisterFile(RegT) {	
-	void clear();
-	void checkpoint();
-	void restore();
+abstract class RegisterFile {
+	abstract void clear();
 }
 
-class IntRegisterFile : RegisterFile!(uint) {
+class CombinedRegisterFile: RegisterFile {
+	this() {
+		this._isSpeculative = false;
+		
+		this.intRegs = new IntRegisterFile();
+		this.floatRegs = new FloatRegisterFile();
+		this.miscRegs = new MiscRegisterFile();
+		
+		this.recIntRegs = new IntRegisterFile();
+		this.recFloatRegs = new FloatRegisterFile();
+		this.recMiscRegs = new MiscRegisterFile();
+	}
+	
+	override void clear() {
+		this.intRegs.clear();
+		this.floatRegs.clear();
+		this.miscRegs.clear();
+		
+		this.recIntRegs.clear();
+		this.recFloatRegs.clear();
+		this.recMiscRegs.clear();
+		
+		this.pc = this.recPc = this.recNnpc = 0;
+	}
+	
+	bool isSpeculative() {
+		return this._isSpeculative;
+	}
+	
+	void isSpeculative(bool value) {
+		if(this._isSpeculative != value) {
+			if(value) {
+				this.intRegs.copyTo(this.recIntRegs);
+				this.floatRegs.copyTo(this.recFloatRegs);
+				this.miscRegs.copyTo(this.recMiscRegs);
+				
+				this.recPc = this.pc;
+				this.recNpc = this.npc;
+				this.recNnpc = this.nnpc;
+			}
+			else {
+				this.recIntRegs.copyTo(this.intRegs);
+				this.recFloatRegs.copyTo(this.floatRegs);
+				this.recMiscRegs.copyTo(this.miscRegs);
+				
+				this.pc = this.recPc;
+				this.npc = this.recNpc;
+				this.nnpc = this.recNnpc;
+			}
+			
+			this._isSpeculative = value;
+		}
+	}
+	
+	bool _isSpeculative;
+	
+	IntRegisterFile intRegs;
+	FloatRegisterFile floatRegs;
+	MiscRegisterFile miscRegs;
+	
+	IntRegisterFile recIntRegs;
+	FloatRegisterFile recFloatRegs;
+	MiscRegisterFile recMiscRegs;
+
+	uint pc, npc, nnpc;
+	
+	uint recPc, recNpc, recNnpc;
+}
+
+class IntRegisterFile : RegisterFile {
 	this() {
 		this.clear();
+	}
+	
+	void copyTo(ref IntRegisterFile otherFile) {
+		foreach(i, reg; this.regs) {
+			otherFile.regs[i] = reg;
+		}
 	}
 	
 	override void clear() {
 		this.regs.clear();
 	}
 	
-	override void checkpoint() {
-		assert(0);
-		//TODO
-	}
-	
-	override void restore() {
-		assert(0);
-		//TODO
-	}
-	
-	uint opIndex(uint index) {
+	uint get(uint index) {
 		assert(index < NumIntRegs);
 		uint value = this.regs[index];
 		//logging.infof(LogCategory.THREAD, "    Reading int reg %d as %#x.", index, value);
 		return value;
 	}
 	
-	void opIndexAssign(uint value, uint index) {
+	void set(uint index, uint value) {
 		assert(index < NumIntRegs);
 		this.regs[index] = value;
 		//logging.infof(LogCategory.THREAD, "    Setting int reg %d to %#x.", index, value);
@@ -407,9 +470,16 @@ class IntRegisterFile : RegisterFile!(uint) {
 	uint[NumIntRegs] regs;
 }
 
-class MiscRegisterFile: RegisterFile!(uint) {
+class MiscRegisterFile: RegisterFile {
 	this() {
 		this.clear();
+	}
+	
+	void copyTo(ref MiscRegisterFile otherFile) {
+		otherFile.lo = this.lo;
+		otherFile.hi = this.hi;
+		otherFile.ea = this.ea;
+		otherFile.fcsr = this.fcsr;
 	}
 	
 	override void clear() {
@@ -419,39 +489,23 @@ class MiscRegisterFile: RegisterFile!(uint) {
 		this.fcsr = 0;
 	}
 	
-	override void checkpoint() {
-		assert(0);
-		//TODO
-	}
-	
-	override void restore() {
-		assert(0);
-		//TODO
-	}
-	
 	uint lo;
 	uint hi;
 	uint ea;
 	uint fcsr;
 }
 
-class FloatRegisterFile : RegisterFile!(float) {
+class FloatRegisterFile : RegisterFile {
 	this() {
 		this.clear();
 	}
 	
+	void copyTo(ref FloatRegisterFile otherFile) {
+		otherFile.regs = this.regs;
+	}
+	
 	override void clear() {
 		this.regs.f = 0f;
-	}
-	
-	override void checkpoint() {
-		assert(0);
-		//TODO
-	}
-	
-	override void restore() {
-		assert(0);
-		//TODO
 	}
 	
 	float getFloat(uint index) {
@@ -670,9 +724,13 @@ class DynamicInst {
 	}
 	
 	void execute() {
-		this.thread.intRegs[ZeroReg] = 0;
+		this.thread.regs.intRegs.set(ZeroReg, 0);
 		
 		this.staticInst.execute(this.thread);
+	}
+	
+	uint physPc() {
+		return this.thread.core.mmu.translate(this.pc);
 	}
 	
 	override string toString() {
@@ -2486,7 +2544,7 @@ class Syscall: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.syscall(thread.intRegs[2]);
+			thread.syscall(thread.regs.intRegs.get(2));
 		}
 }
 
@@ -2502,7 +2560,7 @@ class Sll: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << this[SA];
+			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RT]) << this[SA]);
 		}
 }
 
@@ -2519,7 +2577,7 @@ class Sllv: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.intRegs[this[RT]] << bits(thread.intRegs[this[RS]], 4, 0);
+			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RT]) << bits(thread.regs.intRegs.get(this[RS]), 4, 0));
 		}
 }
 
@@ -2535,7 +2593,7 @@ class Sra: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]] >> this[SA];
+			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RT]) >> this[SA]);
 		}
 }
 
@@ -2552,7 +2610,7 @@ class Srav: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RT]] >> bits(thread.intRegs[this[RS]], 4, 0);
+			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RT]) >> bits(thread.regs.intRegs.get(this[RS]), 4, 0));
 		}
 }
 
@@ -2568,7 +2626,7 @@ class Srl: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RT]] >> this[SA];
+			thread.regs.intRegs.set(this[RD], cast(uint) thread.regs.intRegs.get(this[RT]) >> this[SA]);
 		}
 }
 
@@ -2585,7 +2643,7 @@ class Srlv: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RT]] >> bits(thread.intRegs[this[RS]], 4, 0);
+			thread.regs.intRegs.set(this[RD], cast(uint) thread.regs.intRegs.get(this[RT]) >> bits(thread.regs.intRegs.get(this[RS]), 4, 0));
 		}
 }
 
@@ -2597,11 +2655,11 @@ abstract class Branch: StaticInst {
 		}
 		
 		override uint targetPc(Thread thread) {
-			return thread.npc + this.displacement;
+			return thread.regs.npc + this.displacement;
 		}
 		
 		void branch(Thread thread) {
-			thread.nnpc = this.targetPc(thread);
+			thread.regs.nnpc = this.targetPc(thread);
 		}
 
 	private:
@@ -2634,7 +2692,7 @@ class Bal: Branch {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[ReturnAddressReg] = thread.nnpc;
+			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
 			this.branch(thread);
 		}
 }
@@ -2651,7 +2709,7 @@ class Beq: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] == cast(int) thread.intRegs[this[RT]]) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) == cast(int) thread.regs.intRegs.get(this[RT])) {
 				this.branch(thread);
 			}
 		}
@@ -2668,7 +2726,7 @@ class Beqz: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] == 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) == 0) {
 				this.branch(thread);
 			}
 		}
@@ -2685,7 +2743,7 @@ class Bgez: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] >= 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) >= 0) {
 				this.branch(thread);
 			}
 		}
@@ -2703,8 +2761,8 @@ class Bgezal: Branch {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[ReturnAddressReg] = thread.nnpc;
-			if(cast(int) thread.intRegs[this[RS]] >= 0) {
+			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
+			if(cast(int) thread.regs.intRegs.get(this[RS]) >= 0) {
 				this.branch(thread);
 			}
 		}
@@ -2721,7 +2779,7 @@ class Bgtz: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] > 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) > 0) {
 				this.branch(thread);
 			}
 		}
@@ -2738,7 +2796,7 @@ class Blez: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] <= 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) <= 0) {
 				this.branch(thread);
 			}
 		}
@@ -2755,7 +2813,7 @@ class Bltz: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] < 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) < 0) {
 				this.branch(thread);
 			}
 		}
@@ -2773,8 +2831,8 @@ class Bltzal: Branch {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[ReturnAddressReg] = thread.nnpc;
-			if(cast(int) thread.intRegs[this[RS]] < 0) {
+			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
+			if(cast(int) thread.regs.intRegs.get(this[RS]) < 0) {
 				this.branch(thread);
 			}
 		}
@@ -2792,7 +2850,7 @@ class Bne: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] != cast(int) thread.intRegs[this[RT]]) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) != cast(int) thread.regs.intRegs.get(this[RT])) {
 				this.branch(thread);
 			}
 		}
@@ -2809,7 +2867,7 @@ class Bnez: Branch {
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.intRegs[this[RS]] != 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) != 0) {
 				this.branch(thread);
 			}
 		}
@@ -2826,7 +2884,7 @@ class Bc1f: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.miscRegs.fcsr;
+			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
 			if(cond) {
@@ -2846,7 +2904,7 @@ class Bc1t: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.miscRegs.fcsr;
+			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
 			if(cond) {
@@ -2866,15 +2924,15 @@ class Bc1fl: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.miscRegs.fcsr;
+			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
 			if(cond) {
 				this.branch(thread);
 			}
 			else {
-				thread.npc = thread.nnpc;
-				thread.nnpc = thread.nnpc + uint.sizeof;
+				thread.regs.npc = thread.regs.nnpc;
+				thread.regs.nnpc = thread.regs.nnpc + uint.sizeof;
 			}
 		}
 }
@@ -2890,15 +2948,15 @@ class Bc1tl: Branch {
 		}
 
 		override void execute(Thread thread) {
-			uint fcsr = thread.miscRegs.fcsr;
+			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
 			if(cond) {
 				this.branch(thread);
 			}
 			else {
-				thread.npc = thread.nnpc;
-				thread.nnpc = thread.nnpc + uint.sizeof;
+				thread.regs.npc = thread.regs.nnpc;
+				thread.regs.nnpc = thread.regs.nnpc + uint.sizeof;
 			}
 		}
 }
@@ -2911,7 +2969,7 @@ abstract class Jump: StaticInst {
 		}
 
 		void jump(Thread thread) {
-			thread.nnpc = this.targetPc(thread);
+			thread.regs.nnpc = this.targetPc(thread);
 		}
 
 	private:
@@ -2928,7 +2986,7 @@ class J: Jump {
 		}
 		
 		override uint targetPc(Thread thread) {
-			return mbits(thread.npc, 32, 28) | this.target;
+			return mbits(thread.regs.npc, 32, 28) | this.target;
 		}
 
 		override void execute(Thread thread) {
@@ -2947,11 +3005,11 @@ class Jal: Jump {
 		}
 
 		override uint targetPc(Thread thread) {
-			return mbits(thread.npc, 32, 28) | this.target;
+			return mbits(thread.regs.npc, 32, 28) | this.target;
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[ReturnAddressReg] = thread.nnpc;
+			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
 			this.jump(thread);
 		}
 }
@@ -2968,11 +3026,11 @@ class Jalr: Jump {
 		}
 		
 		override uint targetPc(Thread thread) {
-			return thread.intRegs[this[RS]];
+			return thread.regs.intRegs.get(this[RS]);
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.nnpc;
+			thread.regs.intRegs.set(this[RD], thread.regs.nnpc);
 			this.jump(thread);
 		}
 }
@@ -2988,7 +3046,7 @@ class Jr: Jump {
 		}
 
 		override uint targetPc(Thread thread) {
-			return thread.intRegs[this[RS]];
+			return thread.regs.intRegs.get(this[RS]);
 		}
 
 		override void execute(Thread thread) {
@@ -3034,7 +3092,7 @@ class Add: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]] + cast(int) thread.intRegs[this[RT]];
+			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) + cast(int) thread.regs.intRegs.get(this[RT]));
 			logging.warn(LogCategory.INSTRUCTION, "Add: overflow trap not implemented.");
 		}
 }
@@ -3051,7 +3109,7 @@ class Addi: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] + this.sextImm;
+			thread.regs.intRegs.set(this[RT], cast(int) thread.regs.intRegs.get(this[RS]) + this.sextImm);
 			logging.warn(LogCategory.INSTRUCTION, "Addi: overflow trap not implemented.");
 		}
 }
@@ -3068,7 +3126,7 @@ class Addiu: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] + this.sextImm;
+			thread.regs.intRegs.set(this[RT], cast(int) thread.regs.intRegs.get(this[RS]) + this.sextImm);
 		}
 }
 
@@ -3085,7 +3143,7 @@ class Addu: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]] + cast(int) thread.intRegs[this[RT]];
+			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) + cast(int) thread.regs.intRegs.get(this[RT]));
 		}
 }
 
@@ -3102,7 +3160,7 @@ class Sub: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]] - cast(int) thread.intRegs[this[RT]];
+			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) - cast(int) thread.regs.intRegs.get(this[RT]));
 			logging.warn(LogCategory.INSTRUCTION, "Sub: overflow trap not implemented.");
 		}
 }
@@ -3120,7 +3178,7 @@ class Subu: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]] - cast(int) thread.intRegs[this[RT]];
+			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) - cast(int) thread.regs.intRegs.get(this[RT]));
 		}
 }
 
@@ -3137,7 +3195,7 @@ class And: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.intRegs[this[RS]] & thread.intRegs[this[RT]];
+			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RS]) & thread.regs.intRegs.get(this[RT]));
 		}
 }
 
@@ -3153,7 +3211,7 @@ class Andi: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = thread.intRegs[this[RS]] & this.zextImm;
+			thread.regs.intRegs.set(this[RT], thread.regs.intRegs.get(this[RS]) & this.zextImm);
 		}
 }
 
@@ -3170,7 +3228,7 @@ class Nor: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = ~(thread.intRegs[this[RS]] | thread.intRegs[this[RT]]);
+			thread.regs.intRegs.set(this[RD], ~(thread.regs.intRegs.get(this[RS]) | thread.regs.intRegs.get(this[RT])));
 		}
 }
 
@@ -3187,7 +3245,7 @@ class Or: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.intRegs[this[RS]] | thread.intRegs[this[RT]];
+			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RS]) | thread.regs.intRegs.get(this[RT]));
 		}
 }
 
@@ -3203,7 +3261,7 @@ class Ori: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = thread.intRegs[this[RS]] | this.zextImm;
+			thread.regs.intRegs.set(this[RT], thread.regs.intRegs.get(this[RS]) | this.zextImm);
 		}
 }
 
@@ -3220,7 +3278,7 @@ class Xor: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.intRegs[this[RS]] ^ thread.intRegs[this[RT]];
+			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RS]) ^ thread.regs.intRegs.get(this[RT]));
 		}
 }
 
@@ -3236,7 +3294,7 @@ class Xori: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = thread.intRegs[this[RS]] ^ this.zextImm;
+			thread.regs.intRegs.set(this[RT], thread.regs.intRegs.get(this[RS]) ^ this.zextImm);
 		}
 }
 
@@ -3253,7 +3311,7 @@ class Slt: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(int) thread.intRegs[this[RS]] < cast(int) thread.intRegs[this[RT]] ? 1 : 0;
+			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) < cast(int) thread.regs.intRegs.get(this[RT]) ? 1 : 0);
 		}
 }
 
@@ -3269,7 +3327,7 @@ class Slti: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = cast(int) thread.intRegs[this[RS]] < this.sextImm ? 1 : 0;
+			thread.regs.intRegs.set(this[RT], cast(int) thread.regs.intRegs.get(this[RS]) < this.sextImm ? 1 : 0);
 		}
 }
 
@@ -3285,7 +3343,7 @@ class Sltiu: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = cast(uint) thread.intRegs[this[RS]] < this.zextImm ? 1 : 0;
+			thread.regs.intRegs.set(this[RT], cast(uint) thread.regs.intRegs.get(this[RS]) < this.zextImm ? 1 : 0);
 		}
 }
 
@@ -3302,7 +3360,7 @@ class Sltu: IntOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = cast(uint) thread.intRegs[this[RS]] < cast(uint) thread.intRegs[this[RT]] ? 1 : 0;
+			thread.regs.intRegs.set(this[RD], cast(uint) thread.regs.intRegs.get(this[RS]) < cast(uint) thread.regs.intRegs.get(this[RT]) ? 1 : 0);
 		}
 }
 
@@ -3317,7 +3375,7 @@ class Lui: IntImmOp {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RT]] = this.imm << 16;
+			thread.regs.intRegs.set(this[RT], this.imm << 16);
 		}
 }
 
@@ -3341,16 +3399,16 @@ class Divu: StaticInst {
 			uint lo = 0;
 			uint hi = 0;
 
-			rs = thread.intRegs[this[RS]];
-			rt = thread.intRegs[this[RT]];
+			rs = thread.regs.intRegs.get(this[RS]);
+			rt = thread.regs.intRegs.get(this[RT]);
 
 			if(rt != 0) {
 				lo = cast(uint) (rs / rt);
 				hi = cast(uint) (rs % rt);
 			}
 
-			thread.miscRegs.lo = lo;
-			thread.miscRegs.hi = hi;
+			thread.regs.miscRegs.lo = lo;
+			thread.regs.miscRegs.hi = hi;
 		}
 }
 
@@ -3374,16 +3432,16 @@ class Div: StaticInst {
 			uint lo = 0;
 			uint hi = 0;
 
-			rs = sext(thread.intRegs[this[RS]], 32);
-			rt = sext(thread.intRegs[this[RT]], 32);
+			rs = sext(thread.regs.intRegs.get(this[RS]), 32);
+			rt = sext(thread.regs.intRegs.get(this[RT]), 32);
 
 			if(rt != 0) {
 				lo = cast(uint) (rs / rt);
 				hi = cast(uint) (rs % rt);
 			}
 
-			thread.miscRegs.lo = lo;
-			thread.miscRegs.hi = hi;
+			thread.regs.miscRegs.lo = lo;
+			thread.regs.miscRegs.hi = hi;
 		}
 }
 
@@ -3399,7 +3457,7 @@ class Mflo: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.miscRegs.lo;
+			thread.regs.intRegs.set(this[RD], thread.regs.miscRegs.lo);
 		}
 }
 
@@ -3415,7 +3473,7 @@ class Mfhi: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.intRegs[this[RD]] = thread.miscRegs.hi;
+			thread.regs.intRegs.set(this[RD], thread.regs.miscRegs.hi);
 		}
 }
 
@@ -3431,7 +3489,7 @@ class Mtlo: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.miscRegs.lo = thread.intRegs[this[RD]];
+			thread.regs.miscRegs.lo = thread.regs.intRegs.get(this[RD]);
 		}
 }
 
@@ -3447,7 +3505,7 @@ class Mthi: StaticInst {
 		}
 
 		override void execute(Thread thread) {
-			thread.miscRegs.hi = thread.intRegs[this[RD]];
+			thread.regs.miscRegs.hi = thread.regs.intRegs.get(this[RD]);
 		}
 }
 
@@ -3468,16 +3526,16 @@ class Mult: StaticInst {
 			long rs = 0;
 			long rt = 0;
 			
-			rs = sext(thread.intRegs[this[RS]], 32);
-			rt = sext(thread.intRegs[this[RT]], 32);
+			rs = sext(thread.regs.intRegs.get(this[RS]), 32);
+			rt = sext(thread.regs.intRegs.get(this[RT]), 32);
 
 			long val = rs * rt;
 
 			uint lo = cast(uint) bits64(val, 31, 0);
 			uint hi = cast(uint) bits64(val, 63, 32);
 
-			thread.miscRegs.lo = lo;
-			thread.miscRegs.hi = hi;
+			thread.regs.miscRegs.lo = lo;
+			thread.regs.miscRegs.hi = hi;
 		}
 }
 
@@ -3498,16 +3556,16 @@ class Multu: StaticInst {
 			ulong rs = 0;
 			ulong rt = 0;
 			
-			rs = thread.intRegs[this[RS]];
-			rt = thread.intRegs[this[RT]];
+			rs = thread.regs.intRegs.get(this[RS]);
+			rt = thread.regs.intRegs.get(this[RT]);
 
 			ulong val = rs * rt;
 
 			uint lo = cast(uint) bits64(val, 31, 0);
 			uint hi = cast(uint) bits64(val, 63, 32);
 
-			thread.miscRegs.lo = lo;
-			thread.miscRegs.hi = hi;
+			thread.regs.miscRegs.lo = lo;
+			thread.regs.miscRegs.hi = hi;
 		}
 }
 
@@ -3550,12 +3608,12 @@ class Add_d: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
-			double ft = thread.floatRegs.getDouble(this[FT]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
+			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs + ft;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3566,12 +3624,12 @@ class Sub_d: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
-			double ft = thread.floatRegs.getDouble(this[FT]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
+			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs - ft;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3582,12 +3640,12 @@ class Mul_d: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
-			double ft = thread.floatRegs.getDouble(this[FT]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
+			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs * ft;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3598,12 +3656,12 @@ class Div_d: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
-			double ft = thread.floatRegs.getDouble(this[FT]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
+			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
 			double fd = fs / ft;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3614,11 +3672,11 @@ class Sqrt_d: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			
 			double fd = sqrt(fs);
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3629,11 +3687,11 @@ class Abs_d: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			
 			double fd = fabs(fs);
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3644,11 +3702,11 @@ class Neg_d: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			
 			double fd = -1 * fs;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3659,10 +3717,10 @@ class Mov_d: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			double fd = fs;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3673,12 +3731,12 @@ class Add_s: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
-			float ft = thread.floatRegs.getFloat(this[FT]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
+			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
 			float fd = fs + ft;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3689,12 +3747,12 @@ class Sub_s: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
-			float ft = thread.floatRegs.getFloat(this[FT]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
+			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
 			float fd = fs - ft;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3705,12 +3763,12 @@ class Mul_s: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
-			float ft = thread.floatRegs.getFloat(this[FT]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
+			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
 			float fd = fs * ft;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3721,12 +3779,12 @@ class Div_s: FloatBinaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
-			float ft = thread.floatRegs.getFloat(this[FT]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
+			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
 			float fd = fs / ft;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3737,11 +3795,11 @@ class Sqrt_s: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			
 			float fd = sqrt(fs);
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3752,11 +3810,11 @@ class Abs_s: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			
 			float fd = fabs(fs);
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3767,11 +3825,11 @@ class Neg_s: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			
 			float fd = -fs;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3782,10 +3840,10 @@ class Mov_s: FloatUnaryOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			float fd = fs;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3808,10 +3866,10 @@ class Cvt_d_s: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			double fd = cast(double) fs;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3822,10 +3880,10 @@ class Cvt_w_s: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			uint fd = cast(uint) fs;
 			
-			thread.floatRegs.setUint(fd, this[FD]);
+			thread.regs.floatRegs.setUint(fd, this[FD]);
 		}
 }
 
@@ -3836,10 +3894,10 @@ class Cvt_l_s: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			ulong fd = cast(ulong) fs;
 			
-			thread.floatRegs.setUlong(fd, this[FD]);
+			thread.regs.floatRegs.setUlong(fd, this[FD]);
 		}
 }
 
@@ -3850,10 +3908,10 @@ class Cvt_s_d: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			float fd = cast(float) fs;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3864,10 +3922,10 @@ class Cvt_w_d: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			uint fd = cast(uint) fs;
 			
-			thread.floatRegs.setUint(fd, this[FD]);
+			thread.regs.floatRegs.setUint(fd, this[FD]);
 		}
 }
 
@@ -3878,10 +3936,10 @@ class Cvt_l_d: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			ulong fd = cast(ulong) fs;
 			
-			thread.floatRegs.setUlong(fd, this[FD]);
+			thread.regs.floatRegs.setUlong(fd, this[FD]);
 		}
 }
 
@@ -3892,10 +3950,10 @@ class Cvt_s_w: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			uint fs = thread.floatRegs.getUint(this[FS]);
+			uint fs = thread.regs.floatRegs.getUint(this[FS]);
 			float fd = cast(float) fs;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3906,10 +3964,10 @@ class Cvt_d_w: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			uint fs = thread.floatRegs.getUint(this[FS]);
+			uint fs = thread.regs.floatRegs.getUint(this[FS]);
 			double fd = cast(double) fs;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);
+			thread.regs.floatRegs.setDouble(fd, this[FD]);
 		}
 }
 
@@ -3920,10 +3978,10 @@ class Cvt_s_l: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			ulong fs = thread.floatRegs.getUlong(this[FS]);
+			ulong fs = thread.regs.floatRegs.getUlong(this[FS]);
 			float fd = cast(float) fs;
 			
-			thread.floatRegs.setFloat(fd, this[FD]);
+			thread.regs.floatRegs.setFloat(fd, this[FD]);
 		}
 }
 
@@ -3934,10 +3992,10 @@ class Cvt_d_l: FloatConvertOp {
 		}
 
 		override void execute(Thread thread) {
-			ulong fs = thread.floatRegs.getUlong(this[FS]);
+			ulong fs = thread.regs.floatRegs.getUlong(this[FS]);
 			double fd = cast(double) fs;
 			
-			thread.floatRegs.setDouble(fd, this[FD]);		
+			thread.regs.floatRegs.setDouble(fd, this[FD]);		
 		}
 }
 
@@ -3962,9 +4020,9 @@ class C_cond_d(alias mnemonic): FloatCompareOp {
 		}
 
 		override void execute(Thread thread) {
-			double fs = thread.floatRegs.getDouble(this[FS]);
-			double ft = thread.floatRegs.getDouble(this[FT]);
-			uint fcsr = thread.miscRegs.fcsr;
+			double fs = thread.regs.floatRegs.getDouble(this[FS]);
+			double ft = thread.regs.floatRegs.getDouble(this[FT]);
+			uint fcsr = thread.regs.miscRegs.fcsr;
 		
 			bool less;
 			bool equal;
@@ -3988,7 +4046,7 @@ class C_cond_d(alias mnemonic): FloatCompareOp {
 				clearFCC(fcsr, this[CC]);
 			}
 			
-			thread.miscRegs.fcsr = fcsr;			
+			thread.regs.miscRegs.fcsr = fcsr;			
 		}
 }
 
@@ -3999,9 +4057,9 @@ class C_cond_s(alias mnemonic): FloatCompareOp {
 		}
 
 		override void execute(Thread thread) {
-			float fs = thread.floatRegs.getFloat(this[FS]);
-			float ft = thread.floatRegs.getFloat(this[FT]);
-			uint fcsr = thread.miscRegs.fcsr;
+			float fs = thread.regs.floatRegs.getFloat(this[FS]);
+			float ft = thread.regs.floatRegs.getFloat(this[FT]);
+			uint fcsr = thread.regs.miscRegs.fcsr;
 		
 			bool less;
 			bool equal;
@@ -4025,7 +4083,7 @@ class C_cond_s(alias mnemonic): FloatCompareOp {
 				clearFCC(fcsr, this[CC]);
 			}
 			
-			thread.miscRegs.fcsr = fcsr;
+			thread.regs.miscRegs.fcsr = fcsr;
 		}
 }
 
@@ -4076,7 +4134,7 @@ class MemoryOp: StaticInst {
 		}
 
 		uint ea(Thread thread) {
-			uint ea = thread.intRegs[this[RS]] + this.displacement;
+			uint ea = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			return ea;
 		}
 
@@ -4123,7 +4181,7 @@ class Lb: MemoryOp {
 		override void execute(Thread thread) {
 			byte mem = 0;
 			thread.mem.readByte(this.ea(thread), cast(ubyte*) &mem);
-			thread.intRegs[this[RT]] = mem;
+			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
@@ -4144,7 +4202,7 @@ class Lbu: MemoryOp {
 		override void execute(Thread thread) {
 			ubyte mem = 0;
 			thread.mem.readByte(this.ea(thread), &mem);
-			thread.intRegs[this[RT]] = mem;
+			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
@@ -4165,7 +4223,7 @@ class Lh: MemoryOp {
 		override void execute(Thread thread) {
 			short mem = 0;
 			thread.mem.readHalfWord(this.ea(thread), cast(ushort*) &mem);
-			thread.intRegs[this[RT]] = mem;
+			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
@@ -4186,7 +4244,7 @@ class Lhu: MemoryOp {
 		override void execute(Thread thread) {
 			ushort mem = 0;
 			thread.mem.readHalfWord(this.ea(thread), &mem);
-			thread.intRegs[this[RT]] = mem;
+			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
@@ -4207,7 +4265,7 @@ class Lw: MemoryOp {
 		override void execute(Thread thread) {
 			int mem = 0;
 			thread.mem.readWord(this.ea(thread), cast(uint*) &mem);
-			thread.intRegs[this[RT]] = mem;
+			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
@@ -4227,13 +4285,13 @@ class Lwl: MemoryOp {
 		}
 		
 		override uint ea(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;			
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
@@ -4244,9 +4302,9 @@ class Lwl: MemoryOp {
 
 			uint mem_shift = 24 - 8 * byte_offset;
 
-			uint rt = (mem << mem_shift) | (thread.intRegs[this[RT]] & mask(mem_shift));
+			uint rt = (mem << mem_shift) | (thread.regs.intRegs.get(this[RT]) & mask(mem_shift));
 
-			thread.intRegs[this[RT]] = rt;
+			thread.regs.intRegs.set(this[RT], rt);
 		}
 }
 
@@ -4266,13 +4324,13 @@ class Lwr: MemoryOp {
 		}
 		
 		override uint ea(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
@@ -4283,31 +4341,31 @@ class Lwr: MemoryOp {
 
 			uint mem_shift = 8 * byte_offset;
 
-			uint rt = (thread.intRegs[this[RT]] & (mask(mem_shift) << (32 - mem_shift))) | (mem >> mem_shift);
+			uint rt = (thread.regs.intRegs.get(this[RT]) & (mask(mem_shift) << (32 - mem_shift))) | (mem >> mem_shift);
 
-			thread.intRegs[this[RT]] = rt;
+			thread.regs.intRegs.set(this[RT], rt);
 		}
 }
 
 class Ll: MemoryOp {
 	public:
-	this(MachInst machInst) {
-		super("ll", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
-	}
-
-	override void setupEaDeps() {
-		this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
-	}
-
-	override void setupMemDeps() {
-		this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
-	}
-
-	override void execute(Thread thread) {		
-		uint mem = 0;		
-		thread.mem.readWord(this.ea(thread), &mem);		
-		thread.intRegs[this[RT]] = mem;
-	}
+		this(MachInst machInst) {
+			super("ll", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
+		}
+	
+		override void setupEaDeps() {
+			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
+		}
+	
+		override void setupMemDeps() {
+			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
+		}
+	
+		override void execute(Thread thread) {		
+			uint mem = 0;		
+			thread.mem.readWord(this.ea(thread), &mem);		
+			thread.regs.intRegs.set(this[RT], mem);
+		}
 }
 
 class Lwc1: MemoryOp {
@@ -4327,7 +4385,7 @@ class Lwc1: MemoryOp {
 		override void execute(Thread thread) {			
 			uint mem = 0;
 			thread.mem.readWord(this.ea(thread), &mem);			
-			thread.floatRegs.setUint(mem, this[FT]);
+			thread.regs.floatRegs.setUint(mem, this[FT]);
 		}
 }
 
@@ -4348,7 +4406,7 @@ class Ldc1: MemoryOp {
 		override void execute(Thread thread) {			
 			ulong mem = 0;
 			thread.mem.readDoubleWord(this.ea(thread), &mem);			
-			thread.floatRegs.setUlong(mem, this[FT]);
+			thread.regs.floatRegs.setUlong(mem, this[FT]);
 		}
 }
 
@@ -4367,7 +4425,7 @@ class Sb: MemoryOp {
 		}
 
 		override void execute(Thread thread) {
-			ubyte mem = cast(ubyte) bits(thread.intRegs[this[RT]], 7, 0);
+			ubyte mem = cast(ubyte) bits(thread.regs.intRegs.get(this[RT]), 7, 0);
 			thread.mem.writeByte(this.ea(thread), mem);
 		}
 }
@@ -4387,7 +4445,7 @@ class Sh: MemoryOp {
 		}
 
 		override void execute(Thread thread) {
-			ushort mem = cast(ushort) bits(thread.intRegs[this[RT]], 15, 0);
+			ushort mem = cast(ushort) bits(thread.regs.intRegs.get(this[RT]), 15, 0);
 			thread.mem.writeHalfWord(this.ea(thread), mem);
 		}
 }
@@ -4407,7 +4465,7 @@ class Sw: MemoryOp {
 		}
 
 		override void execute(Thread thread) {
-			uint mem = thread.intRegs[this[RT]];
+			uint mem = thread.regs.intRegs.get(this[RT]);
 			thread.mem.writeWord(this.ea(thread), mem);
 		}
 }
@@ -4427,13 +4485,13 @@ class Swl: MemoryOp {
 		}
 		
 		override uint ea(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
@@ -4445,7 +4503,7 @@ class Swl: MemoryOp {
 			uint reg_shift = 24 - 8 * byte_offset;
 			uint mem_shift = 32 - reg_shift;
 
-			mem = (mem & (mask(reg_shift) << mem_shift)) | (thread.intRegs[this[RT]] >> reg_shift);
+			mem = (mem & (mask(reg_shift) << mem_shift)) | (thread.regs.intRegs.get(this[RT]) >> reg_shift);
 
 			thread.mem.writeWord(ea, mem);
 		}
@@ -4466,13 +4524,13 @@ class Swr: MemoryOp {
 		}
 		
 		override uint ea(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;
 			return ea;
 		}
 
 		override void execute(Thread thread) {
-			uint addr = thread.intRegs[this[RS]] + this.displacement;
+			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
 			uint byte_offset = addr & 3;
@@ -4483,7 +4541,7 @@ class Swr: MemoryOp {
 
 			uint reg_shift = 8 * byte_offset;
 
-			mem = thread.intRegs[this[RT]] << reg_shift | (mem & (mask(reg_shift)));
+			mem = thread.regs.intRegs.get(this[RT]) << reg_shift | (mem & (mask(reg_shift)));
 
 			thread.mem.writeWord(ea, mem);
 		}
@@ -4505,9 +4563,9 @@ class Sc: MemoryOp {
 		}
 	
 		override void execute(Thread thread) {
-			uint rt = thread.intRegs[this[RT]];
+			uint rt = thread.regs.intRegs.get(this[RT]);
 			thread.mem.writeWord(this.ea(thread), rt);
-			thread.intRegs[this[RT]] = 1;
+			thread.regs.intRegs.set(this[RT], 1);
 		}
 }
 
@@ -4526,7 +4584,7 @@ class Swc1: MemoryOp {
 		}
 	
 		override void execute(Thread thread) {			
-			uint ft = thread.floatRegs.getUint(this[FT]);			
+			uint ft = thread.regs.floatRegs.getUint(this[FT]);			
 			thread.mem.writeWord(this.ea(thread), ft);
 		}
 }
@@ -4546,7 +4604,7 @@ class Sdc1: MemoryOp {
 		}
 	
 		override void execute(Thread thread) {		
-			ulong ft = thread.floatRegs.getUlong(this[FT]);			
+			ulong ft = thread.regs.floatRegs.getUlong(this[FT]);			
 			thread.mem.writeDoubleWord(this.ea(thread), ft);
 		}
 }
@@ -4570,8 +4628,8 @@ class Mfc1: CP1Control {
 		}
 
 		override void execute(Thread thread) {			
-			uint fs = thread.floatRegs.getUint(this[FS]);
-			thread.intRegs[this[RT]] = fs;
+			uint fs = thread.regs.floatRegs.getUint(this[FS]);
+			thread.regs.intRegs.set(this[RT], fs);
 		}
 }
 
@@ -4587,13 +4645,13 @@ class Cfc1: CP1Control {
 		}
 
 		override void execute(Thread thread) {			
-			uint fcsr = thread.miscRegs.fcsr;
+			uint fcsr = thread.regs.miscRegs.fcsr;
 			
 			uint rt = 0;
 			
 			if(this[FS] == 31) {
 				rt = fcsr;
-				thread.intRegs[this[RT]] = rt;
+				thread.regs.intRegs.set(this[RT], rt);
 			}
 		}
 }
@@ -4610,8 +4668,8 @@ class Mtc1: CP1Control {
 		}
 
 		override void execute(Thread thread) {
-			uint rt = thread.intRegs[this[RT]];
-			thread.floatRegs.setUint(rt, this[FS]);
+			uint rt = thread.regs.intRegs.get(this[RT]);
+			thread.regs.floatRegs.setUint(rt, this[FS]);
 		}
 }
 
@@ -4627,10 +4685,10 @@ class Ctc1: CP1Control {
 		}
 
 		override void execute(Thread thread) {
-			uint rt = thread.intRegs[this[RT]];
+			uint rt = thread.regs.intRegs.get(this[RT]);
 			
 			if(this[FS]) {
-				thread.miscRegs.fcsr = rt;
+				thread.regs.miscRegs.fcsr = rt;
 			}
 		}
 }
@@ -4772,7 +4830,7 @@ class Fault {
 		abstract string getName();
 
 		void invoke(Thread thread) {
-			logging.panicf(LogCategory.INSTRUCTION, "fault (%s) detected @ PC %p", this.getName(), thread.pc);
+			logging.panicf(LogCategory.INSTRUCTION, "fault (%s) detected @ PC %p", this.getName(), thread.regs.pc);
 		}
 }
 
