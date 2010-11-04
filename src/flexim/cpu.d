@@ -662,6 +662,10 @@ class ReorderBufferEntry {
 		this.oDeps = oDeps;
 	}
 	
+	void signalExecutionCompleted() {
+		this.dynamicInst.thread.core.oooEventQueue ~= this;
+	}
+	
 	bool allOperandsReady() {
 		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(this.iDeps).empty;
 	}
@@ -869,6 +873,7 @@ class Core {
 		
 		uint numRenamed = 0;
 		
+		/* instruction decode B/W left? */
 		while(numRenamed < this.decodeWidth) {
 			bool allStalled = true;
 			
@@ -879,11 +884,13 @@ class Core {
 			}
 			
 			DecodeBufferEntry decodeBufferEntry = this.threads[decodeThreadId].decodeBuffer.front;
-						
+	
+			/* maintain $r0 semantics */
 			this.threads[decodeThreadId].intRegs[ZeroReg] = 0;
 			
 			DynamicInst dynamicInst = decodeBufferEntry.dynamicInst;
-			
+	
+			/* is this a NOP */
 			if(!dynamicInst.staticInst.isNop) {
 				ReorderBufferEntry reorderBufferEntry = new ReorderBufferEntry(dynamicInst, dynamicInst.staticInst.iDeps, dynamicInst.staticInst.oDeps);
 				reorderBufferEntry.npc = decodeBufferEntry.npc;
@@ -910,7 +917,8 @@ class Core {
 					decodeStalled[decodeThreadId] = true;
 					continue;
 				}
-				
+	
+				/* split ld/st's into two operations: eff addr comp + mem access */
 				if(dynamicInst.staticInst.isMem) {					
 					ReorderBufferEntry loadStoreQueueEntry = new ReorderBufferEntry(dynamicInst, 
 						(cast(MemoryOp) dynamicInst.staticInst).memIDeps, (cast(MemoryOp) dynamicInst.staticInst).memODeps);
@@ -969,7 +977,8 @@ class Core {
 		}
 		
 		dispatchThreadId = (dispatchThreadId + 1) % this.threads.length;
-		
+
+		/* instruction decode B/W left? */
 		while(numDispatched < this.decodeWidth) {
 			bool allStalled = true;
 			
@@ -992,7 +1001,8 @@ class Core {
 			}
 			
 			numDispatchedPerThread[dispatchThreadId]++;
-
+	
+			/* insert into the ready or waiting queue */
 			if(reorderBufferEntry.allOperandsReady) {
 				this.readyQueue ~= reorderBufferEntry;
 				reorderBufferEntry.isInReadyQueue = true;
@@ -1000,16 +1010,22 @@ class Core {
 			else {
 				this.waitingQueue ~= reorderBufferEntry;
 			}
+			
+			/* update the rob entry */
 			reorderBufferEntry.isDispatched = true;
 			
 			if(reorderBufferEntry.loadStoreQueueEntry !is null) {
 				ReorderBufferEntry loadStoreQueueEntry = reorderBufferEntry.loadStoreQueueEntry;
-				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore && loadStoreQueueEntry.allOperandsReady) {
-					this.readyQueue ~= loadStoreQueueEntry;
-					loadStoreQueueEntry.isInReadyQueue = true;
-				}
-				else {
-					this.waitingQueue ~= loadStoreQueueEntry;
+				
+				/* issue stores only, loads are issued by lsq_refresh() */
+				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) { 
+					if(loadStoreQueueEntry.allOperandsReady) {
+						this.readyQueue ~= loadStoreQueueEntry;
+						loadStoreQueueEntry.isInReadyQueue = true;
+					}
+					else {
+						this.waitingQueue ~= loadStoreQueueEntry;
+					}
 				}
 				loadStoreQueueEntry.isDispatched = true;
 			}
@@ -1026,6 +1042,7 @@ class Core {
 			
 			if(waitingQueueEntry.allOperandsReady) {
 				this.readyQueue ~= waitingQueueEntry;
+				waitingQueueEntry.isInReadyQueue = true;
 			}
 			else {
 				toWaitingQueue ~= waitingQueueEntry;
@@ -1062,23 +1079,13 @@ class Core {
 						}
 						
 						if(hitInLoadStoreQueue) {
-							foreach(oDep; readyQueueEntry.oDeps) {
-								readyQueueEntry.physRegs[oDep].writeback();
-							}
-							
-							readyQueueEntry.isCompleted = true;
+							readyQueueEntry.signalExecutionCompleted();
 						}
 						else {
 							this.seqD.load(this.mmu.translate(readyQueueEntry.ea), false, readyQueueEntry,
 								(ReorderBufferEntry readyQueueEntry)
 								{
-									if(!readyQueueEntry.isEAComputation) {
-										foreach(oDep; readyQueueEntry.oDeps) {
-											readyQueueEntry.physRegs[oDep].writeback();
-										}
-										
-										readyQueueEntry.isCompleted = true;
-									}
+									readyQueueEntry.signalExecutionCompleted();
 								});
 						}
 					});
@@ -1090,11 +1097,7 @@ class Core {
 					this.fuPool.acquire(readyQueueEntry,
 						(ReorderBufferEntry readyQueueEntry)
 						{
-							foreach(oDep; readyQueueEntry.oDeps) {
-								readyQueueEntry.physRegs[oDep].writeback();
-							}
-							
-							readyQueueEntry.isCompleted = true;
+							readyQueueEntry.signalExecutionCompleted();
 						});
 					readyQueueEntry.isIssued = true;
 				}
@@ -1116,16 +1119,9 @@ class Core {
 			ReorderBufferEntry reorderBufferEntry = this.oooEventQueue.front;
 			
 			reorderBufferEntry.isCompleted = true;
-			
-			if(reorderBufferEntry.isEAComputation) {
-				foreach(oDep; reorderBufferEntry.oDeps) {
-					reorderBufferEntry.physRegs[oDep].writeback();
-				}
-			}
-			
-			if(reorderBufferEntry.isRecoverInst) {
-				assert(0);
-				//TODO: recover
+
+			foreach(oDep; reorderBufferEntry.oDeps) {
+				reorderBufferEntry.physRegs[oDep].writeback();
 			}
 			
 			this.oooEventQueue.takeFront();
@@ -1285,7 +1281,8 @@ class Thread {
 		}
 		
 		bool done = false;
-		
+	
+		/* fetch instructions */
 		while(!done && !this.decodeBuffer.full && !this.fetchStalled) {
 			if(this.fetchNpc != this.fetchPc + uint.sizeof) {
 				done = true;
@@ -1297,7 +1294,8 @@ class Thread {
 				
 			this.fetchPc = this.fetchNpc;
 			this.fetchNpc = this.fetchNnpc;			
-				
+	
+			/* fetch instruction from memory */
 			StaticInst staticInst = this.core.isa.decode(this.fetchPc, this.mem);
 			DynamicInst dynamicInst = new DynamicInst(this, this.fetchPc, staticInst);
 				
@@ -1306,7 +1304,8 @@ class Thread {
 			this.pc = this.npc;
 			this.npc = this.nnpc;
 			this.nnpc += uint.sizeof;
-				
+	
+			/* functional simulation */
 			dynamicInst.execute();
 				
 			this.fetchNpc = this.npc;
@@ -1314,18 +1313,19 @@ class Thread {
 			
 			uint stackRecoverIndex;
 			BpredUpdate dirUpdate = new BpredUpdate();
-			
+	
+			/* calculate fetch nnpc */
 			uint dest = this.bpred.lookup(
 				this.fetchPc,
 				0,
 				staticInst,
 				dirUpdate,
 				stackRecoverIndex);
-	
 			this.fetchNnpc = dest <= 1 ? this.fetchNpc + uint.sizeof : dest;
 			
 			this.isSpeculative = (this.npc != this.fetchNpc);
-				
+	
+			/* insert instruction in decode buffer */
 			DecodeBufferEntry decodeBufferEntry = new DecodeBufferEntry(dynamicInst);
 			decodeBufferEntry.npc = this.npc;
 			decodeBufferEntry.nnpc = this.nnpc;
@@ -1353,8 +1353,10 @@ class Thread {
 	
 	void refreshLoadStoreQueue() {
 		uint[] stdUnknowns;
-		
+	
+		/* search in lsq for ready load's until an unresolved store is found */
 		foreach(loadStoreQueueEntry; this.loadStoreQueue) {
+			/* if it is a store */
 			if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) {
 				if(loadStoreQueueEntry.storeAddressReady) {
 					break;
@@ -1363,6 +1365,7 @@ class Thread {
 					stdUnknowns ~= loadStoreQueueEntry.ea;
 				}
 				else {
+					/* we know addr & data; a resolved store shadows a previous unresolved one */
 					foreach(ref addr; stdUnknowns) {
 						if(addr == loadStoreQueueEntry.ea) {
 							addr = 0;
@@ -1370,13 +1373,15 @@ class Thread {
 					}
 				}
 			}
-			
+	
+			/* if it is a load */
 			if(loadStoreQueueEntry.dynamicInst.staticInst.isLoad &&
 				loadStoreQueueEntry.isDispatched &&
 				!loadStoreQueueEntry.isInReadyQueue &&
 				!loadStoreQueueEntry.isIssued &&
 				!loadStoreQueueEntry.isCompleted &&
 				loadStoreQueueEntry.allOperandsReady) {
+				/* no addr conflict here; check data conflict, if no conflict, send to readyq */
 				if(count(stdUnknowns, loadStoreQueueEntry.ea) == 0) {
 					this.core.readyQueue ~= loadStoreQueueEntry;
 					loadStoreQueueEntry.isInReadyQueue = true;
@@ -1394,31 +1399,37 @@ class Thread {
 		
 		while(!this.reorderBuffer.empty && numCommitted < this.commitWidth) {
 			ReorderBufferEntry reorderBufferEntry = this.reorderBuffer.front;
-			
+	
+			/* head of line blocking if inst not completed */
 			if(!reorderBufferEntry.isCompleted) {
 				break;
 			}
-			
+	
+			/* if this is the first instruction in spec mode, empty reorder buffer */
 			if(reorderBufferEntry.isRecoverInst) {
 				this.bpred.recover(reorderBufferEntry.dynamicInst.pc, reorderBufferEntry.stackRecoverIndex);
 				
 				this.isSpeculative = false;
-
+	
+				/* regenerate fetch stage status */
 				this.fetchNpc = this.npc;
 				this.fetchNnpc = this.nnpc;
-				
+	
+				/* squash pipeline and stop commit */
 				this.recoverReorderBuffer(reorderBufferEntry);
-				assert(0);
 				break;
 			}
-			
+	
+			/* for memory inst, extract element from lsq */
 			if(reorderBufferEntry.isEAComputation) {
 				ReorderBufferEntry loadStoreQueueEntry = this.loadStoreQueue.front;
-				
+	
+				/* if not completed, cannot commit */
 				if(!loadStoreQueueEntry.isCompleted) {
 					break;
 				}
-				
+	
+				/* stores access memory here */
 				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) {
 					this.core.fuPool.acquire(loadStoreQueueEntry,
 										(ReorderBufferEntry loadStoreQueueEntry)
@@ -1426,7 +1437,8 @@ class Thread {
 						this.core.seqD.store(this.core.mmu.translate(loadStoreQueueEntry.ea), false, {});
 					});
 				}
-				
+	
+				/* commit lsq entry */
 				foreach(oDep; loadStoreQueueEntry.oDeps) {
 					loadStoreQueueEntry.oldPhysRegs[oDep].dealloc();
 					loadStoreQueueEntry.physRegs[oDep].commit();
@@ -1434,12 +1446,14 @@ class Thread {
 				
 				this.loadStoreQueue.takeFront();
 			}
-			
+	
+			/* retire rob entry */
 			foreach(oDep; reorderBufferEntry.oDeps) {
 				reorderBufferEntry.oldPhysRegs[oDep].dealloc();
 				reorderBufferEntry.physRegs[oDep].commit();
 			}
-			
+	
+			/* update branch predictor */
 			if(reorderBufferEntry.dynamicInst.staticInst.isControl) {
 				this.bpred.update(
 					/* branch address */ reorderBufferEntry.dynamicInst.pc,

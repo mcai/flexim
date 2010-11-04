@@ -229,12 +229,12 @@ class List(EntryT) {
 	}
 	
 	void takeFront() {
-		//writefln("%s.takeFront() = %s", this.name, this.front);
+		writefln("%s.takeFront() = %s", this.name, this.front);
 		this.entries.takeFront();
 	}
 	
 	void takeBack() {
-		//writefln("%s.takeBack() = %s", this.name, this.back);
+		writefln("%s.takeBack() = %s", this.name, this.back);
 		this.entries.takeBack();
 	}
 	
@@ -253,14 +253,14 @@ class List(EntryT) {
 	}
 	
 	void remove(EntryT value) {
-		//writefln("%s.remove(%s)", this.name, value);
+		writefln("%s.remove(%s)", this.name, value);
 		auto c = find(this.entries[], value).begin;
 		this.entries.remove(c);
 	}
 	
 	void opOpAssign(string op, EntryT)(EntryT value)
 		if(op == "~") {
-		//writefln("%s ~= %s", this.name, value);
+		writefln("%s ~= %s", this.name, value);
 		this.entries ~= value;
 	}
 	
@@ -292,7 +292,7 @@ class Queue(EntryT): List!(EntryT) {
 			logging.fatalf(LogCategory.MISC, "%s", this);
 		}
 
-		//writefln("%s ~= %s", this.name, value);
+		writefln("%s ~= %s", this.name, value);
 		this.entries ~= value;
 	}
 	
