@@ -367,13 +367,15 @@ class CoreConfigXMLSerializer: XMLSerializer!(CoreConfig) {
 class ProcessorConfig: Config!(ProcessorConfig) {
 	this(ulong maxCycle, ulong maxInsts, ulong maxTime, uint numThreadsPerCore,
 		uint physicalRegisterFileCapacity,
-		uint commitWidth, uint decodeBufferCapacity, uint reorderBufferCapacity, uint loadStoreQueueCapacity) {
+		uint decodeWidth, uint issueWidth, uint commitWidth, uint decodeBufferCapacity, uint reorderBufferCapacity, uint loadStoreQueueCapacity) {
 		this.maxCycle = maxCycle;
 		this.maxInsts = maxInsts;
 		this.maxTime = maxTime;
 		this.numThreadsPerCore = numThreadsPerCore;
 		
 		this.physicalRegisterFileCapacity = physicalRegisterFileCapacity;
+		this.decodeWidth = decodeWidth;
+		this.issueWidth = issueWidth;
 		this.commitWidth = commitWidth;
 		this.decodeBufferCapacity = decodeBufferCapacity;
 		this.reorderBufferCapacity = reorderBufferCapacity;
@@ -383,10 +385,10 @@ class ProcessorConfig: Config!(ProcessorConfig) {
 	override string toString() {
 		return format("ProcessorConfig[maxCycle=%d, maxInsts=%d, maxTime=%d, numThreadsPerCore=%d, cores.length=%d, " ~
 			"physicalRegisterFileCapacity=%d, " ~
-			"commitWidth=%d, decodeBufferCapacity=%d, reorderBufferCapacity=%d, loadStoreQueueCapacity=%d]",
+			"decodeWidth=%d, issueWidth=%d, commitWidth=%d, decodeBufferCapacity=%d, reorderBufferCapacity=%d, loadStoreQueueCapacity=%d]",
 			this.maxCycle, this.maxInsts, this.maxTime, this.numThreadsPerCore, this.cores.length,
 			this.physicalRegisterFileCapacity,
-			this.commitWidth, this.decodeBufferCapacity, this.reorderBufferCapacity, this.loadStoreQueueCapacity);
+			this.decodeWidth, this.issueWidth, this.commitWidth, this.decodeBufferCapacity, this.reorderBufferCapacity, this.loadStoreQueueCapacity);
 	}
 
 	ulong maxCycle, maxInsts, maxTime;
@@ -394,7 +396,7 @@ class ProcessorConfig: Config!(ProcessorConfig) {
 	CoreConfig[] cores;
 	
 	uint physicalRegisterFileCapacity;
-	uint commitWidth, decodeBufferCapacity, reorderBufferCapacity, loadStoreQueueCapacity;
+	uint decodeWidth, issueWidth, commitWidth, decodeBufferCapacity, reorderBufferCapacity, loadStoreQueueCapacity;
 }
 
 class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
@@ -410,6 +412,8 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 		xmlConfig["numThreadsPerCore"] = to!(string)(processorConfig.numThreadsPerCore);
 			
 		xmlConfig["physicalRegisterFileCapacity"] = to!(string)(processorConfig.physicalRegisterFileCapacity);
+		xmlConfig["decodeWidth"] = to!(string)(processorConfig.decodeWidth);
+		xmlConfig["issueWidth"] = to!(string)(processorConfig.issueWidth);
 		xmlConfig["commitWidth"] = to!(string)(processorConfig.commitWidth);
 		xmlConfig["decodeBufferCapacity"] = to!(string)(processorConfig.decodeBufferCapacity);
 		xmlConfig["reorderBufferCapacity"] = to!(string)(processorConfig.reorderBufferCapacity);
@@ -429,6 +433,8 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 		uint numThreadsPerCore = to!(uint)(xmlConfig["numThreadsPerCore"]);
 			
 		uint physicalRegisterFileCapacity = to!(uint)(xmlConfig["physicalRegisterFileCapacity"]);
+		uint decodeWidth = to!(uint)(xmlConfig["decodeWidth"]);
+		uint issueWidth = to!(uint)(xmlConfig["issueWidth"]);
 		uint commitWidth = to!(uint)(xmlConfig["commitWidth"]);
 		uint decodeBufferCapacity = to!(uint)(xmlConfig["decodeBufferCapacity"]);
 		uint reorderBufferCapacity = to!(uint)(xmlConfig["reorderBufferCapacity"]);
@@ -436,7 +442,7 @@ class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) {
 			
 		ProcessorConfig processorConfig = new ProcessorConfig(maxCycle, maxInsts, maxTime, numThreadsPerCore,
 			physicalRegisterFileCapacity,
-			commitWidth, decodeBufferCapacity, reorderBufferCapacity, loadStoreQueueCapacity);
+			decodeWidth, issueWidth, commitWidth, decodeBufferCapacity, reorderBufferCapacity, loadStoreQueueCapacity);
 		
 		foreach(entry; xmlConfig.entries) {
 			processorConfig.cores ~= CoreConfigXMLSerializer.singleInstance.load(entry);
@@ -1435,6 +1441,6 @@ void main(string[] args) {
 	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
 	logging.info(LogCategory.SIMULATOR, "");
 	
-	bool gui = true;
+	bool gui = false;
 	gui ? mainGui(args) : mainConsole(args);
 }

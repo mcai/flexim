@@ -637,7 +637,6 @@ class DecodeBufferEntry {
 	uint npc, nnpc, predNpc, predNnpc;
 	DynamicInst dynamicInst;
 	
-	bool isSpeculative;
 	bool isRecoverInst;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
@@ -716,7 +715,6 @@ class ReorderBufferEntry {
 	ReorderBufferEntry loadStoreQueueEntry;
 	uint ea;
 	
-	bool isSpeculative;
 	bool isRecoverInst;
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
@@ -822,9 +820,8 @@ class Core {
 		this.processor = processor;
 		this.num = num;
 	
-		this.fetchSpeed = 1;
-		this.decodeWidth = 4; //TODO: config!
-		this.issueWidth = 4; //TODO: config!
+		this.decodeWidth = config.decodeWidth;
+		this.issueWidth = config.issueWidth;
 		
 		this.intRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
 		this.fpRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
@@ -860,13 +857,11 @@ class Core {
 	}
 	
 	void registerRename() {
-		bool[uint] decodeRedirected;
 		bool[uint] decodeStalled;
 		
 		static uint decodeThreadId = 0;
 		
 		foreach(i, thread; this.threads) {
-			decodeRedirected[i] = false;
 			decodeStalled[i] = false;
 		}
 		
@@ -883,26 +878,11 @@ class Core {
 				break;
 			}
 			
-			if(decodeRedirected[decodeThreadId]) {
-				this.threads[decodeThreadId].decodeBuffer.takeFront();
-				continue;
-			}
-			
 			DecodeBufferEntry decodeBufferEntry = this.threads[decodeThreadId].decodeBuffer.front;
 						
 			this.threads[decodeThreadId].intRegs[ZeroReg] = 0;
 			
 			DynamicInst dynamicInst = decodeBufferEntry.dynamicInst;
-			
-			bool brTaken = this.threads[decodeThreadId].nnpc != (this.threads[decodeThreadId].npc + uint.sizeof);
-			bool brPredTaken = this.threads[decodeThreadId].predNpc != (this.threads[decodeThreadId].npc + uint.sizeof);
-			
-			uint targetPc = dynamicInst.staticInst.targetPc(this.threads[decodeThreadId]);
-			
-			/*if(dynamicInst.staticInst.isDirectJump && targetPc != this.threads[decodeThreadId].predNpc && brPredTaken) {
-				this.threads[decodeThreadId].fetchPredNpc = this.threads[decodeThreadId].fetchNpc = this.threads[decodeThreadId].nnpc;
-				decodeRedirected[decodeThreadId] = true;
-			}*/
 			
 			if(!dynamicInst.staticInst.isNop) {
 				ReorderBufferEntry reorderBufferEntry = new ReorderBufferEntry(dynamicInst, dynamicInst.staticInst.iDeps, dynamicInst.staticInst.oDeps);
@@ -912,7 +892,6 @@ class Core {
 				reorderBufferEntry.predNnpc = decodeBufferEntry.predNnpc;
 				reorderBufferEntry.stackRecoverIndex = decodeBufferEntry.stackRecoverIndex;
 				reorderBufferEntry.dirUpdate = decodeBufferEntry.dirUpdate;
-				reorderBufferEntry.isSpeculative = decodeBufferEntry.isSpeculative;
 				reorderBufferEntry.isRecoverInst = decodeBufferEntry.isRecoverInst;
 				
 				foreach(iDep; reorderBufferEntry.iDeps) {
@@ -942,7 +921,6 @@ class Core {
 					loadStoreQueueEntry.predNnpc = decodeBufferEntry.predNnpc;
 					loadStoreQueueEntry.stackRecoverIndex = 0;
 					loadStoreQueueEntry.dirUpdate = null;
-					loadStoreQueueEntry.isSpeculative = decodeBufferEntry.isSpeculative;
 					loadStoreQueueEntry.isRecoverInst = false;
 					
 					loadStoreQueueEntry.ea = (cast(MemoryOp) dynamicInst.staticInst).ea(this.threads[decodeThreadId]);
@@ -1040,7 +1018,7 @@ class Core {
 		}
 	}
 	
-	void issue() {
+	void wakeup() {
 		ReorderBufferEntry[] toWaitingQueue;
 		
 		while(!this.waitingQueue.empty) {
@@ -1059,7 +1037,9 @@ class Core {
 		foreach(waitingQueueEntry; toWaitingQueue) {
 			this.waitingQueue ~= waitingQueueEntry;
 		}
-		
+	}
+	
+	void selection() {
 		uint numIssued = 0;
 		
 		while(numIssued < this.issueWidth && !this.readyQueue.empty) {
@@ -1168,7 +1148,8 @@ class Core {
 		this.commit();
 		this.writeback();
 		this.refreshLoadStoreQueue();
-		this.issue();
+		this.wakeup();
+		this.selection();
 		this.dispatch();
 		this.registerRename();
 		this.fetch();
@@ -1209,10 +1190,6 @@ class Core {
 	MMU mmu() {
 		return this.processor.simulator.memorySystem.mmu;
 	}
-	
-	uint fetchWidth() {
-		return this.decodeWidth * this.fetchSpeed;
-	}
 
 	uint num;
 	Processor processor;
@@ -1220,7 +1197,6 @@ class Core {
 	
 	Memory mem;
 	
-	uint fetchSpeed;
 	uint decodeWidth;
 	uint issueWidth;
 
@@ -1347,6 +1323,8 @@ class Thread {
 				stackRecoverIndex);
 	
 			this.fetchNnpc = dest <= 1 ? this.fetchNpc + uint.sizeof : dest;
+			
+			this.isSpeculative = (this.npc != this.fetchNpc);
 				
 			DecodeBufferEntry decodeBufferEntry = new DecodeBufferEntry(dynamicInst);
 			decodeBufferEntry.npc = this.npc;
@@ -1355,13 +1333,7 @@ class Thread {
 			decodeBufferEntry.predNnpc = this.fetchNnpc;
 			decodeBufferEntry.stackRecoverIndex = stackRecoverIndex;
 			decodeBufferEntry.dirUpdate = dirUpdate;
-			decodeBufferEntry.isSpeculative = this.isSpeculative;
-			
-			if(!this.isSpeculative && this.npc != this.fetchNpc) { //TODO:???
-				this.isSpeculative = true;
-				assert(0);
-				decodeBufferEntry.isRecoverInst = true;
-			}
+			decodeBufferEntry.isRecoverInst = this.isSpeculative;
 			
 			this.decodeBuffer ~= decodeBufferEntry;
 		}
@@ -1436,6 +1408,8 @@ class Thread {
 				this.fetchNnpc = this.nnpc;
 				
 				this.recoverReorderBuffer(reorderBufferEntry);
+				assert(0);
+				break;
 			}
 			
 			if(reorderBufferEntry.isEAComputation) {
@@ -1468,13 +1442,13 @@ class Thread {
 			
 			if(reorderBufferEntry.dynamicInst.staticInst.isControl) {
 				this.bpred.update(
-					reorderBufferEntry.dynamicInst.pc,
-					reorderBufferEntry.nnpc,
-					reorderBufferEntry.nnpc != (reorderBufferEntry.npc + uint.sizeof),
-					reorderBufferEntry.predNnpc != (reorderBufferEntry.npc + uint.sizeof),
-					reorderBufferEntry.predNnpc == reorderBufferEntry.nnpc,
-					reorderBufferEntry.dynamicInst.staticInst,
-					reorderBufferEntry.dirUpdate
+					/* branch address */ reorderBufferEntry.dynamicInst.pc,
+					/* actual target address */ reorderBufferEntry.nnpc,
+				    /* taken? */ reorderBufferEntry.nnpc != (reorderBufferEntry.npc + uint.sizeof),
+					/* pred taken? */ reorderBufferEntry.predNnpc != (reorderBufferEntry.npc + uint.sizeof),
+					/* correct pred? */ reorderBufferEntry.predNnpc == reorderBufferEntry.nnpc,
+					/* static inst */ reorderBufferEntry.dynamicInst.staticInst,
+					/* dir predictor update */ reorderBufferEntry.dirUpdate
 				);
 			}
 			
@@ -1579,10 +1553,6 @@ class Thread {
 	uint lastFetchedBlock;
 	
 	Bpred bpred;
-	
-	uint predNpc; //TODO
-	
-	uint fetchPredNpc; //TODO
 	
 	RegisterRenameTable renameTable;
 	
