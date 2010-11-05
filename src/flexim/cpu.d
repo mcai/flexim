@@ -1528,7 +1528,7 @@ class Thread {
 			
 			numCommitted++;
 			
-			logging.infof(LogCategory.DEBUG, "t%d instruction committed (dynamicInst=%s)", this.num,  reorderBufferEntry.dynamicInst);
+			//logging.infof(LogCategory.DEBUG, "t%d instruction committed (dynamicInst=%s)", this.num,  reorderBufferEntry.dynamicInst);
 		}
 	}
 	
