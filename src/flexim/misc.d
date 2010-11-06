@@ -39,6 +39,25 @@ template declareProperty(T, string _name, string setter_modifier = PUBLIC, strin
 	mixin(field_modifier ~ ": " ~ T.stringof ~ " m_" ~ _name ~ ";");
 }
 
+class ListenerSupport(SenderT, ContextT) {
+	alias void delegate(SenderT, ContextT) ListenerT;
+	
+	this() {
+	}
+	
+	void addListener(ListenerT listener) {
+		this.listeners ~= listener;
+	}
+    
+    void dispatch(SenderT sender, ContextT context) {
+		foreach(listener; this.listeners) {
+			listener(sender, context);
+		}
+    }
+    
+	ListenerT[] listeners;
+}
+
 /// Generate a 32-bit mask of 'nbits' 1s, right justified.
 uint mask(int nbits) {
 	return (nbits == 32) ? cast(uint) -1 : (1U << nbits) - 1;
@@ -192,10 +211,19 @@ genCCVector(uint fcsr, int cc_num, uint cc_val)
     return fcsr;
 }
 
-class List(EntryT) {
+class List(EntryT, ListT) {
+	alias EntryT ContextT;
+	alias ListenerSupport!(ListT, ContextT) ListenerSupportT;
+	alias ListenerSupportT.ListenerT ListenerT;
+	
 	this(string name) {
 		this.name = name;
 		this.entries = new LinkList!(EntryT)();
+		
+		this.listenerSupportTakeFront = new ListenerSupportT();
+		this.listenerSupportTakeBack = new ListenerSupportT();
+		this.listenerSupportRemove = new ListenerSupportT();
+		this.listenerSupportAppend = new ListenerSupportT();
 	}
 	
 	bool empty() {
@@ -229,12 +257,12 @@ class List(EntryT) {
 	}
 	
 	void takeFront() {
-		logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", this.name, this.front);
+		this.listenerSupportTakeFront.dispatch(cast(ListT) this, this.front);
 		this.entries.takeFront();
 	}
 	
 	void takeBack() {
-		logging.infof(LogCategory.SIMULATOR, "%s.takeBack() = %s", this.name, this.back);
+		this.listenerSupportTakeBack.dispatch(cast(ListT) this, this.back);
 		this.entries.takeBack();
 	}
 	
@@ -253,19 +281,35 @@ class List(EntryT) {
 	}
 	
 	void remove(EntryT value) {
-		logging.infof(LogCategory.SIMULATOR, "%s.remove(%s)", this.name, value);
+		this.listenerSupportRemove.dispatch(cast(ListT) this, value);
 		auto c = find(this.entries[], value).begin;
 		this.entries.remove(c);
 	}
 	
 	void opOpAssign(string op, EntryT)(EntryT value)
 		if(op == "~") {
-		logging.infof(LogCategory.SIMULATOR, "%s ~= %s", this.name, value);
+		this.listenerSupportAppend.dispatch(cast(ListT) this, value);
 		this.entries ~= value;
 	}
 	
 	void clear() {
 		this.entries.clear();
+	}
+	
+	void addTakeFrontListener(ListenerT listener) {
+		this.listenerSupportTakeFront.addListener(listener);
+	}
+	
+	void addTakeBackListener(ListenerT listener) {
+		this.listenerSupportTakeBack.addListener(listener);
+	}
+	
+	void addRemoveListener(ListenerT listener) {
+		this.listenerSupportRemove.addListener(listener);
+	}
+	
+	void addAppendListener(ListenerT listener) {
+		this.listenerSupportAppend.addListener(listener);
 	}
 	
 	override string toString() {
@@ -274,9 +318,14 @@ class List(EntryT) {
 	
 	string name;
 	LinkList!(EntryT) entries;
+	
+	ListenerSupportT listenerSupportTakeFront;
+	ListenerSupportT listenerSupportTakeBack;
+	ListenerSupportT listenerSupportRemove;
+	ListenerSupportT listenerSupportAppend;
 }
 
-class Queue(EntryT): List!(EntryT) {
+class Queue(EntryT, QueueT): List!(EntryT, QueueT) {
 	this(string name, uint capacity) {
 		super(name);
 		this.capacity = capacity;
@@ -292,8 +341,7 @@ class Queue(EntryT): List!(EntryT) {
 			logging.fatalf(LogCategory.MISC, "%s", this);
 		}
 
-		logging.infof(LogCategory.SIMULATOR, "%s ~= %s", this.name, value);
-		this.entries ~= value;
+		super ~= value;
 	}
 	
 	override string toString() {

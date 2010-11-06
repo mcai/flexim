@@ -442,7 +442,7 @@ class FunctionalUnit {
 			to!(string)(this.type), this.opLat, this.issueLat, this.busy);
 	}
 	
-	void acquire(void delegate() onCompletedCallback) {	
+	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate() onCompletedCallback) {
 		this.pool.eventQueue.schedule(
 			{
 				this.busy = false;
@@ -450,6 +450,9 @@ class FunctionalUnit {
 				if(onCompletedCallback !is null) {
 					onCompletedCallback();
 				}
+				
+				this.pool.listenerSupportRelease.dispatch(this.pool, new FunctionalUnitPool.ListenerContext(reorderBufferEntry, this));
+				
 			}, this.issueLat + this.opLat);
 		this.busy = true;
 	}
@@ -462,7 +465,24 @@ class FunctionalUnit {
 }
 
 class FunctionalUnitPool {
-	this() {		
+	static class ListenerContext {
+		this(ReorderBufferEntry reorderBufferEntry, FunctionalUnit fu) {
+			this.reorderBufferEntry = reorderBufferEntry;
+			this.fu = fu;
+		}
+		
+		ReorderBufferEntry reorderBufferEntry;
+		FunctionalUnit fu;
+	}
+	
+	alias ListenerSupport!(FunctionalUnitPool, ListenerContext) ListenerSupportT;
+	alias ListenerSupportT.ListenerT ListenerT;
+	
+	this(Core core) {
+		this.core = core;
+		
+		this.name = format("c%d.fuPool", this.core.num);
+				
 		this.add(FunctionalUnitType.IntALU, 4, 1, 1);
 		this.add(FunctionalUnitType.IntMULT, 1, 3, 1);
 		this.add(FunctionalUnitType.IntDIV, 1, 20, 19);
@@ -477,6 +497,9 @@ class FunctionalUnitPool {
 		
 		this.eventQueue = new DelegateEventQueue();
 		Simulator.singleInstance.addEventProcessor(this.eventQueue);
+		
+		this.listenerSupportAcquire = new ListenerSupportT();
+		this.listenerSupportRelease = new ListenerSupportT();
 	}
 	
 	void add(FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) {
@@ -496,7 +519,11 @@ class FunctionalUnitPool {
 		FunctionalUnit fu = this.findFree(type);
 		
 		if(fu !is null) {
-			fu.acquire({onCompletedCallback2(reorderBufferEntry);});
+			this.listenerSupportAcquire.dispatch(this, new ListenerContext(reorderBufferEntry, fu));
+			fu.acquire(reorderBufferEntry, 
+				{
+					onCompletedCallback2(reorderBufferEntry);
+				});
 		}
 		else {
 			this.eventQueue.schedule(
@@ -505,9 +532,23 @@ class FunctionalUnitPool {
 				}, 10);
 		}
 	}
+	
+	void addAcquireListener(ListenerT listener) {
+		this.listenerSupportAcquire.addListener(listener);
+	}
+	
+	void addReleaseListener(ListenerT listener) {
+		this.listenerSupportRelease.addListener(listener);
+	}
+	
+	Core core;
+	string name;
 
 	FunctionalUnit[][FunctionalUnitType] entities;
 	DelegateEventQueue eventQueue;
+	
+	ListenerSupportT listenerSupportAcquire;
+	ListenerSupportT listenerSupportRelease;
 }
 
 enum PhysicalRegisterState: string {
@@ -518,24 +559,29 @@ enum PhysicalRegisterState: string {
 }
 
 class PhysicalRegister {
-	this() {
+	this(PhysicalRegisterFile file) {
+		this.file = file;
 		this.state = PhysicalRegisterState.FREE;
 	}
 	
 	void alloc(ReorderBufferEntry reorderBufferEntry) {
+		this.file.listenerSupportWriteback.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.ALLOC;
 		this.reorderBufferEntry = reorderBufferEntry;
 	}
 	
 	void writeback() {
+		this.file.listenerSupportWriteback.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(this.reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.WB;
 	}
 	
 	void commit() {
+		this.file.listenerSupportCommit.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(this.reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.ARCH;
 	}
 	
 	void dealloc() {
+		this.file.listenerSupportDealloc.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(this.reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.FREE;
 		this.reorderBufferEntry = null;
 	}
@@ -548,6 +594,7 @@ class PhysicalRegister {
 		return format("PhysicalRegister[state=%s, reorderBufferEntry=%s]", this.state, this.reorderBufferEntry);
 	}
 	
+	PhysicalRegisterFile file;
 	PhysicalRegisterState state;
 	ReorderBufferEntry reorderBufferEntry;
 }
@@ -559,14 +606,33 @@ class NoFreePhysicalRegisterException: Exception {
 }
 
 class PhysicalRegisterFile {
-	this(Core core, uint capacity) {
+	static class ListenerContext {
+		this(ReorderBufferEntry reorderBufferEntry, PhysicalRegister physicalRegister) {
+			this.reorderBufferEntry = reorderBufferEntry;
+			this.physicalRegister = physicalRegister;
+		}
+		
+		ReorderBufferEntry reorderBufferEntry;
+		PhysicalRegister physicalRegister;
+	}
+	
+	alias ListenerSupport!(PhysicalRegisterFile, ListenerContext) ListenerSupportT;
+	alias ListenerSupportT.ListenerT ListenerT;
+	
+	this(Core core, string namePostfix, uint capacity) {
 		this.core = core;
+		this.name = format("c%d.%s", core.num, namePostfix);
 		this.capacity = capacity;
 		
 		this.entries = new PhysicalRegister[this.capacity];
 		for(uint i = 0; i < this.capacity; i++) {
-			this.entries[i] = new PhysicalRegister();
+			this.entries[i] = new PhysicalRegister(this);
 		}
+		
+		this.listenerSupportAlloc = new ListenerSupportT();
+		this.listenerSupportWriteback = new ListenerSupportT();
+		this.listenerSupportCommit = new ListenerSupportT();
+		this.listenerSupportDealloc = new ListenerSupportT();
 	}
 	
 	PhysicalRegister findFree() {
@@ -585,6 +651,22 @@ class PhysicalRegisterFile {
 		return freeReg;
 	}
 	
+	void addAllocListener(ListenerT listener) {
+		this.listenerSupportAlloc.addListener(listener);
+	}
+	
+	void addWritebackListener(ListenerT listener) {
+		this.listenerSupportWriteback.addListener(listener);
+	}
+	
+	void addCommitListener(ListenerT listener) {
+		this.listenerSupportCommit.addListener(listener);
+	}
+	
+	void addDeallocListener(ListenerT listener) {
+		this.listenerSupportDealloc.addListener(listener);
+	}
+	
 	PhysicalRegister opIndex(uint index) {
 		assert(index >= 0 && index <= this.entries.length, format("%d", index));
 		return this.entries[index];
@@ -600,8 +682,11 @@ class PhysicalRegisterFile {
 	}
 
 	Core core;
+	string name;
 	uint capacity;
 	PhysicalRegister[] entries;
+	
+	ListenerSupportT listenerSupportAlloc, listenerSupportWriteback, listenerSupportCommit, listenerSupportDealloc;
 }
 
 class RegisterRenameTable {
@@ -609,7 +694,7 @@ class RegisterRenameTable {
 	}
 	
 	PhysicalRegister opIndex(RegisterDependency dep) {
-		return this.entries[dep.type][dep.num];
+		return this[dep.type, dep.num];
 	}
 	
 	PhysicalRegister opIndex(RegisterDependencyType type, uint num) {
@@ -617,7 +702,7 @@ class RegisterRenameTable {
 	}
 	
 	void opIndexAssign(PhysicalRegister physReg, RegisterDependency dep) {
-		this.entries[dep.type][dep.num] = physReg;
+		this[dep.type, dep.num] = physReg;
 	}
 	
 	void opIndexAssign(PhysicalRegister physReg, RegisterDependencyType type, uint num) {
@@ -652,9 +737,9 @@ class DecodeBufferEntry {
 	static ulong currentId;
 }
 
-class DecodeBuffer: Queue!(DecodeBufferEntry) {
-	this(uint capacity) {
-		super("decodeBuffer", capacity);
+class DecodeBuffer: Queue!(DecodeBufferEntry, DecodeBuffer) {
+	this(Thread thread, uint capacity) {
+		super(format("c%dt%d.decodeBuffer", thread.core.num, thread.num), capacity);
 	}
 }
 
@@ -742,33 +827,33 @@ class ReorderBufferEntry {
 	static ulong currentId;
 }
 
-class ReadyQueue: List!(ReorderBufferEntry) {
-	this() {
-		super("readyQueue");
+class ReadyQueue: List!(ReorderBufferEntry, ReadyQueue) {
+	this(Core core) {
+		super(format("c%d.readyQueue", core.num));
 	}
 }
 
-class WaitingQueue: List!(ReorderBufferEntry) {
-	this() {
-		super("waitingQueue");
+class WaitingQueue: List!(ReorderBufferEntry, WaitingQueue) {
+	this(Core core) {
+		super(format("c%d.waitingQueue", core.num));
 	}
 }
 
-class OoOEventQueue: List!(ReorderBufferEntry) {
-	this() {
-		super("oooEventQueue");
+class OoOEventQueue: List!(ReorderBufferEntry, OoOEventQueue) {
+	this(Core core) {
+		super(format("c%d.oooEventQueue", core.num));
 	}
 }
 
-class ReorderBuffer: Queue!(ReorderBufferEntry) {
-	this(uint capacity) {
-		super("reorderBuffer", capacity);
+class ReorderBuffer: Queue!(ReorderBufferEntry, ReorderBuffer) {
+	this(Thread thread, uint capacity) {
+		super(format("c%dt%d.reorderBuffer", thread.core.num, thread.num), capacity);
 	}
 }
 
-class LoadStoreQueue: Queue!(ReorderBufferEntry) {
-	this(uint capacity) {
-		super("loadStoreQueue", capacity);
+class LoadStoreQueue: Queue!(ReorderBufferEntry, LoadStoreQueue) {
+	this(Thread thread, uint capacity) {
+		super(format("c%dt%d.loadStoreQueue", thread.core.num, thread.num), capacity);
 	}
 }
 
@@ -837,17 +922,17 @@ class Core {
 		this.decodeWidth = config.decodeWidth;
 		this.issueWidth = config.issueWidth;
 		
-		this.intRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
-		this.fpRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
-		this.miscRegFile = new PhysicalRegisterFile(this, config.physicalRegisterFileCapacity);
+		this.intRegFile = new PhysicalRegisterFile(this, "intRegFile", config.physicalRegisterFileCapacity);
+		this.fpRegFile = new PhysicalRegisterFile(this, "fpRegFile", config.physicalRegisterFileCapacity);
+		this.miscRegFile = new PhysicalRegisterFile(this, "miscRegFile", config.physicalRegisterFileCapacity);
 		
-		this.fuPool = new FunctionalUnitPool();
+		this.fuPool = new FunctionalUnitPool(this);
 		
 		this.isa = new MipsISA();
 		
-		this.readyQueue = new ReadyQueue();
-		this.waitingQueue = new WaitingQueue();
-		this.oooEventQueue = new OoOEventQueue();
+		this.readyQueue = new ReadyQueue(this);
+		this.waitingQueue = new WaitingQueue(this);
+		this.oooEventQueue = new OoOEventQueue(this);
 		
 		this.mem = new Memory();
 	}
@@ -917,10 +1002,8 @@ class Core {
 				
 				try {
 					foreach(oDep; reorderBufferEntry.oDeps) {
-						PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
 						reorderBufferEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
-						reorderBufferEntry.physRegs[oDep] = regFile.alloc(reorderBufferEntry);
-						this.threads[decodeThreadId].renameTable[oDep] = reorderBufferEntry.physRegs[oDep];
+						this.threads[decodeThreadId].renameTable[oDep] = reorderBufferEntry.physRegs[oDep] = this.getPhysicalRegisterFile(oDep.type).alloc(reorderBufferEntry);
 					}
 				}
 				catch(NoFreePhysicalRegisterException ex) {
@@ -951,10 +1034,8 @@ class Core {
 					
 					try {
 						foreach(oDep; loadStoreQueueEntry.oDeps) {
-							PhysicalRegisterFile regFile = this.getPhysicalRegisterFile(oDep.type);
 							loadStoreQueueEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
-							loadStoreQueueEntry.physRegs[oDep] = regFile.alloc(loadStoreQueueEntry);
-							this.threads[decodeThreadId].renameTable[oDep] = loadStoreQueueEntry.physRegs[oDep];
+							this.threads[decodeThreadId].renameTable[oDep] = loadStoreQueueEntry.physRegs[oDep] = this.getPhysicalRegisterFile(oDep.type).alloc(loadStoreQueueEntry);
 						}
 					}
 					catch(NoFreePhysicalRegisterException ex) {
@@ -1304,9 +1385,9 @@ class Thread {
 		
 		this.commitWidth = config.commitWidth;
 		
-		this.decodeBuffer = new DecodeBuffer(config.decodeBufferCapacity);
-		this.reorderBuffer = new ReorderBuffer(config.reorderBufferCapacity);
-		this.loadStoreQueue = new LoadStoreQueue(config.loadStoreQueueCapacity);
+		this.decodeBuffer = new DecodeBuffer(this, config.decodeBufferCapacity);
+		this.reorderBuffer = new ReorderBuffer(this, config.reorderBufferCapacity);
+		this.loadStoreQueue = new LoadStoreQueue(this, config.loadStoreQueueCapacity);
 		
 		this.fetchNpc = this.regs.npc;
 		this.fetchNnpc = this.regs.nnpc;

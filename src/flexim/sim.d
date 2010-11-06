@@ -588,18 +588,20 @@ class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig) {
 }
 
 class Property(T) {
+	alias T ContextT;
+	alias ListenerSupport!(typeof(this), ContextT) ListenerSupportT;
+	
 	this(T v) {
 		this.value = v;
+		this.listenerSupport = new ListenerSupportT();
 	}
 	
-	void addListener(void delegate(T) listener) {
-		this.listeners ~= listener;
+	void addListener(ListenerSupportT.ListenerT listener) {
+		this.listenerSupport.addListener(listener);
 	}
     
     void dispatch() {
-		foreach(listener; this.listeners) {
-			listener(this.value);
-		}
+    	this.listenerSupport.dispatch(this, this.value);
     }
 	
     T value() { 
@@ -616,8 +618,8 @@ class Property(T) {
     	return to!(string)(this.value);
     }
     
-	void delegate(T)[] listeners;
 	private T _value;
+	ListenerSupportT listenerSupport;
 }
 
 abstract class Stat(StatT) {	
@@ -1155,13 +1157,7 @@ class SimulationStatXMLSerializer: XMLSerializer!(SimulationStat) {
 	static SimulationStatXMLSerializer singleInstance;
 }
 
-interface Reproducible {
-	void beforeRun();
-	void run();
-	void afterRun();
-}
-
-class Simulation: Reproducible {
+class Simulation {
 	this(string title, string cwd, SimulationConfig config, SimulationStat stat) {
 		this.title = title;
 		this.cwd = cwd;
@@ -1185,13 +1181,21 @@ class Simulation: Reproducible {
 		this.afterRun();
 	}
 	
-	override void beforeRun() {
+	void beforeRun(void delegate(CPUSimulator simulator) simulatorInitDel = null) {
+		this.simulatorInitDel = simulatorInitDel;
+		
 		this.isRunning = true;
 		this.stat.reset();
 	}
 	
-	override void run() {
-		Simulator simulator = new CPUSimulator(this);
+	void delegate(CPUSimulator simulator) simulatorInitDel;
+	
+	void run() {
+		CPUSimulator simulator = new CPUSimulator(this);
+		if(this.simulatorInitDel !is null) {
+			this.simulatorInitDel(simulator);
+		}
+		
 		simulator.run();
 	}
 	
@@ -1199,7 +1203,7 @@ class Simulation: Reproducible {
 		this.isRunning = false;
 	}
 	
-	override void afterRun() {
+	void afterRun() {
 		this.isRunning = false;
 	}
 	

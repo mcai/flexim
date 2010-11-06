@@ -215,7 +215,7 @@ HBox newHBoxWithLabelAndEntry2(T)(string labelText, Property!(T) property, void 
 
 	entry.setEditable(entryChangedAction !is null);
 
-	property.addListener(delegate void(T newValue)
+	property.addListener(delegate void(Property!(T) sender, T newValue)
 		{
 			entry.setText(to!(string)(newValue));
 			entry.showAll();
@@ -971,7 +971,7 @@ class FrameSimulations: FrameEditSet {
 		
 					this.buttonSimulate.setLabel("Abort Simulation");
 					
-					simulation.beforeRun();
+					simulation.beforeRun(&this.demoSimulatorInit);
 
 					threadRunSimulation.start();
 					threadUpdateGui.start();
@@ -984,6 +984,150 @@ class FrameSimulations: FrameEditSet {
 		
 		this.notebookSets.setCurrentPage(0);
 		this.comboBoxSet.setActive(0);
+	}
+	
+	void demoSimulatorInit(CPUSimulator simulator) {
+		foreach(i, core; simulator.processor.cores) {
+			foreach(j, thread; core.threads) {
+				thread.decodeBuffer.addTakeFrontListener(delegate void(DecodeBuffer sender, DecodeBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", sender.name, entry);
+					});
+				thread.decodeBuffer.addTakeBackListener(delegate void(DecodeBuffer sender, DecodeBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.takeBack() = %s", sender.name, entry);
+					});
+				thread.decodeBuffer.addRemoveListener(delegate void(DecodeBuffer sender, DecodeBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.remove(%s)", sender.name, entry);
+					});
+				thread.decodeBuffer.addAppendListener(delegate void(DecodeBuffer sender, DecodeBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s ~= %s", sender.name, entry);
+					});
+	
+				thread.reorderBuffer.addTakeFrontListener(delegate void(ReorderBuffer sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", sender.name, entry);
+					});
+				thread.reorderBuffer.addTakeBackListener(delegate void(ReorderBuffer sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.takeBack() = %s", sender.name, entry);
+					});
+				thread.reorderBuffer.addRemoveListener(delegate void(ReorderBuffer sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.remove(%s)", sender.name, entry);
+					});
+				thread.reorderBuffer.addAppendListener(delegate void(ReorderBuffer sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s ~= %s", sender.name, entry);
+					});
+	
+				thread.loadStoreQueue.addTakeFrontListener(delegate void(LoadStoreQueue sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", sender.name, entry);
+					});
+				thread.loadStoreQueue.addTakeBackListener(delegate void(LoadStoreQueue sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.takeBack() = %s", sender.name, entry);
+					});
+				thread.loadStoreQueue.addRemoveListener(delegate void(LoadStoreQueue sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.remove(%s)", sender.name, entry);
+					});
+				thread.loadStoreQueue.addAppendListener(delegate void(LoadStoreQueue sender, ReorderBufferEntry entry)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s ~= %s", sender.name, entry);
+					});
+			}
+			
+			core.fuPool.addAcquireListener(delegate void(FunctionalUnitPool sender, FunctionalUnitPool.ListenerContext context)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.acquire(%s, %s)", sender.name, context.reorderBufferEntry, context.fu);
+				});
+			core.fuPool.addReleaseListener(delegate void(FunctionalUnitPool sender, FunctionalUnitPool.ListenerContext context) 
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.release(%s, %s)", sender.name, context.reorderBufferEntry, context.fu);
+				});
+			
+			PhysicalRegisterFile[] regFiles;
+			regFiles ~= core.intRegFile;
+			regFiles ~= core.fpRegFile;
+			regFiles ~= core.miscRegFile;
+			
+			foreach(regFile; regFiles) {
+				regFile.addAllocListener(delegate void(PhysicalRegisterFile sender, PhysicalRegisterFile.ListenerContext context) 
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.alloc(%s, %s)", sender.name, context.reorderBufferEntry, context.physicalRegister);
+					});
+					
+				regFile.addWritebackListener(delegate void(PhysicalRegisterFile sender, PhysicalRegisterFile.ListenerContext context) 
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.writeback(%s, %s)", sender.name, context.reorderBufferEntry, context.physicalRegister);
+					});
+					
+				regFile.addCommitListener(delegate void(PhysicalRegisterFile sender, PhysicalRegisterFile.ListenerContext context) 
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.commit(%s, %s)", sender.name, context.reorderBufferEntry, context.physicalRegister);
+					});
+					
+				regFile.addDeallocListener(delegate void(PhysicalRegisterFile sender, PhysicalRegisterFile.ListenerContext context) 
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s.dealloc(%s, %s)", sender.name, context.reorderBufferEntry, context.physicalRegister);
+					});
+			}
+	
+			core.waitingQueue.addTakeFrontListener(delegate void(WaitingQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", sender.name, entry);
+				});
+			core.waitingQueue.addTakeBackListener(delegate void(WaitingQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.takeBack() = %s", sender.name, entry);
+				});
+			core.waitingQueue.addRemoveListener(delegate void(WaitingQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.remove(%s)", sender.name, entry);
+				});
+			core.waitingQueue.addAppendListener(delegate void(WaitingQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s ~= %s", sender.name, entry);
+				});
+	
+			core.readyQueue.addTakeFrontListener(delegate void(ReadyQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", sender.name, entry);
+				});
+			core.readyQueue.addTakeBackListener(delegate void(ReadyQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.takeBack() = %s", sender.name, entry);
+				});
+			core.readyQueue.addRemoveListener(delegate void(ReadyQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.remove(%s)", sender.name, entry);
+				});
+			core.readyQueue.addAppendListener(delegate void(ReadyQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s ~= %s", sender.name, entry);
+				});
+	
+			core.oooEventQueue.addTakeFrontListener(delegate void(OoOEventQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", sender.name, entry);
+				});
+			core.oooEventQueue.addTakeBackListener(delegate void(OoOEventQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.takeBack() = %s", sender.name, entry);
+				});
+			core.oooEventQueue.addRemoveListener(delegate void(OoOEventQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s.remove(%s)", sender.name, entry);
+				});
+			core.oooEventQueue.addAppendListener(delegate void(OoOEventQueue sender, ReorderBufferEntry entry)
+				{
+					logging.infof(LogCategory.SIMULATOR, "%s ~= %s", sender.name, entry);
+				});
+		}
 	}
 	
 	override void onComboBoxSetChanged() {
