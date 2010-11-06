@@ -995,13 +995,162 @@ class Cache {
 	CacheConfig cacheConfig;
 }
 
-abstract class CoherentCacheNode {	
+abstract class CoherentCacheNode {
+	static class ListenerContextFindAndLock {
+		this(uint addr, bool isBlocking, bool isRead, bool isRetry) {
+			this.addr = addr;
+			this.isBlocking = isBlocking;
+			this.isRead = isRead;
+			this.isRetry = isRetry;
+		}
+		
+		uint addr;
+		bool isBlocking;
+		bool isRead;
+		bool isRetry;
+	}
+	
+	static class ListenerContextLoad {
+		this(uint addr, bool isRetry) {
+			this.addr = addr;
+			this.isRetry = isRetry;
+		}
+		
+		uint addr;
+		bool isRetry;
+	}
+	
+	static class ListenerContextStore {
+		this(uint addr, bool isRetry) {
+			this.addr = addr;
+			this.isRetry = isRetry;
+		}
+		
+		uint addr;
+		bool isRetry;
+	}
+	
+	static class ListenerContextEvict {
+		this(uint set, uint way) {
+			this.set = set;
+			this.way = way;
+		}
+		
+		uint set;
+		uint way;
+	}
+	
+	static class ListenerContextEvictReceive {
+		this(CoherentCacheNode source, uint addr, bool isWriteback) {
+			this.source = source;
+			this.addr = addr;
+			this.isWriteback = isWriteback;
+		}
+		
+		CoherentCacheNode source;
+		uint addr;
+		bool isWriteback;
+	}
+	
+	static class ListenerContextReadRequest {
+		this(CoherentCacheNode target, uint addr) {
+			this.target = target;
+			this.addr = addr;
+		}
+		
+		CoherentCacheNode target;
+		uint addr;
+	}
+	
+	static class ListenerContextReadRequestReceive {
+		this(CoherentCacheNode source, uint addr) {
+			this.source = source;
+			this.addr = addr;
+		}
+		
+		CoherentCacheNode source;
+		uint addr;
+	}
+	
+	static class ListenerContextWriteRequest {
+		this(CoherentCacheNode target, uint addr) {
+			this.target = target;
+			this.addr = addr;
+		}
+		
+		CoherentCacheNode target;
+		uint addr;
+	}
+	
+	static class ListenerContextWriteRequestReceive {
+		this(CoherentCacheNode source, uint addr) {
+			this.source = source;
+			this.addr = addr;
+		}
+		
+		CoherentCacheNode source;
+		uint addr;
+	}
+	
+	static class ListenerContextInvalidate {
+		this(CoherentCacheNode except, uint set, uint way) {
+			this.except = except;
+			this.set = set;
+			this.way = way;
+		}
+		
+		CoherentCacheNode except;
+		uint set;
+		uint way;
+	}
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextFindAndLock) ListenerSupportFindAndLockT;
+	alias ListenerSupportFindAndLockT.ListenerT ListenerFindAndLockT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextLoad) ListenerSupportLoadT;
+	alias ListenerSupportLoadT.ListenerT ListenerLoadT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextStore) ListenerSupportStoreT;
+	alias ListenerSupportStoreT.ListenerT ListenerStoreT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextEvict) ListenerSupportEvictT;
+	alias ListenerSupportEvictT.ListenerT ListenerEvictT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextEvictReceive) ListenerSupportEvictReceiveT;
+	alias ListenerSupportEvictReceiveT.ListenerT ListenerEvictReceiveT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextReadRequest) ListenerSupportReadRequestT;
+	alias ListenerSupportReadRequestT.ListenerT ListenerReadRequestT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextReadRequestReceive) ListenerSupportReadRequestReceiveT;
+	alias ListenerSupportReadRequestReceiveT.ListenerT ListenerReadRequestReceiveT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextWriteRequest) ListenerSupportWriteRequestT;
+	alias ListenerSupportWriteRequestT.ListenerT ListenerWriteRequestT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextWriteRequestReceive) ListenerSupportWriteRequestReceiveT;
+	alias ListenerSupportWriteRequestReceiveT.ListenerT ListenerWriteRequestReceiveT;
+	
+	alias ListenerSupport!(CoherentCacheNode, ListenerContextInvalidate) ListenerSupportInvalidateT;
+	alias ListenerSupportInvalidateT.ListenerT ListenerInvalidateT;
+	
 	this(MemorySystem memorySystem, string name) {
 		this.name = name;
 		this.memorySystem = memorySystem;
 		
 		this.eventQueue = new DelegateEventQueue();
 		Simulator.singleInstance.addEventProcessor(this.eventQueue);
+		
+		this.listenerSupportFindAndLock = new ListenerSupportFindAndLockT();
+		this.listenerSupportLoad = new ListenerSupportLoadT();
+		this.listenerSupportStore = new ListenerSupportStoreT();
+		this.listenerSupportEvict = new ListenerSupportEvictT();
+		this.listenerSupportEvictReceive = new ListenerSupportEvictReceiveT();
+		this.listenerSupportReadRequest = new ListenerSupportReadRequestT();
+		this.listenerSupportReadRequestReceive = new ListenerSupportReadRequestReceiveT();
+		this.listenerSupportWriteRequest = new ListenerSupportWriteRequestT();
+		this.listenerSupportWriteRequestReceive = new ListenerSupportWriteRequestReceiveT();
+		this.listenerSupportInvalidate = new ListenerSupportInvalidateT();
 	}
 	
 	void schedule(void delegate() event, ulong delay = 0) {
@@ -1049,6 +1198,7 @@ abstract class CoherentCacheNode {
 		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
 		assert(0);
 	}
+	
 	void writeRequest(CoherentCacheNode target, uint addr, 
 		void delegate(bool hasError) onCompletedCallback) {
 		writefln("%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
@@ -1067,6 +1217,46 @@ abstract class CoherentCacheNode {
 		assert(0);
 	}
 	
+	void addFindAndLockListener(ListenerFindAndLockT listener) {
+		this.listenerSupportFindAndLock.addListener(listener);
+	}
+	
+	void addLoadListener(ListenerLoadT listener) {
+		this.listenerSupportLoad.addListener(listener);
+	}
+	
+	void addStoreListener(ListenerStoreT listener) {
+		this.listenerSupportStore.addListener(listener);
+	}
+	
+	void addEvictListener(ListenerEvictT listener) {
+		this.listenerSupportEvict.addListener(listener);
+	}
+	
+	void addEvictReceiveListener(ListenerEvictReceiveT listener) {
+		this.listenerSupportEvictReceive.addListener(listener);
+	}
+	
+	void addReadRequestListener(ListenerReadRequestT listener) {
+		this.listenerSupportReadRequest.addListener(listener);
+	}
+	
+	void addReadRequestReceiveListener(ListenerReadRequestReceiveT listener) {
+		this.listenerSupportReadRequestReceive.addListener(listener);
+	}
+	
+	void addWriteRequestListener(ListenerWriteRequestT listener) {
+		this.listenerSupportWriteRequest.addListener(listener);
+	}
+	
+	void addWriteRequestReceiveListener(ListenerWriteRequestReceiveT listener) {
+		this.listenerSupportWriteRequestReceive.addListener(listener);
+	}
+	
+	void addInvalidateListener(ListenerInvalidateT listener) {
+		this.listenerSupportInvalidate.addListener(listener);
+	}
+	
 	abstract uint level();
 	
 	override string toString() {
@@ -1077,6 +1267,17 @@ abstract class CoherentCacheNode {
 	MemorySystem memorySystem;
 	CoherentCacheNode next;	
 	DelegateEventQueue eventQueue;
+	
+	ListenerSupportFindAndLockT listenerSupportFindAndLock;
+	ListenerSupportLoadT listenerSupportLoad;
+	ListenerSupportStoreT listenerSupportStore;
+	ListenerSupportEvictT listenerSupportEvict;
+	ListenerSupportEvictReceiveT listenerSupportEvictReceive;
+	ListenerSupportReadRequestT listenerSupportReadRequest;
+	ListenerSupportReadRequestReceiveT listenerSupportReadRequestReceive;
+	ListenerSupportWriteRequestT listenerSupportWriteRequest;
+	ListenerSupportWriteRequestReceiveT listenerSupportWriteRequestReceive;
+	ListenerSupportInvalidateT listenerSupportInvalidate;
 }
 
 class MSHRTarget {
@@ -1127,12 +1328,14 @@ class Sequencer: CoherentCacheNode {
 	}
 	
 	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.listenerSupportLoad.dispatch(this, new CoherentCacheNode.ListenerContextLoad(addr, isRetry));
+			
 		this.l1Cache.load(addr, isRetry, onCompletedCallback);
 	}
 	
 	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.listenerSupportStore.dispatch(this, new CoherentCacheNode.ListenerContextStore(addr, isRetry));
+			
 		this.l1Cache.store(addr, isRetry, onCompletedCallback);
 	}
 	
@@ -1182,7 +1385,8 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
 		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
+		this.listenerSupportFindAndLock.dispatch(this, new CoherentCacheNode.ListenerContextFindAndLock(addr, isBlocking, isRead, isRetry));
+			
 		uint set, way, tag;
 		MESIState state;
 		
@@ -1287,7 +1491,8 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.listenerSupportLoad.dispatch(this, new CoherentCacheNode.ListenerContextLoad(addr, isRetry));
+			
 		this.findAndLock(addr, false, true, isRetry,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{
@@ -1323,7 +1528,8 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
+		this.listenerSupportStore.dispatch(this, new CoherentCacheNode.ListenerContextStore(addr, isRetry));
+			
 		this.findAndLock(addr, false, false, isRetry, 
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{
@@ -1361,7 +1567,8 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void evict(uint set, uint way,
 		void delegate(bool hasError) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.evict(set=%d, way=%d)", this, set, way);
+		this.listenerSupportEvict.dispatch(this, new CoherentCacheNode.ListenerContextEvict(set, way));
+			
 		uint tag;
 		MESIState state;
 		
@@ -1408,7 +1615,7 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback,
 		void delegate(bool hasError) onReceiveReplyCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
+		this.listenerSupportEvictReceive.dispatch(this, new CoherentCacheNode.ListenerContextEvictReceive(source, addr, isWriteback));
 		
 		this.findAndLock(addr, false, false, false, 
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
@@ -1475,7 +1682,8 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void readRequest(CoherentCacheNode target, uint addr,
 		void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.readRequest(target=%s, addr=0x%x)", this, target, addr);
+		this.listenerSupportReadRequest.dispatch(this, new CoherentCacheNode.ListenerContextReadRequest(target, addr));
+			
 		this.schedule(
 			{
 				target.readRequestReceive(this, addr, onCompletedCallback);
@@ -1484,7 +1692,8 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr,
 		void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.listenerSupportReadRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextReadRequestReceive(source, addr));
+				
 		this.findAndLock(addr, this.next == source, true, false,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{				
@@ -1602,7 +1811,8 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void writeRequest(CoherentCacheNode target, uint addr,
 		void delegate(bool hasError) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
+		this.listenerSupportWriteRequest.dispatch(this, new CoherentCacheNode.ListenerContextWriteRequest(target, addr));
+				
 		this.schedule(
 			{
 				target.writeRequestReceive(this, addr, onCompletedCallback);
@@ -1611,7 +1821,8 @@ class CoherentCache: CoherentCacheNode {
 	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr,
 		void delegate(bool hasError) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.listenerSupportWriteRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextWriteRequestReceive(source, addr));
+				
 		this.findAndLock(addr, this.next == source, false, false,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{				
@@ -1677,7 +1888,8 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void invalidate(CoherentCacheNode except, uint set, uint way, void delegate() onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.invalidate(except=%s, set=%d, way=%d)", this, except, set, way);
+		this.listenerSupportInvalidate.dispatch(this, new CoherentCacheNode.ListenerContextInvalidate(except, set, way));
+			
 		uint tag;
 		MESIState state;
 		
@@ -1742,21 +1954,24 @@ class MemoryController: CoherentCacheNode {
 	}
 	
 	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, void delegate(bool hasError) onReceiveReplyCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
+		this.listenerSupportEvictReceive.dispatch(this, new CoherentCacheNode.ListenerContextEvictReceive(source, addr, isWriteback));
+			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
 		this.stat.writes.value = this.stat.writes.value + 1;
 		this.schedule({onReceiveReplyCallback(false);}, this.latency);
 	}
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.listenerSupportReadRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextReadRequestReceive(source, addr));
+			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
 		this.stat.reads.value = this.stat.reads.value + 1;
 		this.schedule({onCompletedCallback(false, false);}, this.latency);
 	}
 	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) {
-		//logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
+		this.listenerSupportWriteRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextWriteRequestReceive(source, addr));
+			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
 		this.stat.writes.value = this.stat.writes.value + 1;
 		this.schedule({onCompletedCallback(false);}, this.latency);

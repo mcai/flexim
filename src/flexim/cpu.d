@@ -443,6 +443,7 @@ class FunctionalUnit {
 	}
 	
 	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate() onCompletedCallback) {
+		this.pool.listenerSupportAcquire.dispatch(this.pool, new FunctionalUnitPool.ListenerContext(reorderBufferEntry, this));
 		this.pool.eventQueue.schedule(
 			{
 				this.busy = false;
@@ -519,7 +520,6 @@ class FunctionalUnitPool {
 		FunctionalUnit fu = this.findFree(type);
 		
 		if(fu !is null) {
-			this.listenerSupportAcquire.dispatch(this, new ListenerContext(reorderBufferEntry, fu));
 			fu.acquire(reorderBufferEntry, 
 				{
 					onCompletedCallback2(reorderBufferEntry);
@@ -690,26 +690,54 @@ class PhysicalRegisterFile {
 }
 
 class RegisterRenameTable {
-	this() {
+	static class ListenerContext {
+		this(RegisterDependencyType type, uint num, PhysicalRegister physReg) {
+			this.type = type;
+			this.num = num;
+			this.physReg = physReg;
+		}
+		
+		RegisterDependencyType type;
+		uint num;
+		PhysicalRegister physReg;
+	}
+	
+	alias ListenerSupport!(RegisterRenameTable, ListenerContext) ListenerSupportT;
+	alias ListenerSupportT.ListenerT ListenerT;
+	
+	this(Thread thread) {
+		this.thread = thread;
+		this.name = format("c%dt%d.renameTable", this.thread.core.num, this.thread.num);
+		
+		this.listenerSupportValueChanged = new ListenerSupportT();
 	}
 	
 	PhysicalRegister opIndex(RegisterDependency dep) {
 		return this[dep.type, dep.num];
 	}
 	
-	PhysicalRegister opIndex(RegisterDependencyType type, uint num) {
-		return this.entries[type][num];
-	}
-	
 	void opIndexAssign(PhysicalRegister physReg, RegisterDependency dep) {
 		this[dep.type, dep.num] = physReg;
 	}
 	
+	PhysicalRegister opIndex(RegisterDependencyType type, uint num) {
+		return this.entries[type][num];
+	}
+	
 	void opIndexAssign(PhysicalRegister physReg, RegisterDependencyType type, uint num) {
+		this.listenerSupportValueChanged.dispatch(this, new ListenerContext(type, num, physReg));
 		this.entries[type][num] = physReg;
 	}
 	
+	void addValueChangedListener(ListenerT listener) {
+		this.listenerSupportValueChanged.addListener(listener);
+	}
+	
+	Thread thread;
+	string name;
 	PhysicalRegister[uint][RegisterDependencyType] entries;
+	
+	ListenerSupportT listenerSupportValueChanged;
 }
 
 class DecodeBufferEntry {
@@ -1355,7 +1383,7 @@ class Thread {
 		//this.bpred = new CombinedBpred();
 		this.bpred = new AlwaysTakenBpred();
 		
-		this.renameTable = new RegisterRenameTable();
+		this.renameTable = new RegisterRenameTable(this);
 
 		this.clearArchRegs();
 

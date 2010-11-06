@@ -1175,8 +1175,8 @@ class Simulation {
 		this(title, cwd, simulationConfig, simulationStat);
 	}
 	
-	void execute() {
-		this.beforeRun();
+	void execute(void delegate(CPUSimulator simulator) simulatorInitDel = null) {
+		this.beforeRun(simulatorInitDel);
 		this.run();
 		this.afterRun();
 	}
@@ -1414,10 +1414,10 @@ void executeEvent(SimulatorEventType eventType, SimulatorEventContext context) {
 }
 
 void mainConsole(string[] args) {
-	//string simulationTitle = "WCETBench-fir-1x1";
+	string simulationTitle = "WCETBench-fir-1x1";
 	//string simulationTitle = "WCETBench-fir-2x1";
 	//string simulationTitle = "Olden_Custom1-em3d_original-1x1";
-	string simulationTitle = "Olden_Custom1-mst_original-1x1";
+	//string simulationTitle = "Olden_Custom1-mst_original-1x1";
 	//string simulationTitle = "Olden_Custom1-mst_original-Olden_Custom1_em3d_original-2x1";
 	//string simulationTitle = "Olden_Custom1-mst_original-2x1";
 	
@@ -1431,7 +1431,18 @@ void mainConsole(string[] args) {
 	logging.infof(LogCategory.SIMULATOR, "run simulation(title=%s)", simulationTitle);
 
 	Simulation simulation = Simulation.loadXML("../simulations", simulationTitle ~ ".xml");
-	simulation.execute();
+	
+	simulation.execute(delegate void(CPUSimulator simulator) 
+		{
+			foreach(i, core; simulator.processor.cores) {
+				foreach(j, thread; core.threads) {
+					thread.renameTable.addValueChangedListener(delegate void(RegisterRenameTable sender, RegisterRenameTable.ListenerContext context)
+						{
+							logging.infof(LogCategory.SIMULATOR, "%s[%s, %d] = %s", sender.name, context.type, context.num, context.physReg);
+						});
+				}
+			}
+		});
 	
 	saveConfigsAndStats();
 }

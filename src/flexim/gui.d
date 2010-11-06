@@ -989,6 +989,11 @@ class FrameSimulations: FrameEditSet {
 	void demoSimulatorInit(CPUSimulator simulator) {
 		foreach(i, core; simulator.processor.cores) {
 			foreach(j, thread; core.threads) {
+				thread.renameTable.addValueChangedListener(delegate void(RegisterRenameTable sender, RegisterRenameTable.ListenerContext context)
+					{
+						logging.infof(LogCategory.SIMULATOR, "%s[%s, %d] = %s", sender.name, context.type, context.num, context.physReg);
+					});
+				
 				thread.decodeBuffer.addTakeFrontListener(delegate void(DecodeBuffer sender, DecodeBufferEntry entry)
 					{
 						logging.infof(LogCategory.SIMULATOR, "%s.takeFront() = %s", sender.name, entry);
@@ -1128,6 +1133,148 @@ class FrameSimulations: FrameEditSet {
 					logging.infof(LogCategory.SIMULATOR, "%s ~= %s", sender.name, entry);
 				});
 		}
+		
+		Sequencer[] seqs;
+		
+		foreach(seq; simulator.memorySystem.seqIs) {
+			seqs ~= seq;
+		}
+		
+		foreach(seq; simulator.memorySystem.seqDs) {
+			seqs ~= seq;
+		}
+		
+		foreach(seq; seqs) {
+			seq.addLoadListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextLoad context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.load(addr=0x%x, isRetry=%s)", 
+						sender,
+						context.addr,
+						context.isRetry);
+				});
+				
+			seq.addStoreListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextStore context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.store(addr=0x%x, isRetry=%s)", 
+						sender,
+						context.addr,
+						context.isRetry);
+				});
+		}
+		
+		CoherentCache[] ccaches;
+		
+		foreach(ccache; simulator.memorySystem.l1Is) {
+			ccaches ~= ccache;
+		}
+		
+		foreach(ccache; simulator.memorySystem.l1Ds) {
+			ccaches ~= ccache;
+		}
+		
+		ccaches ~= simulator.memorySystem.l2;
+		
+		foreach(ccache; ccaches) {
+			ccache.addFindAndLockListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextFindAndLock context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", 
+						sender, 
+						context.addr, 
+						context.isBlocking, 
+						context.isRead,
+						context.isRetry);
+				});
+			ccache.addLoadListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextLoad context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.load(addr=0x%x, isRetry=%s)", 
+						sender, 
+						context.addr,
+						context.isRetry);
+				});
+			ccache.addStoreListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextStore context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.store(addr=0x%x, isRetry=%s)",
+						sender,
+						context.addr,
+						context.isRetry);
+				});
+			ccache.addEvictListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextEvict context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.evict(set=%d, way=%d)", 
+						sender, 
+						context.set,
+						context.way);
+				});
+			ccache.addEvictReceiveListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextEvictReceive context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", 
+						sender, 
+						context.source,
+						context.addr,
+						context.isWriteback);
+				});
+			ccache.addReadRequestListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextReadRequest context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.readRequest(target=%s, addr=0x%x)",
+						sender,
+						context.target,
+						context.addr);
+				});
+			ccache.addReadRequestReceiveListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextReadRequestReceive context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)",
+						sender,
+						context.source,
+						context.addr);
+				});
+			ccache.addWriteRequestListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextWriteRequest context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.writeRequest(target=%s, addr=0x%x)",
+						sender,
+						context.target, 
+						context.addr);
+				});
+			ccache.addWriteRequestReceiveListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextWriteRequestReceive context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)", 
+						sender, 
+						context.source,
+						context.addr);
+				});
+			ccache.addInvalidateListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextInvalidate context)
+				{
+					logging.infof(LogCategory.COHERENCE, "%s.invalidate(except=%s, set=%d, way=%d)", 
+						sender, 
+						context.except, 
+						context.set,
+						context.way);
+				});
+		}
+		
+		simulator.memorySystem.mem.addEvictReceiveListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextEvictReceive context)
+			{
+				logging.infof(LogCategory.COHERENCE, "%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", 
+					sender,
+					context.source,
+					context.addr,
+					context.isWriteback);
+			});
+			
+		simulator.memorySystem.mem.addReadRequestReceiveListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextReadRequestReceive context)
+			{
+				logging.infof(LogCategory.COHERENCE, "%s.readRequestReceive(source=%s, addr=0x%x)", 
+					sender,
+					context.source,
+					context.addr);
+			});
+			
+		simulator.memorySystem.mem.addWriteRequestReceiveListener(delegate void(CoherentCacheNode sender, CoherentCacheNode.ListenerContextWriteRequestReceive context)
+			{
+				logging.infof(LogCategory.COHERENCE, "%s.writeRequestReceive(source=%s, addr=0x%x)",
+					sender,
+					context.source,
+					context.addr);
+			});
 	}
 	
 	override void onComboBoxSetChanged() {
