@@ -322,7 +322,7 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig)
 		string benchmarkSuiteTitle = xmlConfig["benchmarkSuiteTitle"];
 		string benchmarkTitle = xmlConfig["benchmarkTitle"];
 		
-		Benchmark workload = benchmarkSuites[benchmarkSuiteTitle][benchmarkTitle];
+		Benchmark workload = BenchmarkSuite.loadXML("../configs/benchmarks", benchmarkSuiteTitle ~ ".xml")[benchmarkTitle];
 		
 		ContextConfig contextConfig = new ContextConfig(workload);
 		return contextConfig;
@@ -622,7 +622,7 @@ class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig)
 	{
 		string architectureConfigTitle = xmlConfig["architectureConfigTitle"];
 		
-		ArchitectureConfig architecture = architectureConfigs[architectureConfigTitle];
+		ArchitectureConfig architecture = ArchitectureConfig.loadXML("../configs/architectures", architectureConfigTitle ~ ".xml");
 		
 		SimulationConfig simulationConfig = new SimulationConfig(architecture);
 		
@@ -1370,72 +1370,6 @@ class SimulationXMLFileSerializer: XMLFileSerializer!(Simulation)
 	}
 	
 	static SimulationXMLFileSerializer singleInstance;
-}
-
-BenchmarkSuite[string] benchmarkSuites;
-ArchitectureConfig[string] architectureConfigs;
-Simulation[string] simulations;
-
-Benchmark defaultBenchmark() 
-{
-	return benchmarkSuites["WCETBench"]["fir"];
-}
-
-void loadConfigsAndStats(void delegate(string text) del, bool useGtk = false) 
-{
-	string boldFontBeginStr = (useGtk ? "<b>" : "");
-	string boldFontEndStr = (useGtk ? "</b>" : "");
-	
-	foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
-	{
-		string baseName = basename(name, ".xml");
-		del("Loading benchmark config: " ~ boldFontBeginStr ~ baseName ~ boldFontEndStr);
-		benchmarkSuites[baseName] = BenchmarkSuite.loadXML("../configs/benchmarks", basename(name));
-		assert(benchmarkSuites[baseName].title == baseName);
-	}
-	foreach (string name; dirEntries("../configs/architectures", SpanMode.breadth))
-	{
-		string baseName = basename(name, ".xml");
-		del("Loading architecture config: " ~ boldFontBeginStr ~ baseName ~ boldFontEndStr);
-		architectureConfigs[baseName] = ArchitectureConfig.loadXML("../configs/architectures", basename(name));
-		assert(architectureConfigs[baseName].title == baseName, baseName);
-	}
-	foreach (string name; dirEntries("../simulations", SpanMode.breadth))
-	{
-		string baseName = basename(name, ".xml");
-		del("Loading simulation: " ~ boldFontBeginStr ~ baseName ~ boldFontEndStr);
-		simulations[baseName] = Simulation.loadXML("../simulations", basename(name));
-		assert(simulations[baseName].title == baseName);
-	}
-}
-
-void saveConfigsAndStats() 
-{
-	foreach (string name; dirEntries("../configs/benchmarks", SpanMode.breadth))
-	{
-		std.file.remove(name);
-	}
-	foreach (string name; dirEntries("../configs/architectures", SpanMode.breadth))
-	{
-		std.file.remove(name);
-	}
-	foreach (string name; dirEntries("../simulations", SpanMode.breadth))
-	{
-		std.file.remove(name);
-	}
-    
-	foreach(benchmarkSuiteTitle, benchmarkSuite; benchmarkSuites) 
-	{
-		BenchmarkSuite.saveXML(benchmarkSuite);
-	}	
-	foreach(simulationConfigTitle, architectureConfig; architectureConfigs) 
-	{
-		ArchitectureConfig.saveXML(architectureConfig);
-	}
-	foreach(simulationTitle, simulation; simulations) 
-	{
-		Simulation.saveXML(simulation);
-	}
 }
 
 abstract class Simulator 

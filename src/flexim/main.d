@@ -28,8 +28,12 @@ import std.getopt;
 import std.path;
 import std.regexp;
 
-void mainConsole(string[] args) 
+void main(string[] args) 
 {
+	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
+	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
+	logging.info(LogCategory.SIMULATOR, "");
+	
 	string simulationTitle = "WCETBench-fir-1x1";
 	//string simulationTitle = "WCETBench-fir-2x1";
 	//string simulationTitle = "Olden_Custom1-em3d_original-1x1";
@@ -38,15 +42,10 @@ void mainConsole(string[] args)
 	//string simulationTitle = "Olden_Custom1-mst_original-2x1";
 	
 	getopt(args, "simulation", &simulationTitle);
-	
-	loadConfigsAndStats(delegate void(string text)
-		{
-			logging.info(LogCategory.SIMULATOR, text);
-		}, false);
-
-	logging.infof(LogCategory.SIMULATOR, "run simulation(title=%s)", simulationTitle);
 
 	Simulation simulation = Simulation.loadXML("../simulations", simulationTitle ~ ".xml");
+
+	logging.infof(LogCategory.SIMULATOR, "run simulation(title=%s)", simulationTitle);
 	
 	simulation.execute(delegate void(CPUSimulator simulator) 
 		{
@@ -61,15 +60,6 @@ void mainConsole(string[] args)
 				}
 			}*/
 		});
-	
-	saveConfigsAndStats();
-}
 
-void main(string[] args) 
-{
-	logging.info(LogCategory.SIMULATOR, "Flexim - A modular and highly configurable multicore simulator written in D");
-	logging.info(LogCategory.SIMULATOR, "Copyright (C) 2010 Min Cai <itecgo@163.com>.");
-	logging.info(LogCategory.SIMULATOR, "");
-	
-	mainConsole(args);
+	Simulation.saveXML(simulation);
 }

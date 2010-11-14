@@ -4,18 +4,18 @@
       <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
       </ContextConfig>
    </SimulationConfig>
-   <SimulationStat duration="197190" totalCycles="22532">
+   <SimulationStat duration="208" totalCycles="22522">
       <ProcessorStat>
          <CoreStat>
             <CacheStat hits="61" noRetryWrites="0" noRetryAccesses="109" writeHits="0" evictions="0" nonblockingReads="109" reads="109" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="61" nonblockingWrites="0" blockingWrites="0" noRetryReads="109" noRetryHits="61" readRetries="0" accesses="109" noRetryReadHits="61">
             </CacheStat>
-            <CacheStat hits="8584" noRetryWrites="89" noRetryAccesses="653" writeHits="5360" evictions="0" nonblockingReads="3273" reads="3273" blockingReads="0" writeRetries="0" writes="5373" noRetryWriteHits="76" readHits="3224" nonblockingWrites="5373" blockingWrites="0" noRetryReads="564" noRetryHits="626" readRetries="0" accesses="8646" noRetryReadHits="550">
+            <CacheStat hits="8536" noRetryWrites="89" noRetryAccesses="653" writeHits="5342" evictions="0" nonblockingReads="3244" reads="3244" blockingReads="0" writeRetries="0" writes="5355" noRetryWriteHits="76" readHits="3194" nonblockingWrites="5355" blockingWrites="0" noRetryReads="564" noRetryHits="626" readRetries="0" accesses="8599" noRetryReadHits="550">
             </CacheStat>
          </CoreStat>
          <ContextStat totalInsts="2661">
          </ContextStat>
       </ProcessorStat>
-      <CacheStat hits="0" noRetryWrites="13" noRetryAccesses="74" writeHits="0" evictions="0" nonblockingReads="61" reads="61" blockingReads="0" writeRetries="0" writes="13" noRetryWriteHits="0" readHits="0" nonblockingWrites="13" blockingWrites="0" noRetryReads="61" noRetryHits="0" readRetries="0" accesses="74" noRetryReadHits="0">
+      <CacheStat hits="1" noRetryWrites="14" noRetryAccesses="75" writeHits="1" evictions="0" nonblockingReads="61" reads="61" blockingReads="0" writeRetries="0" writes="14" noRetryWriteHits="1" readHits="0" nonblockingWrites="14" blockingWrites="0" noRetryReads="61" noRetryHits="1" readRetries="0" accesses="75" noRetryReadHits="0">
       </CacheStat>
       <MainMemoryStat writes="13" reads="61" accesses="74">
       </MainMemoryStat>

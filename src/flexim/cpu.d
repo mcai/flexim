@@ -2075,7 +2075,8 @@ class Thread
 
 class CPUSimulator : Simulator 
 {	
-	this(Simulation simulation) {
+	this(Simulation simulation) 
+	{
 		this.simulation = simulation;
 		this.processor = new Processor(this);
 		
