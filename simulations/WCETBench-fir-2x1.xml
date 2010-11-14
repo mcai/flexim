@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <SimulationStat title="WCETBench-fir-2x1" cwd="../stats/simulations">
    <SimulationConfig architectureConfigTitle="shared_l2_cmp_2x1">
-      <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
+      <ContextConfig workloadSetTitle="WCETBench" workloadTitle="fir">
       </ContextConfig>
-      <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
+      <ContextConfig workloadSetTitle="WCETBench" workloadTitle="fir">
       </ContextConfig>
    </SimulationConfig>
    <SimulationStat duration="1308" totalCycles="23170">

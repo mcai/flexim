@@ -31,7 +31,8 @@ import std.path;
 
 class BpredBtbEntry 
 {
-	this() {
+	this() 
+	{
 	}
 
 	uint addr;
@@ -555,7 +556,8 @@ class FunctionalUnit
 
 class FunctionalUnitPool 
 {
-	static class ListenerContext {
+	static class ListenerContext 
+	{
 		this(ReorderBufferEntry reorderBufferEntry, FunctionalUnit fu) 
 		{
 			this.reorderBufferEntry = reorderBufferEntry;
@@ -1218,7 +1220,8 @@ class Core
 					reorderBufferEntry.srcPhysRegs[iDep] = this.threads[decodeThreadId].renameTable[iDep];
 				}
 				
-				try {
+				try 
+				{
 					foreach(oDep; reorderBufferEntry.oDeps) 
 					{
 						reorderBufferEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
@@ -1280,7 +1283,8 @@ class Core
 		}
 	}
 	
-	void dispatch() {
+	void dispatch() 
+	{
 		static uint dispatchThreadId = 0; 
 		
 		uint numDispatched = 0;
@@ -1730,7 +1734,7 @@ class Thread
 			}
 			
 			if(setNpc()) 
-				{
+			{
 				this.regs.isSpeculative = this.isSpeculative = true;
 			}
 			
@@ -1810,7 +1814,8 @@ class Thread
 				{
 					stdUnknowns ~= loadStoreQueueEntry.ea;
 				}
-				else {
+				else 
+				{
 					/* we know addr & data; a resolved store shadows a previous unresolved one */
 					foreach(ref addr; stdUnknowns) 
 					{

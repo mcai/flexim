@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<WorkloadSet title="CPU2006">
+   <Workload title="416.gamess" cwd="../tests/Workloads/CPU2006/416.gamess" stdin="triazolium.config" exe="gamess_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="999.specrand" cwd="../tests/Workloads/CPU2006/999.specrand" stdin="" exe="specrand_base.i386" argsLiteral="1255432124 234923" stdout="">
+   </Workload>
+   <Workload title="481.wrf" cwd="../tests/Workloads/CPU2006/481.wrf" stdin="" exe="wrf_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="410.bwaves" cwd="../tests/Workloads/CPU2006/410.bwaves" stdin="" exe="bwaves_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="458.sjeng" cwd="../tests/Workloads/CPU2006/458.sjeng" stdin="" exe="sjeng_base.i386" argsLiteral="ref.txt" stdout="">
+   </Workload>
+   <Workload title="434.zeusmp" cwd="../tests/Workloads/CPU2006/434.zeusmp" stdin="" exe="zeusmp_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="459.GemsFDTD" cwd="../tests/Workloads/CPU2006/459.GemsFDTD" stdin="" exe="GemsFDTD_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="470.lbm" cwd="../tests/Workloads/CPU2006/470.lbm" stdin="" exe="lbm_base.i386" argsLiteral="3000 reference.dat 0 0 100_100_130_ldc.of" stdout="">
+   </Workload>
+   <Workload title="403.gcc" cwd="../tests/Workloads/CPU2006/403.gcc" stdin="" exe="gcc_base.i386" argsLiteral="166.i -o 166.s" stdout="">
+   </Workload>
+   <Workload title="998.specrand" cwd="../tests/Workloads/CPU2006/998.specrand" stdin="" exe="specrand_base.i386" argsLiteral="1255432124 234923" stdout="">
+   </Workload>
+   <Workload title="444.namd" cwd="../tests/Workloads/CPU2006/444.namd" stdin="" exe="namd_base.i386" argsLiteral="--input namd.input --iterations 38 --output namd.out" stdout="">
+   </Workload>
+   <Workload title="454.calculix" cwd="../tests/Workloads/CPU2006/454.calculix" stdin="" exe="calculix_base.i386" argsLiteral="-i hyperviscoplastic" stdout="">
+   </Workload>
+   <Workload title="464.h264ref" cwd="../tests/Workloads/CPU2006/464.h264ref" stdin="" exe="h264ref_base.i386" argsLiteral="-d sss_encoder_main.cfg" stdout="">
+   </Workload>
+   <Workload title="400.perlbench" cwd="../tests/Workloads/CPU2006/400.perlbench" stdin="" exe="perlbench_base.i386" argsLiteral="checkspam.pl 2500 5 25 11 150 1 1 1 1" stdout="">
+   </Workload>
+   <Workload title="437.leslie3d" cwd="../tests/Workloads/CPU2006/437.leslie3d" stdin="leslie3d.in" exe="leslie3d_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="445.gobmk" cwd="../tests/Workloads/CPU2006/445.gobmk" stdin="trevord.tst" exe="gobmk_base.i386" argsLiteral="--quiet --mode gtp" stdout="">
+   </Workload>
+   <Workload title="436.cactusADM" cwd="../tests/Workloads/CPU2006/436.cactusADM" stdin="" exe="cactusADM_base.i386" argsLiteral="benchADM.par" stdout="">
+   </Workload>
+   <Workload title="435.gromacs" cwd="../tests/Workloads/CPU2006/435.gromacs" stdin="" exe="gromacs_base.i386" argsLiteral="-silent -deffnm gromacs -nice 0" stdout="">
+   </Workload>
+   <Workload title="465.tonto" cwd="../tests/Workloads/CPU2006/465.tonto" stdin="" exe="tonto_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="482.sphinx3" cwd="../tests/Workloads/CPU2006/482.sphinx3" stdin="" exe="sphinx3_base.i386" argsLiteral="ctlfile . args.an4" stdout="">
+   </Workload>
+   <Workload title="450.soplex" cwd="../tests/Workloads/CPU2006/450.soplex" stdin="" exe="soplex_base.i386" argsLiteral="-m3500 ref.mps" stdout="">
+   </Workload>
+   <Workload title="462.libquantum" cwd="../tests/Workloads/CPU2006/462.libquantum" stdin="" exe="libquantum_base.i386" argsLiteral="1397 8" stdout="">
+   </Workload>
+   <Workload title="447.dealII" cwd="../tests/Workloads/CPU2006/447.dealII" stdin="" exe="dealII_base.i386" argsLiteral="23" stdout="">
+   </Workload>
+   <Workload title="401.bzip2" cwd="../tests/Workloads/CPU2006/401.bzip2" stdin="" exe="bzip2_base.i386" argsLiteral="input.source 280" stdout="">
+   </Workload>
+   <Workload title="473.astar" cwd="../tests/Workloads/CPU2006/473.astar" stdin="" exe="astar_base.i386" argsLiteral="rivers.cfg" stdout="">
+   </Workload>
+   <Workload title="429.mcf" cwd="../tests/Workloads/CPU2006/429.mcf" stdin="" exe="mcf_base.i386" argsLiteral="inp.in" stdout="">
+   </Workload>
+   <Workload title="456.hmmer" cwd="../tests/Workloads/CPU2006/456.hmmer" stdin="" exe="hmmer_base.i386" argsLiteral="--fixed 0 --mean 500 --num 500000 --sd 350 --seed 0 retro.hmm" stdout="">
+   </Workload>
+   <Workload title="471.omnetpp" cwd="../tests/Workloads/CPU2006/471.omnetpp" stdin="" exe="omnetpp_base.i386" argsLiteral="omnetpp.ini" stdout="">
+   </Workload>
+   <Workload title="433.milc" cwd="../tests/Workloads/CPU2006/433.milc" stdin="su3imp.in" exe="milc_base.i386" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="453.povray" cwd="../tests/Workloads/CPU2006/453.povray" stdin="" exe="povray_base.i386" argsLiteral="SPEC-Workload-ref.ini" stdout="">
+   </Workload>
+   <Workload title="483.xalancbmk" cwd="../tests/Workloads/CPU2006/483.xalancbmk" stdin="" exe="xalancbmk_base.i386" argsLiteral="-v t5.xml xalanc.xsl" stdout="">
+   </Workload>
+</WorkloadSet>

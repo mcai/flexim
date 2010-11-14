@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <SimulationStat title="WCETBench-fir-1x1" cwd="../stats/simulations">
    <SimulationConfig architectureConfigTitle="shared_l2_cmp_1x1">
-      <ContextConfig benchmarkSuiteTitle="WCETBench" benchmarkTitle="fir">
+      <ContextConfig workloadSetTitle="WCETBench" workloadTitle="fir">
       </ContextConfig>
    </SimulationConfig>
-   <SimulationStat duration="208" totalCycles="22522">
+   <SimulationStat duration="211" totalCycles="22593">
       <ProcessorStat>
          <CoreStat>
             <CacheStat hits="61" noRetryWrites="0" noRetryAccesses="109" writeHits="0" evictions="0" nonblockingReads="109" reads="109" blockingReads="0" writeRetries="0" writes="0" noRetryWriteHits="0" readHits="61" nonblockingWrites="0" blockingWrites="0" noRetryReads="109" noRetryHits="61" readRetries="0" accesses="109" noRetryReadHits="61">
             </CacheStat>
-            <CacheStat hits="8536" noRetryWrites="89" noRetryAccesses="653" writeHits="5342" evictions="0" nonblockingReads="3244" reads="3244" blockingReads="0" writeRetries="0" writes="5355" noRetryWriteHits="76" readHits="3194" nonblockingWrites="5355" blockingWrites="0" noRetryReads="564" noRetryHits="626" readRetries="0" accesses="8599" noRetryReadHits="550">
+            <CacheStat hits="8566" noRetryWrites="89" noRetryAccesses="653" writeHits="5375" evictions="0" nonblockingReads="3239" reads="3239" blockingReads="0" writeRetries="0" writes="5388" noRetryWriteHits="76" readHits="3191" nonblockingWrites="5388" blockingWrites="0" noRetryReads="564" noRetryHits="626" readRetries="0" accesses="8627" noRetryReadHits="550">
             </CacheStat>
          </CoreStat>
          <ContextStat totalInsts="2661">

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<WorkloadSet title="Olden_Custom1">
+   <Workload title="mst_prepush" cwd="../tests/Workloads/Olden/mst/prepush" stdin="" exe="" argsLiteral="100" stdout="">
+   </Workload>
+   <Workload title="mst_original" cwd="../tests/Workloads/Olden/mst/original" stdin="" exe="mst" argsLiteral="200" stdout="">
+   </Workload>
+   <Workload title="em3d_original" cwd="../tests/Workloads/Olden/em3d/original" stdin="" exe="em3d" argsLiteral="200 100 75 1" stdout="">
+   </Workload>
+   <Workload title="em3d_prepush" cwd="../tests/Workloads/Olden/em3d/prepush" stdin="" exe="" argsLiteral="200 100 75 1" stdout="">
+   </Workload>
+</WorkloadSet>

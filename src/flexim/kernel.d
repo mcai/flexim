@@ -671,7 +671,8 @@ class Process
 					if(shdr.sh_type == SHT_NOBITS) 
 					{
 						thread.mem.zero(shdr.sh_addr, shdr.sh_size);
-					} else 
+					} 
+					else 
 					{
 						ubyte* buf = binary.ptr!(ubyte)(shdr.sh_offset);
 						thread.mem.initBlock(shdr.sh_addr, shdr.sh_size, buf);

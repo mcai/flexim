@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<WorkloadSet title="CPU2006_Custom1">
+   <Workload title="462.libquantum_original" cwd="../tests/Workloads/CPU2006/462.libquantum/original" stdin="" exe="462.libquantum" argsLiteral="15 8" stdout="">
+   </Workload>
+   <Workload title="462.libquantum_prepush" cwd="../tests/Workloads/CPU2006/462.libquantum/prepush" stdin="" exe="" argsLiteral="15 8" stdout="">
+   </Workload>
+   <Workload title="429.mcf_original" cwd="../tests/Workloads/CPU2006/429.mcf/original" stdin="" exe="" argsLiteral="data/test/input/inp.in" stdout="">
+   </Workload>
+   <Workload title="429.mcf_prepush" cwd="../tests/Workloads/CPU2006/429.mcf/prepush" stdin="" exe="" argsLiteral="data/test/input/inp.in" stdout="">
+   </Workload>
+</WorkloadSet>

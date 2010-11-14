@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<WorkloadSet title="WCETBench">
+   <Workload title="fir" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="fir" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="crc" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="crc" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="ludcmp" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="ludcmp" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="qsort-exam" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="qsort-exam" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="cnt" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="cnt" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="insertsort" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="insertsort" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="minmax" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="minmax" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="matmult" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="matmult" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="edn" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="edn" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="fft1" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="fft1" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="nsichneu" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="nsichneu" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="bs" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="bs" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="adpcm" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="adpcm" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="qurt" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="qurt" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="lcdnum" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="lcdnum" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="minver" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="minver" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="fdct" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="fdct" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="statemate" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="statemate" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="cover" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="cover" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="duff" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="duff" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="select" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="select" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="fac" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="fac" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="ns" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="ns" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="expint" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="expint" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="janne_complex" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="janne_complex" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="compress" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="compress" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="jfdctint" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="jfdctint" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="loop3" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="loop3" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="sqrt" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="sqrt" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="bsort100" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="bsort100" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="lms" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="lms" argsLiteral="" stdout="">
+   </Workload>
+   <Workload title="fibcall" cwd="../tests/benchmarks/wcet_bench/" stdin="" exe="fibcall" argsLiteral="" stdout="">
+   </Workload>
+</WorkloadSet>

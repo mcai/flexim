@@ -464,7 +464,8 @@ class DelegateEventQueue: EventProcessor
 {
 	alias void delegate() DelegateT; 
 	
-	class EventT {
+	class EventT 
+	{
 		this(DelegateT del, ulong when) 
 		{
 			this.del = del;
@@ -715,7 +716,7 @@ void serialize(XMLConfig entry, Element rootElement, Element element)
 {
 	foreach(key, value; entry) 
 	{
-        element.tag.attr[key] = value;
+		element.tag.attr[key] = value;
 	}
 	
 	foreach(child; entry.entries) 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <SimulationStat title="Olden_Custom1-mst_original-1x1" cwd="../stats/simulations">
    <SimulationConfig architectureConfigTitle="shared_l2_cmp_1x1">
-      <ContextConfig benchmarkSuiteTitle="Olden_Custom1" benchmarkTitle="mst_original">
+      <ContextConfig workloadSetTitle="Olden_Custom1" workloadTitle="mst_original">
       </ContextConfig>
    </SimulationConfig>
    <SimulationStat duration="545076" totalCycles="20451713">

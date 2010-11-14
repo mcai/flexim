@@ -63,7 +63,8 @@ class MemoryPage
 
 class SegmentationFaultException: Exception 
 {
-	this(uint addr) {
+	this(uint addr) 
+	{
 		super(format("SegmentationFaultException @ 0x%x", addr));
 		this.addr = addr;
 	}
@@ -372,7 +373,8 @@ class Memory
 			 * and return 0s on read. */
 			if(page is null && !this.safe) 
 			{
-				switch(access) {
+				switch(access) 
+				{
 					/* Return 0s and exit. */
 					case MemoryAccessType.READ:
 					case MemoryAccessType.EXEC:
@@ -489,8 +491,8 @@ class Memory
 			assert(isAligned(size));
 			tag_start = addr;
 			tag_end = addr;
-			for(; ; ) {
-				
+			for(; ; ) 
+			{				
 				/* Address space overflow */
 				if(tag_start == 0) 
 				{
@@ -559,7 +561,8 @@ class Memory
 			/* Allocate pages */
 			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) 
 			{
-				if(this.getPage(tag) !is null) {
+				if(this.getPage(tag) !is null) 
+				{
 					this.removePage(tag);
 				}
 			}
@@ -581,7 +584,8 @@ class Memory
 			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) 
 			{
 				page = this.getPage(tag);
-				if(page !is null) {
+				if(page !is null) 
+				{
 					page.perm = perm;
 				}
 			}
@@ -592,7 +596,8 @@ class Memory
 	private:
 		MemoryPage opIndex(uint index) 
 		{
-			if(index in this.pages) {
+			if(index in this.pages) 
+			{
 				return this.pages[index];
 			}
 
@@ -679,9 +684,7 @@ class MMU
 		while(page) 
 		{
 			if(page.vtladdr == tag) 
-			{
 				break;
-			}
 			page = page.next;
 		}
 
@@ -1532,7 +1535,10 @@ class Sequencer: CoherentCacheNode
 	
 	void load(uint addr, bool isRetry, ReorderBufferEntry rs, void delegate(ReorderBufferEntry rs) onCompletedCallback2) 
 	{		
-		this.load(addr, isRetry, {onCompletedCallback2(rs);});
+		this.load(addr, isRetry, 
+		{
+			onCompletedCallback2(rs);
+		});
 	}
 	
 	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) 
@@ -1703,7 +1709,10 @@ class CoherentCache: CoherentCacheNode
 			}
 			else 
 			{
-				this.retry({this.findAndLock(addr, isBlocking, isRead, true, onCompletedCallback);});
+				this.retry(
+					{
+						this.findAndLock(addr, isBlocking, isRead, true, onCompletedCallback);
+					});
 			}
 		}
 		else 
@@ -1770,7 +1779,10 @@ class CoherentCache: CoherentCacheNode
 							{
 								this.stat.readRetries.value = this.stat.readRetries.value + 1;
 								dirLock.unlock();
-								this.retry({this.load(addr, true, onCompletedCallback);});
+								this.retry(
+									{
+										this.load(addr, true, onCompletedCallback);
+									});
 							}
 						});
 					}
@@ -1784,7 +1796,10 @@ class CoherentCache: CoherentCacheNode
 				else 
 				{
 					this.stat.readRetries.value = this.stat.readRetries.value + 1;
-					this.retry({this.load(addr, true, onCompletedCallback);});
+					this.retry(
+						{
+							this.load(addr, true, onCompletedCallback);
+						});
 				}
 			});
 	}
@@ -1814,7 +1829,10 @@ class CoherentCache: CoherentCacheNode
 								{
 									this.stat.writeRetries.value = this.stat.writeRetries.value + 1;
 									dirLock.unlock();
-									this.retry({this.store(addr, true, onCompletedCallback);});
+									this.retry(
+										{
+											this.store(addr, true, onCompletedCallback);
+										});
 								}
 							});
 					}
@@ -1829,7 +1847,10 @@ class CoherentCache: CoherentCacheNode
 				else 
 				{
 					this.stat.writeRetries.value = this.stat.writeRetries.value + 1;
-					this.retry({this.store(addr, true, onCompletedCallback);});
+					this.retry(
+						{
+							this.store(addr, true, onCompletedCallback);
+						});
 				}
 			});
 	}
@@ -1912,13 +1933,15 @@ class CoherentCache: CoherentCacheNode
 											this.evictWritebackFinish(source, hasError, set, way, tag, dirLock, onReceiveReplyCallback);
 										});
 								}
-								else {
+								else 
+								{
 									this.evictWritebackFinish(source, false, set, way, tag, dirLock, onReceiveReplyCallback);
 								}
 							});
 					}
 				}
-				else {
+				else 
+				{
 					onReceiveReplyCallback(true);
 				}
 			});
@@ -2139,7 +2162,8 @@ class CoherentCache: CoherentCacheNode
 						{
 							if(source.next == this) 
 							{
-								if(state == MESIState.MODIFIED || state == MESIState.EXCLUSIVE) {
+								if(state == MESIState.MODIFIED || state == MESIState.EXCLUSIVE) 
+								{
 									writeRequestUpdownFinish(source, false, set, way, tag, state, dirLock, onCompletedCallback);
 								}
 								else 
@@ -2286,7 +2310,10 @@ class MemoryController: CoherentCacheNode
 			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
 		this.stat.writes.value = this.stat.writes.value + 1;
-		this.schedule({onReceiveReplyCallback(false);}, this.latency);
+		this.schedule(
+			{
+				onReceiveReplyCallback(false);
+			}, this.latency);
 	}
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) 
@@ -2295,7 +2322,10 @@ class MemoryController: CoherentCacheNode
 			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
 		this.stat.reads.value = this.stat.reads.value + 1;
-		this.schedule({onCompletedCallback(false, false);}, this.latency);
+		this.schedule(
+			{
+				onCompletedCallback(false, false);
+			}, this.latency);
 	}
 	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) 
@@ -2304,7 +2334,10 @@ class MemoryController: CoherentCacheNode
 			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
 		this.stat.writes.value = this.stat.writes.value + 1;
-		this.schedule({onCompletedCallback(false);}, this.latency);
+		this.schedule(
+			{
+				onCompletedCallback(false);
+			}, this.latency);
 	}
 	
 	MainMemoryConfig config;

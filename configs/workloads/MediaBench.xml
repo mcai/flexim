@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<WorkloadSet title="MediaBench">
+   <Workload title="adpcm-dec" cwd="../tests/Workloads/MediaBench/adpcm-dec" stdin="clinton.adpcm" exe="rawdaudio" argsLiteral="" stdout="out.pcm">
+   </Workload>
+   <Workload title="adpcm-enc" cwd="../tests/Workloads/MediaBench/adpcm-enc" stdin="clinton.pcm" exe="rawcaudio" argsLiteral="" stdout="out.adpcm">
+   </Workload>
+   <Workload title="g721-dec" cwd="../tests/Workloads/MediaBench/g721-dec" stdin="" exe="decode" argsLiteral="-4 -l -f clinton.g721" stdout="">
+   </Workload>
+   <Workload title="g721-enc" cwd="../tests/Workloads/MediaBench/g721-enc" stdin="" exe="encode" argsLiteral="-4 -l -f clinton.pcm" stdout="">
+   </Workload>
+   <Workload title="jpeg-dec" cwd="../tests/Workloads/MediaBench/jpeg-dec" stdin="" exe="djpeg" argsLiteral="-dct int -ppm -outfile testout.ppm testimg.jpg" stdout="">
+   </Workload>
+   <Workload title="jpeg-enc" cwd="../tests/Workloads/MediaBench/jpeg-enc" stdin="" exe="cjpeg" argsLiteral="-dct int -progressive -opt -outfile testout.jpg testimg.ppm" stdout="">
+   </Workload>
+   <Workload title="pegwit-dec" cwd="../tests/Workloads/MediaBench/pegwit-dec" stdin="my.sec" exe="pegwit" argsLiteral="-d pegwit.enc pegwit.dec" stdout="">
+   </Workload>
+   <Workload title="pegwit-enc" cwd="../tests/Workloads/MediaBench/pegwit-enc" stdin="encryption_junk" exe="pegwit" argsLiteral="-e my.pub pgptest.plain pegwit.enc" stdout="">
+   </Workload>
+   <Workload title="rasta" cwd="../tests/Workloads/MediaBench/rasta" stdin="ex5_c1.wav" exe="rasta" argsLiteral="-z -A -J -S 8000 -n 12 -f map_weights.dat" stdout="ex5.asc">
+   </Workload>
+   <Workload title="epic-dec" cwd="../tests/Workloads/MediaBench/epic-dec" stdin="" exe="unepic" argsLiteral="test_image.E" stdout="">
+   </Workload>
+   <Workload title="epic-enc" cwd="../tests/Workloads/MediaBench/epic-enc" stdin="" exe="epic" argsLiteral="test_image.pgm -b 25" stdout="">
+   </Workload>
+   <Workload title="ghostscript" cwd="../tests/Workloads/MediaBench/ghostscript" stdin="" exe="gs" argsLiteral="-sDEVICE=ppm -sOutputFile=test.ppm -dNOPAUSE -q -- tiger.ps" stdout="">
+   </Workload>
+   <Workload title="gsm-dec" cwd="../tests/Workloads/MediaBench/gsm-dec" stdin="" exe="untoast" argsLiteral="-fpl clinton.pcm.gsm" stdout="">
+   </Workload>
+   <Workload title="gsm-enc" cwd="../tests/Workloads/MediaBench/gsm-enc" stdin="" exe="toast" argsLiteral="-fpl clinton.pcm" stdout="">
+   </Workload>
+   <Workload title="mpeg-dec" cwd="../tests/Workloads/MediaBench/mpeg-dec" stdin="" exe="mpeg2decode" argsLiteral="-b mei16v2.m2v -r -f -o0 rec%d" stdout="">
+   </Workload>
+   <Workload title="mpeg-enc" cwd="../tests/Workloads/MediaBench/mpeg-enc" stdin="" exe="mpeg2encode" argsLiteral="options.par out.m2v" stdout="">
+   </Workload>
+</WorkloadSet>

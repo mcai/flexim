@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<WorkloadSet title="Splash2">
+   <Workload title="fft" cwd="../tests/benchmarks/Splash2/fft" stdin="" exe="fft.i386" argsLiteral="-m18 -p${nthreads} -n65536 -l4" stdout="">
+   </Workload>
+   <Workload title="radix" cwd="../tests/benchmarks/Splash2/radix" stdin="" exe="radix.i386" argsLiteral="-p${nthreads} -r4096 -n262144 -m524288" stdout="">
+   </Workload>
+   <Workload title="lu" cwd="../tests/benchmarks/Splash2/lu" stdin="" exe="lu.i386" argsLiteral="-p${nthreads} -n2048 -b16" stdout="">
+   </Workload>
+   <Workload title="barnes" cwd="../tests/benchmarks/Splash2/barnes" stdin="input" exe="barnes.i386" argsLiteral="${nthreads}" stdout="">
+   </Workload>
+   <Workload title="ocean" cwd="../tests/benchmarks/Splash2/ocean" stdin="" exe="ocean.i386" argsLiteral="-n258 -p${nthreads} -e1e-07 -r20000 -t28800" stdout="">
+   </Workload>
+   <Workload title="water-spatial" cwd="../tests/benchmarks/Splash2/water-spatial" stdin="input" exe="water-spatial.i386" argsLiteral="${nthreads}" stdout="">
+   </Workload>
+   <Workload title="fmm" cwd="../tests/benchmarks/Splash2/fmm" stdin="input" exe="fmm.i386" argsLiteral="${nthreads}" stdout="">
+   </Workload>
+   <Workload title="cholesky" cwd="../tests/benchmarks/Splash2/cholesky" stdin="tk14.O" exe="cholesky.i386" argsLiteral="-p${nthreads}" stdout="">
+   </Workload>
+   <Workload title="radiosity" cwd="../tests/benchmarks/Splash2/radiosity" stdin="" exe="radiosity.i386" argsLiteral="-batch -room -p${nthreads}" stdout="">
+   </Workload>
+   <Workload title="water-nsquared" cwd="../tests/benchmarks/Splash2/water-nsquared" stdin="input" exe="water-nsquared.i386" argsLiteral="${nthreads}" stdout="">
+   </Workload>
+   <Workload title="raytrace" cwd="../tests/benchmarks/Splash2/raytrace" stdin="" exe="raytrace.i386" argsLiteral="-p${nthreads} balls4.env" stdout="">
+   </Workload>
+</WorkloadSet>

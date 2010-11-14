@@ -239,15 +239,16 @@ string disassemble(MachInst machInst, uint pc, Thread thread)
 	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.core.isa.decodeMachInst(machInst).mnemonic);
 
 	
-	if(machInst.data == 0x00000000) {
+	if(machInst.data == 0x00000000) 
+	{
 		return buf;
 	}
 
 	switch(machInst.getType()) 
-		{
+	{
 		case MachInstType.J:
 			buf ~= format("%x", machInst[JMPTARG]);
-		break;
+			break;
 		case MachInstType.I:
 			if(machInst.isOneOpBranch()) 
 			{
@@ -265,7 +266,7 @@ string disassemble(MachInst machInst, uint pc, Thread thread)
 			{
 				buf ~= format("$%s, $%s, %d", mips_gpr_names[machInst[RT]], mips_gpr_names[machInst[RS]], cast(short) machInst[INTIMM]);
 			}
-		break;
+			break;
 		case MachInstType.F:
 			if(machInst.isCVT()) 
 			{
@@ -291,7 +292,7 @@ string disassemble(MachInst machInst, uint pc, Thread thread)
 			{
 				buf ~= format("$f%d, $f%d, $f%d", machInst[FD], machInst[FS], machInst[FT]);
 			}
-		break;
+			break;
 		case MachInstType.R:
 			if(machInst.isSyscall()) 
 			{
@@ -320,7 +321,7 @@ string disassemble(MachInst machInst, uint pc, Thread thread)
 			{
 				buf ~= format("$%s, $%s, $%s", mips_gpr_names[machInst[RD]], mips_gpr_names[machInst[RS]], mips_gpr_names[machInst[RT]]);
 			}
-		break;
+			break;
 		default:
 			logging.fatal(LogCategory.INSTRUCTION, "you can not reach here");
 	}
@@ -912,7 +913,8 @@ class DynamicInst
 
 class MipsISA : ISA 
 {
-	this() {
+	this() 
+	{
 	}
 	
 	override StaticInst decodeMachInst(MachInst machInst) 
@@ -1849,7 +1851,8 @@ class MipsISA : ISA
 												switch(machInst[FUNC_HI]) 
 												{
 													case 0x0:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Add_ps", machInst);
 															case 0x1:
@@ -2867,7 +2870,8 @@ class Syscall: StaticInst
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, 2);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.syscall(thread.regs.intRegs.get(2));
 		}
 }
@@ -3203,7 +3207,8 @@ class Bltz: Branch
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			if(cast(int) thread.regs.intRegs.get(this[RS]) < 0) 
 			{
 				this.branch(thread);
@@ -3298,7 +3303,8 @@ class Bc1f: Branch
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
-			if(cond) {
+			if(cond) 
+			{
 				this.branch(thread);
 			}
 		}
@@ -3322,7 +3328,8 @@ class Bc1t: Branch
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
-			if(cond) {
+			if(cond) 
+			{
 				this.branch(thread);
 			}
 		}
@@ -3346,10 +3353,12 @@ class Bc1fl: Branch
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
-			if(cond) {
+			if(cond) 
+			{
 				this.branch(thread);
 			}
-			else {
+			else 
+			{
 				thread.regs.npc = thread.regs.nnpc;
 				thread.regs.nnpc = thread.regs.nnpc + uint.sizeof;
 			}
@@ -3930,7 +3939,8 @@ class Divu: StaticInst
 			rs = thread.regs.intRegs.get(this[RS]);
 			rt = thread.regs.intRegs.get(this[RT]);
 
-			if(rt != 0) {
+			if(rt != 0) 
+			{
 				lo = cast(uint) (rs / rt);
 				hi = cast(uint) (rs % rt);
 			}
@@ -3967,7 +3977,8 @@ class Div: StaticInst
 			rs = sext(thread.regs.intRegs.get(this[RS]), 32);
 			rt = sext(thread.regs.intRegs.get(this[RT]), 32);
 
-			if(rt != 0) {
+			if(rt != 0) 
+			{
 				lo = cast(uint) (rs / rt);
 				hi = cast(uint) (rs % rt);
 			}
@@ -5641,7 +5652,8 @@ class Fault
 	public:
 		abstract string getName();
 
-		void invoke(Thread thread) {
+		void invoke(Thread thread) 
+		{
 			logging.panicf(LogCategory.INSTRUCTION, "fault (%s) detected @ PC %p", this.getName(), thread.regs.pc);
 		}
 }

@@ -28,7 +28,7 @@ import std.getopt;
 import std.path;
 import std.regexp;
 
-class Benchmark 
+class Workload 
 {
 	this(string title, string cwd, string exe, string argsLiteral, string stdin = null, string stdout = null, uint numThreadsPerCore = 1) 
 	{
@@ -48,7 +48,7 @@ class Benchmark
 	
 	override string toString() 
 	{
-		return format("Benchmark[title=%s, cwd=%s, exe=%s, argsLiteral=%s, stdin=%s, stdout=%s, numThreadsPerCore=%d]",
+		return format("Workload[title=%s, cwd=%s, exe=%s, argsLiteral=%s, stdin=%s, stdout=%s, numThreadsPerCore=%d]",
 			this.title, this.cwd, this.exe, this.argsLiteral, this.stdin, this.stdout, this.numThreadsPerCore);
 	}
 	
@@ -60,76 +60,77 @@ class Benchmark
 	string stdout;
 	
 	uint numThreadsPerCore;
-	BenchmarkSuite suite;
+	WorkloadSet parent;
 }
 
-class BenchmarkSuite 
+class WorkloadSet 
 {	
-	this(string title) {
+	this(string title) 
+	{
 		this.title = title;
 	}
 	
-	void register(Benchmark benchmark)
+	void register(Workload workload)
 	in
 	{
-		assert(!(benchmark.title in this.benchmarks), format("%s.%s", this.title, benchmark.title));
+		assert(!(workload.title in this.workloads), format("%s.%s", this.title, workload.title));
 	}
 	body 
 	{
-		benchmark.suite = this;
-		this.benchmarks[benchmark.title] = benchmark;
+		workload.parent = this;
+		this.workloads[workload.title] = workload;
 	}
 	
-	Benchmark opIndex(string index) 
+	Workload opIndex(string index) 
 	{
-		return this.benchmarks[index];
+		return this.workloads[index];
 	}
 	
 	override string toString() 
 	{
-		return format("BenchmarkSuite[title=%s, benchmarks.length=%d]", this.title, this.benchmarks.length);
+		return format("WorkloadSet[title=%s, workloads.length=%d]", this.title, this.workloads.length);
 	}
 	
-	static BenchmarkSuite loadXML(string cwd, string fileName) 
+	static WorkloadSet loadXML(string cwd, string fileName) 
 	{
-		return BenchmarkSuiteXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
+		return WorkloadSetXMLFileSerializer.singleInstance.loadXML(join(cwd, fileName));
 	}
 	
-	static void saveXML(BenchmarkSuite benchmarkSuite) 
+	static void saveXML(WorkloadSet workloadSet) 
 	{
-		saveXML(benchmarkSuite, "../configs/benchmarks", benchmarkSuite.title ~ ".xml");
+		saveXML(workloadSet, "../configs/workloads", workloadSet.title ~ ".xml");
 	}
 	
-	static void saveXML(BenchmarkSuite benchmarkSuite, string cwd, string fileName) 
+	static void saveXML(WorkloadSet workloadSet, string cwd, string fileName) 
 	{
-		BenchmarkSuiteXMLFileSerializer.singleInstance.saveXML(benchmarkSuite, join(cwd, fileName));
+		WorkloadSetXMLFileSerializer.singleInstance.saveXML(workloadSet, join(cwd, fileName));
 	}
 	
 	string title;
-	Benchmark[string] benchmarks;
+	Workload[string] workloads;
 }
 
-class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite) 
+class WorkloadSetXMLFileSerializer: XMLFileSerializer!(WorkloadSet) 
 {
 	this() 
 	{
 	}
 	
-	override XMLConfigFile save(BenchmarkSuite benchmarkSuite) 
+	override XMLConfigFile save(WorkloadSet workloadSet) 
 	{
-		XMLConfigFile xmlConfigFile = new XMLConfigFile("BenchmarkSuite");
+		XMLConfigFile xmlConfigFile = new XMLConfigFile("WorkloadSet");
 		
-		xmlConfigFile["title"] = benchmarkSuite.title;
+		xmlConfigFile["title"] = workloadSet.title;
 		
-		foreach(benchmarkTitle, benchmark; benchmarkSuite.benchmarks) 
+		foreach(workloadTitle, workload; workloadSet.workloads) 
 		{
-			XMLConfig xmlConfig = new XMLConfig("Benchmark");
-			xmlConfig["title"] = benchmark.title;
-			xmlConfig["cwd"] = benchmark.cwd;
-			xmlConfig["exe"] = benchmark.exe;
-			xmlConfig["argsLiteral"] = benchmark.argsLiteral;
-			xmlConfig["stdin"] = benchmark.stdin;
-			xmlConfig["stdout"] = benchmark.stdout;
+			XMLConfig xmlConfig = new XMLConfig("Workload");
+			xmlConfig["title"] = workload.title;
+			xmlConfig["cwd"] = workload.cwd;
+			xmlConfig["exe"] = workload.exe;
+			xmlConfig["argsLiteral"] = workload.argsLiteral;
+			xmlConfig["stdin"] = workload.stdin;
+			xmlConfig["stdout"] = workload.stdout;
 			
 			xmlConfigFile.entries ~= xmlConfig;
 		}
@@ -137,11 +138,11 @@ class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite)
 		return xmlConfigFile;
 	}
 	
-	override BenchmarkSuite load(XMLConfigFile xmlConfigFile) 
+	override WorkloadSet load(XMLConfigFile xmlConfigFile) 
 	{
 		string bs_title = xmlConfigFile["title"];
 		
-		BenchmarkSuite benchmarkSuite = new BenchmarkSuite(bs_title);
+		WorkloadSet workloadSet = new WorkloadSet(bs_title);
 		
 		foreach(entry; xmlConfigFile.entries) 
 		{
@@ -152,19 +153,19 @@ class BenchmarkSuiteXMLFileSerializer: XMLFileSerializer!(BenchmarkSuite)
 			string stdin = entry["stdin"];
 			string stdout = entry["stdout"];
 			
-			Benchmark benchmark = new Benchmark(title, cwd, exe, argsLiteral, stdin, stdout);
-			benchmarkSuite.register(benchmark);
+			Workload workload = new Workload(title, cwd, exe, argsLiteral, stdin, stdout);
+			workloadSet.register(workload);
 		}
 		
-		return benchmarkSuite;
+		return workloadSet;
 	}
 	
 	static this() 
 	{
-		singleInstance = new BenchmarkSuiteXMLFileSerializer();
+		singleInstance = new WorkloadSetXMLFileSerializer();
 	}
 	
-	static BenchmarkSuiteXMLFileSerializer singleInstance;
+	static WorkloadSetXMLFileSerializer singleInstance;
 }
 
 abstract class Config(ConfigT) 
@@ -173,7 +174,8 @@ abstract class Config(ConfigT)
 
 class CacheConfig: Config!(CacheConfig) 
 {
-	this(string name, uint level, uint numSets, uint assoc, uint blockSize, uint hitLatency, uint missLatency, CacheReplacementPolicy policy) {
+	this(string name, uint level, uint numSets, uint assoc, uint blockSize, uint hitLatency, uint missLatency, CacheReplacementPolicy policy) 
+	{
 		this.name = name;
 		this.level = level;
 		this.numSets = numSets;
@@ -197,7 +199,8 @@ class CacheConfig: Config!(CacheConfig)
 
 class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) 
 {
-	this() {		
+	this() 
+	{		
 	}
 	
 	override XMLConfig save(CacheConfig cacheConfig) 
@@ -257,7 +260,8 @@ class MainMemoryConfig: Config!(MainMemoryConfig)
 
 class MainMemoryConfigXMLSerializer: XMLSerializer!(MainMemoryConfig) 
 {
-	this() {
+	this() 
+	{
 	}
 	
 	override XMLConfig save(MainMemoryConfig mainMemoryConfig) 
@@ -288,7 +292,7 @@ class MainMemoryConfigXMLSerializer: XMLSerializer!(MainMemoryConfig)
 
 class ContextConfig: Config!(ContextConfig) 
 {
-	this(Benchmark workload) 
+	this(Workload workload) 
 	{
 		this.workload = workload;
 	}
@@ -298,7 +302,7 @@ class ContextConfig: Config!(ContextConfig)
 		return format("ContextConfig[workload=%s]", this.workload);
 	}
 
-	Benchmark workload;
+	Workload workload;
 }
 
 class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig) 
@@ -311,18 +315,18 @@ class ContextConfigXMLSerializer: XMLSerializer!(ContextConfig)
 	{
 		XMLConfig xmlConfig = new XMLConfig("ContextConfig");
 		
-		xmlConfig["benchmarkSuiteTitle"] = contextConfig.workload.suite.title;
-		xmlConfig["benchmarkTitle"] = contextConfig.workload.title;
+		xmlConfig["workloadSetTitle"] = contextConfig.workload.parent.title;
+		xmlConfig["workloadTitle"] = contextConfig.workload.title;
 		
 		return xmlConfig;
 	}
 	
 	override ContextConfig load(XMLConfig xmlConfig) 
 	{
-		string benchmarkSuiteTitle = xmlConfig["benchmarkSuiteTitle"];
-		string benchmarkTitle = xmlConfig["benchmarkTitle"];
+		string workloadSetTitle = xmlConfig["workloadSetTitle"];
+		string workloadTitle = xmlConfig["workloadTitle"];
 		
-		Benchmark workload = BenchmarkSuite.loadXML("../configs/benchmarks", benchmarkSuiteTitle ~ ".xml")[benchmarkTitle];
+		Workload workload = WorkloadSet.loadXML("../configs/workloads", workloadSetTitle ~ ".xml")[workloadTitle];
 		
 		ContextConfig contextConfig = new ContextConfig(workload);
 		return contextConfig;
@@ -427,7 +431,8 @@ class ProcessorConfig: Config!(ProcessorConfig)
 
 class ProcessorConfigXMLSerializer: XMLSerializer!(ProcessorConfig) 
 {
-	this() {
+	this() 
+	{
 	}
 	
 	override XMLConfig save(ProcessorConfig processorConfig) 
@@ -882,7 +887,8 @@ class MainMemoryStat: Stat!(MainMemoryStat)
 
 class MainMemoryStatXMLSerializer: XMLSerializer!(MainMemoryStat) 
 {
-	this() {
+	this() 
+	{
 	}
 	
 	override XMLConfig save(MainMemoryStat mainMemoryStat) {
@@ -1335,7 +1341,8 @@ class Simulation
 
 class SimulationXMLFileSerializer: XMLFileSerializer!(Simulation) 
 {
-	this() {
+	this() 
+	{
 	}
 	
 	override XMLConfigFile save(Simulation simulation) 
@@ -1374,7 +1381,8 @@ class SimulationXMLFileSerializer: XMLFileSerializer!(Simulation)
 
 abstract class Simulator 
 {
-	this() {
+	this() 
+	{
 		this.eventQueue = new DelegateEventQueue();
 		this.addEventProcessor(this.eventQueue);
 		
