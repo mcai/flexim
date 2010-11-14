@@ -36,7 +36,8 @@ const uint MEM_BLOCK_SIZE = 64;
 const uint MEM_PROT_READ = 0x01;
 const uint MEM_PROT_WRITE = 0x02;
 
-enum MemoryAccessType: uint {
+enum MemoryAccessType: uint 
+{
 	NONE = 0x00,
 	READ = 0x01,
 	WRITE = 0x02,
@@ -44,127 +45,137 @@ enum MemoryAccessType: uint {
 	INIT = 0x08
 }
 
-class MemoryPage {
-	public:
-		this() {
-			this.tag = 0;
-			this.perm = MemoryAccessType.NONE;
-			this.next = null;
-		}
+class MemoryPage 
+{
+	this() 
+	{
+		this.tag = 0;
+		this.perm = MemoryAccessType.NONE;
+		this.next = null;
+	}
 
-		~this() {
-		}
+	uint tag;
+	MemoryAccessType perm;
+	ubyte data[MEM_PAGESIZE];
 
-		uint tag;
-		MemoryAccessType perm;
-		ubyte data[MEM_PAGESIZE];
-
-		MemoryPage next;
+	MemoryPage next;
 };
 
-class SegmentationFaultException: Exception {
-	public:
-		this(uint addr) {
-			super(format("SegmentationFaultException @ 0x%x", addr));
-			this.addr = addr;
-		}
-
-		uint addr() {
-			return this.m_addr;
-		}
-
-		void addr(uint value) {
-			this.m_addr = value;
-		}
-
-	private:
-		uint m_addr;
+class SegmentationFaultException: Exception 
+{
+	this(uint addr) {
+		super(format("SegmentationFaultException @ 0x%x", addr));
+		this.addr = addr;
+	}
+	uint addr;
 }
 
-class Memory {
+class Memory 
+{
 	public:
-		this() {
+		this() 
+		{
 			this.safe = true;
 			//			this.safe = false;
 		}
 
-		~this() {
+		~this() 
+		{
 			this.pages.clear();
 			this.pages = null;
 		}
 
-		void initByte(uint addr, ubyte data) {
+		void initByte(uint addr, ubyte data) 
+		{
 			this.access(addr, 1, &data, MemoryAccessType.INIT);
 		}
 
-		void initHalfWord(uint addr, ushort data) {
+		void initHalfWord(uint addr, ushort data) 
+		{
 			this.access(addr, 2, cast(ubyte*) &data, MemoryAccessType.INIT);
 		}
 
-		void initWord(uint addr, uint data) {
+		void initWord(uint addr, uint data) 
+		{
 			this.access(addr, 4, cast(ubyte*) &data, MemoryAccessType.INIT);
 		}
 
-		void initDoubleWord(uint addr, ulong data) {
+		void initDoubleWord(uint addr, ulong data) 
+		{
 			this.access(addr, 8, cast(ubyte*) &data, MemoryAccessType.INIT);
 		}
 
-		void initString(uint addr, char* str) {
+		void initString(uint addr, char* str) 
+		{
 			this.access(addr, strlen(str) + 1, cast(ubyte*) str, MemoryAccessType.INIT);
 		}
 
-		void initBlock(uint addr, uint size, ubyte* p) {
-			for(uint i = 0; i < size; i++) {
+		void initBlock(uint addr, uint size, ubyte* p) 
+		{
+			for(uint i = 0; i < size; i++) 
+			{
 				this.initByte(addr + i, *(p + i));
 			}
 		}
 
-		void writeByte(uint addr, ubyte data) {
+		void writeByte(uint addr, ubyte data) 
+		{
 			this.access(addr, 1, &data, MemoryAccessType.WRITE);
 		}
 
-		void writeHalfWord(uint addr, ushort data) {
+		void writeHalfWord(uint addr, ushort data) 
+		{
 			this.access(addr, 2, cast(ubyte*) &data, MemoryAccessType.WRITE);
 		}
 
-		void writeWord(uint addr, uint data) {
+		void writeWord(uint addr, uint data) 
+		{
 			this.access(addr, 4, cast(ubyte*) &data, MemoryAccessType.WRITE);
 		}
 
-		void writeDoubleWord(uint addr, ulong data) {
+		void writeDoubleWord(uint addr, ulong data) 
+		{
 			this.access(addr, 8, cast(ubyte*) &data, MemoryAccessType.WRITE);
 		}
 
-		void writeString(uint addr, char* str) {
+		void writeString(uint addr, char* str) 
+		{
 			this.access(addr, strlen(str) + 1, cast(ubyte*) str, MemoryAccessType.WRITE);
 		}
 
-		void writeBlock(uint addr, uint size, ubyte* data) {
+		void writeBlock(uint addr, uint size, ubyte* data) 
+		{
 			this.access(addr, size, data, MemoryAccessType.WRITE);
 		}
 
-		void readByte(uint addr, ubyte* data) {
+		void readByte(uint addr, ubyte* data) 
+		{
 			this.access(addr, 1, data, MemoryAccessType.READ);
 		}
 
-		void readHalfWord(uint addr, ushort* data) {
+		void readHalfWord(uint addr, ushort* data) 
+		{
 			this.access(addr, 2, cast(ubyte*) data, MemoryAccessType.READ);
 		}
 
-		void readWord(uint addr, uint* data) {
+		void readWord(uint addr, uint* data) 
+		{
 			this.access(addr, 4, cast(ubyte*) data, MemoryAccessType.READ);
 		}
 
-		void readDoubleWord(uint addr, ulong* data) {
+		void readDoubleWord(uint addr, ulong* data) 
+		{
 			this.access(addr, 8, cast(ubyte*) data, MemoryAccessType.READ);
 		}
 
 		/* Read a string from memory and return the length of the read string.
 		 * If the return length is equal to max_size, it means that the string did not
 		 * fit in the destination buffer. */
-		int readString(uint addr, int size, char* str) {
+		int readString(uint addr, int size, char* str) 
+		{
 			int i;
-			for(i = 0; i < size; i++) {
+			for(i = 0; i < size; i++) 
+			{
 				this.access(addr + i, 1, str + i, MemoryAccessType.READ);
 				if(!str[i])
 					break;
@@ -172,35 +183,43 @@ class Memory {
 			return i;
 		}
 
-		void readBlock(uint addr, uint size, ubyte* p) {
+		void readBlock(uint addr, uint size, ubyte* p) 
+		{
 			this.access(addr, size, p, MemoryAccessType.READ);
 		}
 
-		void zero(uint addr, int size) {
+		void zero(uint addr, int size) 
+		{
 			ubyte zero = 0;
-			while(size--) {
+			while(size--) 
+			{
 				this.access(addr++, 0, &zero, MemoryAccessType.WRITE);
 			}
 		}
 
-		uint getTag(uint addr) {
+		uint getTag(uint addr) 
+		{
 			return addr & ~(MEM_PAGESIZE - 1);
 		}
 
-		uint getOffset(uint addr) {
+		uint getOffset(uint addr) 
+		{
 			return addr & (MEM_PAGESIZE - 1);
 		}
 
-		uint getIndex(uint addr) {
+		uint getIndex(uint addr) 
+		{
 			return (addr >> MEM_LOGPAGESIZE) % MEM_PAGE_COUNT;
 		}
 
-		bool isAligned(uint addr) {
+		bool isAligned(uint addr) 
+		{
 			return this.getOffset(addr) == 0;
 		}
 
 		/* Return mem page corresponding to an address. */
-		MemoryPage getPage(uint addr) {
+		MemoryPage getPage(uint addr) 
+		{
 			uint index, tag;
 			MemoryPage prev, page;
 
@@ -210,13 +229,15 @@ class Memory {
 			prev = null;
 
 			/* Look for page */
-			while(page !is null && page.tag != tag) {
+			while(page !is null && page.tag != tag) 
+			{
 				prev = page;
 				page = page.next;
 			}
 
 			/* Place page into list head */
-			if(prev !is null && page !is null) {
+			if(prev !is null && page !is null) 
+			{
 				prev.next = page.next;
 				page.next = this[index];
 				this[index] = page;
@@ -227,7 +248,8 @@ class Memory {
 		}
 
 		/* Create new mem page */
-		MemoryPage addPage(uint addr, MemoryAccessType perm) {
+		MemoryPage addPage(uint addr, MemoryAccessType perm) 
+		{
 			uint index, tag;
 			MemoryPage page;
 
@@ -249,7 +271,8 @@ class Memory {
 		}
 
 		/* Free mem pages */
-		void removePage(uint addr) {
+		void removePage(uint addr) 
+		{
 			uint index, tag;
 			MemoryPage prev, page;
 
@@ -259,19 +282,24 @@ class Memory {
 
 			/* Find page */
 			page = this[index];
-			while(page !is null && page.tag != tag) {
+			while(page !is null && page.tag != tag) 
+			{
 				prev = page;
 				page = page.next;
 			}
 
-			if(page is null) {
+			if(page is null) 
+			{
 				return;
 			}
 
 			/* Free page */
-			if(prev !is null) {
+			if(prev !is null) 
+			{
 				prev.next = page.next;
-			} else {
+			} 
+			else 
+			{
 				this[index] = page.next;
 			}
 
@@ -282,7 +310,8 @@ class Memory {
 
 		/* Copy memory pages. All parameters must be multiple of the page size.
 		 * The pages in the source and destination interval must exist. */
-		void copy(uint dest, uint src, int size) {
+		void copy(uint dest, uint src, int size) 
+		{
 			MemoryPage page_dest, page_src;
 
 			/* Restrictions. No overlapping allowed. */
@@ -293,7 +322,8 @@ class Memory {
 				logging.fatal(LogCategory.MEMORY, "mem_copy: cannot copy overlapping regions");
 
 			/* Copy */
-			while(size > 0) {
+			while(size > 0) 
+			{
 				page_dest = this.getPage(dest);
 				page_src = this.getPage(src);
 				assert(page_src !is null && page_dest !is null);
@@ -307,7 +337,8 @@ class Memory {
 		/* Return the buffer corresponding to address 'addr' in the simulated
 		 * mem. The returned buffer is null if addr+size exceeds the page
 		 * boundaries. */
-		ubyte* getBuffer(uint addr, int size, MemoryAccessType access) {
+		ubyte* getBuffer(uint addr, int size, MemoryAccessType access) 
+		{
 			MemoryPage page;
 			uint offset;
 
@@ -319,7 +350,8 @@ class Memory {
 			if(page is null)
 				return null;
 
-			if((page.perm & access) != access && this.safe) {
+			if((page.perm & access) != access && this.safe) 
+			{
 				logging.fatalf(LogCategory.MEMORY, "Memory.getBuffer: permission denied at 0x%x", addr);
 			}
 
@@ -327,7 +359,8 @@ class Memory {
 		}
 
 		/* Access mem without exceeding page boundaries. */
-		void accessPageBoundary(uint addr, int size, void* buf, MemoryAccessType access) {
+		void accessPageBoundary(uint addr, int size, void* buf, MemoryAccessType access) 
+		{
 			MemoryPage page;
 			uint offset;
 			ubyte* data;
@@ -337,7 +370,8 @@ class Memory {
 
 			/* If page does not exist and we are in unsafe mode, create it on write
 			 * and return 0s on read. */
-			if(page is null && !this.safe) {
+			if(page is null && !this.safe) 
+			{
 				switch(access) {
 					/* Return 0s and exit. */
 					case MemoryAccessType.READ:
@@ -351,18 +385,21 @@ class Memory {
 					case MemoryAccessType.INIT:
 						logging.warnf(LogCategory.MEMORY, "Memory.accessPageBoundary: unsafe writing 0x%x", addr);
 						page = addPage(addr, MemoryAccessType.READ | MemoryAccessType.WRITE | MemoryAccessType.EXEC | MemoryAccessType.INIT);
-					break;
+						break;
 					default:
 						logging.panic(LogCategory.MEMORY, "Memory.accessPageBoundary: unknown access");
 				}
 			}
 
 			/* If we are in safe mode, check permissions. */
-			if(this.safe) {
-				if(page is null) {
+			if(this.safe) 
+			{
+				if(page is null) 
+				{
 					throw new SegmentationFaultException(addr);
 				}
-				if((page.perm & access) != access) {
+				if((page.perm & access) != access) 
+				{
 					logging.fatalf(LogCategory.MEMORY, "Memory.accessPageBoundary: permission denied at 0x%x, page.perm: 0x%x, access: 0x%x", addr, page.perm, access);
 				}
 			}
@@ -371,27 +408,30 @@ class Memory {
 			offset = this.getOffset(addr);
 			assert(offset + size <= MEM_PAGESIZE);
 			data = &page.data[offset];
-			switch(access) {
+			switch(access) 
+			{
 				case MemoryAccessType.READ:
 				case MemoryAccessType.EXEC:
 					memcpy(buf, data, size);
-				break;
+					break;
 				case MemoryAccessType.WRITE:
 				case MemoryAccessType.INIT:
 					memcpy(data, buf, size);
-				break;
+					break;
 				default:
 					logging.panic(LogCategory.MEMORY, "Memory.accessPageBoundary: unknown access");
 			}
 		}
 
 		/* Access mem at address 'addr'. This access can cross page boundaries. */
-		void access(uint addr, int size, void* buf, MemoryAccessType access) {
+		void access(uint addr, int size, void* buf, MemoryAccessType access) 
+		{
 			uint offset;
 			int chunksize;
 
 			this.last_address = addr;
-			while(size > 0) {
+			while(size > 0) 
+			{
 				offset = this.getOffset(addr);
 				chunksize = min!(int)(size, MEM_PAGESIZE - offset);
 				this.accessPageBoundary(addr, chunksize, buf, access);
@@ -404,21 +444,25 @@ class Memory {
 
 		/* This function finds a free memory region to allocate 'size' bytes
 		 * starting at address 'addr'. */
-		uint mapSpace(uint addr, int size) {
+		uint mapSpace(uint addr, int size) 
+		{
 			uint tag_start, tag_end;
 
 			assert(isAligned(addr));
 			assert(isAligned(size));
 			tag_start = addr;
 			tag_end = addr;
-			for(; ; ) {
+			for(; ; ) 
+			{
 				/* Address space overflow */
-				if(tag_end == 0) {
+				if(tag_end == 0) 
+				{
 					return cast(uint) -1;
 				}
 
 				/* Not enough free pages in current region */
-				if(this.getPage(tag_end) !is null) {
+				if(this.getPage(tag_end) !is null) 
+				{
 					tag_end += MEM_PAGESIZE;
 					tag_start = tag_end;
 					continue;
@@ -437,7 +481,8 @@ class Memory {
 			return tag_start;
 		}
 
-		uint mapSpaceDown(uint addr, int size) {
+		uint mapSpaceDown(uint addr, int size) 
+		{
 			uint tag_start, tag_end;
 
 			assert(isAligned(addr));
@@ -445,13 +490,16 @@ class Memory {
 			tag_start = addr;
 			tag_end = addr;
 			for(; ; ) {
+				
 				/* Address space overflow */
-				if(tag_start == 0) {
+				if(tag_start == 0) 
+				{
 					return cast(uint) -1;
 				}
 
 				/* Not enough free pages in current region */
-				if(this.getPage(tag_start) !is null) {
+				if(this.getPage(tag_start) !is null) 
+				{
 					tag_start += MEM_PAGESIZE;
 					tag_end = tag_start;
 					continue;
@@ -473,7 +521,8 @@ class Memory {
 		/* Allocate (if not already allocated) all necessary memory pages to
 		 * access 'size' bytes at 'addr'. These two fields do not need to be
 		 * aligned to page boundaries. If some page already exists, add permissions. */
-		void map(uint addr, int size, MemoryAccessType perm) {
+		void map(uint addr, int size, MemoryAccessType perm) 
+		{
 			//logging.infof(LogCategory.MEMORY, "Memory.map(), addr: 0x%08x ~ 0x%08x, size: %d, perm: 0x%x", addr, addr + size, size, perm);
 			uint tag1, tag2, tag;
 			MemoryPage page;
@@ -483,9 +532,11 @@ class Memory {
 			tag2 = this.getTag(addr + size - 1);
 
 			/* Allocate pages */
-			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) {
+			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) 
+			{
 				page = this.getPage(tag);
-				if(page is null) {
+				if(page is null) 
+				{
 					page = this.addPage(tag, perm);
 					page.perm |= perm;
 				}
@@ -495,7 +546,8 @@ class Memory {
 		/* Deallocate memory pages. The addr and size parameters must be both
 		 * multiple of the page size. If some page was not allocated, no action
 		 * is done for that specific page. */
-		void unmap(uint addr, int size) {
+		void unmap(uint addr, int size) 
+		{
 			uint tag1, tag2, tag;
 
 			/* Calculate page boundaries */
@@ -505,7 +557,8 @@ class Memory {
 			tag2 = getTag(addr + size - 1);
 
 			/* Allocate pages */
-			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) {
+			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) 
+			{
 				if(this.getPage(tag) !is null) {
 					this.removePage(tag);
 				}
@@ -513,7 +566,8 @@ class Memory {
 		}
 
 		/* Assign protection attributes to pages */
-		void protect(uint addr, int size, MemoryAccessType perm) {
+		void protect(uint addr, int size, MemoryAccessType perm) 
+		{
 			uint tag1, tag2, tag;
 			MemoryPage page;
 
@@ -524,7 +578,8 @@ class Memory {
 			tag2 = getTag(addr + size - 1);
 
 			/* Allocate pages */
-			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) {
+			for(tag = tag1; tag <= tag2; tag += MEM_PAGESIZE) 
+			{
 				page = this.getPage(tag);
 				if(page !is null) {
 					page.perm = perm;
@@ -535,7 +590,8 @@ class Memory {
 		uint last_address; /* Address of last access */
 
 	private:
-		MemoryPage opIndex(uint index) {
+		MemoryPage opIndex(uint index) 
+		{
 			if(index in this.pages) {
 				return this.pages[index];
 			}
@@ -543,7 +599,8 @@ class Memory {
 			return null;
 		}
 
-		void opIndexAssign(MemoryPage page, uint index) {
+		void opIndexAssign(MemoryPage page, uint index) 
+		{
 			this.pages[index] = page;
 		}
 
@@ -555,9 +612,10 @@ class Memory {
 		bool safe = true; /* Safe mode */
 };
 
-class CAM(T, K, V) {
-	this() {
-
+class CAM(T, K, V) 
+{
+	this() 
+	{
 	}
 
 	K tag;
@@ -565,60 +623,72 @@ class CAM(T, K, V) {
 	T next;
 }
 
-class MMUPage: CAM!(MMUPage, uint, uint) {
+class MMUPage: CAM!(MMUPage, uint, uint) 
+{
 	alias tag vtladdr;
 	alias content phaddr;
 	
 	Dir dir;
 }
 
-class MMU {	
+class MMU 
+{	
 	alias MMUPage MMUPageT;
 	
-	this() {
+	this() 
+	{
 	}
 
-	uint page(uint vtladdr) {
+	uint page(uint vtladdr) 
+	{
 		return vtladdr >> MEM_LOGPAGESIZE;
 	}
 
-	uint tag(uint vtladdr) {
+	uint tag(uint vtladdr) 
+	{
 		return vtladdr & ~MEM_PAGEMASK;
 	}
 
-	uint offset(uint vtladdr) {
+	uint offset(uint vtladdr) 
+	{
 		return vtladdr & MEM_PAGEMASK;
 	}
 
-	MMUPageT opIndex(uint index) {
-		if(index in this.pages) {
+	MMUPageT opIndex(uint index) 
+	{
+		if(index in this.pages) 
+		{
 			return this.pages[index];
 		}
 		
 		return null;
 	}
 
-	void opIndexAssign(MMUPageT value, uint index) {
+	void opIndexAssign(MMUPageT value, uint index) 
+	{
 		this.pages[index] = value;
 	}
 
-	MMUPageT getPage(uint vtladdr) {
+	MMUPageT getPage(uint vtladdr) 
+	{
 		int idx = this.page(vtladdr);
 		uint tag = this.tag(vtladdr);
 
 		MMUPageT page = this[idx];
 
-		while(page) {
-			if(page.vtladdr == tag) {
+		while(page) 
+		{
+			if(page.vtladdr == tag) 
+			{
 				break;
 			}
 			page = page.next;
 		}
 
-		if(!page) {
+		if(!page) 
+		{
 			page = new MMUPageT();
-			page.dir =
-				new Dir(MEM_PAGESIZE / MEM_BLOCK_SIZE, 1);
+			page.dir = new Dir(MEM_PAGESIZE / MEM_BLOCK_SIZE, 1);
 			
 			page.vtladdr = tag;
 			page.phaddr = this.pageCount << MEM_LOGPAGESIZE;
@@ -632,21 +702,25 @@ class MMU {
 		return page;
 	}
 
-	uint translate(uint vtladdr) {
+	uint translate(uint vtladdr) 
+	{
 		MMUPageT page = this.getPage(vtladdr);
 		return page.phaddr | this.offset(vtladdr);
 	}
 	
-	Dir getDir(uint phaddr) {
+	Dir getDir(uint phaddr) 
+	{
 		int idx = this.page(phaddr);
-		if(idx >= this.pageCount) {
+		if(idx >= this.pageCount) 
+		{
 			return null;
 		}
 		
 		return this[idx].dir;
 	}
 
-	bool validPhysicalAddress(uint phaddr) {
+	bool validPhysicalAddress(uint phaddr) 
+	{
 		return this.page(phaddr) < this.pageCount;
 	}
 
@@ -654,48 +728,63 @@ class MMU {
 	uint pageCount;
 }
 
-class DirEntry {
-	this(uint x, uint y) {
+class DirEntry 
+{
+	this(uint x, uint y) 
+	{
 		this.x = x;
 		this.y = y;
 	}
 
-	void setSharer(CoherentCacheNode node) {
+	void setSharer(CoherentCacheNode node)
+	in
+	{
 		assert(node !is null);
-		if(!this.sharers.canFind(node)) {			
+	}
+	body
+	{
+		if(!this.sharers.canFind(node)) 
+		{			
 			this.sharers ~= node;
-        }
+		}
 	}
 
-	void unsetSharer(CoherentCacheNode node) {
+	void unsetSharer(CoherentCacheNode node)
+	in
+	{
 		assert(node !is null);
-		if(canFind(this.sharers, node)) {
+	}
+	body
+	{
+		if(canFind(this.sharers, node)) 
+		{
 			this.sharers = this.sharers.remove(this.sharers.indexOf(node));
 		}
 	}
 
-	bool isSharer(CoherentCacheNode node) {
+	bool isSharer(CoherentCacheNode node) 
+	{
 		return canFind(this.sharers, node);
 	}
 	
-	bool isShared() {
-		return this.sharers.length > 1;
+	bool isShared() 
+	{
+		return !this.sharers.empty;
 	}
 	
-	bool isOwned() {
+	bool isOwned() 
+	{
 		return this.owner !is null;
 	}
 
-	bool isSharedOrOwned() {
+	bool isSharedOrOwned() 
+	{
 		return this.isShared || this.isOwned;
 	}
 
-	override string toString() {
-		string str;
-
-		str ~= format("DirEntry[owner=%s, sharers.length=%d]", this.owner !is null ? this.owner.name : "NULL", this.sharers.length);
-
-		return str;
+	override string toString() 
+	{
+		return format("DirEntry[owner=%s, sharers.length=%d]", this.owner !is null ? this.owner.name : "NULL", this.sharers.length);
 	}
 
 	CoherentCacheNode owner;
@@ -705,58 +794,67 @@ class DirEntry {
 	uint y;
 }
 
-class DirLock {
-	this(uint x) {
+class DirLock 
+{
+	this(uint x) 
+	{
 		this.x = x;
 	}
 
-	bool lock() {
-		if(this.locked) {
+	bool lock() 
+	{
+		if(this.locked) 
+		{
 			return false;
-		} else {			
+		} 
+		else 
+		{			
 			this.locked = true;
 			return true;
 		}
 	}
 
-	void unlock() {
+	void unlock() 
+	{
 		this.locked = false;
 	}
 
-	override string toString() {
-		string str;
-
-		str ~= format("DirLock[locked=%s]", this.locked);
-
-		return str;
+	override string toString() 
+	{
+		return format("DirLock[locked=%s]", this.locked);
 	}
 
 	uint x;
-
 	bool locked;
 }
 
-class Dir {
-	this(uint xSize, uint ySize) {
+class Dir 
+{
+	this(uint xSize, uint ySize) 
+	{
 		this.xSize = xSize;
 		this.ySize = ySize;
 
 		this.dirEntries = new DirEntry[][this.xSize];
-		for(uint i = 0; i < this.xSize; i++) {
+		for(uint i = 0; i < this.xSize; i++) 
+		{
 			this.dirEntries[i] = new DirEntry[this.ySize];
 
-			for(uint j = 0; j < this.ySize; j++) {
+			for(uint j = 0; j < this.ySize; j++) 
+			{
 				this.dirEntries[i][j] = new DirEntry(i, j);
 			}
 		}
 
 		this.dirLocks = new DirLock[this.xSize];
-		for(uint i = 0; i < this.xSize; i++) {
+		for(uint i = 0; i < this.xSize; i++) 
+		{
 			this.dirLocks[i] = new DirLock(i);
 		}
 	}
 
-	bool isSharedOrOwned(uint x, uint y) {
+	bool isSharedOrOwned(uint x, uint y) 
+	{
 		return this.dirEntries[x][y].isSharedOrOwned;
 	}
 
@@ -767,29 +865,35 @@ class Dir {
 	DirLock[] dirLocks;
 }
 
-enum MESIState: string {
+enum MESIState: string 
+{
 	MODIFIED = "MODIFIED",
 	EXCLUSIVE = "EXCLUSIVE",
 	SHARED = "SHARED",
 	INVALID = "INVALID"
 }
 
-bool isReadHit(MESIState state) {
+bool isReadHit(MESIState state) 
+{
 	return state != MESIState.INVALID;
 }
 
-bool isWriteHit(MESIState state) {
+bool isWriteHit(MESIState state) 
+{
 	return state == MESIState.MODIFIED || state == MESIState.EXCLUSIVE;
 }
 
-enum CacheReplacementPolicy: string {
+enum CacheReplacementPolicy: string 
+{
 	LRU = "LRU",
 	FIFO = "FIFO",
 	Random = "Random"
 }
 
-class CacheBlock {
-	this(CacheSet set, uint way) {
+class CacheBlock 
+{
+	this(CacheSet set, uint way) 
+	{
 		this.set = set;
 		this.way = way;
 		
@@ -800,7 +904,8 @@ class CacheBlock {
 		this.lastAccess = 0;
 	}
 
-	override string toString() {
+	override string toString() 
+	{
 		return format("CacheBlock[set=%s, way=%d, tag=%d, transientTag=%d, state=%s]",
 			to!(string)(this.set), this.way, this.tag, this.transientTag, to!(string)(this.state));
 	}
@@ -814,30 +919,37 @@ class CacheBlock {
 	ulong lastAccess;
 }
 
-class CacheSet {
-	this(Cache cache, uint assoc, uint num) {
+class CacheSet 
+{
+	this(Cache cache, uint assoc, uint num) 
+	{
 		this.cache = cache;
 		this.assoc = assoc;
 		this.num = num;
 
 		this.blks = new CacheBlock[this.assoc];
-		for(uint i = 0; i < this.assoc; i++) {
+		for(uint i = 0; i < this.assoc; i++) 
+		{
 			this.blks[i] = new CacheBlock(this, i);
 		}
 	}
 
-	uint length() {
+	uint length() 
+	{
 		return this.blks.length;
 	}
 
-	CacheBlock opIndex(uint i) {
+	CacheBlock opIndex(uint i) 
+	{
 		return this.blks[i];
 	}
 
-	int opApply(int delegate(ref uint, ref CacheBlock) dg) {
+	int opApply(int delegate(ref uint, ref CacheBlock) dg) 
+	{
 		int result;
 
-		foreach(ref uint i, ref CacheBlock p; this.blks) {
+		foreach(ref uint i, ref CacheBlock p; this.blks) 
+		{
 			result = dg(i, p);
 			if(result)
 				break;
@@ -845,10 +957,12 @@ class CacheSet {
 		return result;
 	}
 
-	int opApply(int delegate(ref CacheBlock) dg) {
+	int opApply(int delegate(ref CacheBlock) dg) 
+	{
 		int result;
 
-		foreach(ref CacheBlock p; this.blks) {
+		foreach(ref CacheBlock p; this.blks) 
+		{
 			result = dg(p);
 			if(result)
 				break;
@@ -856,12 +970,14 @@ class CacheSet {
 		return result;
 	}
 	
-	CacheBlock firstOf(T)(T pred) {
+	CacheBlock firstOf(T)(T pred) 
+	{
 		auto res = filter!(pred)(this.blks);
 		return !res.empty ? res.front : null;
 	}
 
-	override string toString() {
+	override string toString() 
+	{
 		return format("CacheSet[assoc=%d]", this.assoc);
 	}
 
@@ -873,25 +989,31 @@ class CacheSet {
 	uint num;
 }
 
-class Cache {
-	this(CacheConfig cacheConfig) {
+class Cache 
+{
+	this(CacheConfig cacheConfig) 
+	{
 		this.cacheConfig = cacheConfig;
 
 		this.sets = new CacheSet[this.numSets];
-		for(uint i = 0; i < this.numSets; i++) {
+		for(uint i = 0; i < this.numSets; i++) 
+		{
 			this[i] = new CacheSet(this, this.assoc, i);
 		}
 
 		this.dir = new Dir(this.numSets, this.assoc);
 	}
 	
-	CacheBlock blockOf(uint addr, bool checkTransientTag = false) {
+	CacheBlock blockOf(uint addr, bool checkTransientTag = false) 
+	{
 		uint tag = this.tag(addr);
 		uint set = this.set(addr);
 
-		foreach(way, blk; this[set]) {
+		foreach(way, blk; this[set]) 
+		{
 			if((blk.tag == tag && blk.state != MESIState.INVALID) ||
-				(checkTransientTag && blk.transientTag == tag && this.dir.dirLocks[set].locked))  {
+				(checkTransientTag && blk.transientTag == tag && this.dir.dirLocks[set].locked)) 
+			{
 				return blk;
 			}
 		}
@@ -899,7 +1021,8 @@ class Cache {
 		return null;
 	}
 	
-	bool findBlock(uint addr, ref uint set, ref uint way, ref uint tag, ref MESIState state, bool checkTransientTag = false) {
+	bool findBlock(uint addr, ref uint set, ref uint way, ref uint tag, ref MESIState state, bool checkTransientTag = false) 
+	{
 		set = this.set(addr);
 		tag = this.tag(addr);
 				
@@ -910,36 +1033,57 @@ class Cache {
 		return blkFound !is null;
 	}
 
-	void setBlock(uint set, uint way, uint tag, MESIState state) {
+	void setBlock(uint set, uint way, uint tag, MESIState state)
+	in
+	{
 		assert(set >= 0 && set < this.numSets);
 		assert(way >= 0 && way < this.assoc);
+	}
+	body 
+	{
 		this.accessBlock(set, way);
 		this[set][way].tag = tag;
 		this[set][way].state = state;
 	}
 
-	void getBlock(uint set, uint way, ref uint tag, ref MESIState state) {
+	void getBlock(uint set, uint way, ref uint tag, ref MESIState state) 
+	in
+	{
 		assert(set >= 0 && set < this.numSets);
 		assert(way >= 0 && way < this.assoc);
+	}
+	body
+	{
 		tag = this[set][way].tag;
 		state = this[set][way].state;
 	}
 
-	void accessBlock(uint set, uint way) {
+	void accessBlock(uint set, uint way) 
+	in
+	{
 		assert(set >= 0 && set < this.numSets);
 		assert(way >= 0 && way < this.assoc);
+	}
+	body
+	{
 		this[set][way].lastAccess = currentCycle;
 	}
 
-	uint replaceBlock(uint set) {
+	uint replaceBlock(uint set)
+	in
+	{
 		assert(set >= 0 && set < this.numSets);
-
+	}
+	body 
+	{
 		ulong smallestTime = this[set][0].lastAccess;
 		uint smallestIndex = 0;
 
-		foreach(way, blk; this[set]) {
+		foreach(way, blk; this[set]) 
+		{
 			ulong time = blk.lastAccess;
-			if(time < smallestTime) {
+			if(time < smallestTime) 
+			{
 				smallestIndex = way;
 				smallestTime = time;
 			}
@@ -948,43 +1092,53 @@ class Cache {
 		return smallestIndex;
 	}
 
-	CacheSet opIndex(uint index) {
+	CacheSet opIndex(uint index) 
+	{
 		return this.sets[index];
 	}
 
-	void opIndexAssign(CacheSet value, uint index) {
+	void opIndexAssign(CacheSet value, uint index) 
+	{
 		this.sets[index] = value;
 	}
 
-	uint logBlockSize() {
+	uint logBlockSize() 
+	{
 		return cast(uint) std.math.log2(this.blockSize);
 	}
 
-	uint blockMask() {
+	uint blockMask() 
+	{
 		return this.blockSize - 1;
 	}
 
-	uint set(uint addr) {
+	uint set(uint addr) 
+	{
 		return (addr >> this.logBlockSize) % this.numSets;
 	}
 
-	uint tag(uint addr) {
+	uint tag(uint addr) 
+	{
 		return addr & ~this.blockMask;
 	}
 
-	uint offset(uint addr) {
+	uint offset(uint addr) 
+	{
 		return addr & this.blockMask;
 	}
 	
-	uint assoc() {
+	uint assoc() 
+	{
 		return this.cacheConfig.assoc;
 	}
 	
-	uint numSets() {
+	uint numSets() 
+	{
 		return this.cacheConfig.numSets;
 	}
 	
-	uint blockSize() {
+	uint blockSize() 
+	{
 		return this.cacheConfig.blockSize;
 	}
 
@@ -995,9 +1149,12 @@ class Cache {
 	CacheConfig cacheConfig;
 }
 
-abstract class CoherentCacheNode {
-	static class ListenerContextFindAndLock {
-		this(uint addr, bool isBlocking, bool isRead, bool isRetry) {
+abstract class CoherentCacheNode 
+{	
+	static class ListenerContextFindAndLock
+	{
+		this(uint addr, bool isBlocking, bool isRead, bool isRetry) 
+		{
 			this.addr = addr;
 			this.isBlocking = isBlocking;
 			this.isRead = isRead;
@@ -1010,8 +1167,10 @@ abstract class CoherentCacheNode {
 		bool isRetry;
 	}
 	
-	static class ListenerContextLoad {
-		this(uint addr, bool isRetry) {
+	static class ListenerContextLoad 
+	{
+		this(uint addr, bool isRetry) 
+		{
 			this.addr = addr;
 			this.isRetry = isRetry;
 		}
@@ -1020,8 +1179,10 @@ abstract class CoherentCacheNode {
 		bool isRetry;
 	}
 	
-	static class ListenerContextStore {
-		this(uint addr, bool isRetry) {
+	static class ListenerContextStore 
+	{
+		this(uint addr, bool isRetry) 
+		{
 			this.addr = addr;
 			this.isRetry = isRetry;
 		}
@@ -1030,8 +1191,10 @@ abstract class CoherentCacheNode {
 		bool isRetry;
 	}
 	
-	static class ListenerContextEvict {
-		this(uint set, uint way) {
+	static class ListenerContextEvict 
+	{
+		this(uint set, uint way) 
+		{
 			this.set = set;
 			this.way = way;
 		}
@@ -1040,8 +1203,10 @@ abstract class CoherentCacheNode {
 		uint way;
 	}
 	
-	static class ListenerContextEvictReceive {
-		this(CoherentCacheNode source, uint addr, bool isWriteback) {
+	static class ListenerContextEvictReceive 
+	{
+		this(CoherentCacheNode source, uint addr, bool isWriteback) 
+		{
 			this.source = source;
 			this.addr = addr;
 			this.isWriteback = isWriteback;
@@ -1052,8 +1217,10 @@ abstract class CoherentCacheNode {
 		bool isWriteback;
 	}
 	
-	static class ListenerContextReadRequest {
-		this(CoherentCacheNode target, uint addr) {
+	static class ListenerContextReadRequest 
+	{
+		this(CoherentCacheNode target, uint addr) 
+		{
 			this.target = target;
 			this.addr = addr;
 		}
@@ -1062,8 +1229,10 @@ abstract class CoherentCacheNode {
 		uint addr;
 	}
 	
-	static class ListenerContextReadRequestReceive {
-		this(CoherentCacheNode source, uint addr) {
+	static class ListenerContextReadRequestReceive 
+	{
+		this(CoherentCacheNode source, uint addr) 
+		{
 			this.source = source;
 			this.addr = addr;
 		}
@@ -1072,8 +1241,10 @@ abstract class CoherentCacheNode {
 		uint addr;
 	}
 	
-	static class ListenerContextWriteRequest {
-		this(CoherentCacheNode target, uint addr) {
+	static class ListenerContextWriteRequest 
+	{
+		this(CoherentCacheNode target, uint addr) 
+		{
 			this.target = target;
 			this.addr = addr;
 		}
@@ -1082,8 +1253,10 @@ abstract class CoherentCacheNode {
 		uint addr;
 	}
 	
-	static class ListenerContextWriteRequestReceive {
-		this(CoherentCacheNode source, uint addr) {
+	static class ListenerContextWriteRequestReceive 
+	{
+		this(CoherentCacheNode source, uint addr) 
+		{
 			this.source = source;
 			this.addr = addr;
 		}
@@ -1092,8 +1265,10 @@ abstract class CoherentCacheNode {
 		uint addr;
 	}
 	
-	static class ListenerContextInvalidate {
-		this(CoherentCacheNode except, uint set, uint way) {
+	static class ListenerContextInvalidate 
+	{
+		this(CoherentCacheNode except, uint set, uint way) 
+		{
 			this.except = except;
 			this.set = set;
 			this.way = way;
@@ -1134,7 +1309,8 @@ abstract class CoherentCacheNode {
 	alias ListenerSupport!(CoherentCacheNode, ListenerContextInvalidate) ListenerSupportInvalidateT;
 	alias ListenerSupportInvalidateT.ListenerT ListenerInvalidateT;
 	
-	this(MemorySystem memorySystem, string name) {
+	this(MemorySystem memorySystem, string name) 
+	{
 		this.name = name;
 		this.memorySystem = memorySystem;
 		
@@ -1153,113 +1329,135 @@ abstract class CoherentCacheNode {
 		this.listenerSupportInvalidate = new ListenerSupportInvalidateT();
 	}
 	
-	void schedule(void delegate() event, ulong delay = 0) {
+	void schedule(void delegate() event, ulong delay = 0) 
+	{
 		this.eventQueue.schedule(event, delay);
 	}
 	
 	void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
-		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
+		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) 
+	{
 		writefln("%s.findAndLock(addr=0x%x, isBlocking=%s, isRead=%s, isRetry=%s)", this, addr, isBlocking, isRead, isRetry);
 		assert(0);
 	}
 	
 	void load(uint addr, bool isRetry, 
-		void delegate() onCompletedCallback) {
+		void delegate() onCompletedCallback) 
+	{
 		writefln("%s.load(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		assert(0);
 	}
 	
 	void store(uint addr, bool isRetry, 
-		void delegate() onCompletedCallback) {
+		void delegate() onCompletedCallback) 
+	{
 		writefln("%s.store(addr=0x%x, isRetry=%s)", this, addr, isRetry);
 		assert(0);
 	}
 	
 	void evict(uint set, uint way, 
-		void delegate(bool hasError) onCompletedCallback) {
+		void delegate(bool hasError) onCompletedCallback) 
+	{
 		writefln("%s.evict(set=%d, way=%d)", this, set, way);
 		assert(0);
 	}
 	
 	void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, 
-		void delegate(bool hasError) onReceiveReplyCallback) {
+		void delegate(bool hasError) onReceiveReplyCallback) 
+	{
 		writefln("%s.evictReceive(source=%s, addr=0x%x, isWriteback=%s)", this, source, addr, isWriteback);
 		assert(0);
 	}
 	
 	void readRequest(CoherentCacheNode target, uint addr, 
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		void delegate(bool hasError, bool isShared) onCompletedCallback) 
+	{
 		writefln("%s.readRequest(target=%s, addr=0x%x)", this, target, addr);
 		assert(0);
 	}
 	
 	void readRequestReceive(CoherentCacheNode source, uint addr, 
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		void delegate(bool hasError, bool isShared) onCompletedCallback) 
+	{
 		writefln("%s.readRequestReceive(source=%s, addr=0x%x)", this, source, addr);
 		assert(0);
 	}
 	
 	void writeRequest(CoherentCacheNode target, uint addr, 
-		void delegate(bool hasError) onCompletedCallback) {
+		void delegate(bool hasError) onCompletedCallback) 
+	{
 		writefln("%s.writeRequest(target=%s, addr=0x%x)", this, target, addr);
 		assert(0);
 	}
 	
 	void writeRequestReceive(CoherentCacheNode source, uint addr, 
-		void delegate(bool hasError) onCompletedCallback) {
+		void delegate(bool hasError) onCompletedCallback) 
+	{
 		writefln("%s.writeRequestReceive(source=%s, addr=0x%x)", this, source, addr);
 		assert(0);
 	}
 	
 	void invalidate(CoherentCacheNode except, uint set, uint way, 
-		void delegate() onCompletedCallback) {
+		void delegate() onCompletedCallback) 
+	{
 		writefln("%s.invalidate(except=%s, set=%d, way=%d)", this, except, set, way);
 		assert(0);
 	}
 	
-	void addFindAndLockListener(ListenerFindAndLockT listener) {
+	void addFindAndLockListener(ListenerFindAndLockT listener) 
+	{
 		this.listenerSupportFindAndLock.addListener(listener);
 	}
 	
-	void addLoadListener(ListenerLoadT listener) {
+	void addLoadListener(ListenerLoadT listener) 
+	{
 		this.listenerSupportLoad.addListener(listener);
 	}
 	
-	void addStoreListener(ListenerStoreT listener) {
+	void addStoreListener(ListenerStoreT listener) 
+	{
 		this.listenerSupportStore.addListener(listener);
 	}
 	
-	void addEvictListener(ListenerEvictT listener) {
+	void addEvictListener(ListenerEvictT listener) 
+	{
 		this.listenerSupportEvict.addListener(listener);
 	}
 	
-	void addEvictReceiveListener(ListenerEvictReceiveT listener) {
+	void addEvictReceiveListener(ListenerEvictReceiveT listener) 
+	{
 		this.listenerSupportEvictReceive.addListener(listener);
 	}
 	
-	void addReadRequestListener(ListenerReadRequestT listener) {
+	void addReadRequestListener(ListenerReadRequestT listener) 
+	{
 		this.listenerSupportReadRequest.addListener(listener);
 	}
 	
-	void addReadRequestReceiveListener(ListenerReadRequestReceiveT listener) {
+	void addReadRequestReceiveListener(ListenerReadRequestReceiveT listener) 
+	{
 		this.listenerSupportReadRequestReceive.addListener(listener);
 	}
 	
-	void addWriteRequestListener(ListenerWriteRequestT listener) {
+	void addWriteRequestListener(ListenerWriteRequestT listener) 
+	{
 		this.listenerSupportWriteRequest.addListener(listener);
 	}
 	
-	void addWriteRequestReceiveListener(ListenerWriteRequestReceiveT listener) {
+	void addWriteRequestReceiveListener(ListenerWriteRequestReceiveT listener) 
+	{
 		this.listenerSupportWriteRequestReceive.addListener(listener);
 	}
 	
-	void addInvalidateListener(ListenerInvalidateT listener) {
+	void addInvalidateListener(ListenerInvalidateT listener) 
+	{
 		this.listenerSupportInvalidate.addListener(listener);
 	}
 	
 	abstract uint level();
 	
-	override string toString() {
+	override string toString() 
+	{
 		return format("%s", this.name);
 	}
 
@@ -1280,15 +1478,19 @@ abstract class CoherentCacheNode {
 	ListenerSupportInvalidateT listenerSupportInvalidate;
 }
 
-class MSHRTarget {
-	this() {
+class MSHRTarget 
+{
+	this() 
+	{
 	}
 
 	uint threadId;
 }
 
-class MSHR {
-	this(uint numTargetSlots) {
+class MSHR 
+{
+	this(uint numTargetSlots) 
+	{
 		this.numTargetSlots = numTargetSlots;
 		this.targets = new MSHRTarget[this.numTargetSlots];
 	}
@@ -1300,13 +1502,16 @@ class MSHR {
 	uint numTargetSlots;
 }
 
-class MSHRFile {
-	this(uint capacity) {
+class MSHRFile 
+{
+	this(uint capacity) 
+	{
 		this.capacity = capacity;
 		this.entries = new MSHR[this.capacity];
 	}
 	
-	bool isFull() {
+	bool isFull() 
+	{
 		assert(0);
 	}
 	
@@ -1316,50 +1521,61 @@ class MSHRFile {
 
 alias MSHRFile WriteBuffer;
 
-class Sequencer: CoherentCacheNode {
-	this(string name, CoherentCache l1Cache) {
+class Sequencer: CoherentCacheNode 
+{
+	this(string name, CoherentCache l1Cache) 
+	{
 		super(l1Cache.memorySystem, name);
 
 		this.l1Cache = l1Cache;
 	}
 	
-	void load(uint addr, bool isRetry, ReorderBufferEntry rs, void delegate(ReorderBufferEntry rs) onCompletedCallback2) {		
+	void load(uint addr, bool isRetry, ReorderBufferEntry rs, void delegate(ReorderBufferEntry rs) onCompletedCallback2) 
+	{		
 		this.load(addr, isRetry, {onCompletedCallback2(rs);});
 	}
 	
-	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) 
+	{
 		this.listenerSupportLoad.dispatch(this, new CoherentCacheNode.ListenerContextLoad(addr, isRetry));
 			
 		this.l1Cache.load(addr, isRetry, onCompletedCallback);
 	}
 	
-	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) 
+	{
 		this.listenerSupportStore.dispatch(this, new CoherentCacheNode.ListenerContextStore(addr, isRetry));
 			
 		this.l1Cache.store(addr, isRetry, onCompletedCallback);
 	}
 	
-	uint blockSize() {
+	uint blockSize() 
+	{
 		return this.l1Cache.cache.blockSize;
 	}
 
-	uint blockAddress(uint addr) {
+	uint blockAddress(uint addr) 
+	{
 		return this.l1Cache.cache.tag(addr);
 	}
 	
-	override uint level() {
+	override uint level() 
+	{
 		assert(0);
 	}
 
-	override string toString() {
+	override string toString() 
+	{
 		return format("%s", this.name);
 	}
 
 	CoherentCache l1Cache;
 }
 
-class CoherentCache: CoherentCacheNode {
-	this(MemorySystem memorySystem, CacheConfig config, CacheStat stat) {
+class CoherentCache: CoherentCacheNode 
+{
+	this(MemorySystem memorySystem, CacheConfig config, CacheStat stat)
+	{
 		super(memorySystem, config.name);
 
 		this.cache = new Cache(config);
@@ -1367,24 +1583,32 @@ class CoherentCache: CoherentCacheNode {
 		this.stat = stat;
 	}
 	
-	uint retryLat() {
+	uint retryLat() 
+	{
 		return this.config.hitLatency + uniform(0, this.config.hitLatency + 2);
 	}
 	
-	void retry(void delegate() action) {
-		this.eventQueue.schedule({action();}, retryLat);
+	void retry(void delegate() action) 
+	{
+		this.eventQueue.schedule(
+		{
+			action();
+		}, retryLat);
 	}
 	
-	uint hitLatency() {
+	uint hitLatency() 
+	{
 		return this.config.hitLatency;
 	}
 	
-	override uint level() {
+	override uint level() 
+	{
 		return this.config.level;
 	}
 	
 	override void findAndLock(uint addr, bool isBlocking, bool isRead, bool isRetry, 
-		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) {
+		void delegate(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock) onCompletedCallback) 
+	{
 		this.listenerSupportFindAndLock.dispatch(this, new CoherentCacheNode.ListenerContextFindAndLock(addr, isBlocking, isRead, isRetry));
 			
 		uint set, way, tag;
@@ -1393,47 +1617,70 @@ class CoherentCache: CoherentCacheNode {
 		bool hit = this.cache.findBlock(addr, set, way, tag, state, true);
 		
 		this.stat.accesses.value = this.stat.accesses.value + 1;
-		if(hit) {
+		if(hit) 
+		{
 			this.stat.hits.value = this.stat.hits.value + 1;
 		}
-		if(isRead) {
+		if(isRead) 
+		{
 			this.stat.reads.value = this.stat.reads.value + 1;
-			if(isBlocking) {
+			
+			if(isBlocking) 
+			{
 				this.stat.blockingReads.value = this.stat.blockingReads.value + 1;
 			}
-			else {
+			else 
+			{
 				this.stat.nonblockingReads.value = this.stat.nonblockingReads.value + 1;
 			}
-			if(hit) {
+			
+			if(hit) 
+			{
 				this.stat.readHits.value = this.stat.readHits.value + 1;
 			}
 		}
-		else {
+		else 
+		{
 			this.stat.writes.value = this.stat.writes.value + 1;
-			if(isBlocking) {
+			
+			if(isBlocking) 
+			{
 				this.stat.blockingWrites.value = this.stat.blockingWrites.value + 1;
 			}
-			else {
+			else 
+			{
 				this.stat.nonblockingWrites.value = this.stat.nonblockingWrites.value + 1;
 			}
-			if(hit) {
+			
+			if(hit) 
+			{
 				this.stat.writeHits.value = this.stat.writeHits.value + 1;
 			}
 		}
-		if(!isRetry) {
+		if(!isRetry) 
+		{
 			this.stat.noRetryAccesses.value = this.stat.noRetryAccesses.value + 1;
-			if(hit) {
+			
+			if(hit) 
+			{
 				this.stat.noRetryHits.value = this.stat.noRetryHits.value + 1;
 			}
-			if(isRead) {
+			
+			if(isRead) 
+			{
 				this.stat.noRetryReads.value = this.stat.noRetryReads.value + 1;
-				if(hit) {
+				
+				if(hit) 
+				{
 					this.stat.noRetryReadHits.value = this.stat.noRetryReadHits.value + 1;
 				}
 			}
-			else {
+			else 
+			{
 				this.stat.noRetryWrites.value = this.stat.noRetryWrites.value + 1;
-				if(hit) {
+				
+				if(hit) 
+				{
 					this.stat.noRetryWriteHits.value = this.stat.noRetryWriteHits.value + 1;
 				}
 			}
@@ -1441,24 +1688,30 @@ class CoherentCache: CoherentCacheNode {
 		
 		uint dumbTag;
 		
-		if(!hit) {
+		if(!hit) 
+		{
 			way = this.cache.replaceBlock(set);
 			this.cache.getBlock(set, way, dumbTag, state);
 		}
 		
 		DirLock dirLock = this.cache.dir.dirLocks[set];
-		if(!dirLock.lock()) {
-			if(isBlocking) {
+		if(!dirLock.lock()) 
+		{
+			if(isBlocking) 
+			{
 				onCompletedCallback(true, set, way, state, tag, dirLock);
 			}
-			else {
+			else 
+			{
 				this.retry({this.findAndLock(addr, isBlocking, isRead, true, onCompletedCallback);});
 			}
 		}
-		else {
+		else 
+		{
 			this.cache[set][way].transientTag = tag;
 			
-			if(!hit && state != MESIState.INVALID) {
+			if(!hit && state != MESIState.INVALID) 
+			{
 				this.schedule(
 					{
 						this.evict(set, way, 
@@ -1466,21 +1719,23 @@ class CoherentCache: CoherentCacheNode {
 							{
 								uint dumbTag;
 								
-								if(!hasError) {
+								if(!hasError) 
+								{
 									this.stat.evictions.value = this.stat.evictions.value + 1;
 									this.cache.getBlock(set, way, dumbTag, state);
 									onCompletedCallback(false, set, way, state, tag, dirLock);
 								}
-								else {
+								else 
+								{
 									this.cache.getBlock(set, way, dumbTag, state);
 									dirLock.unlock();
 									onCompletedCallback(true, set, way, state, tag, dirLock);
 								}
 							});
-					}, this.hitLatency);
-				
+					}, this.hitLatency);				
 			}
-			else {			
+			else 
+			{			
 				this.schedule(
 					{
 						onCompletedCallback(false, set, way, state, tag, dirLock);
@@ -1490,75 +1745,89 @@ class CoherentCache: CoherentCacheNode {
 		}
 	}
 	
-	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+	override void load(uint addr, bool isRetry, void delegate() onCompletedCallback) 
+	{
 		this.listenerSupportLoad.dispatch(this, new CoherentCacheNode.ListenerContextLoad(addr, isRetry));
 			
 		this.findAndLock(addr, false, true, isRetry,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{
-				if(!hasError) {
-					if(!isReadHit(state)) {
+				if(!hasError) 
+				{
+					if(!isReadHit(state)) 
+					{
 						this.readRequest(this.next, tag,
 						(bool hasError, bool isShared) 
 						{
-							if(!hasError) {
+							if(!hasError) 
+							{
 								this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
 								this.cache.accessBlock(set, way);
 								dirLock.unlock();								
 								onCompletedCallback();
 							}
-							else {
+							else 
+							{
 								this.stat.readRetries.value = this.stat.readRetries.value + 1;
 								dirLock.unlock();
 								this.retry({this.load(addr, true, onCompletedCallback);});
 							}
 						});
 					}
-					else {
+					else 
+					{
 						this.cache.accessBlock(set, way);	
 						dirLock.unlock();					
 						onCompletedCallback();
 					}
 				}
-				else {
+				else 
+				{
 					this.stat.readRetries.value = this.stat.readRetries.value + 1;
 					this.retry({this.load(addr, true, onCompletedCallback);});
 				}
 			});
 	}
 	
-	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) {
+	override void store(uint addr, bool isRetry, void delegate() onCompletedCallback) 
+	{
 		this.listenerSupportStore.dispatch(this, new CoherentCacheNode.ListenerContextStore(addr, isRetry));
 			
 		this.findAndLock(addr, false, false, isRetry, 
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{
-				if(!hasError) {
-					if(!isWriteHit(state)) {
+				if(!hasError) 
+				{
+					if(!isWriteHit(state)) 
+					{
 						this.writeRequest(this.next, tag,
 							(bool hasError)
 							{
-								if(!hasError) {
+								if(!hasError) 
+								{
 									this.cache.accessBlock(set, way);
 									this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
 									dirLock.unlock();
 									onCompletedCallback();
 								}
-								else {
+								else 
+								{
 									this.stat.writeRetries.value = this.stat.writeRetries.value + 1;
 									dirLock.unlock();
 									this.retry({this.store(addr, true, onCompletedCallback);});
 								}
 							});
 					}
-					else {
+					else 
+					{
 						this.cache.accessBlock(set, way);
 						this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
 						dirLock.unlock();
 						onCompletedCallback();
 					}
 				}
-				else {
+				else 
+				{
 					this.stat.writeRetries.value = this.stat.writeRetries.value + 1;
 					this.retry({this.store(addr, true, onCompletedCallback);});
 				}
@@ -1566,7 +1835,8 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void evict(uint set, uint way,
-		void delegate(bool hasError) onCompletedCallback) {
+		void delegate(bool hasError) onCompletedCallback) 
+	{
 		this.listenerSupportEvict.dispatch(this, new CoherentCacheNode.ListenerContextEvict(set, way));
 			
 		uint tag;
@@ -1581,10 +1851,12 @@ class CoherentCache: CoherentCacheNode {
 			
 		this.invalidate(null, set, way, 
 			{
-				if(state == MESIState.INVALID) {
+				if(state == MESIState.INVALID) 
+				{
 					onCompletedCallback(false);
 				}
-				else if(state == MESIState.MODIFIED) {
+				else if(state == MESIState.MODIFIED) 
+				{
 					this.schedule(
 						{
 							target.evictReceive(this, srcTag, true, 
@@ -1597,7 +1869,8 @@ class CoherentCache: CoherentCacheNode {
 								});
 						}, 2);
 				}
-				else {
+				else 
+				{
 					this.schedule(
 						{
 							target.evictReceive(this, srcTag, false, 
@@ -1614,20 +1887,25 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback,
-		void delegate(bool hasError) onReceiveReplyCallback) {
+		void delegate(bool hasError) onReceiveReplyCallback) 
+	{
 		this.listenerSupportEvictReceive.dispatch(this, new CoherentCacheNode.ListenerContextEvictReceive(source, addr, isWriteback));
 		
 		this.findAndLock(addr, false, false, false, 
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{				
-				if(!hasError) {
-					if(!isWriteback) {
+				if(!hasError) 
+				{
+					if(!isWriteback) 
+					{
 						this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
 					}
-					else {
+					else 
+					{
 						this.invalidate(source, set, way, 
 							{
-								if(state == MESIState.SHARED) {
+								if(state == MESIState.SHARED) 
+								{
 									this.writeRequest(this.next, tag,
 										(bool hasError)
 										{
@@ -1647,33 +1925,40 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void evictWritebackFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, DirLock dirLock,
-		void delegate(bool hasError) onReceiveReplyCallback) {
-		if(!hasError) {
+		void delegate(bool hasError) onReceiveReplyCallback) 
+	{
+		if(!hasError) 
+		{
 			this.cache.setBlock(set, way, tag, MESIState.MODIFIED);
 			this.cache.accessBlock(set, way);
 			this.evictProcess(source, set, way, dirLock, onReceiveReplyCallback);
 		}
-		else {
+		else 
+		{
 			dirLock.unlock();
 			onReceiveReplyCallback(true);
 		}
 	}
 	
 	void evictProcess(CoherentCacheNode source, uint set, uint way, DirLock dirLock,
-		void delegate(bool hasError) onReceiveReplyCallback) {
+		void delegate(bool hasError) onReceiveReplyCallback) 
+	{
 		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
 		dirEntry.unsetSharer(source);
-		if(dirEntry.owner == source) {
+		if(dirEntry.owner == source) 
+		{
 			dirEntry.owner = null;
 		}
 		dirLock.unlock();
 		onReceiveReplyCallback(false);
 	}
 	
-	void evictReplyReceive(bool hasError, uint srcSet, uint srcWay, void delegate(bool hasError) onCompletedCallback) {
+	void evictReplyReceive(bool hasError, uint srcSet, uint srcWay, void delegate(bool hasError) onCompletedCallback) 
+	{
 		this.schedule(
 			{
-				if(!hasError) {
+				if(!hasError) 
+				{
 					this.cache.setBlock(srcSet, srcWay, 0, MESIState.INVALID);
 				}
 				onCompletedCallback(hasError);
@@ -1681,7 +1966,8 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void readRequest(CoherentCacheNode target, uint addr,
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		void delegate(bool hasError, bool isShared) onCompletedCallback) 
+	{
 		this.listenerSupportReadRequest.dispatch(this, new CoherentCacheNode.ListenerContextReadRequest(target, addr));
 			
 		this.schedule(
@@ -1691,21 +1977,26 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void readRequestReceive(CoherentCacheNode source, uint addr,
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		void delegate(bool hasError, bool isShared) onCompletedCallback) 
+	{
 		this.listenerSupportReadRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextReadRequestReceive(source, addr));
 				
 		this.findAndLock(addr, this.next == source, true, false,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{				
-				if(!hasError) {
-					if(source.next == this) {
+				if(!hasError) 
+				{
+					if(source.next == this) 
+					{
 						this.readRequestUpdown(source, set, way, tag, state, dirLock, onCompletedCallback);
 					}
-					else {
+					else 
+					{
 						this.readRequestDownup(set, way, tag, dirLock, onCompletedCallback);
 					}
 				}
-				else {
+				else 
+				{
 					this.schedule(
 						{
 							onCompletedCallback(true, false);
@@ -1715,13 +2006,16 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void readRequestUpdown(CoherentCacheNode source, uint set, uint way, uint tag, MESIState state, DirLock dirLock,
-		void delegate(bool hasError, bool isShard) onCompletedCallback) {
+		void delegate(bool hasError, bool isShard) onCompletedCallback) 
+	{
 		uint pending = 1;
 		
-		if(state != MESIState.INVALID) {
+		if(state != MESIState.INVALID) 
+		{
 			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
 			
-			if(dirEntry.owner !is null && dirEntry.owner != source) {
+			if(dirEntry.owner !is null && dirEntry.owner != source) 
+			{
 				pending++;
 				this.readRequest(dirEntry.owner, tag,
 					(bool hasError, bool isShared)
@@ -1732,15 +2026,18 @@ class CoherentCache: CoherentCacheNode {
 
 			this.readRequestUpdownFinish(source, set, way, dirLock, pending, onCompletedCallback);
 		}
-		else {
+		else 
+		{
 			this.readRequest(this.next, tag,
 				(bool hasError, bool isShared)
 				{
-					if(!hasError) {
+					if(!hasError) 
+					{
 						this.cache.setBlock(set, way, tag, isShared ? MESIState.SHARED : MESIState.EXCLUSIVE);
 						this.readRequestUpdownFinish(source, set, way, dirLock, pending, onCompletedCallback);
 					}
-					else {
+					else 
+					{
 						dirLock.unlock();
 						this.schedule(
 							{
@@ -1752,16 +2049,20 @@ class CoherentCache: CoherentCacheNode {
 	}		
 	
 	void readRequestUpdownFinish(CoherentCacheNode source, uint set, uint way, DirLock dirLock, ref uint pending,
-			void delegate(bool hasError, bool isShard) onCompletedCallback) {
+			void delegate(bool hasError, bool isShard) onCompletedCallback) 
+	{
 		pending--;
-		if(pending == 0) {
+		if(pending == 0) 
+		{
 			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-			if(dirEntry.owner !is null && dirEntry.owner != source) {
+			if(dirEntry.owner !is null && dirEntry.owner != source) 
+			{
 				dirEntry.owner = null;
 			}
 			
 			dirEntry.setSharer(source);
-			if(!dirEntry.isShared) {
+			if(!dirEntry.isShared) 
+			{
 				dirEntry.owner = source;
 			}
 			
@@ -1775,11 +2076,13 @@ class CoherentCache: CoherentCacheNode {
 	}
 			
 	void readRequestDownup(uint set, uint way, uint tag, DirLock dirLock,
-		void delegate(bool hasError, bool isShared) onCompletedCallback) {
+		void delegate(bool hasError, bool isShared) onCompletedCallback) 
+	{
 		uint pending = 1;
 		
 		DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
-		if(dirEntry.owner !is null) {
+		if(dirEntry.owner !is null) 
+		{
 			pending++;
 			this.readRequest(dirEntry.owner, tag,
 				(bool hasError, bool isShared)
@@ -1792,10 +2095,12 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void readRequestDownUpFinish(uint set, uint way, uint tag, DirLock dirLock, ref uint pending,
-			void delegate(bool hasError, bool isShared) onCompletedCallback) {
+			void delegate(bool hasError, bool isShared) onCompletedCallback) 
+	{
 		pending--;
 		
-		if(pending == 0) {
+		if(pending == 0) 
+		{
 			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
 			dirEntry.owner = null;
 			
@@ -1810,7 +2115,8 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void writeRequest(CoherentCacheNode target, uint addr,
-		void delegate(bool hasError) onCompletedCallback) {
+		void delegate(bool hasError) onCompletedCallback) 
+	{
 		this.listenerSupportWriteRequest.dispatch(this, new CoherentCacheNode.ListenerContextWriteRequest(target, addr));
 				
 		this.schedule(
@@ -1820,20 +2126,24 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	override void writeRequestReceive(CoherentCacheNode source, uint addr,
-		void delegate(bool hasError) onCompletedCallback) {
+		void delegate(bool hasError) onCompletedCallback) 
+	{
 		this.listenerSupportWriteRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextWriteRequestReceive(source, addr));
 				
 		this.findAndLock(addr, this.next == source, false, false,
 			(bool hasError, uint set, uint way, MESIState state, uint tag, DirLock dirLock)
 			{				
-				if(!hasError) {
+				if(!hasError) 
+				{
 					this.invalidate(source, set, way, 
 						{
-							if(source.next == this) {
+							if(source.next == this) 
+							{
 								if(state == MESIState.MODIFIED || state == MESIState.EXCLUSIVE) {
 									writeRequestUpdownFinish(source, false, set, way, tag, state, dirLock, onCompletedCallback);
 								}
-								else {
+								else 
+								{
 									this.writeRequest(this.next, tag,
 										(bool hasError)
 										{
@@ -1841,7 +2151,8 @@ class CoherentCache: CoherentCacheNode {
 										});
 								}
 							}
-							else {
+							else 
+							{
 								this.cache.setBlock(set, way, 0, MESIState.INVALID);
 								dirLock.unlock();
 								this.schedule(
@@ -1851,7 +2162,8 @@ class CoherentCache: CoherentCacheNode {
 							}
 						});
 				}
-				else {
+				else 
+				{
 					this.schedule(
 						{
 							onCompletedCallback(true);
@@ -1861,14 +2173,17 @@ class CoherentCache: CoherentCacheNode {
 	}
 	
 	void writeRequestUpdownFinish(CoherentCacheNode source, bool hasError, uint set, uint way, uint tag, MESIState state, DirLock dirLock,
-			void delegate(bool hasError) onCompletedCallback) {
-		if(!hasError) {
+			void delegate(bool hasError) onCompletedCallback) 
+	{
+		if(!hasError) 
+		{
 			DirEntry dirEntry = this.cache.dir.dirEntries[set][way];
 			dirEntry.setSharer(source);
 			dirEntry.owner = source;
 			
 			this.cache.accessBlock(set, way);
-			if(state != MESIState.MODIFIED) {
+			if(state != MESIState.MODIFIED) 
+			{
 				this.cache.setBlock(set, way, tag, MESIState.EXCLUSIVE);
 			}
 			
@@ -1878,7 +2193,8 @@ class CoherentCache: CoherentCacheNode {
 					onCompletedCallback(false);
 				}, 2);									
 		}
-		else {
+		else 
+		{
 			dirLock.unlock();
 			this.schedule(
 				{
@@ -1887,7 +2203,8 @@ class CoherentCache: CoherentCacheNode {
 		}
 	}
 	
-	override void invalidate(CoherentCacheNode except, uint set, uint way, void delegate() onCompletedCallback) {
+	override void invalidate(CoherentCacheNode except, uint set, uint way, void delegate() onCompletedCallback) 
+	{
 		this.listenerSupportInvalidate.dispatch(this, new CoherentCacheNode.ListenerContextInvalidate(except, set, way));
 			
 		uint tag;
@@ -1901,15 +2218,19 @@ class CoherentCache: CoherentCacheNode {
 		
 		CoherentCacheNode[] sharersToRemove;
 		
-		foreach(sharer; dirEntry.sharers) {
-			if(sharer != except) {
+		foreach(sharer; dirEntry.sharers) 
+		{
+			if(sharer != except) 
+			{
 				sharersToRemove ~= sharer;
 			}
 		}
 		
-		foreach(sharer; sharersToRemove) {
+		foreach(sharer; sharersToRemove) 
+		{
 			dirEntry.unsetSharer(sharer);
-			if(dirEntry.owner == sharer) {
+			if(dirEntry.owner == sharer) 
+			{
 				dirEntry.owner = null;
 			}
 			
@@ -1918,7 +2239,8 @@ class CoherentCache: CoherentCacheNode {
 				{
 					pending--;
 					
-					if(pending == 0) {
+					if(pending == 0) 
+					{
 						onCompletedCallback();
 					}
 				});
@@ -1927,7 +2249,8 @@ class CoherentCache: CoherentCacheNode {
 		
 		pending--;
 		
-		if(pending == 0) {
+		if(pending == 0) 
+		{
 			onCompletedCallback();
 		}
 	}
@@ -1937,23 +2260,28 @@ class CoherentCache: CoherentCacheNode {
 	CacheStat stat;
 }
 
-class MemoryController: CoherentCacheNode {
-	this(MemorySystem memorySystem, MainMemoryConfig config, MainMemoryStat stat) {
+class MemoryController: CoherentCacheNode 
+{
+	this(MemorySystem memorySystem, MainMemoryConfig config, MainMemoryStat stat)
+	 {
 		super(memorySystem, "mem");
 		
 		this.config = config;
 		this.stat = stat;
 	}
 	
-	override uint level() {
+	override uint level() 
+	{
 		assert(0);
 	}
 	
-	uint latency() {
+	uint latency() 
+	{
 		return this.config.latency;
 	}
 	
-	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, void delegate(bool hasError) onReceiveReplyCallback) {
+	override void evictReceive(CoherentCacheNode source, uint addr, bool isWriteback, void delegate(bool hasError) onReceiveReplyCallback) 
+	{
 		this.listenerSupportEvictReceive.dispatch(this, new CoherentCacheNode.ListenerContextEvictReceive(source, addr, isWriteback));
 			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
@@ -1961,7 +2289,8 @@ class MemoryController: CoherentCacheNode {
 		this.schedule({onReceiveReplyCallback(false);}, this.latency);
 	}
 	
-	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) {
+	override void readRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError, bool isShared) onCompletedCallback) 
+	{
 		this.listenerSupportReadRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextReadRequestReceive(source, addr));
 			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
@@ -1969,7 +2298,8 @@ class MemoryController: CoherentCacheNode {
 		this.schedule({onCompletedCallback(false, false);}, this.latency);
 	}
 	
-	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) {
+	override void writeRequestReceive(CoherentCacheNode source, uint addr, void delegate(bool hasError) onCompletedCallback) 
+	{
 		this.listenerSupportWriteRequestReceive.dispatch(this, new CoherentCacheNode.ListenerContextWriteRequestReceive(source, addr));
 			
 		this.stat.accesses.value = this.stat.accesses.value + 1;
@@ -1981,53 +2311,66 @@ class MemoryController: CoherentCacheNode {
 	MainMemoryStat stat;
 }
 
-class Transaction {
-	void begin() {
+class Transaction 
+{
+	void begin() 
+	{
 		//TODO
 	}
 	
-	void commit() {
+	void commit() 
+	{
 		//TODO
 	}
 	
-	void abort() {
+	void abort() 
+	{
 		//TODO
 	}
 	
-	void resume() {
+	void resume() 
+	{
 		//TODO
 	}
 	
-	void clear() {
+	void clear() 
+	{
 		//TODO
 	}
 	
-	void clearReadSet() {
+	void clearReadSet() 
+	{
 		//TODO
 	}
 	
-	void clearWriteSet() {
+	void clearWriteSet() 
+	{
 		//TODO
 	}
 	
-	void checkpointRegisters() {
+	void checkpointRegisters() 
+	{
 		//TODO
 	}
 	
-	void restoreRegisters() {
+	void restoreRegisters() 
+	{
 		//TODO
 	}
 	
-	bool checkForReadConflict(uint addr) {
+	bool checkForReadConflict(uint addr) 
+	{
 		//TODO
 		return false;
 	}
 	
-	void abortAndReset() {
+	void abortAndReset() 
+	{
 		//TODO
 	}
 	
-	void earlyRelease() {
+	void earlyRelease() 
+	{
 		//TODO
 	}
 	
@@ -2038,14 +2381,17 @@ class Transaction {
 	uint lastLoad;
 }
 
-class MemorySystem {
-	this(Simulation simulation) {	
+class MemorySystem 
+{
+	this(Simulation simulation) 
+	{	
 		this.simulation = simulation;		
 		this.endNodeCount = this.simulation.config.architecture.processor.cores.length;
 		this.createMemoryHierarchy();
 	}
 
-	void createMemoryHierarchy() {
+	void createMemoryHierarchy() 
+	{
 		this.mem = new MemoryController(this, this.simulation.config.architecture.mainMemory, this.simulation.stat.mainMemory);
 				
 		this.l2 = new CoherentCache(this, this.simulation.config.architecture.l2Cache, this.simulation.stat.l2Cache);
@@ -2057,7 +2403,8 @@ class MemorySystem {
 		this.seqDs = new Sequencer[this.endNodeCount];
 		this.l1Ds = new CoherentCache[this.endNodeCount];
 
-		for(uint i = 0; i < this.endNodeCount; i++) {
+		for(uint i = 0; i < this.endNodeCount; i++) 
+		{
 			CoherentCache l1I = new CoherentCache(this, this.simulation.config.architecture.processor.cores[i].iCache, this.simulation.stat.processor.cores[i].iCache);
 			Sequencer seqI = new Sequencer("seqI" ~ "-" ~ to!(string)(i), l1I);
 

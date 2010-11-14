@@ -29,9 +29,9 @@ import std.c.stdlib;
 
 import std.path;
 
-class BpredBtbEntry {
+class BpredBtbEntry 
+{
 	this() {
-
 	}
 
 	uint addr;
@@ -42,23 +42,28 @@ class BpredBtbEntry {
 
 const uint MD_BR_SHIFT = 3;
 
-class BimodBpredDir {
-	this(uint size) {
+class BimodBpredDir 
+{
+	this(uint size) 
+	{
 		this.size = size;
 		this.table = new ubyte[this.size];
 
 		ubyte flipflop = 1;
-		for(uint cnt = 0; cnt < this.size; cnt++) {
+		for(uint cnt = 0; cnt < this.size; cnt++) 
+		{
 			this.table[cnt] = flipflop;
 			flipflop = cast(ubyte) (3 - flipflop);
 		}
 	}
 
-	uint hash(uint baddr) {
+	uint hash(uint baddr) 
+	{
 		return (baddr >> 19) ^ (baddr >> MD_BR_SHIFT) & (this.size - 1);
 	}
 
-	ubyte* lookup(uint baddr) {
+	ubyte* lookup(uint baddr) 
+	{
 		return &this.table[this.hash(baddr)];
 	}
 
@@ -66,8 +71,10 @@ class BimodBpredDir {
 	ubyte[] table;
 }
 
-class TwoLevelBpredDir {
-	this(uint l1Size, uint l2Size, uint shiftWidth, bool xor) {
+class TwoLevelBpredDir 
+{
+	this(uint l1Size, uint l2Size, uint shiftWidth, bool xor) 
+	{
 		this.l1Size = l1Size;
 		this.l2Size = l2Size;
 		this.shiftWidth = shiftWidth;
@@ -77,20 +84,24 @@ class TwoLevelBpredDir {
 		this.l2Table = new ubyte[this.l2Size];
 
 		ubyte flipflop = 1;
-		for(uint cnt = 0; cnt < this.l2Size; cnt++) {
+		for(uint cnt = 0; cnt < this.l2Size; cnt++) 
+		{
 			this.l2Table[cnt] = flipflop;
 			flipflop = cast(ubyte) (3 - flipflop);
 		}
 	}
 
-	ubyte* lookup(uint baddr) {
+	ubyte* lookup(uint baddr) 
+	{
 		uint l1Index = (baddr >> MD_BR_SHIFT) & (this.l1Size - 1);
 		uint l2Index = this.shiftRegs[l1Index];
 
-		if(this.xor) {
+		if(this.xor)
+		{
 			l2Index = (((l2Index ^ (baddr >> MD_BR_SHIFT)) & ((1 << this.shiftWidth) - 1)) | ((baddr >> MD_BR_SHIFT) << this.shiftWidth));
 		}
-		else {
+		else 
+		{
 			l2Index |= (baddr >> MD_BR_SHIFT) << this.shiftWidth;
 		}
 		
@@ -107,36 +118,47 @@ class TwoLevelBpredDir {
 	ubyte[] l2Table;
 }
 
-class BTB {
-	this(uint sets, uint assoc) {
+class BTB 
+{
+	this(uint sets, uint assoc) 
+	{
 		this.sets = sets;
 		this.assoc = assoc;
 
 		this.entries = new BpredBtbEntry[this.sets * this.assoc];
-		for(uint i = 0; i < this.sets * this.assoc; i++) {
+		for(uint i = 0; i < this.sets * this.assoc; i++) 
+		{
 			this[i] = new BpredBtbEntry();
 		}
 
-		if(this.assoc > 1) {
-			for(uint i = 0; i < this.sets * this.assoc; i++) {
-				if(i % this.assoc != (this.assoc - 1)) {
+		if(this.assoc > 1) 
+		{
+			for(uint i = 0; i < this.sets * this.assoc; i++) 
+			{
+				if(i % this.assoc != (this.assoc - 1))					
+				{
 					this[i].next = this[i + 1];
-				} else {
+				} 
+				else 
+				{
 					this[i].next = null;
 				}
 
-				if(i % this.assoc != (this.assoc - 1)) {
+				if(i % this.assoc != (this.assoc - 1)) 
+				{
 					this[i + 1].prev = this[i];
 				}
 			}
 		}
 	}
 
-	BpredBtbEntry opIndex(uint index) {
+	BpredBtbEntry opIndex(uint index) 
+	{
 		return this.entries[index];
 	}
 
-	void opIndexAssign(BpredBtbEntry value, uint index) {
+	void opIndexAssign(BpredBtbEntry value, uint index) 
+	{
 		this.entries[index] = value;
 	}
 
@@ -145,22 +167,27 @@ class BTB {
 	BpredBtbEntry[] entries;
 }
 
-class RAS {
-	this(uint size) {
+class RAS 
+{
+	this(uint size) 
+	{
 		this.size = size;
 		this.entries = new BpredBtbEntry[this.size];
-		for(uint i = 0; i < this.size; i++) {
+		for(uint i = 0; i < this.size; i++) 
+		{
 			this[i] = new BpredBtbEntry();
 		}
 
 		this.tos = this.size - 1;
 	}
 
-	BpredBtbEntry opIndex(uint index) {
+	BpredBtbEntry opIndex(uint index) 
+	{
 		return this.entries[index];
 	}
 
-	void opIndexAssign(BpredBtbEntry value, uint index) {
+	void opIndexAssign(BpredBtbEntry value, uint index) 
+	{
 		this.entries[index] = value;
 	}
 
@@ -169,9 +196,10 @@ class RAS {
 	BpredBtbEntry[] entries;
 }
 
-class BpredUpdate {
-	this() {
-
+class BpredUpdate 
+{
+	this() 
+	{
 	}
 
 	ubyte* pdir1;
@@ -184,7 +212,8 @@ class BpredUpdate {
 	bool meta;
 }
 
-interface Bpred {
+interface Bpred 
+{
 	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx);
 
 	void recover(uint baddr, uint stackRecoverIdx);
@@ -192,12 +221,15 @@ interface Bpred {
 	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate);	
 }
 
-class CombinedBpred : Bpred {
-	this() {
+class CombinedBpred : Bpred 
+{
+	this() 
+	{
 		this(65536, 1, 65536, 65536, 16, 1, 1024, 4, 1024);
 	}
 	
-	this(uint bimodSize, uint l1Size, uint l2Size, uint metaSize, uint shiftWidth, bool xor, uint btbSets, uint btbAssoc, uint rasSize) {
+	this(uint bimodSize, uint l1Size, uint l2Size, uint metaSize, uint shiftWidth, bool xor, uint btbSets, uint btbAssoc, uint rasSize) 
+	{
 		this.twoLevel = new TwoLevelBpredDir(l1Size, l2Size, shiftWidth, xor);
 		this.bimod = new BimodBpredDir(bimodSize);
 		this.meta = new BimodBpredDir(metaSize);
@@ -207,10 +239,12 @@ class CombinedBpred : Bpred {
 	}
 
 	// btarget is for static predictors such taken or not taken, so here it is not used at all
-	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) {
+	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) 
+	{
 		StaticInst staticInst = dynamicInst.staticInst;
 				
-		if(!staticInst.isControl) {
+		if(!staticInst.isControl) 
+		{
 			return 0;
 		}
 
@@ -220,7 +254,8 @@ class CombinedBpred : Bpred {
 		dirUpdate.pdir2 = null;
 		dirUpdate.pmeta = null;
 		
-		if(staticInst.isControl && !staticInst.isUnconditional) {
+		if(staticInst.isControl && !staticInst.isUnconditional) 
+		{
 			ubyte* bimodCtr = this.bimod.lookup(baddr);
 			ubyte* twoLevelCtr = this.twoLevel.lookup(baddr);
 			ubyte* metaCtr = this.meta.lookup(baddr);
@@ -230,30 +265,36 @@ class CombinedBpred : Bpred {
 			dirUpdate.bimod = (*bimodCtr >= 2);
 			dirUpdate.twoLevel = (*twoLevelCtr >= 2);
 			
-			if(*metaCtr >=2) {
+			if(*metaCtr >=2) 
+			{
 				dirUpdate.pdir1 = twoLevelCtr;
 				dirUpdate.pdir2 = bimodCtr;
 			}
-			else {
+			else 
+			{
 				dirUpdate.pdir1 = bimodCtr;
 				dirUpdate.pdir2 = twoLevelCtr;
 			}
 		}
 		
-		if(this.retStack.size > 0) {
+		if(this.retStack.size > 0) 
+		{
 			stackRecoverIdx = this.retStack.tos;
 		}
-		else {
+		else 
+		{
 			stackRecoverIdx = 0;
 		}
 		
-		if(staticInst.isReturn && this.retStack.size > 0) {
+		if(staticInst.isReturn && this.retStack.size > 0) 
+		{
 			uint target = this.retStack[this.retStack.tos].target;
 			this.retStack.tos = (this.retStack.tos + this.retStack.size - 1) % this.retStack.size;
 			dirUpdate.ras = true;
 		}
 		
-		if(staticInst.isCall && this.retStack.size > 0) {
+		if(staticInst.isCall && this.retStack.size > 0) 
+		{
 			this.retStack.tos = (this.retStack.tos + 1) % this.retStack.size;
 			this.retStack[this.retStack.tos].target = baddr + uint.sizeof;
 		}
@@ -262,76 +303,94 @@ class CombinedBpred : Bpred {
 		
 		BpredBtbEntry btbEntry;
 		
-		if(this.btb.assoc > 1) {
+		if(this.btb.assoc > 1) 
+		{
 			index *= this.btb.assoc;
 			
-			for(uint i = index; i < (index + this.btb.assoc); i++) {
-				if(this.btb[i].addr == baddr) {
+			for(uint i = index; i < (index + this.btb.assoc); i++) 
+			{
+				if(this.btb[i].addr == baddr) 
+				{
 					btbEntry = this.btb[i];
 					break;
 				}
 			}
 		}
-		else {
+		else 
+		{
 			btbEntry = this.btb[index];
-			if(btbEntry.addr != baddr) {
+			if(btbEntry.addr != baddr) 
+			{
 				btbEntry = null;
 			}
 		}
 		
-		if(staticInst.isControl && staticInst.isUnconditional) {
+		if(staticInst.isControl && staticInst.isUnconditional)
+		{
 			return btbEntry !is null ? btbEntry.target : 1;
 		}
 		
-		if(btbEntry is null) {
+		if(btbEntry is null) 
+		{
 			return *(dirUpdate.pdir1) >= 2 ? 1 : 0;
 		}
-		else {
+		else 
+		{
 			return *(dirUpdate.pdir1) >= 2 ? btbEntry.target :0;
 		}
 	}
 
-	void recover(uint baddr, uint stackRecoverIdx) {
+	void recover(uint baddr, uint stackRecoverIdx) 
+	{
 		this.retStack.tos = stackRecoverIdx;
 	}
 
-	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate) {
+	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate) 
+	{
 		StaticInst staticInst = dynamicInst.staticInst;
 		
 		BpredBtbEntry btbEntry = null;
 		
-		if(!staticInst.isControl) {
+		if(!staticInst.isControl) 
+		{
 			return;
 		}
 		
-		if(staticInst.isControl && !staticInst.isUnconditional) {
+		if(staticInst.isControl && !staticInst.isUnconditional) 
+		{
 			uint l1Index = (baddr >> MD_BR_SHIFT) & (this.twoLevel.l1Size - 1);
 			uint shiftReg = (this.twoLevel.shiftRegs[l1Index] << 1) | taken;
 			this.twoLevel.shiftRegs[l1Index] = shiftReg & ((1 << this.twoLevel.shiftWidth) - 1);
 		}
 		
-		if(taken) {
+		if(taken) 
+		{
 			uint index = (baddr >> MD_BR_SHIFT) & (this.btb.sets - 1);
 			
-			if(this.btb.assoc > 1) {
+			if(this.btb.assoc > 1) 
+			{
 				index *= this.btb.assoc;
 				
 				BpredBtbEntry lruHead = null, lruItem = null;
 				
-				for(uint i = index; i < (index + this.btb.assoc); i++) {
-					if(this.btb[i].addr == baddr) {
+				for(uint i = index; i < (index + this.btb.assoc); i++) 
+				{
+					if(this.btb[i].addr == baddr) 
+					{
 						assert(btbEntry is null);
 						btbEntry = this.btb[i];
 					}
 					
 					assert(this.btb[i].prev != this.btb[i].next);
 					
-					if(this.btb[i].prev is null) {
+					if(this.btb[i].prev is null) 
+					{
 						assert(lruHead is null);
 						lruHead = this.btb[i];
 					}
 					
-					if(this.btb[i].next is null) {
+					if(this.btb[i].next is null)
+					{
 						assert(lruItem is null);
 						lruItem = this.btb[i];
 					}
@@ -339,16 +398,20 @@ class CombinedBpred : Bpred {
 				
 				assert(lruHead !is null && lruItem !is null);
 				
-				if(btbEntry is null) {
+				if(btbEntry is null) 
+				{
 					btbEntry = lruItem;
 				}
 				
-				if(btbEntry != lruHead) {
-					if(btbEntry.prev !is null) {
+				if(btbEntry != lruHead) 
+				{
+					if(btbEntry.prev !is null) 
+					{
 						btbEntry.prev.next = btbEntry.next;
 					}
 					
-					if(btbEntry.next !is null) {
+					if(btbEntry.next !is null) 
+					{
 						btbEntry.next.prev = btbEntry.prev;
 					}
 					
@@ -359,61 +422,82 @@ class CombinedBpred : Bpred {
 					assert(btbEntry.prev != btbEntry.next);
 				}
 			}
-			else {
+			else 
+			{
 				btbEntry = this.btb[index];
 			}
 		}
 		
-		if(dirUpdate.pdir1 !is null) {
-			if(taken) {
-				if(*dirUpdate.pdir1 < 3) {
+		if(dirUpdate.pdir1 !is null) 
+		{
+			if(taken) 
+			{
+				if(*dirUpdate.pdir1 < 3) 
+				{
 					++*dirUpdate.pdir1;
 				}
 			}
-			else {
-				if(*dirUpdate.pdir1 > 0) {
+			else 
+			{
+				if(*dirUpdate.pdir1 > 0) 
+				{
 					++*dirUpdate.pdir1;
 				}
 			}
 		}
 		
-		if(dirUpdate.pdir2 !is null) {
-			if(taken) {
-				if(*dirUpdate.pdir2 < 3) {
+		if(dirUpdate.pdir2 !is null) 
+		{
+			if(taken) 
+			{
+				if(*dirUpdate.pdir2 < 3) 
+				{
 					++*dirUpdate.pdir2;
 				}
 			}
-			else {
-				if(*dirUpdate.pdir2 > 0) {
+			else 
+			{
+				if(*dirUpdate.pdir2 > 0) 
+				{
 					--*dirUpdate.pdir2;
 				}
 			}
 		}
 		
-		if(dirUpdate.pmeta !is null) {
-			if(dirUpdate.bimod != dirUpdate.twoLevel) {
-				if(dirUpdate.twoLevel == taken) {
-					if(*dirUpdate.pmeta < 3) {
+		if(dirUpdate.pmeta !is null) 
+		{
+			if(dirUpdate.bimod != dirUpdate.twoLevel) 
+			{
+				if(dirUpdate.twoLevel == taken) 
+				{
+					if(*dirUpdate.pmeta < 3) 
+					{
 						++*dirUpdate.pmeta;
 					}
 				}
-				else {
-					if(*dirUpdate.pmeta > 0) {
+				else 
+				{
+					if(*dirUpdate.pmeta > 0) 
+					{
 						--*dirUpdate.pmeta;
 					}
 				}
 			}
 		}
 		
-		if(btbEntry !is null) {
+		if(btbEntry !is null) 
+		{
 			assert(taken);
 			
-			if(btbEntry.addr == baddr) {
-				if(!correct) {
+			if(btbEntry.addr == baddr) 
+			{
+				if(!correct) 
+				{
 					btbEntry.target = btarget;
 				}
 			}
-			else {
+			else 
+			{
 				btbEntry.addr = baddr;
 				btbEntry.staticInst = staticInst;
 				btbEntry.target = btarget;
@@ -429,7 +513,8 @@ class CombinedBpred : Bpred {
 	RAS retStack;
 }
 
-class FunctionalUnit {
+class FunctionalUnit 
+{
 	this(FunctionalUnitPool pool, FunctionalUnitType type, uint opLat, uint issueLat) {
 		this.pool = pool;
 		this.type = type;
@@ -437,18 +522,21 @@ class FunctionalUnit {
 		this.issueLat = issueLat;
 	}
 
-	override string toString() {
+	override string toString() 
+	{
 		return format("%s[type=%s, opLat=%d, issueLat=%d, busy=%d]", "FunctionalUnit",
 			to!(string)(this.type), this.opLat, this.issueLat, this.busy);
 	}
 	
-	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate() onCompletedCallback) {
+	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate() onCompletedCallback) 
+	{
 		this.pool.listenerSupportAcquire.dispatch(this.pool, new FunctionalUnitPool.ListenerContext(reorderBufferEntry, this));
 		this.pool.eventQueue.schedule(
 			{
 				this.busy = false;
 				
-				if(onCompletedCallback !is null) {
+				if(onCompletedCallback !is null) 
+				{
 					onCompletedCallback();
 				}
 				
@@ -465,9 +553,11 @@ class FunctionalUnit {
 	bool busy;
 }
 
-class FunctionalUnitPool {
+class FunctionalUnitPool 
+{
 	static class ListenerContext {
-		this(ReorderBufferEntry reorderBufferEntry, FunctionalUnit fu) {
+		this(ReorderBufferEntry reorderBufferEntry, FunctionalUnit fu) 
+		{
 			this.reorderBufferEntry = reorderBufferEntry;
 			this.fu = fu;
 		}
@@ -479,7 +569,8 @@ class FunctionalUnitPool {
 	alias ListenerSupport!(FunctionalUnitPool, ListenerContext) ListenerSupportT;
 	alias ListenerSupportT.ListenerT ListenerT;
 	
-	this(Core core) {
+	this(Core core) 
+	{
 		this.core = core;
 		
 		this.name = format("c%d.fuPool", this.core.num);
@@ -503,29 +594,35 @@ class FunctionalUnitPool {
 		this.listenerSupportRelease = new ListenerSupportT();
 	}
 	
-	void add(FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) {
+	void add(FunctionalUnitType type, uint quantity, uint opLat, uint issueLat) 
+	{
 		this.entities[type] = new FunctionalUnit[quantity];
-		for(uint i = 0; i < quantity; i++) {
+		for(uint i = 0; i < quantity; i++) 
+		{
 			this.entities[type][i] = new FunctionalUnit(this, type, opLat, issueLat);
 		}
 	}
 	
-	FunctionalUnit findFree(FunctionalUnitType type) {
+	FunctionalUnit findFree(FunctionalUnitType type) 
+	{
 		auto res = filter!((FunctionalUnit fu){return !fu.busy;})(this.entities[type]);
 		return !res.empty ? res.front: null;
 	}
 	
-	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry reorderBufferEntry) onCompletedCallback2) {
+	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry reorderBufferEntry) onCompletedCallback2) 
+	{
 		FunctionalUnitType type = reorderBufferEntry.dynamicInst.staticInst.fuType;
 		FunctionalUnit fu = this.findFree(type);
 		
-		if(fu !is null) {
+		if(fu !is null) 
+		{
 			fu.acquire(reorderBufferEntry, 
 				{
 					onCompletedCallback2(reorderBufferEntry);
 				});
 		}
-		else {
+		else 
+		{
 			this.eventQueue.schedule(
 				{
 					this.acquire(reorderBufferEntry, onCompletedCallback2);
@@ -533,11 +630,13 @@ class FunctionalUnitPool {
 		}
 	}
 	
-	void addAcquireListener(ListenerT listener) {
+	void addAcquireListener(ListenerT listener) 
+	{
 		this.listenerSupportAcquire.addListener(listener);
 	}
 	
-	void addReleaseListener(ListenerT listener) {
+	void addReleaseListener(ListenerT listener) 
+	{
 		this.listenerSupportRelease.addListener(listener);
 	}
 	
@@ -551,46 +650,55 @@ class FunctionalUnitPool {
 	ListenerSupportT listenerSupportRelease;
 }
 
-enum PhysicalRegisterState: string {
+enum PhysicalRegisterState: string 
+{
 	FREE = "FREE",
 	ALLOC = "ALLOC",
 	WB = "WB",
 	ARCH = "ARCH"
 }
 
-class PhysicalRegister {
-	this(PhysicalRegisterFile file) {
+class PhysicalRegister 
+{
+	this(PhysicalRegisterFile file) 
+	{
 		this.file = file;
 		this.state = PhysicalRegisterState.FREE;
 	}
 	
-	void alloc(ReorderBufferEntry reorderBufferEntry) {
+	void alloc(ReorderBufferEntry reorderBufferEntry) 
+	{
 		this.file.listenerSupportWriteback.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.ALLOC;
 		this.reorderBufferEntry = reorderBufferEntry;
 	}
 	
-	void writeback() {
+	void writeback() 
+	{
 		this.file.listenerSupportWriteback.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(this.reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.WB;
 	}
 	
-	void commit() {
+	void commit() 
+	{
 		this.file.listenerSupportCommit.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(this.reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.ARCH;
 	}
 	
-	void dealloc() {
+	void dealloc() 
+	{
 		this.file.listenerSupportDealloc.dispatch(this.file, new PhysicalRegisterFile.ListenerContext(this.reorderBufferEntry, this));
 		this.state = PhysicalRegisterState.FREE;
 		this.reorderBufferEntry = null;
 	}
 	
-	bool isReady() {
+	bool isReady() 
+	{
 		return this.state == PhysicalRegisterState.WB || this.state == PhysicalRegisterState.ARCH;
 	}
 	
-	override string toString() {
+	override string toString() 
+	{
 		return format("PhysicalRegister[state=%s, reorderBufferEntry=%s]", this.state, this.reorderBufferEntry);
 	}
 	
@@ -599,15 +707,20 @@ class PhysicalRegister {
 	ReorderBufferEntry reorderBufferEntry;
 }
 
-class NoFreePhysicalRegisterException: Exception {
-	this() {
+class NoFreePhysicalRegisterException: Exception 
+{
+	this() 
+	{
 		super("NoFreePhysicalRegisterException");
 	}
 }
 
-class PhysicalRegisterFile {
-	static class ListenerContext {
-		this(ReorderBufferEntry reorderBufferEntry, PhysicalRegister physicalRegister) {
+class PhysicalRegisterFile 
+{
+	static class ListenerContext 
+	{
+		this(ReorderBufferEntry reorderBufferEntry, PhysicalRegister physicalRegister) 
+		{
 			this.reorderBufferEntry = reorderBufferEntry;
 			this.physicalRegister = physicalRegister;
 		}
@@ -619,13 +732,15 @@ class PhysicalRegisterFile {
 	alias ListenerSupport!(PhysicalRegisterFile, ListenerContext) ListenerSupportT;
 	alias ListenerSupportT.ListenerT ListenerT;
 	
-	this(Core core, string namePostfix, uint capacity) {
+	this(Core core, string namePostfix, uint capacity) 
+	{
 		this.core = core;
 		this.name = format("c%d.%s", core.num, namePostfix);
 		this.capacity = capacity;
 		
 		this.entries = new PhysicalRegister[this.capacity];
-		for(uint i = 0; i < this.capacity; i++) {
+		for(uint i = 0; i < this.capacity; i++) 
+		{
 			this.entries[i] = new PhysicalRegister(this);
 		}
 		
@@ -635,15 +750,18 @@ class PhysicalRegisterFile {
 		this.listenerSupportDealloc = new ListenerSupportT();
 	}
 	
-	PhysicalRegister findFree() {
+	PhysicalRegister findFree() 
+	{
 		auto res = filter!((PhysicalRegister physReg){return physReg.state == PhysicalRegisterState.FREE;})(this.entries);
 		return !res.empty ? res.front : null;
 	}
 	
-	PhysicalRegister alloc(ReorderBufferEntry reorderBufferEntry) {
+	PhysicalRegister alloc(ReorderBufferEntry reorderBufferEntry) 
+	{
 		PhysicalRegister freeReg = this.findFree();
 		
-		if(freeReg is null) {
+		if(freeReg is null) 
+		{
 			throw new NoFreePhysicalRegisterException();
 		}
 		
@@ -651,33 +769,48 @@ class PhysicalRegisterFile {
 		return freeReg;
 	}
 	
-	void addAllocListener(ListenerT listener) {
+	void addAllocListener(ListenerT listener) 
+	{
 		this.listenerSupportAlloc.addListener(listener);
 	}
 	
-	void addWritebackListener(ListenerT listener) {
+	void addWritebackListener(ListenerT listener) 
+	{
 		this.listenerSupportWriteback.addListener(listener);
 	}
 	
-	void addCommitListener(ListenerT listener) {
+	void addCommitListener(ListenerT listener) 
+	{
 		this.listenerSupportCommit.addListener(listener);
 	}
 	
-	void addDeallocListener(ListenerT listener) {
+	void addDeallocListener(ListenerT listener) 
+	{
 		this.listenerSupportDealloc.addListener(listener);
 	}
 	
-	PhysicalRegister opIndex(uint index) {
+	PhysicalRegister opIndex(uint index)
+	in
+	{
 		assert(index >= 0 && index <= this.entries.length, format("%d", index));
+	}
+	body
+	{
 		return this.entries[index];
 	}
 	
-	void opIndexAssign(PhysicalRegister value, uint index) {
+	void opIndexAssign(PhysicalRegister value, uint index) 
+	in
+	{
 		assert(index >= 0 && index <= this.entries.length, format("%d", index));
+	}
+	body
+	{
 		this.entries[index] = value;
 	}
 	
-	override string toString() {
+	override string toString() 
+	{
 		return format("PhysicalRegisterFile[capacity=%d, core=%s, entries.length=%d]", this.capacity, this.core, this.entries.length);
 	}
 
@@ -689,9 +822,12 @@ class PhysicalRegisterFile {
 	ListenerSupportT listenerSupportAlloc, listenerSupportWriteback, listenerSupportCommit, listenerSupportDealloc;
 }
 
-class RegisterRenameTable {
-	static class ListenerContext {
-		this(RegisterDependencyType type, uint num, PhysicalRegister physReg) {
+class RegisterRenameTable 
+{
+	static class ListenerContext 
+	{
+		this(RegisterDependencyType type, uint num, PhysicalRegister physReg) 
+		{
 			this.type = type;
 			this.num = num;
 			this.physReg = physReg;
@@ -705,31 +841,37 @@ class RegisterRenameTable {
 	alias ListenerSupport!(RegisterRenameTable, ListenerContext) ListenerSupportT;
 	alias ListenerSupportT.ListenerT ListenerT;
 	
-	this(Thread thread) {
+	this(Thread thread) 
+	{
 		this.thread = thread;
 		this.name = format("c%dt%d.renameTable", this.thread.core.num, this.thread.num);
 		
 		this.listenerSupportValueChanged = new ListenerSupportT();
 	}
 	
-	PhysicalRegister opIndex(RegisterDependency dep) {
+	PhysicalRegister opIndex(RegisterDependency dep) 
+	{
 		return this[dep.type, dep.num];
 	}
 	
-	void opIndexAssign(PhysicalRegister physReg, RegisterDependency dep) {
+	void opIndexAssign(PhysicalRegister physReg, RegisterDependency dep) 
+	{
 		this[dep.type, dep.num] = physReg;
 	}
 	
-	PhysicalRegister opIndex(RegisterDependencyType type, uint num) {
+	PhysicalRegister opIndex(RegisterDependencyType type, uint num) 
+	{
 		return this.entries[type][num];
 	}
 	
-	void opIndexAssign(PhysicalRegister physReg, RegisterDependencyType type, uint num) {
+	void opIndexAssign(PhysicalRegister physReg, RegisterDependencyType type, uint num) 
+	{
 		this.listenerSupportValueChanged.dispatch(this, new ListenerContext(type, num, physReg));
 		this.entries[type][num] = physReg;
 	}
 	
-	void addValueChangedListener(ListenerT listener) {
+	void addValueChangedListener(ListenerT listener) 
+	{
 		this.listenerSupportValueChanged.addListener(listener);
 	}
 	
@@ -740,13 +882,16 @@ class RegisterRenameTable {
 	ListenerSupportT listenerSupportValueChanged;
 }
 
-class DecodeBufferEntry {
-	this(DynamicInst dynamicInst) {
+class DecodeBufferEntry 
+{
+	this(DynamicInst dynamicInst) 
+	{
 		this.id = currentId++;
 		this.dynamicInst = dynamicInst;
 	}
 	
-	override string toString() {
+	override string toString() 
+	{
 		return format("DecodeBufferEntry[id=%d, dynamicInst=%s]", this.id, this.dynamicInst);
 	}
 	
@@ -758,21 +903,26 @@ class DecodeBufferEntry {
 	uint stackRecoverIndex;
 	BpredUpdate dirUpdate;
 	
-	static this() {
+	static this() 
+	{
 		currentId = 0;
 	}
 	
 	static ulong currentId;
 }
 
-class DecodeBuffer: Queue!(DecodeBufferEntry, DecodeBuffer) {
-	this(Thread thread, uint capacity) {
+class DecodeBuffer: Queue!(DecodeBufferEntry, DecodeBuffer) 
+{
+	this(Thread thread, uint capacity) 
+	{
 		super(format("c%dt%d.decodeBuffer", thread.core.num, thread.num), capacity);
 	}
 }
 
-class ReorderBufferEntry {
-	this(DynamicInst dynamicInst, RegisterDependency[] iDeps, RegisterDependency[] oDeps) {
+class ReorderBufferEntry 
+{
+	this(DynamicInst dynamicInst, RegisterDependency[] iDeps, RegisterDependency[] oDeps) 
+	{
 		this.id = currentId++;
 		this.dynamicInst = dynamicInst;
 		this.iDeps = iDeps;
@@ -781,45 +931,55 @@ class ReorderBufferEntry {
 		this.isValid = true;
 	}
 	
-	void signalExecutionCompleted() {
+	void signalExecutionCompleted() 
+	{
 		this.dynamicInst.thread.core.oooEventQueue ~= this;
 	}
 	
-	bool allOperandsReady() {
+	bool allOperandsReady()
+	{
 		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(this.iDeps).empty;
 	}
 	
-	bool storeAddressReady() {
+	bool storeAddressReady()
+	{
 		MemoryOp memOp = (cast(MemoryOp)(this.dynamicInst.staticInst));		
 		assert(memOp !is null);	
 		
 		return this.srcPhysRegs[memOp.memIDeps[0]].isReady;
 	}
 	
-	bool storeOperandsReady() {
+	bool storeOperandsReady() 
+	{
 		MemoryOp memOp = (cast(MemoryOp)(this.dynamicInst.staticInst));		
 		assert(memOp !is null);	
 		
 		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(memOp.memIDeps[1..$]).empty;
 	}
 	
-	bool isInLoadStoreQueue() {
+	bool isInLoadStoreQueue()
+	{
 		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry is null;
 	}
 	
-	bool isEAComputation() {
+	bool isEAComputation() 
+	{
 		return this.dynamicInst.staticInst.isMem && this.loadStoreQueueEntry !is null;
 	}
 	
-	void invalidate() {
+	void invalidate() 
+	{
 		this.isValid = false;
 	}
 	
-	override string toString() {
-		string operandsReadyToString() {
+	override string toString() 
+	{
+		string operandsReadyToString() 
+		{
 			string str = "\n";
 		
-			foreach(i, iDep; this.iDeps) {
+			foreach(i, iDep; this.iDeps)			
+			{
 				str ~= format("[%s] idep=%s, isReady=%s\n", i, iDep, this.srcPhysRegs[iDep].isReady);
 			}
 			
@@ -848,39 +1008,50 @@ class ReorderBufferEntry {
 	
 	ulong id;
 	
-	static this() {
+	static this() 
+	{
 		currentId = 0;
 	}
 	
 	static ulong currentId;
 }
 
-class ReadyQueue: List!(ReorderBufferEntry, ReadyQueue) {
-	this(Core core) {
+class ReadyQueue: List!(ReorderBufferEntry, ReadyQueue) 
+{
+	this(Core core) 
+	{
 		super(format("c%d.readyQueue", core.num));
 	}
 }
 
-class WaitingQueue: List!(ReorderBufferEntry, WaitingQueue) {
-	this(Core core) {
+class WaitingQueue: List!(ReorderBufferEntry, WaitingQueue) 
+{
+	this(Core core) 
+	{
 		super(format("c%d.waitingQueue", core.num));
 	}
 }
 
-class OoOEventQueue: List!(ReorderBufferEntry, OoOEventQueue) {
-	this(Core core) {
+class OoOEventQueue: List!(ReorderBufferEntry, OoOEventQueue)
+{
+	this(Core core) 
+	{
 		super(format("c%d.oooEventQueue", core.num));
 	}
 }
 
-class ReorderBuffer: Queue!(ReorderBufferEntry, ReorderBuffer) {
-	this(Thread thread, uint capacity) {
+class ReorderBuffer: Queue!(ReorderBufferEntry, ReorderBuffer) 
+{
+	this(Thread thread, uint capacity) 
+	{
 		super(format("c%dt%d.reorderBuffer", thread.core.num, thread.num), capacity);
 	}
 }
 
-class LoadStoreQueue: Queue!(ReorderBufferEntry, LoadStoreQueue) {
-	this(Thread thread, uint capacity) {
+class LoadStoreQueue: Queue!(ReorderBufferEntry, LoadStoreQueue)
+{
+	this(Thread thread, uint capacity) 
+	{
 		super(format("c%dt%d.loadStoreQueue", thread.core.num, thread.num), capacity);
 	}
 }
@@ -912,25 +1083,31 @@ class LoadStoreQueue: Queue!(ReorderBufferEntry, LoadStoreQueue) {
  * instruction lifecycle: decodeBuffer -> dispatchBuffer -> reorderBuffer
  */
 
-class Processor {
+class Processor 
+{
 	public:
-		this(CPUSimulator simulator) {
+		this(CPUSimulator simulator) 
+		{
 			this(simulator, "");
 		}
 
-		this(CPUSimulator simulator, string name) {
+		this(CPUSimulator simulator, string name)
+		{
 			this.simulator = simulator;
 			this.name = name;
 			
 			this.activeThreadCount = 0;
 		}
 		
-		bool canRun() {
+		bool canRun() 
+		{
 			return this.activeThreadCount > 0;
 		}
 
-		void run() {
-			foreach(core; this.cores) {
+		void run() 
+		{
+			foreach(core; this.cores) 
+			{
 				core.run();
 			}
 		}
@@ -942,8 +1119,10 @@ class Processor {
 		int activeThreadCount;
 }
 
-class Core {
-	this(Processor processor, ProcessorConfig config, uint num) {
+class Core 
+{
+	this(Processor processor, ProcessorConfig config, uint num) 
+	{
 		this.processor = processor;
 		this.num = num;
 	
@@ -965,15 +1144,20 @@ class Core {
 		this.mem = new Memory();
 	}
 	
-	void fetch() {
-		foreach(thread; this.threads) {
+	void fetch() 
+	{
+		foreach(thread; this.threads) 
+		{
 			thread.fetch();
 		}
 	}
 	
-	uint findNextThreadIdToDecode(ref bool allStalled, ref bool[uint] decodeStalled) {
-		foreach(i, thread; this.threads) {
-			if(!decodeStalled[i] && !thread.decodeBuffer.empty && !thread.reorderBuffer.full && !thread.loadStoreQueue.full) {
+	uint findNextThreadIdToDecode(ref bool allStalled, ref bool[uint] decodeStalled) 
+	{
+		foreach(i, thread; this.threads) 
+		{
+			if(!decodeStalled[i] && !thread.decodeBuffer.empty && !thread.reorderBuffer.full && !thread.loadStoreQueue.full) 
+			{
 				allStalled = false;
 				return i;
 			}
@@ -983,12 +1167,14 @@ class Core {
 		return -1;
 	}
 	
-	void registerRename() {
+	void registerRename() 
+	{
 		bool[uint] decodeStalled;
 		
 		static uint decodeThreadId = 0;
 		
-		foreach(i, thread; this.threads) {
+		foreach(i, thread; this.threads) 
+		{
 			decodeStalled[i] = false;
 		}
 		
@@ -997,12 +1183,14 @@ class Core {
 		uint numRenamed = 0;
 		
 		/* instruction decode B/W left? */
-		while(numRenamed < this.decodeWidth) {
+		while(numRenamed < this.decodeWidth) 
+		{
 			bool allStalled = true;
 			
 			decodeThreadId = this.findNextThreadIdToDecode(allStalled, decodeStalled);
 			
-			if(allStalled) {
+			if(allStalled) 
+			{
 				break;
 			}
 			
@@ -1014,7 +1202,8 @@ class Core {
 			DynamicInst dynamicInst = decodeBufferEntry.dynamicInst;
 	
 			/* is this a NOP */
-			if(!dynamicInst.staticInst.isNop) {
+			if(!dynamicInst.staticInst.isNop) 
+			{
 				ReorderBufferEntry reorderBufferEntry = new ReorderBufferEntry(dynamicInst, dynamicInst.staticInst.iDeps, dynamicInst.staticInst.oDeps);
 				reorderBufferEntry.npc = decodeBufferEntry.npc;
 				reorderBufferEntry.nnpc = decodeBufferEntry.nnpc;
@@ -1024,23 +1213,27 @@ class Core {
 				reorderBufferEntry.dirUpdate = decodeBufferEntry.dirUpdate;
 				reorderBufferEntry.isSpeculative = decodeBufferEntry.isSpeculative;
 				
-				foreach(iDep; reorderBufferEntry.iDeps) {
+				foreach(iDep; reorderBufferEntry.iDeps) 
+				{
 					reorderBufferEntry.srcPhysRegs[iDep] = this.threads[decodeThreadId].renameTable[iDep];
 				}
 				
 				try {
-					foreach(oDep; reorderBufferEntry.oDeps) {
+					foreach(oDep; reorderBufferEntry.oDeps) 
+					{
 						reorderBufferEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
 						this.threads[decodeThreadId].renameTable[oDep] = reorderBufferEntry.physRegs[oDep] = this.getPhysicalRegisterFile(oDep.type).alloc(reorderBufferEntry);
 					}
 				}
-				catch(NoFreePhysicalRegisterException ex) {
+				catch(NoFreePhysicalRegisterException ex) 
+				{
 					decodeStalled[decodeThreadId] = true;
 					continue;
 				}
 	
 				/* split ld/st's into two operations: eff addr comp + mem access */
-				if(dynamicInst.staticInst.isMem) {					
+				if(dynamicInst.staticInst.isMem) 
+				{					
 					ReorderBufferEntry loadStoreQueueEntry = new ReorderBufferEntry(dynamicInst, 
 						(cast(MemoryOp) dynamicInst.staticInst).memIDeps, (cast(MemoryOp) dynamicInst.staticInst).memODeps);
 					
@@ -1056,17 +1249,21 @@ class Core {
 					
 					reorderBufferEntry.loadStoreQueueEntry = loadStoreQueueEntry; 
 					
-					foreach(iDep; loadStoreQueueEntry.iDeps) {
+					foreach(iDep; loadStoreQueueEntry.iDeps) 
+					{
 						loadStoreQueueEntry.srcPhysRegs[iDep] = this.threads[decodeThreadId].renameTable[iDep];
 					}
 					
-					try {
-						foreach(oDep; loadStoreQueueEntry.oDeps) {
+					try 
+					{
+						foreach(oDep; loadStoreQueueEntry.oDeps) 
+						{
 							loadStoreQueueEntry.oldPhysRegs[oDep] = this.threads[decodeThreadId].renameTable[oDep];
 							this.threads[decodeThreadId].renameTable[oDep] = loadStoreQueueEntry.physRegs[oDep] = this.getPhysicalRegisterFile(oDep.type).alloc(loadStoreQueueEntry);
 						}
 					}
-					catch(NoFreePhysicalRegisterException ex) {
+					catch(NoFreePhysicalRegisterException ex) 
+					{
 						decodeStalled[decodeThreadId] = true;
 						continue;
 					}
@@ -1090,7 +1287,8 @@ class Core {
 		bool[uint] dispatchStalled;
 		uint[uint] numDispatchedPerThread;
 		
-		foreach(i, thread; this.threads) {
+		foreach(i, thread; this.threads) 
+		{
 			dispatchStalled[i] = false;
 			numDispatchedPerThread[i] = 0;
 		}
@@ -1098,23 +1296,28 @@ class Core {
 		dispatchThreadId = (dispatchThreadId + 1) % this.threads.length;
 
 		/* instruction decode B/W left? */
-		while(numDispatched < this.decodeWidth) {
+		while(numDispatched < this.decodeWidth) 
+		{
 			bool allStalled = true;
 			
-			foreach(i, thread; this.threads) {
-				if(!dispatchStalled[i]) {
+			foreach(i, thread; this.threads) 
+			{
+				if(!dispatchStalled[i]) 
+				{
 					allStalled = false;
 				}
 			}
 			
-			if(allStalled) {
+			if(allStalled) 
+			{
 				break;
 			}
 			
 			ReorderBufferEntry reorderBufferEntry = this.threads[dispatchThreadId].getNextReorderBufferEntryToDispatch(
 				dispatchStalled[dispatchThreadId]);
 			
-			if(dispatchStalled[dispatchThreadId]) {
+			if(dispatchStalled[dispatchThreadId]) 
+			{
 				dispatchThreadId = (dispatchThreadId + 1) % this.threads.length;
 				continue;
 			}
@@ -1122,27 +1325,33 @@ class Core {
 			numDispatchedPerThread[dispatchThreadId]++;
 	
 			/* insert into the ready or waiting queue */
-			if(reorderBufferEntry.allOperandsReady) {
+			if(reorderBufferEntry.allOperandsReady) 
+			{
 				this.readyQueue ~= reorderBufferEntry;
 				reorderBufferEntry.isInReadyQueue = true;
 			}
-			else {
+			else 
+			{
 				this.waitingQueue ~= reorderBufferEntry;
 			}
 			
 			/* update the rob entry */
 			reorderBufferEntry.isDispatched = true;
 			
-			if(reorderBufferEntry.loadStoreQueueEntry !is null) {
+			if(reorderBufferEntry.loadStoreQueueEntry !is null) 
+			{
 				ReorderBufferEntry loadStoreQueueEntry = reorderBufferEntry.loadStoreQueueEntry;
 				
 				/* issue stores only, loads are issued by lsq_refresh() */
-				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) { 
-					if(loadStoreQueueEntry.allOperandsReady) {
+				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) 
+				{ 
+					if(loadStoreQueueEntry.allOperandsReady) 
+					{
 						this.readyQueue ~= loadStoreQueueEntry;
 						loadStoreQueueEntry.isInReadyQueue = true;
 					}
-					else {
+					else 
+					{
 						this.waitingQueue ~= loadStoreQueueEntry;
 					}
 				}
@@ -1153,59 +1362,73 @@ class Core {
 		}
 	}
 	
-	void wakeup() {
+	void wakeup() 
+	{
 		ReorderBufferEntry[] toWaitingQueue;
 		
-		while(!this.waitingQueue.empty) {
+		while(!this.waitingQueue.empty) 
+		{
 			ReorderBufferEntry waitingQueueEntry = this.waitingQueue.front;
 			
-			if(!waitingQueueEntry.isValid) {
+			if(!waitingQueueEntry.isValid) 
+			{
 				this.waitingQueue.takeFront();
 				continue;
 			}
 			
-			if(waitingQueueEntry.allOperandsReady) {
+			if(waitingQueueEntry.allOperandsReady) 
+			{
 				this.readyQueue ~= waitingQueueEntry;
 				waitingQueueEntry.isInReadyQueue = true;
 			}
-			else {
+			else 
+			{
 				toWaitingQueue ~= waitingQueueEntry;
 			}
 			
 			this.waitingQueue.takeFront();
 		}
 		
-		foreach(waitingQueueEntry; toWaitingQueue) {
+		foreach(waitingQueueEntry; toWaitingQueue) 
+		{
 			this.waitingQueue ~= waitingQueueEntry;
 		}
 	}
 	
-	void selection() {
+	void selection() 
+	{
 		uint numIssued = 0;
 		
-		while(numIssued < this.issueWidth && !this.readyQueue.empty) {
+		while(numIssued < this.issueWidth && !this.readyQueue.empty) 
+		{
 			ReorderBufferEntry readyQueueEntry = this.readyQueue.front;
 			
-			if(readyQueueEntry.isInLoadStoreQueue && readyQueueEntry.dynamicInst.staticInst.isStore) {
+			if(readyQueueEntry.isInLoadStoreQueue && readyQueueEntry.dynamicInst.staticInst.isStore) 
+			{
 				readyQueueEntry.isIssued = true;
 				readyQueueEntry.isCompleted = true;
 			}
-			else if(readyQueueEntry.isInLoadStoreQueue && readyQueueEntry.dynamicInst.staticInst.isLoad) {
+			else if(readyQueueEntry.isInLoadStoreQueue && readyQueueEntry.dynamicInst.staticInst.isLoad) 
+			{
 				this.fuPool.acquire(readyQueueEntry,
 					(ReorderBufferEntry readyQueueEntry)
 					{
 						bool hitInLoadStoreQueue = false;
 						
-						foreach_reverse(loadStoreQueueEntry; readyQueueEntry.dynamicInst.thread.loadStoreQueue) {
-							if(loadStoreQueueEntry.dynamicInst.staticInst.isStore && loadStoreQueueEntry.ea == readyQueueEntry.ea) {
+						foreach_reverse(loadStoreQueueEntry; readyQueueEntry.dynamicInst.thread.loadStoreQueue) 
+						{
+							if(loadStoreQueueEntry.dynamicInst.staticInst.isStore && loadStoreQueueEntry.ea == readyQueueEntry.ea) 
+							{
 								hitInLoadStoreQueue = true;
 							}
 						}
 						
-						if(hitInLoadStoreQueue) {
+						if(hitInLoadStoreQueue) 
+						{
 							readyQueueEntry.signalExecutionCompleted();
 						}
-						else {
+						else 
+						{
 							this.seqD.load(this.mmu.translate(readyQueueEntry.ea), false, readyQueueEntry,
 								(ReorderBufferEntry readyQueueEntry)
 								{
@@ -1216,8 +1439,10 @@ class Core {
 				
 				readyQueueEntry.isIssued = true;
 			}
-			else {
-				if(readyQueueEntry.dynamicInst.staticInst.fuType != FunctionalUnitType.NONE) {
+			else 
+			{
+				if(readyQueueEntry.dynamicInst.staticInst.fuType != FunctionalUnitType.NONE) 
+				{
 					this.fuPool.acquire(readyQueueEntry,
 						(ReorderBufferEntry readyQueueEntry)
 						{
@@ -1225,7 +1450,8 @@ class Core {
 						});
 					readyQueueEntry.isIssued = true;
 				}
-				else {
+				else 
+				{
 					readyQueueEntry.isIssued = true;
 					readyQueueEntry.isCompleted = true;
 				}
@@ -1238,23 +1464,28 @@ class Core {
 		}
 	}
 	
-	void writeback() {
-		while(!this.oooEventQueue.empty) {
+	void writeback() 
+	{
+		while(!this.oooEventQueue.empty) 
+		{
 			ReorderBufferEntry reorderBufferEntry = this.oooEventQueue.front;
 			
-			if(!reorderBufferEntry.isValid) {
+			if(!reorderBufferEntry.isValid) 
+			{
 				this.oooEventQueue.takeFront();
 				continue;
 			}
 			
 			reorderBufferEntry.isCompleted = true;
 
-			foreach(oDep; reorderBufferEntry.oDeps) {
+			foreach(oDep; reorderBufferEntry.oDeps) 
+			{
 				reorderBufferEntry.physRegs[oDep].writeback();
 			}
 	
 			/* if this is the first instruction in spec mode, empty reorder buffer */
-			if(reorderBufferEntry.isSpeculative) {				
+			if(reorderBufferEntry.isSpeculative) 
+			{				
 				reorderBufferEntry.dynamicInst.thread.bpred.recover(reorderBufferEntry.dynamicInst.physPc, reorderBufferEntry.stackRecoverIndex);
 
 				/* regenerate fetch stage status */
@@ -1271,19 +1502,24 @@ class Core {
 		}
 	}
 	
-	void refreshLoadStoreQueue() {
-		foreach(thread; this.threads) {
+	void refreshLoadStoreQueue() 
+	{
+		foreach(thread; this.threads) 
+		{
 			thread.refreshLoadStoreQueue();
 		}
 	}
 	
-	void commit() {
-		foreach(thread; this.threads) {
+	void commit() 
+	{
+		foreach(thread; this.threads) 
+		{
 			thread.commit();
 		}
 	}
 	
-	void run() {
+	void run()
+	{
 		this.commit();
 		this.writeback();
 		this.refreshLoadStoreQueue();
@@ -1294,39 +1530,49 @@ class Core {
 		this.fetch();
 	}
 	
-	PhysicalRegisterFile getPhysicalRegisterFile(RegisterDependencyType type) {
-		if(type == RegisterDependencyType.INT) {
+	PhysicalRegisterFile getPhysicalRegisterFile(RegisterDependencyType type) 
+	{
+		if(type == RegisterDependencyType.INT) 
+		{
 			return this.intRegFile;
 		}
-		else if(type == RegisterDependencyType.FP) {
+		else if(type == RegisterDependencyType.FP) 
+		{
 			return this.fpRegFile;
 		}
-		else {
+		else 
+		{
 			return this.miscRegFile;
 		}
 	}
 	
-	uint numThreadsPerCore() {
+	uint numThreadsPerCore()
+	{
 		return this.threads.length;
 	}
 
-	Sequencer seqI() {
+	Sequencer seqI() 
+	{
 		return this.processor.simulator.memorySystem.seqIs[this.num];
 	}
 	
-	CoherentCacheNode l1I() {
+	CoherentCacheNode l1I() 
+	{
 		return this.processor.simulator.memorySystem.l1Is[this.num];
 	}
 
-	Sequencer seqD() {
+	Sequencer seqD() 
+	{
 		return this.processor.simulator.memorySystem.seqDs[this.num];
 	}
 	
-	CoherentCacheNode l1D() {
+	CoherentCacheNode l1D() 
+	{
 		return this.processor.simulator.memorySystem.l1Ds[this.num];
 	}
 	
-	MMU mmu() {
+	MMU mmu()
+	{
 		return this.processor.simulator.memorySystem.mmu;
 	}
 
@@ -1352,26 +1598,33 @@ class Core {
 	OoOEventQueue oooEventQueue;
 }
 
-enum ThreadState: string {
+enum ThreadState: string 
+{
 	Inactive = "Inactive",
 	Active = "Active",
 	Halted = "Halted"
 }
 
-class AlwaysTakenBpred: Bpred {
-	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx) {
+class AlwaysTakenBpred: Bpred
+{
+	uint lookup(uint baddr, uint btarget, DynamicInst dynamicInst, ref BpredUpdate dirUpdate, ref uint stackRecoverIdx)
+	{
 		return dynamicInst.staticInst.targetPc(dynamicInst.thread);
 	}
 
-	void recover(uint baddr, uint stackRecoverIdx) {
+	void recover(uint baddr, uint stackRecoverIdx) 
+	{
 	}
 	
-	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate) {
+	void update(uint baddr, uint btarget, bool taken, bool predTaken, bool correct, DynamicInst dynamicInst, ref BpredUpdate dirUpdate) 
+	{
 	}
 }
 
-class Thread {
-	this(Core core, ProcessorConfig config, ContextStat stat, uint num, Process process) {
+class Thread 
+{
+	this(Core core, ProcessorConfig config, ContextStat stat, uint num, Process process) 
+	{
 		this.core = core;
 		
 		this.num = num;
@@ -1393,19 +1646,22 @@ class Thread {
 		
 		this.state = ThreadState.Active;
 		
-		for(uint i = 0; i < NumIntRegs; i++) {
+		for(uint i = 0; i < NumIntRegs; i++) 
+		{
 			PhysicalRegister physReg = this.core.intRegFile[this.num * NumIntRegs + i];
 			physReg.commit();
 			this.renameTable[RegisterDependencyType.INT, i] = physReg;
 		}
 		
-		for(uint i = 0; i < NumFloatRegs; i++) {
+		for(uint i = 0; i < NumFloatRegs; i++) 
+		{
 			PhysicalRegister physReg = this.core.intRegFile[this.num * NumFloatRegs + i];
 			physReg.commit();
 			this.renameTable[RegisterDependencyType.FP, i] = physReg;
 		}
 		
-		for(uint i = 0; i < NumMiscRegs; i++) {
+		for(uint i = 0; i < NumMiscRegs; i++) 
+		{
 			PhysicalRegister physReg = this.core.intRegFile[this.num * NumMiscRegs + i];
 			physReg.commit();
 			this.renameTable[RegisterDependencyType.MISC, i] = physReg;
@@ -1421,7 +1677,8 @@ class Thread {
 		this.fetchNnpc = this.regs.nnpc;
 	}
 	
-	DynamicInst decodeAndExecute() {
+	DynamicInst decodeAndExecute() 
+	{
 		this.regs.pc = this.regs.npc;
 		this.regs.npc = this.regs.nnpc;
 		this.regs.nnpc += uint.sizeof;
@@ -1436,9 +1693,11 @@ class Thread {
 		return dynamicInst;
 	}
 	
-	void fetch() {
+	void fetch() 
+	{
 		uint blockToFetch = aligned(this.fetchNpc, this.core.seqI.blockSize);
-		if(blockToFetch != this.lastFetchedBlock) {
+		if(blockToFetch != this.lastFetchedBlock) 
+		{
 			this.lastFetchedBlock = blockToFetch;
 			
 			this.core.seqI.load(this.core.mmu.translate(this.fetchNpc), false, 
@@ -1452,13 +1711,17 @@ class Thread {
 		bool done = false;
 	
 		/* fetch instructions */
-		while(!done && !this.decodeBuffer.full && !this.fetchStalled) {
-			bool setNpc() {
-				if(this.regs.npc == this.fetchNpc) {
+		while(!done && !this.decodeBuffer.full && !this.fetchStalled) 
+		{
+			bool setNpc()
+			{
+				if(this.regs.npc == this.fetchNpc) 
+				{
 					return false;
 				}
 				
-				if(this.isSpeculative) {
+				if(this.isSpeculative) 
+				{
 					this.regs.npc = this.fetchNpc;
 					return false;
 				}
@@ -1466,7 +1729,8 @@ class Thread {
 				return true;
 			}
 			
-			if(setNpc()) {
+			if(setNpc()) 
+				{
 				this.regs.isSpeculative = this.isSpeculative = true;
 			}
 			
@@ -1475,11 +1739,13 @@ class Thread {
 			
 			DynamicInst dynamicInst = this.decodeAndExecute();
 			
-			if(this.fetchNpc != this.fetchPc + uint.sizeof) {
+			if(this.fetchNpc != this.fetchPc + uint.sizeof) 
+			{
 				done = true;
 			}
 	
-			if((this.fetchPc + uint.sizeof) % this.core.seqI.blockSize == 0) {
+			if((this.fetchPc + uint.sizeof) % this.core.seqI.blockSize == 0) 
+			{
 				done = true;
 			}
 			
@@ -1511,9 +1777,12 @@ class Thread {
 		}
 	}
 	
-	ReorderBufferEntry getNextReorderBufferEntryToDispatch(ref bool dispatchStalled) {
-		foreach(reorderBufferEntry; this.reorderBuffer) {
-			if(!reorderBufferEntry.isDispatched) {
+	ReorderBufferEntry getNextReorderBufferEntryToDispatch(ref bool dispatchStalled) 
+	{
+		foreach(reorderBufferEntry; this.reorderBuffer) 
+		{
+			if(!reorderBufferEntry.isDispatched) 
+			{
 				dispatchStalled = false;
 				return reorderBufferEntry;
 			}
@@ -1523,23 +1792,30 @@ class Thread {
 		return null;
 	}
 	
-	void refreshLoadStoreQueue() {
+	void refreshLoadStoreQueue() 
+	{
 		uint[] stdUnknowns;
 	
 		/* search in lsq for ready load's until an unresolved store is found */
-		foreach(loadStoreQueueEntry; this.loadStoreQueue) {
+		foreach(loadStoreQueueEntry; this.loadStoreQueue) 
+		{
 			/* if it is a store */
-			if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) {
-				if(loadStoreQueueEntry.storeAddressReady) {
+			if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) 
+			{
+				if(loadStoreQueueEntry.storeAddressReady) 
+				{
 					break;
 				}
-				else if(!loadStoreQueueEntry.allOperandsReady) {
+				else if(!loadStoreQueueEntry.allOperandsReady) 
+				{
 					stdUnknowns ~= loadStoreQueueEntry.ea;
 				}
 				else {
 					/* we know addr & data; a resolved store shadows a previous unresolved one */
-					foreach(ref addr; stdUnknowns) {
-						if(addr == loadStoreQueueEntry.ea) {
+					foreach(ref addr; stdUnknowns) 
+					{
+						if(addr == loadStoreQueueEntry.ea) 
+						{
 							addr = 0;
 						}
 					}
@@ -1552,9 +1828,11 @@ class Thread {
 				!loadStoreQueueEntry.isInReadyQueue &&
 				!loadStoreQueueEntry.isIssued &&
 				!loadStoreQueueEntry.isCompleted &&
-				loadStoreQueueEntry.allOperandsReady) {
+				loadStoreQueueEntry.allOperandsReady) 
+			{
 				/* no addr conflict here; check data conflict, if no conflict, send to readyq */
-				if(count(stdUnknowns, loadStoreQueueEntry.ea) == 0) {
+				if(count(stdUnknowns, loadStoreQueueEntry.ea) == 0) 
+				{
 					this.core.readyQueue ~= loadStoreQueueEntry;
 					loadStoreQueueEntry.isInReadyQueue = true;
 				}
@@ -1562,11 +1840,14 @@ class Thread {
 		}
 	}
 	
-	void commit() {
-		if(currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) {
+	void commit() 
+	{
+		if(currentCycle - this.lastCommitCycle > COMMIT_TIMEOUT) 
+		{
 			logging.infof(LogCategory.SIMULATOR, "this.reorderBuffer.size=%d", this.reorderBuffer.size);
 			
-			foreach(reorderBufferEntry; this.reorderBuffer) {
+			foreach(reorderBufferEntry; this.reorderBuffer) 
+			{
 				logging.infof(LogCategory.SIMULATOR, "%s", reorderBufferEntry);
 			}
 			
@@ -1575,25 +1856,30 @@ class Thread {
 		
 		uint numCommitted = 0;
 		
-		while(!this.reorderBuffer.empty && numCommitted < this.commitWidth) {
+		while(!this.reorderBuffer.empty && numCommitted < this.commitWidth) 
+		{
 			ReorderBufferEntry reorderBufferEntry = this.reorderBuffer.front;
 	
 			/* head of line blocking if inst not completed */
-			if(!reorderBufferEntry.isCompleted) {
+			if(!reorderBufferEntry.isCompleted) 
+			{
 				break;
 			}
 	
 			/* for memory inst, extract element from lsq */
-			if(reorderBufferEntry.isEAComputation) {
+			if(reorderBufferEntry.isEAComputation) 
+			{
 				ReorderBufferEntry loadStoreQueueEntry = this.loadStoreQueue.front;
 	
 				/* if not completed, cannot commit */
-				if(!loadStoreQueueEntry.isCompleted) {
+				if(!loadStoreQueueEntry.isCompleted) 
+				{
 					break;
 				}
 	
 				/* stores access memory here */
-				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore) {
+				if(loadStoreQueueEntry.dynamicInst.staticInst.isStore)
+				{
 					this.core.fuPool.acquire(loadStoreQueueEntry,
 										(ReorderBufferEntry loadStoreQueueEntry)
 					{
@@ -1602,7 +1888,8 @@ class Thread {
 				}
 	
 				/* commit lsq entry */
-				foreach(oDep; loadStoreQueueEntry.oDeps) {
+				foreach(oDep; loadStoreQueueEntry.oDeps) 
+				{
 					loadStoreQueueEntry.oldPhysRegs[oDep].dealloc();
 					loadStoreQueueEntry.physRegs[oDep].commit();
 				}
@@ -1611,13 +1898,15 @@ class Thread {
 			}
 	
 			/* retire rob entry */
-			foreach(oDep; reorderBufferEntry.oDeps) {
+			foreach(oDep; reorderBufferEntry.oDeps) 
+			{
 				reorderBufferEntry.oldPhysRegs[oDep].dealloc();
 				reorderBufferEntry.physRegs[oDep].commit();
 			}
 	
 			/* update branch predictor */
-			if(reorderBufferEntry.dynamicInst.staticInst.isControl) {
+			if(reorderBufferEntry.dynamicInst.staticInst.isControl) 
+			{
 				this.bpred.update(
 					/* branch address */ reorderBufferEntry.dynamicInst.physPc,
 					/* actual target address */ reorderBufferEntry.nnpc,
@@ -1641,24 +1930,29 @@ class Thread {
 		}
 	}
 	
-	void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry) {
+	void recoverReorderBuffer(ReorderBufferEntry branchReorderBufferEntry) 
+	{
 		logging.infof(LogCategory.SIMULATOR, "recovering at %s", branchReorderBufferEntry);
 		
 		ReorderBufferEntry[] toSquash;
 		
-		while(!this.reorderBuffer.empty) {
+		while(!this.reorderBuffer.empty) 
+		{
 			ReorderBufferEntry reorderBufferEntry = this.reorderBuffer.back;
 			
-			if(!reorderBufferEntry.isSpeculative) {
+			if(!reorderBufferEntry.isSpeculative) 
+			{
 				break;
 			}
 			
-			if(reorderBufferEntry.isEAComputation) {
+			if(reorderBufferEntry.isEAComputation) 
+			{
 				ReorderBufferEntry loadStoreQueueEntry = this.loadStoreQueue.back;
 				
 				loadStoreQueueEntry.invalidate();
 				
-				foreach(oDep; loadStoreQueueEntry.oDeps) { //TODO: is it necessary or correct?
+				foreach(oDep; loadStoreQueueEntry.oDeps) //TODO: is it necessary or correct?
+				{ 
 					loadStoreQueueEntry.physRegs[oDep].dealloc();
 					this.renameTable[oDep] = loadStoreQueueEntry.oldPhysRegs[oDep];
 				}
@@ -1670,7 +1964,8 @@ class Thread {
 			
 			reorderBufferEntry.invalidate();
 			
-			foreach(oDep; reorderBufferEntry.oDeps) {
+			foreach(oDep; reorderBufferEntry.oDeps) 
+			{
 				reorderBufferEntry.physRegs[oDep].dealloc();
 				this.renameTable[oDep] = reorderBufferEntry.oldPhysRegs[oDep];
 			}
@@ -1684,46 +1979,63 @@ class Thread {
 		// TODO: when branch misprediction, empty speculative instructions from decode buffer
 	}
 
-	uint getSyscallArg(int i) {
+	uint getSyscallArg(int i)
+	in
+	{
 		assert(i < 6);
+	}
+	body 
+	{
 		return this.regs.intRegs.get(FirstArgumentReg + i);
 	}
 
-	void setSyscallArg(int i, uint val) {
+	void setSyscallArg(int i, uint val)
+	in
+	{
 		assert(i < 6);
+	}
+	body 
+	{
 		this.regs.intRegs.set(FirstArgumentReg + i, val);
 	}
 
-	void setSyscallReturn(uint return_value) {
+	void setSyscallReturn(uint return_value) 
+	{
 		this.regs.intRegs.set(ReturnValueReg, return_value);
 		this.regs.intRegs.set(SyscallSuccessReg, (return_value == cast(uint) -EINVAL ? 1 : 0));
 	}
 
-	void syscall(uint callnum) {
+	void syscall(uint callnum) 
+	{
 		this.syscallEmul.syscall(callnum, this);
 	}
 
-	void clearArchRegs() {
+	void clearArchRegs() 
+	{
 		this.regs = new CombinedRegisterFile();
 		this.regs.pc = 0;
 		this.regs.npc = 0;
 		this.regs.nnpc = 0;
 	}
 	
-	void halt(int exitCode) {
-		if(this.state != ThreadState.Halted) {
+	void halt(int exitCode) 
+	{
+		if(this.state != ThreadState.Halted) 
+		{
 			logging.infof(LogCategory.SIMULATOR, "target called exit(%d)", exitCode);
 			this.state = ThreadState.Halted;
 			this.core.processor.activeThreadCount--;
 			
 			//assert(0); //TODO: should stop thread from running!!
 		}
-		else {
+		else 
+		{
 			assert(0);
 		}
 	}
 	
-	Memory mem() {
+	Memory mem() 
+	{
 		return this.core.mem;
 	}
 	
@@ -1761,17 +2073,20 @@ class Thread {
 	static const uint COMMIT_TIMEOUT = 1000000;
 }
 
-class CPUSimulator : Simulator {	
+class CPUSimulator : Simulator 
+{	
 	this(Simulation simulation) {
 		this.simulation = simulation;
 		this.processor = new Processor(this);
 		
 		SimulationConfig simulationConfig = simulation.config;
 		
-		for(uint i = 0; i < simulationConfig.architecture.processor.cores.length; i++) {
+		for(uint i = 0; i < simulationConfig.architecture.processor.cores.length; i++) 
+		{
 			Core core = new Core(this.processor, simulationConfig.architecture.processor, i);
 				
-			for(uint j = 0; j < simulationConfig.architecture.processor.numThreadsPerCore; j++) {
+			for(uint j = 0; j < simulationConfig.architecture.processor.numThreadsPerCore; j++) 
+			{
 				ContextConfig context = simulationConfig.contexts[i * simulationConfig.architecture.processor.numThreadsPerCore + j];
 				
 				writefln("context.cwd: %s, args: %s", context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
@@ -1795,13 +2110,16 @@ class CPUSimulator : Simulator {
 		this.simulation.stat.totalCycles.value = currentCycle = 0;
 	}
 
-	override void run() {		
+	override void run() 
+	{		
 		Ticks beginTime = apptime();
 
-		while(!this.eventQueue.halted && this.processor.canRun && this.simulation.isRunning) {
+		while(!this.halted && this.processor.canRun && this.simulation.isRunning) 
+		{
 			this.processor.run();
 
-			foreach(eventProcessor; this.eventProcessors) {
+			foreach(eventProcessor; this.eventProcessors) 
+			{
 				eventProcessor.processEvents();
 			}
 
@@ -1811,11 +2129,13 @@ class CPUSimulator : Simulator {
 		}
 	}
 	
-	ulong duration() {
+	ulong duration() 
+	{
 		return this.simulation.stat.duration.value;
 	}
 	
-	void duration(ulong value) {
+	void duration(ulong value) 
+	{
 		this.simulation.stat.duration.value = value;
 	}
 	

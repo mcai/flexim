@@ -29,74 +29,57 @@ import std.c.stdlib;
 import std.c.string;
 import std.c.linux.linux;
 
-struct FileBuffer {
-	string path;
-	ubyte[] data;
-
-	static FileBuffer opCall(string path) {
-		FileBuffer _this;
-		_this.path = path;
-		_this.data = cast(ubyte[]) std.file.read(path);
-		return _this;
-	}
-
-	static FileBuffer opCall(string path, ubyte[] data) {
-		FileBuffer _this;
-		_this.path = path;
-		_this.data = data;
-		return _this;
-	}
-
-	string getPath() {
-		return path;
-	}
-
-	void deleteData() {
-		delete this.data;
-	}
-}
-
-enum Anchor {
+enum Anchor 
+{
 	None,
 	Begin,
 	End,
 	Current
 }
 
-class FileReader {
+class FileReader 
+{
 	public:
-		this(void[] data) {
-			this.data = cast(ubyte[]) data;
+		this(string fileName) 
+		{
+			this.data = cast(ubyte[]) std.file.read(fileName);
 		}
 
-		this(FileBuffer buffer) {
-			this.data = buffer.data;
-		}
-
-		FileReader peek(ref ubyte x) {
+		FileReader peek(ref ubyte x)
+		in
+		{
 			assert(this.hasMore());
-			x = data[position];
+		}
+		body 
+		{
+			x = this.data[this.position];
 			return this;
 		}
 
-		FileReader peek(ref ubyte[] x, uint elements = uint.max) {
-			if(elements == ulong.max) {
-				x = data[position .. $];
-			} else {
-				x = data[position .. position + elements];
+		FileReader peek(ref ubyte[] x, uint elements = uint.max)
+		{
+			if(elements == ulong.max) 
+			{
+				x = data[this.position .. $];
+			} 
+			else 
+			{
+				x = data[this.position .. this.position + elements];
 			}
 			return this;
 		}
 
-		FileReader getAll(ref void[] x) {
-			x = data[position .. $];
-			position = data.length;
+		FileReader getAll(ref void[] x) 
+		{
+			x = this.data[this.position .. $];
+			this.position = this.data.length;
 			return this;
 		}
 
-		FileReader _get(T)(ref T x) {
-			x = *(cast(T*) (data[position .. position + T.sizeof].ptr));
-			position += T.sizeof;
+		FileReader _get(T)(ref T x) 
+		{
+			x = *(cast(T*) (this.data[this.position .. this.position + T.sizeof].ptr));
+			this.position += T.sizeof;
 			return this;
 		}
 
@@ -113,16 +96,20 @@ class FileReader {
 		alias _get!(ulong) get;
 		alias _get!(long) get;
 
-		FileReader _getArray(T)(ref T[] x, uint elements = uint.max) {
+		FileReader _getArray(T)(ref T[] x, uint elements = uint.max) 
+		{
 			uint end;
-			if(elements == uint.max) {
-				end = data.length - (data.length % T.sizeof);
-				x = cast(T[]) (data[position .. end]);
-			} else {
-				end = position + (elements * T.sizeof);
-				x = cast(T[]) (data[position .. end]);
+			if(elements == uint.max) 
+			{
+				end = this.data.length - (this.data.length % T.sizeof);
+				x = cast(T[]) (this.data[this.position .. end]);
+			} 
+			else 
+			{
+				end = this.position + (elements * T.sizeof);
+				x = cast(T[]) (this.data[this.position .. end]);
 			}
-			position = end;
+			this.position = end;
 			return this;
 		}
 
@@ -139,36 +126,41 @@ class FileReader {
 		alias _getArray!(ulong) get;
 		alias _getArray!(long) get;
 
-		bool hasMore() {
-			return position < data.length;
+		bool hasMore() 
+		{
+			return this.position < this.data.length;
 		}
 
-		FileReader seek(int offset, Anchor anchor = Anchor.Begin) {
-			switch(anchor) {
+		FileReader seek(int offset, Anchor anchor = Anchor.Begin) 
+		{
+			switch(anchor) 
+			{
 				case Anchor.Begin:
 					assert(offset < data.length);
-					position = offset;
-				break;
+					this.position = offset;
+					break;
 				case Anchor.End:
-					assert(position + offset < data.length);
-					position = data.length + offset;
-				break;
+					assert(this.position + offset < this.data.length);
+					this.position = this.data.length + offset;
+					break;
 				default:
 				case Anchor.None:
 				case Anchor.Current:
-					assert(position + offset < data.length);
-					position += offset;
-				break;
+					assert(this.position + offset < this.data.length);
+					this.position += offset;
+					break;
 			}
 			return this;
 		}
 
-		int getPosition() {
-			return position;
+		int getPosition() 
+		{
+			return this.position;
 		}
 
-		ubyte[] getData() {
-			return data;
+		ubyte[] getData() 
+		{
+			return this.data;
 		}
 
 	private:
@@ -176,21 +168,23 @@ class FileReader {
 		int position;
 }
 
-class ELFReader: FileReader {
-	public:
-		this(FileBuffer buffer) {
-			super(buffer);
-		}
+class ELFReader: FileReader 
+{
+	this(string fileName) 
+	{
+		super(fileName);
+	}
 
-		void setPosition(uint position) {
-			super.seek(position, Anchor.Begin);
-		}
+	void setPosition(uint position) 
+	{
+		super.seek(position, Anchor.Begin);
+	}
 
-		alias _get!(Elf32_Ehdr) get;
-		alias _get!(Elf32_Shdr) get;
-		alias _get!(Elf32_Phdr) get;
-		alias _get!(Elf32_Rel) get;
-		alias _get!(Elf32_Rela) get;
+	alias _get!(Elf32_Ehdr) get;
+	alias _get!(Elf32_Shdr) get;
+	alias _get!(Elf32_Phdr) get;
+	alias _get!(Elf32_Rel) get;
+	alias _get!(Elf32_Rela) get;
 }
 
 /** Size of the e_ident array. */
@@ -283,7 +277,8 @@ alias int Elf32_SWord;
 alias uint Elf32_Word;
 alias ushort Elf32_Sword;
 
-struct Elf32_Ehdr {
+struct Elf32_Ehdr 
+{
 	ubyte[EI_NIDENT] e_ident;
 	Elf32_Half e_type;
 	Elf32_Half e_machine;
@@ -300,7 +295,8 @@ struct Elf32_Ehdr {
 	Elf32_Half e_shstrndx;
 }
 
-struct Elf32_Shdr {
+struct Elf32_Shdr 
+{
 	Elf32_Word sh_name;
 	Elf32_Word sh_type;
 	Elf32_Word sh_flags;
@@ -313,7 +309,8 @@ struct Elf32_Shdr {
 	Elf32_Word sh_entsize;
 }
 
-struct Elf32_Phdr {
+struct Elf32_Phdr 
+{
 	Elf32_Word p_type;
 	Elf32_Off p_offset;
 	Elf32_Addr p_vaddr;
@@ -324,34 +321,42 @@ struct Elf32_Phdr {
 	Elf32_Word p_align;
 }
 
-struct Elf32_Rel {
+struct Elf32_Rel 
+{
 	Elf32_Addr r_offset;
 	Elf32_Word r_info;
 }
 
-struct Elf32_Rela {
+struct Elf32_Rela 
+{
 	Elf32_Addr r_offset;
 	Elf32_Word r_info;
 	Elf32_Sword r_addend;
 
-	ubyte symbol() {
+	ubyte symbol() 
+	{
 		return cast(ubyte) (this.r_info >> 8);
 	}
 
-	ubyte type() {
+	ubyte type() 
+	{
 		return cast(ubyte) this.r_info;
 	}
 }
 
-class ELF32Binary {
-	this() {
+class ELF32Binary 
+{
+	this() 
+	{
 	}
 	
-	void parse(string executable) {
-		this.parse(new ELFReader(FileBuffer(executable)));
+	void parse(string executable) 
+	{
+		this.parse(new ELFReader(executable));
 	}
 
-	void printElfHeader() {
+	void printElfHeader() 
+	{
 		ubyte[] m = this.ehdr.e_ident;
 
 		writefln("  Magic:\t%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11],
@@ -374,7 +379,8 @@ class ELF32Binary {
 		writefln("  Section header string table index:\t%s", this.ehdr.e_shstrndx);
 	}
 
-	void printProgramHeader(uint n, Elf32_Phdr phdr) {
+	void printProgramHeader(uint n, Elf32_Phdr phdr) 
+	{
 		writefln("Program header %d", n);
 		writefln("  Type:\t\t\t\t%s", segmentTypeStr(phdr.p_type));
 		writefln("  Offset:\t\t\t0x%x", phdr.p_offset);
@@ -386,13 +392,15 @@ class ELF32Binary {
 		writefln("  Alignment:\t\t\t%d", phdr.p_align);
 	}
 
-	void printProgramHeaders() {
+	void printProgramHeaders() 
+	{
 		writefln("Program Headers: %d", this.phdrs.length);
 		foreach(idx, phdr; this.phdrs)
 			printProgramHeader(idx, phdr);
 	}
 
-	void printSectionHeader(uint n, Elf32_Shdr shdr) {
+	void printSectionHeader(uint n, Elf32_Shdr shdr) 
+	{
 		writefln("Section header %d: %s", n, this.getSectionName(shdr));
 		writefln("  Type:\t\t\t\t%s", sectionTypeStr(shdr.sh_type));
 		writefln("  Flags:\t\t\t0x%x", shdr.sh_flags);
@@ -405,25 +413,30 @@ class ELF32Binary {
 		writefln("  Entry size:\t\t\t%d (in bytes)", shdr.sh_entsize);
 	}
 
-	void printSectionHeaders() {
+	void printSectionHeaders() 
+	{
 		writefln("Section Headers: %d", this.shdrs.length);
 		foreach(idx, shdr; this.shdrs)
 			printSectionHeader(idx, shdr);
 	}
 	
-	string getSectionName(Elf32_Shdr shdr) {
+	string getSectionName(Elf32_Shdr shdr) 
+	{
 		return to!(string)(this.shstr + shdr.sh_name);
 	}
 
-	T* ptr(T)(uint offset) {
+	T* ptr(T)(uint offset) 
+	{
 		return cast(T*) (this.bitslab + offset);
 	}
 
-	T[] ptrArray(T)(uint offset, uint len) {
+	T[] ptrArray(T)(uint offset, uint len) 
+	{
 		return (cast(T*) (this.bitslab + offset))[0 .. len];
 	}
 
-	void parse(ELFReader reader) {
+	void parse(ELFReader reader) 
+	{
 		void[] data;
 		reader.getAll(data);
 		this.slabsize = data.length;
@@ -435,10 +448,13 @@ class ELF32Binary {
 		assert(this.ehdr.e_type == ET_EXEC, "Not an executable file");
 		assert(this.ehdr.e_ident[0 .. 4] == cast(ubyte[]) "\x7fELF", "Not a valid ELF Object file");
 
-		uint elfversion = this.ehdr.e_ident[EI_VERSION];
-		if(elfversion == EV_NONE || elfversion > EV_CURRENT) {
+		uint elfVersion = this.ehdr.e_ident[EI_VERSION];
+		if(elfVersion == EV_NONE || elfVersion > EV_CURRENT) 
+		{
 			throw new Exception("Invalid specification version.");
-		} else if(elfversion > DDL_ELFVERSION_SUPP) {
+		} 
+		else if(elfVersion > DDL_ELFVERSION_SUPP) 
+		{
 			throw new Exception("This version of the specification is still to be implemented.");
 		}
 
@@ -449,49 +465,53 @@ class ELF32Binary {
 		/* Read section headers */
 		this.shdrs = ptrArray!(Elf32_Shdr)(this.ehdr.e_shoff, this.ehdr.e_shnum);
 
-		foreach(shdr; this.shdrs) {
-			switch(shdr.sh_type) {
+		foreach(shdr; this.shdrs) 
+		{
+			switch(shdr.sh_type) 
+			{
 				case SHT_NULL:
-				break;
+					break;
 
 				case SHT_PROGBITS:
-				break;
+					break;
 
 				case SHT_SYMTAB:
 				case SHT_HASH:
-				break;
+					break;
 
 				case SHT_DYNAMIC:
 				case SHT_DYNSYM:
 					logging.fatal(LogCategory.ELF, "dynamic linking is not supported");
-				break;
+					break;
 
 				case SHT_STRTAB:
-				break;
+					break;
 
 				case SHT_RELA:
 					Elf32_Rela[] relaSet = ptrArray!(Elf32_Rela)(shdr.sh_offset, shdr.sh_size);
-					foreach(rela; relaSet) {
+					foreach(rela; relaSet) 
+					{
 					}
-				break;
+					break;
 
 				case SHT_NOTE:
-				break;
+					break;
 
 				case SHT_NOBITS:
-				break;
+					break;
 
 				case SHT_REL:
 					Elf32_Rel[] relSet = ptrArray!(Elf32_Rel)(shdr.sh_offset, shdr.sh_size);
-					foreach(rela; relSet) {
+					foreach(rela; relSet) 
+					{
 					}
-				break;
+					break;
 
 				case SHT_SHLIB:
-				break;
+					break;
 
 				default:
-				break;
+					break;
 			}
 		}
 
@@ -501,30 +521,44 @@ class ELF32Binary {
 		this.phdrs = ptrArray!(Elf32_Phdr)(this.ehdr.e_phoff, this.ehdr.e_phnum);
 	}
 
-	string sectionTypeStr(uint n) {
-		if(n <= SHT_DYNSYM) {
+	string sectionTypeStr(uint n) 
+	{
+		if(n <= SHT_DYNSYM) 
+		{
 			return sectionTypes[n];
-		} else if(n >= SHT_LOPROC && n <= SHT_HIPROC) {
+		} 
+		else if(n >= SHT_LOPROC && n <= SHT_HIPROC) 
+		{
 			return "[SHT_LOPROC..SHT_HIPROC]";
-		} else if(n >= SHT_LOUSER && n <= SHT_HIUSER) {
+		} 
+		else if(n >= SHT_LOUSER && n <= SHT_HIUSER) 
+		{
 			return "[SHT_LOUSER..SHT_HIUSER]";
 		}
 		return "";
 	}
 
-	string segmentTypeStr(uint n) {
-		if(n <= PT_SHLIB) {
+	string segmentTypeStr(uint n) 
+	{
+		if(n <= PT_SHLIB) 
+		{
 			return segmentTypes[n];
-		} else if(n >= PT_LOPROC && n <= PT_HIPROC) {
+		} 
+		else if(n >= PT_LOPROC && n <= PT_HIPROC) 
+		{
 			return "[PT_LOPROC..PT_HIPROC]";
 		}
 		return "";
 	}
 
-	string objectTypeStr(uint n) {
-		if(n <= ET_CORE) {
+	string objectTypeStr(uint n) 
+	{
+		if(n <= ET_CORE) 
+		{
 			return objectTypes[n];
-		} else if(n >= ET_LOPROC && n <= ET_HIPROC) {
+		} 
+		else if(n >= ET_LOPROC && n <= ET_HIPROC) 
+		{
 			return "[ET_LOPROC..ET_HIPROC]";
 		}
 		return "";
@@ -561,7 +595,8 @@ const uint LD_STACK_SIZE = 0x100000; /* 8MB stack size */
 //extern(C)
 //	extern __gshared char** environ;
 
-struct FdMap {
+struct FdMap 
+{
 	int fd = -1;
 	string filename = "NULL";
 	int mode = 0;
@@ -571,14 +606,17 @@ struct FdMap {
 	ulong fileOffset = 0;
 };
 
-class Process {
-	this(string cwd, string[] args) {
+class Process 
+{
+	this(string cwd, string[] args) 
+	{
 		this.cwd = cwd;
 		this.args = args;
 
 		this.argc = this.args.length;
 
-		foreach(arg; this.args) {
+		foreach(arg; this.args) 
+		{
 			this.argv = this.argv ~ cast(char*) toStringz(arg);
 		}
 
@@ -591,28 +629,33 @@ class Process {
 		this.ppid = 99;
 	}
 
-	void loadInternal(Thread thread, ELF32Binary binary) {
+	void loadInternal(Thread thread, ELF32Binary binary) 
+	{
 		uint data_base = 0;
 		uint data_size = 0;
 		uint envAddr, argAddr;
 		uint stack_ptr;
 
-		foreach(phdr; binary.phdrs) {
-			if(phdr.p_type == PT_LOAD && phdr.p_vaddr > data_base) {
+		foreach(phdr; binary.phdrs) 
+		{
+			if(phdr.p_type == PT_LOAD && phdr.p_vaddr > data_base) 
+			{
 				data_base = phdr.p_vaddr;
 				data_size = phdr.p_memsz;
 			}
 		}
 
-		foreach(shdr; binary.shdrs) {
-			if(shdr.sh_type == SHT_PROGBITS || shdr.sh_type == SHT_NOBITS) {
-
+		foreach(shdr; binary.shdrs) 
+		{
+			if(shdr.sh_type == SHT_PROGBITS || shdr.sh_type == SHT_NOBITS) 
+			{
 				Elf32_Word new_section_type, new_section_flags;
 				Elf32_Addr new_section_addr;
 
 				new_section_addr = shdr.sh_addr;
 
-				if(shdr.sh_size > 0 && (shdr.sh_flags & SHF_ALLOC)) {
+				if(shdr.sh_size > 0 && (shdr.sh_flags & SHF_ALLOC)) 
+				{
 					//logging.infof(LogCategory.PROCESS, "Loading %s (%d bytes) at address 0x%08x", binary.getSectionName(shdr), shdr.sh_size, new_section_addr);
 
 					MemoryAccessType perm = MemoryAccessType.INIT | MemoryAccessType.READ;
@@ -625,14 +668,18 @@ class Process {
 
 					thread.mem.map(shdr.sh_addr, shdr.sh_size, perm);
 
-					if(shdr.sh_type == SHT_NOBITS) {
+					if(shdr.sh_type == SHT_NOBITS) 
+					{
 						thread.mem.zero(shdr.sh_addr, shdr.sh_size);
-					} else {
+					} else 
+					{
 						ubyte* buf = binary.ptr!(ubyte)(shdr.sh_offset);
 						thread.mem.initBlock(shdr.sh_addr, shdr.sh_size, buf);
 					}
 				}
-			} else if(shdr.sh_type == SHT_DYNAMIC || shdr.sh_type == SHT_DYNSYM) {
+			} 
+			else if(shdr.sh_type == SHT_DYNAMIC || shdr.sh_type == SHT_DYNSYM) 
+			{
 				logging.fatal(LogCategory.PROCESS, "dynamic linking is not supported");
 			}
 		}
@@ -666,7 +713,8 @@ class Process {
 		stack_ptr += this.env.length * uint.sizeof + uint.sizeof;
 
 		/*write argv to stack*/
-		foreach(i, arg; this.argv) {
+		foreach(i, arg; this.argv) 
+		{
 			thread.mem.writeWord(argAddr + i * uint.sizeof, stack_ptr);
 			thread.mem.writeString(stack_ptr, arg);
 			/*0 already at the end of the string as done by initialization*/
@@ -676,7 +724,8 @@ class Process {
 		/*0 already at the end argv pointer array*/
 
 		/*write env to stack*/
-		foreach(i, e; this.env) {
+		foreach(i, e; this.env) 
+		{
 			thread.mem.writeWord(envAddr + i * uint.sizeof, stack_ptr);
 			thread.mem.writeString(stack_ptr, e);
 			stack_ptr += strlen(e) + 1;
@@ -685,7 +734,8 @@ class Process {
 		/*0 already at the end argv pointer array*/
 
 		/*stack overflow*/
-		if(stack_ptr + uint.sizeof >= STACK_BASE) {
+		if(stack_ptr + uint.sizeof >= STACK_BASE) 
+		{
 			logging.fatal(LogCategory.PROCESS, "Environment overflow. Need to increase MAX_ENVIRON.");
 		}
 
@@ -701,7 +751,8 @@ class Process {
 		thread.regs.nnpc = thread.regs.npc + uint.sizeof;
 	}
 
-	bool load(Thread thread) {
+	bool load(Thread thread) 
+	{
 		ELF32Binary binary = new ELF32Binary();
 		binary.parse(this.args[0]);
 
@@ -710,7 +761,8 @@ class Process {
 		return true;
 	}
 
-	string fullPath(string filename) {
+	string fullPath(string filename) 
+	{
 		if(filename[0] == '/' || this.cwd == null || this.cwd == "")
 			return filename;
 
@@ -742,7 +794,8 @@ const uint MAXBUFSIZE = 1024;
 
 /// This struct is used to build an target-OS-dependent table that
 /// maps the target's open() flags to the host open() flags.
-struct OpenFlagTransTable {
+struct OpenFlagTransTable 
+{
 	int tgtFlag; // Target system flag value.
 	int hostFlag; // Corresponding host system flag value.
 };
@@ -765,7 +818,8 @@ OpenFlagTransTable openFlagTable[] = [{SIM_O_RDONLY, O_RDONLY}, {SIM_O_WRONLY, O
 const int _SYS_NMLN = 65;
 
 /// Interface struct for uname().
-struct utsname {
+struct utsname 
+{
 	char sysname[_SYS_NMLN]; // System name.
 	char nodename[_SYS_NMLN]; // Node name.
 	char release[_SYS_NMLN]; // OS release.
@@ -774,21 +828,24 @@ struct utsname {
 };
 
 /* 1 */
-uint exit_impl(SyscallDesc desc, Thread thread) {
+uint exit_impl(SyscallDesc desc, Thread thread) 
+{
 	writeln("exiting...");
 	thread.halt(thread.getSyscallArg(0) & 0xff);
 	return 1;
 }
 
 /* 3 */
-uint read_impl(SyscallDesc desc, Thread thread) {
+uint read_impl(SyscallDesc desc, Thread thread) 
+{
 	int fd = thread.getSyscallArg(0);
 	uint buf_addr = thread.getSyscallArg(1);
 	size_t count = thread.getSyscallArg(2);
 	
 	void* buf = malloc(count);
 	ssize_t ret = core.sys.posix.unistd.read(fd, buf, count);
-	if(ret > 0) {
+	if(ret > 0) 
+	{
 		thread.mem.writeBlock(buf_addr, ret, cast(ubyte*) buf);
 	}
 	free(buf);
@@ -797,7 +854,8 @@ uint read_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 4 */
-uint write_impl(SyscallDesc desc, Thread thread) {
+uint write_impl(SyscallDesc desc, Thread thread) 
+{
 	int fd = thread.getSyscallArg(0);
 	uint buf_addr = thread.getSyscallArg(1);
 	size_t count = thread.getSyscallArg(2);
@@ -811,7 +869,8 @@ uint write_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 5 */
-uint open_impl(SyscallDesc desc, Thread thread) {
+uint open_impl(SyscallDesc desc, Thread thread) 
+{
 	char path[MAXBUFSIZE];
 
 	uint addr = thread.getSyscallArg(0);
@@ -822,8 +881,10 @@ uint open_impl(SyscallDesc desc, Thread thread) {
 
 	// translate open flags
 	int hostFlags = 0;
-	foreach(t; openFlagTable) {
-		if(tgtFlags & t.tgtFlag) {
+	foreach(t; openFlagTable) 
+	{
+		if(tgtFlags & t.tgtFlag) 
+		{
 			tgtFlags &= ~t.tgtFlag;
 			hostFlags |= t.hostFlag;
 		}
@@ -842,14 +903,16 @@ uint open_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 6 */
-uint close_impl(SyscallDesc desc, Thread thread) {
+uint close_impl(SyscallDesc desc, Thread thread) 
+{
 	int fd = thread.getSyscallArg(0);
 	int ret = close(fd);
 	return ret;
 }
 
 /* 19 */
-uint lseek_impl(SyscallDesc desc, Thread thread) {
+uint lseek_impl(SyscallDesc desc, Thread thread) 
+{
 	int fildes = thread.getSyscallArg(0);
 	off_t offset = thread.getSyscallArg(1);
 	int whence = thread.getSyscallArg(2);
@@ -859,17 +922,20 @@ uint lseek_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 20 */
-uint getpid_impl(SyscallDesc desc, Thread thread) {
+uint getpid_impl(SyscallDesc desc, Thread thread) 
+{
 	return thread.process.pid;
 }
 
 /* 24 */
-uint getuid_impl(SyscallDesc desc, Thread thread) {
+uint getuid_impl(SyscallDesc desc, Thread thread) 
+{
 	return thread.process.uid;
 }
 
 /// For times().
-struct tms {
+struct tms 
+{
 	int64_t tms_utime; // user time
 	int64_t tms_stime; // system time
 	int64_t tms_cutime; // user time of children
@@ -877,7 +943,8 @@ struct tms {
 };
 
 /* 43 */
-uint times_impl(SyscallDesc desc, Thread thread) {
+uint times_impl(SyscallDesc desc, Thread thread) 
+{
 	assert(0);
 	//tms buf;
 	//clock_t ret = times(&buf);
@@ -888,7 +955,8 @@ uint times_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 45 */
-uint brk_impl(SyscallDesc desc, Thread thread) {
+uint brk_impl(SyscallDesc desc, Thread thread) 
+{
 	int retval;
 
 	uint oldbrk, newbrk;
@@ -897,16 +965,20 @@ uint brk_impl(SyscallDesc desc, Thread thread) {
 	newbrk = thread.getSyscallArg(0);
 	oldbrk = thread.process.brk;
 
-	if(newbrk == 0) {
+	if(newbrk == 0) 
+	{
 		return thread.process.brk;
 	}
 
 	newbrk_rnd = Rounding!(uint).roundUp(newbrk, MEM_PAGESIZE);
 	oldbrk_rnd = Rounding!(uint).roundUp(oldbrk, MEM_PAGESIZE);
 
-	if(newbrk > oldbrk) {
+	if(newbrk > oldbrk) 
+	{
 		thread.mem.map(oldbrk_rnd, newbrk_rnd - oldbrk_rnd, MemoryAccessType.READ | MemoryAccessType.WRITE);
-	} else if(newbrk < oldbrk) {
+	} 
+	else if(newbrk < oldbrk)
+	{
 		thread.mem.unmap(newbrk_rnd, oldbrk_rnd - newbrk_rnd);
 	}
 	thread.process.brk = newbrk;
@@ -915,33 +987,39 @@ uint brk_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 47 */
-uint getgid_impl(SyscallDesc desc, Thread thread) {
+uint getgid_impl(SyscallDesc desc, Thread thread) 
+{
 	return thread.process.gid;
 }
 
 /* 49 */
-uint geteuid_impl(SyscallDesc desc, Thread thread) {
+uint geteuid_impl(SyscallDesc desc, Thread thread) 
+{
 	return thread.process.euid;
 }
 
 /* 50 */
-uint getegid_impl(SyscallDesc desc, Thread thread) {
+uint getegid_impl(SyscallDesc desc, Thread thread) 
+{
 	return thread.process.egid;
 }
 
 /* 90 */
-uint mmap_impl(SyscallDesc desc, Thread thread) {
+uint mmap_impl(SyscallDesc desc, Thread thread) 
+{
 	assert(0); //TODO
 	//return -EINVAL;
 }
 
 /* 108 */
-uint fstat_impl(SyscallDesc desc, Thread thread) {
+uint fstat_impl(SyscallDesc desc, Thread thread) 
+{
 	int fd = thread.getSyscallArg(0);
 	uint buf_addr = thread.getSyscallArg(1);
 	stat_t* buf = cast(stat_t*)(malloc(stat_t.sizeof));
 	int ret = fstat(fd, buf);
-	if(ret >= 0) {
+	if(ret >= 0) 
+	{
 		thread.mem.writeBlock(buf_addr, stat_t.sizeof, cast(ubyte*) buf);
 	}
 	free(buf);
@@ -949,14 +1027,16 @@ uint fstat_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 122 */
-uint uname_impl(SyscallDesc desc, Thread thread) {
+uint uname_impl(SyscallDesc desc, Thread thread) 
+{
 	utsname un = {"Linux", "sim", "2.6", "Tue Apr 5 12:21:57 UTC 2005", "mips"};
 	thread.mem.writeBlock(thread.getSyscallArg(0), un.sizeof, cast(ubyte*) &un);
 	return 0;
 }
 
 /* 140 */
-uint _llseek_impl(SyscallDesc desc, Thread thread) {
+uint _llseek_impl(SyscallDesc desc, Thread thread) 
+{
 	int fd = thread.getSyscallArg(0);
 	uint offset_high = thread.getSyscallArg(1);
 	uint offset_low = thread.getSyscallArg(2);
@@ -965,16 +1045,20 @@ uint _llseek_impl(SyscallDesc desc, Thread thread) {
 	
 	int ret;
 	
-	if(offset_high == 0) {
+	if(offset_high == 0) 
+	{
 		off_t lseek_ret = lseek(fd, offset_low, whence);
-		if(lseek_ret >= 0) {
+		if(lseek_ret >= 0) 
+		{
 			ret = 0;
 		}
-		else {
+		else 
+		{
 			ret = -1;
 		}
 	}
-	else {
+	else 
+	{
 		ret = -1;
 	}
 	
@@ -982,25 +1066,31 @@ uint _llseek_impl(SyscallDesc desc, Thread thread) {
 }
 
 /* 197 */
-uint fstat64_impl(SyscallDesc desc, Thread thread) {
+uint fstat64_impl(SyscallDesc desc, Thread thread) 
+{
 	assert(0); //TODO
 	//return -EINVAL;
 }
 
-uint invalidArg_impl(SyscallDesc desc, Thread thread) {
+uint invalidArg_impl(SyscallDesc desc, Thread thread) 
+{
 	logging.warnf(LogCategory.SYSCALL, "syscall %s is ignored.", desc.name);
 	return -EINVAL;
 }
 
-class SyscallEmul {
-	this() {
+class SyscallEmul 
+{
+	this() 
+	{
 		this.initSyscallDescs();
 	}
 
-	void initSyscallDescs() {
+	void initSyscallDescs() 
+	{
 		uint index = 0;
 
-		void _register(string name, SyscallAction action = null) {
+		void _register(string name, SyscallAction action = null) 
+		{
 			this.register(name, index, action);
 		}
 
@@ -1228,24 +1318,31 @@ class SyscallEmul {
 		/* 221 */ _register("fcntl64", &invalidArg_impl);
 	}
 
-	void register(string name, ref uint num) {
+	void register(string name, ref uint num) 
+	{
 		this.register(new SyscallDesc(name, num++));
 	}
 
-	void register(string name, ref uint num, SyscallAction action) {
+	void register(string name, ref uint num, SyscallAction action) 
+	{
 		this.register(new SyscallDesc(name, num++, action));
 	}
 
-	void register(SyscallDesc desc) {
+	void register(SyscallDesc desc) 
+	{
 		this.syscallDescs[desc.num] = desc;
 	}
 
-	void syscall(uint callnum, Thread thread) {
+	void syscall(uint callnum, Thread thread) 
+	{
 		int syscall_idx = callnum - 4000;
 
-		if(syscall_idx >= 0 && syscall_idx < this.syscallDescs.length && (syscall_idx in this.syscallDescs)) {
+		if(syscall_idx >= 0 && syscall_idx < this.syscallDescs.length && (syscall_idx in this.syscallDescs)) 
+		{
 			this.syscallDescs[syscall_idx].doSyscall(thread);
-		} else {
+		} 
+		else
+		{
 			logging.warnf(LogCategory.SYSCALL, "Syscall %d (%d) out of range", callnum, syscall_idx);
 			thread.setSyscallReturn(-EINVAL);
 		}
@@ -1254,21 +1351,26 @@ class SyscallEmul {
 	SyscallDesc[uint] syscallDescs;
 }
 
-class SyscallDesc {
-	this(string name, uint num) {
+class SyscallDesc 
+{
+	this(string name, uint num) 
+	{
 		this.name = name;
 		this.num = num;
 		this.action = null;
 	}
 
-	this(string name, uint num, SyscallAction action) {
+	this(string name, uint num, SyscallAction action) 
+	{
 		this.name = name;
 		this.num = num;
 		this.action = action;
 	}
 
-	void doSyscall(Thread thread) {
-		if(this.action is null) {
+	void doSyscall(Thread thread) 
+	{
+		if(this.action is null) 
+		{
 			logging.fatalf(LogCategory.SYSCALL, "syscall %s has not been implemented yet.", this.name);
 		}
 

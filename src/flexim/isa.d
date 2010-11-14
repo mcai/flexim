@@ -23,83 +23,100 @@ module flexim.isa;
 
 import flexim.all;
 
-union MachInst {
+union MachInst 
+{
 	uint data;
 
-	uint opIndex(BitField field) {
+	uint opIndex(BitField field) 
+	{
 		return bits(this.data, field.hi, field.lo);
 	}
 
-	bool isRMt() {
+	bool isRMt() 
+	{
 		uint func = this[FUNC];
 		return (func == 0x10 || func == 0x11);
 	}
 
-	bool isRMf() {
+	bool isRMf() 
+	{
 		uint func = this[FUNC];
 		return (func == 0x12 || func == 0x13);
 	}
 
-	bool isROneOp() {
+	bool isROneOp() 
+	{
 		uint func = this[FUNC];
 		return (func == 0x08 || func == 0x09);
 	}
 
-	bool isRTwoOp() {
+	bool isRTwoOp() 
+	{
 		uint func = this[FUNC];
 		return (func >= 0x18 && func <= 0x1b);
 	}
 
-	bool isLoadStore() {
+	bool isLoadStore() 
+	{
 		uint opcode = this[OPCODE];
 		return (((opcode >= 0x20) && (opcode <= 0x2e)) || (opcode == 0x30) || (opcode == 0x38));
 	}
 
-	bool isFPLoadStore() {
+	bool isFPLoadStore() 
+	{
 		uint opcode = this[OPCODE];
 		return (opcode == 0x31 || opcode == 0x39);
 	}
 
-	bool isOneOpBranch() {
+	bool isOneOpBranch() 
+	{
 		uint opcode = this[OPCODE];
 		return ((opcode == 0x00) || (opcode == 0x01) || (opcode == 0x06) || (opcode == 0x07));
 	}
 
-	bool isShift() {
+	bool isShift() 
+	{
 		uint func = this[FUNC];
 		return (func == 0x00 || func == 0x01 || func == 0x03);
 	}
 
-	bool isCVT() {
+	bool isCVT() 
+	{
 		uint func = this[FUNC];
 		return (func == 32 || func == 33 || func == 36);
 	}
 
-	bool isCompare() {
+	bool isCompare() 
+	{
 		uint func = this[FUNC];
 		return (func >= 48);
 	}
 
-	bool isGPR_FP_Move() {
+	bool isGPR_FP_Move() 
+	{
 		uint rs = this[RS];
 		return (rs == 0 || rs == 4);
 	}
 
-	bool isGPR_FCR_Move() {
+	bool isGPR_FCR_Move() 
+	{
 		uint rs = this[RS];
 		return (rs == 2 || rs == 6);
 	}
 
-	bool isFPBranch() {
+	bool isFPBranch() 
+	{
 		uint rs = this[RS];
 		return (rs == 8);
 	}
 
-	bool isSyscall() {
+	bool isSyscall() 
+	{
 		return (this[OPCODE_LO] == 0x0 && this[FUNC_HI] == 0x1 && this[FUNC_LO] == 0x4);
 	}
 
-	MachInstType getType() {
+	MachInstType getType() 
+	{
 		uint opcode = this[OPCODE];
 
 		if(opcode == 0)
@@ -113,14 +130,16 @@ union MachInst {
 	}
 }
 
-enum MachInstType {
+enum MachInstType 
+{
 	R,
 	I,
 	J,
 	F
 }
 
-struct BitField {
+struct BitField 
+{
 	string name;
 	uint hi;
 	uint lo;
@@ -213,58 +232,92 @@ const BitField MT_H = {"MT_H", 4, 4};
 //Cache Ops
 const BitField CACHE_OP = {"CACHE_OP", 20, 16};
 
-string disassemble(MachInst machInst, uint pc, Thread thread) {
+string disassemble(MachInst machInst, uint pc, Thread thread) 
+{
 	string buf;
 
 	buf ~= format("0x%08x : 0x%08x %s ", pc, machInst.data, thread.core.isa.decodeMachInst(machInst).mnemonic);
 
+	
 	if(machInst.data == 0x00000000) {
 		return buf;
 	}
 
-	switch(machInst.getType()) {
+	switch(machInst.getType()) 
+		{
 		case MachInstType.J:
 			buf ~= format("%x", machInst[JMPTARG]);
 		break;
 		case MachInstType.I:
-			if(machInst.isOneOpBranch()) {
+			if(machInst.isOneOpBranch()) 
+			{
 				buf ~= format("$%s, %d", mips_gpr_names[machInst[RS]], cast(short) machInst[INTIMM]);
-			} else if(machInst.isLoadStore()) {
+			} 
+			else if(machInst.isLoadStore()) 
+			{
 				buf ~= format("$%s, %d($%s)", mips_gpr_names[machInst[RT]], cast(short) machInst[INTIMM], mips_gpr_names[machInst[RS]]);
-			} else if(machInst.isFPLoadStore()) {
+			} 
+			else if(machInst.isFPLoadStore()) 
+			{
 				buf ~= format("$f%d, %d($%s)", machInst[FT], cast(short) machInst[INTIMM], mips_gpr_names[machInst[RS]]);
-			} else {
+			} 
+			else 
+			{
 				buf ~= format("$%s, $%s, %d", mips_gpr_names[machInst[RT]], mips_gpr_names[machInst[RS]], cast(short) machInst[INTIMM]);
 			}
 		break;
 		case MachInstType.F:
-			if(machInst.isCVT()) {
+			if(machInst.isCVT()) 
+			{
 				buf ~= format("$f%d, $f%d", machInst[FD], machInst[FS]);
-			} else if(machInst.isCompare()) {
+			} 
+			else if(machInst.isCompare()) 
+			{
 				buf ~= format("%d, $f%d, $f%d", machInst[FD] >> 2, machInst[FS], machInst[FT]);
-			} else if(machInst.isFPBranch()) {
+			} 
+			else if(machInst.isFPBranch()) 
+			{
 				buf ~= format("%d, %d", machInst[FD] >> 2, cast(short) machInst[INTIMM]);
-			} else if(machInst.isGPR_FP_Move()) {
+			} 
+			else if(machInst.isGPR_FP_Move()) 
+			{
 				buf ~= format("$%s, $f%d", mips_gpr_names[machInst[RT]], machInst[FS]);
-			} else if(machInst.isGPR_FCR_Move()) {
+			} 
+			else if(machInst.isGPR_FCR_Move()) 
+			{
 				buf ~= format("$%s, $%d", mips_gpr_names[machInst[RT]], machInst[FS]);
-			} else {
+			} 
+			else 
+			{
 				buf ~= format("$f%d, $f%d, $f%d", machInst[FD], machInst[FS], machInst[FT]);
 			}
 		break;
 		case MachInstType.R:
-			if(machInst.isSyscall()) {
-			} else if(machInst.isShift()) {
+			if(machInst.isSyscall()) 
+			{
+			} 
+			else if(machInst.isShift()) 
+			{
 				buf ~= format("$%s, $%s, %d", mips_gpr_names[machInst[RD]], mips_gpr_names[machInst[RT]], machInst[SA]);
-			} else if(machInst.isROneOp()) {
+			} 
+			else if(machInst.isROneOp()) 
+			{
 				buf ~= format("$%s", mips_gpr_names[machInst[RS]]);
-			} else if(machInst.isRTwoOp()) {
+			} 
+			else if(machInst.isRTwoOp()) 
+			{
 				buf ~= format("$%s, $%s", mips_gpr_names[machInst[RS]], mips_gpr_names[machInst[RT]]);
-			} else if(machInst.isRMt()) {
+			} 
+			else if(machInst.isRMt())
+			{
 				buf ~= format("$%s", mips_gpr_names[machInst[RS]]);
-			} else if(machInst.isRMf()) {
+			} 
+			else if(machInst.isRMf()) 
+			{
 				buf ~= format("$%s", mips_gpr_names[machInst[RD]]);
-			} else {
+			} 
+			else 
+			{
 				buf ~= format("$%s, $%s, $%s", mips_gpr_names[machInst[RD]], mips_gpr_names[machInst[RS]], mips_gpr_names[machInst[RT]]);
 			}
 		break;
@@ -276,7 +329,8 @@ string disassemble(MachInst machInst, uint pc, Thread thread) {
 }
 
 /* instruction flags */
-enum StaticInstFlag: uint {
+enum StaticInstFlag: uint 
+{
 	NONE = 0x00000000,
 	ICOMP = 0x00000001, /* integer computation */
 	FCOMP = 0x00000002, /* floating-point computation */
@@ -300,7 +354,8 @@ enum StaticInstFlag: uint {
 }
 
 /* possible functional units */
-enum FunctionalUnitType: uint {
+enum FunctionalUnitType: uint 
+{
 	NONE = 0,
 	IntALU,
 	IntMULT,
@@ -322,7 +377,8 @@ const uint NumIntRegs = 32;
 const uint NumFloatRegs = 32;
 const uint NumMiscRegs = 4;
 
-enum MiscRegNums: int {
+enum MiscRegNums: int 
+{
 	LO = 0,
 	HI,
 	EA,
@@ -344,12 +400,15 @@ const int ReturnAddressReg = 31;
 
 const int SyscallPseudoReturnReg = 3;
 
-abstract class RegisterFile {
+abstract class RegisterFile 
+{
 	abstract void clear();
 }
 
-class CombinedRegisterFile: RegisterFile {
-	this() {
+class CombinedRegisterFile: RegisterFile 
+{
+	this() 
+	{
 		this._isSpeculative = false;
 		
 		this.intRegs = new IntRegisterFile();
@@ -361,7 +420,8 @@ class CombinedRegisterFile: RegisterFile {
 		this.recMiscRegs = new MiscRegisterFile();
 	}
 	
-	override void clear() {
+	override void clear() 
+	{
 		this.intRegs.clear();
 		this.floatRegs.clear();
 		this.miscRegs.clear();
@@ -373,13 +433,17 @@ class CombinedRegisterFile: RegisterFile {
 		this.pc = this.recPc = this.recNnpc = 0;
 	}
 	
-	bool isSpeculative() {
+	bool isSpeculative()
+	{
 		return this._isSpeculative;
 	}
 	
-	void isSpeculative(bool value) {
-		if(this._isSpeculative != value) {
-			if(value) {
+	void isSpeculative(bool value) 
+	{
+		if(this._isSpeculative != value) 
+		{
+			if(value) 
+			{
 				this.intRegs.copyTo(this.recIntRegs);
 				this.floatRegs.copyTo(this.recFloatRegs);
 				this.miscRegs.copyTo(this.recMiscRegs);
@@ -388,7 +452,8 @@ class CombinedRegisterFile: RegisterFile {
 				this.recNpc = this.npc;
 				this.recNnpc = this.nnpc;
 			}
-			else {
+			else 
+			{
 				this.recIntRegs.copyTo(this.intRegs);
 				this.recFloatRegs.copyTo(this.floatRegs);
 				this.recMiscRegs.copyTo(this.miscRegs);
@@ -417,49 +482,69 @@ class CombinedRegisterFile: RegisterFile {
 	uint recPc, recNpc, recNnpc;
 }
 
-class IntRegisterFile : RegisterFile {
-	this() {
+class IntRegisterFile : RegisterFile 
+{
+	this() 
+	{
 		this.clear();
 	}
 	
-	void copyTo(ref IntRegisterFile otherFile) {
-		foreach(i, reg; this.regs) {
+	void copyTo(ref IntRegisterFile otherFile) 
+	{
+		foreach(i, reg; this.regs) 
+		{
 			otherFile.regs[i] = reg;
 		}
 	}
 	
-	override void clear() {
+	override void clear() 
+	{
 		this.regs.clear();
 	}
 	
-	uint get(uint index) {
+	uint get(uint index)
+	in
+	{
 		assert(index < NumIntRegs);
+	}
+	body
+	{
 		uint value = this.regs[index];
 		//logging.infof(LogCategory.THREAD, "    Reading int reg %d as %#x.", index, value);
 		return value;
 	}
 	
-	void set(uint index, uint value) {
+	void set(uint index, uint value)
+	in
+	{
 		assert(index < NumIntRegs);
+	}
+	body
+	{
 		this.regs[index] = value;
 		//logging.infof(LogCategory.THREAD, "    Setting int reg %d to %#x.", index, value);
 	}
 
-	override string toString() {
+	override string toString() 
+	{
 		string buf;
 
-		foreach(i, reg; this.regs[0 .. NumIntRegs]) {
-			if(i % 4 == 0) {
+		foreach(i, reg; this.regs[0 .. NumIntRegs]) 
+		{
+			if(i % 4 == 0) 
+			{
 				buf ~= "    ";
 			}
 
-			if(i > 0) {
+			if(i > 0) 
+			{
 				buf ~= "  ";
 			}
 
 			buf ~= format("%s  = 0x%08x ", mips_gpr_names[i], reg);
 
-			if(i % 4 == 3 && i != (NumIntRegs - 1)) {
+			if(i % 4 == 3 && i != (NumIntRegs - 1)) 
+			{
 				buf ~= '\n';
 			}
 		}
@@ -470,19 +555,23 @@ class IntRegisterFile : RegisterFile {
 	uint[NumIntRegs] regs;
 }
 
-class MiscRegisterFile: RegisterFile {
-	this() {
+class MiscRegisterFile: RegisterFile 
+{
+	this() 
+	{
 		this.clear();
 	}
 	
-	void copyTo(ref MiscRegisterFile otherFile) {
+	void copyTo(ref MiscRegisterFile otherFile) 
+	{
 		otherFile.lo = this.lo;
 		otherFile.hi = this.hi;
 		otherFile.ea = this.ea;
 		otherFile.fcsr = this.fcsr;
 	}
 	
-	override void clear() {
+	override void clear() 
+	{
 		this.lo = 0;
 		this.hi = 0;
 		this.ea = 0;
@@ -495,86 +584,135 @@ class MiscRegisterFile: RegisterFile {
 	uint fcsr;
 }
 
-class FloatRegisterFile : RegisterFile {
-	this() {
+class FloatRegisterFile : RegisterFile 
+{
+	this() 
+	{
 		this.clear();
 	}
 	
-	void copyTo(ref FloatRegisterFile otherFile) {
+	void copyTo(ref FloatRegisterFile otherFile) 
+	{
 		otherFile.regs = this.regs;
 	}
 	
-	override void clear() {
+	override void clear() 
+	{
 		this.regs.f = 0f;
 	}
 	
-	float getFloat(uint index) {
+	float getFloat(uint index)
+	in
+	{
 		assert(index < NumFloatRegs);
+	}
+	body
+	{
 		float value = this.regs.f[index];
 		//logging.infof(LogCategory.REGISTER, "    Reading float reg %d as %f.", index, value);
 		return value;
 	}
 	
-	void setFloat(float value, uint index) {
+	void setFloat(float value, uint index)
+	in
+	{
 		assert(index < NumFloatRegs);
+	}
+	body
+	{
 		this.regs.f[index] = value;
 		//logging.infof(LogCategory.REGISTER, "    Setting float reg %d to %f.", index, value);
 	}
 	
-	double getDouble(uint index) {
+	double getDouble(uint index) 
+	in
+	{
 		assert(index < NumFloatRegs);
+	}
+	body
+	{
 		double value = this.regs.d[index/2];
 		//logging.infof(LogCategory.REGISTER, "    Reading double reg %d as %f.", index, value);
 		return value;
 	}
 	
-	void setDouble(double value, uint index) {
+	void setDouble(double value, uint index) 
+	in
+	{
 		assert(index < NumFloatRegs);
+	}
+	body
+	{
 		this.regs.d[index/2] = value;
 		//logging.infof(LogCategory.REGISTER, "    Setting double reg %d to %f.", index, value);
 	}
 	
-	uint getUint(uint index) {
+	uint getUint(uint index) 
+	in
+	{
 		assert(index < NumFloatRegs);
+	}
+	body
+	{
 		uint value = this.regs.i[index];
 		//logging.infof(LogCategory.REGISTER, "    Reading float reg %d bits as %#x.", index, value);
 		return value;
 	}
 	
-	void setUint(uint value, uint index) {
+	void setUint(uint value, uint index) 
+	in
+	{
 		assert(index < NumFloatRegs, format("%d", index));
+	}
+	body
+	{
 		this.regs.i[index] = value;
 		//logging.infof(LogCategory.REGISTER, "    Setting float reg %d bits to %#x.", index, value);
 	}
 	
-	ulong getUlong(uint index) {
+	ulong getUlong(uint index) 
+	in
+	{
 		assert(index < NumFloatRegs);
+	}
+	body
+	{
 		ulong value = this.regs.l[index/2];
 		//logging.infof(LogCategory.REGISTER, "    Reading double reg %d bits as %#x.", index, value);
 		return value;
 	}
 	
-	void setUlong(ulong value, uint index) {
+	void setUlong(ulong value, uint index) 
+	in
+	{
 		assert(index < NumFloatRegs);
+	}
+	body
+	{
 		this.regs.l[index/2] = value;
 		//logging.infof(LogCategory.REGISTER, "    Setting double reg %d bits to %#x.", index, value);
 	}
 
-	override string toString() {
+	override string toString() 
+	{
 		string buf;
 
-		foreach(i, reg; this.regs.f[0 .. NumFloatRegs]) {
-			if(i % 4 == 0) {
+		foreach(i, reg; this.regs.f[0 .. NumFloatRegs]) 
+		{
+			if(i % 4 == 0) 
+			{
 				buf ~= "    ";
 			}
 
-			if(i > 0) {
+			if(i > 0) 
+			{
 				buf ~= "  ";
 			}
 
 			buf ~= format("f%d  = 0x%08x ", i, reg);
 
-			if(i % 4 == 3 && i != (NumFloatRegs - 1)) {
+			if(i % 4 == 3 && i != (NumFloatRegs - 1)) 
+			{
 				buf ~= '\n';
 			}
 		}
@@ -582,7 +720,8 @@ class FloatRegisterFile : RegisterFile {
 		return buf;
 	}
 	
-	union cop1_reg {
+	union cop1_reg 
+	{
 		float f[NumFloatRegs];
 		int i[NumFloatRegs];
 		double d[NumFloatRegs / 2];
@@ -592,12 +731,16 @@ class FloatRegisterFile : RegisterFile {
 	cop1_reg regs;
 }
 
-abstract class ISA {
-	StaticInst decode(uint pc, Memory mem) {
-		if(pc in this.decodedInsts) {
+abstract class ISA 
+{
+	StaticInst decode(uint pc, Memory mem) 
+	{
+		if(pc in this.decodedInsts) 
+		{
 			return this.decodedInsts[pc];
 		}
-		else {
+		else 
+		{
 			MachInst machInst;
 	
 			mem.readWord(pc, &machInst.data);
@@ -617,19 +760,23 @@ abstract class ISA {
 	StaticInst[uint] decodedInsts;
 }
 
-enum RegisterDependencyType: string {
+enum RegisterDependencyType: string 
+{
 	INT = "INT",
 	FP = "FP",
 	MISC = "MISC"
 }
 
-class RegisterDependency {
-	this(RegisterDependencyType type, uint num) {
+class RegisterDependency 
+{
+	this(RegisterDependencyType type, uint num) 
+	{
 		this.type = type;
 		this.num = num;
 	}
 	
-	override string toString() {
+	override string toString() 
+	{
 		return format("RegisterDependency[type=%s, num=%d]", this.type, this.num);
 	}
 	
@@ -637,8 +784,10 @@ class RegisterDependency {
 	uint num;
 }
 
-abstract class StaticInst {
-	this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+abstract class StaticInst 
+{
+	this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+	{
 		this.mnemonic = mnemonic;
 		this.machInst = machInst;
 		this.flags = flags;
@@ -647,7 +796,8 @@ abstract class StaticInst {
 		this.setupDeps();
 	}
 	
-	uint targetPc(Thread thread) {
+	uint targetPc(Thread thread) 
+	{
 		return 0;
 	}
 	
@@ -655,55 +805,68 @@ abstract class StaticInst {
 	
 	abstract void execute(Thread thread);
 
-	uint opIndex(BitField field) {
+	uint opIndex(BitField field) 
+	{
 		return this.machInst[field];
 	}
 	
-	bool isLongLat() {
+	bool isLongLat() 
+	{
 		return (this.flags & StaticInstFlag.LONGLAT) == StaticInstFlag.LONGLAT;
 	}
 	
-	bool isTrap() {
+	bool isTrap() 
+	{
 		return (this.flags & StaticInstFlag.TRAP) == StaticInstFlag.TRAP;
 	}
 	
-	bool isMem() {
+	bool isMem() 
+	{
 		return (this.flags & StaticInstFlag.MEM) == StaticInstFlag.MEM;
 	}
 	
-	bool isLoad() {
+	bool isLoad() 
+	{
 		return this.isMem && (this.flags & StaticInstFlag.LOAD) == StaticInstFlag.LOAD;
 	}
 	
-	bool isStore() {
+	bool isStore() 
+	{
 		return this.isMem && (this.flags & StaticInstFlag.STORE) == StaticInstFlag.STORE;
 	}
 
-	bool isConditional() {
+	bool isConditional() 
+	{
 		return (this.flags & StaticInstFlag.COND) == StaticInstFlag.COND;
 	}
 
-	bool isUnconditional() {
+	bool isUnconditional() 
+	{
 		return (this.flags & StaticInstFlag.UNCOND) == StaticInstFlag.UNCOND;
 	}
 	
-	bool isDirectJump() {
+	bool isDirectJump()
+	{
 		return (this.flags & StaticInstFlag.DIRJMP) != StaticInstFlag.DIRJMP;
 	}
 
-	bool isControl() {
+	bool isControl() 
+	{
 		return (this.flags & StaticInstFlag.CTRL) == StaticInstFlag.CTRL;
 	}
 
-	bool isCall() {
+	bool isCall() 
+	{
 		return (this.flags & StaticInstFlag.CALL) == StaticInstFlag.CALL;
 	}
 
-	bool isReturn() {
+	bool isReturn() 
+	{
 		return (this.flags & StaticInstFlag.RET) == StaticInstFlag.RET;
 	}
 	
-	bool isNop() {
+	bool isNop() 
+	{
 		return (cast(Nop)this) !is null;
 	}
 	
@@ -716,24 +879,29 @@ abstract class StaticInst {
 	FunctionalUnitType fuType;
 }
 
-class DynamicInst {
-	this(Thread thread, uint pc, StaticInst staticInst) {
+class DynamicInst 
+{
+	this(Thread thread, uint pc, StaticInst staticInst)
+	{
 		this.thread = thread;
 		this.pc = pc;
 		this.staticInst = staticInst;
 	}
 	
-	void execute() {
+	void execute() 
+	{
 		this.thread.regs.intRegs.set(ZeroReg, 0);
 		
 		this.staticInst.execute(this.thread);
 	}
 	
-	uint physPc() {
+	uint physPc() 
+	{
 		return this.thread.core.mmu.translate(this.pc);
 	}
 	
-	override string toString() {
+	override string toString() 
+	{
 		return disassemble(this.staticInst.machInst, this.pc, this.thread);
 	}
 	
@@ -742,21 +910,27 @@ class DynamicInst {
 	Thread thread;
 }
 
-class MipsISA : ISA {
+class MipsISA : ISA 
+{
 	this() {
-		
 	}
 	
-	override StaticInst decodeMachInst(MachInst machInst) {
-		switch(machInst[OPCODE_HI]) {
+	override StaticInst decodeMachInst(MachInst machInst) 
+	{
+		switch(machInst[OPCODE_HI]) 
+		{
 			case 0x0:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x0:
-						switch(machInst[FUNC_HI]) {
+						switch(machInst[FUNC_HI]) 
+						{
 							case 0x0:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x1:
-										switch(machInst[MOVCI]) {
+										switch(machInst[MOVCI]) 
+										{
 											case 0x0:
 												return new FailUnimplemented("Movf", machInst);
 											case 0x1:
@@ -765,11 +939,14 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x0:
-										switch(machInst[RS]) {
+										switch(machInst[RS]) 
+										{
 											case 0x0:
-												switch(machInst[RT_RD]) {
+												switch(machInst[RT_RD]) 
+												{
 													case 0x0:
-														switch(machInst[SA]) {
+														switch(machInst[SA]) 
+														{
 															case 0x1:
 																return new FailUnimplemented("Ssnop", machInst);
 															case 0x3:
@@ -784,9 +961,11 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x2:
-										switch(machInst[RS_SRL]) {
+										switch(machInst[RS_SRL]) 
+										{
 											case 0x0:
-												switch(machInst[SRL]) {
+												switch(machInst[SRL]) 
+												{
 													case 0x0:
 														return new Srl(machInst);
 													case 0x1:
@@ -798,7 +977,8 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x3:
-										switch(machInst[RS]) {
+										switch(machInst[RS]) 
+										{
 											case 0x0:
 												return new Sra(machInst);
 											default:
@@ -807,7 +987,8 @@ class MipsISA : ISA {
 									case 0x4:
 										return new Sllv(machInst);
 									case 0x6:
-										switch(machInst[SRLV]) {
+										switch(machInst[SRLV]) 
+										{
 											case 0x0:
 												return new Srlv(machInst);
 											case 0x1:
@@ -821,16 +1002,19 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x1:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
-										switch(machInst[HINT]) {
+										switch(machInst[HINT]) 
+										{
 											case 0x1:
 												return new FailUnimplemented("Jr_hb", machInst);
 											default:
 												return new Jr(machInst);
 										}
 									case 0x1:
-										switch(machInst[HINT]) {
+										switch(machInst[HINT]) 
+										{
 											case 0x1:
 												return new FailUnimplemented("Jalr_hb", machInst);
 											default:
@@ -850,7 +1034,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x2:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new Mfhi(machInst);
 									case 0x1:
@@ -863,7 +1048,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x3:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new Mult(machInst);
 									case 0x1:
@@ -876,9 +1062,11 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x4:
-								switch(machInst[HINT]) {
+								switch(machInst[HINT]) 
+								{
 									case 0x0:
-										switch(machInst[FUNC_LO]) {
+										switch(machInst[FUNC_LO]) 
+										{
 											case 0x0:
 												return new Add(machInst);
 											case 0x1:
@@ -902,9 +1090,11 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x5:
-								switch(machInst[HINT]) {
+								switch(machInst[HINT]) 
+								{
 									case 0x0:
-										switch(machInst[FUNC_LO]) {
+										switch(machInst[FUNC_LO]) 
+										{
 											case 0x2:
 												return new Slt(machInst);
 											case 0x3:
@@ -916,7 +1106,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x6:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Tge", machInst);
 									case 0x1:
@@ -936,9 +1127,11 @@ class MipsISA : ISA {
 								return new Unknown(machInst);
 						}
 					case 0x1:
-						switch(machInst[REGIMM_HI]) {
+						switch(machInst[REGIMM_HI]) 
+						{
 							case 0x0:
-								switch(machInst[REGIMM_LO]) {
+								switch(machInst[REGIMM_LO]) 
+								{
 									case 0x0:
 										return new Bltz(machInst);
 									case 0x1:
@@ -951,7 +1144,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x1:
-								switch(machInst[REGIMM_LO]) {
+								switch(machInst[REGIMM_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Tgei", machInst);
 									case 0x1:
@@ -968,11 +1162,13 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x2:
-								switch(machInst[REGIMM_LO]) {
+								switch(machInst[REGIMM_LO]) 
+								{
 									case 0x0:
 										return new Bltzal(machInst);
 									case 0x1:
-										switch(machInst[RS]) {
+										switch(machInst[RS]) 
+										{
 											case 0x0:
 												return new Bal(machInst);
 											default:
@@ -986,7 +1182,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x3:
-								switch(machInst[REGIMM_LO]) {
+								switch(machInst[REGIMM_LO])
+								{
 									case 0x4:
 										return new FailUnimplemented("Bposge32", machInst);
 									case 0x7:
@@ -1002,7 +1199,8 @@ class MipsISA : ISA {
 					case 0x3:
 						return new Jal(machInst);
 					case 0x4:
-						switch(machInst[RS_RT]) {
+						switch(machInst[RS_RT]) 
+						{
 							case 0x0:
 								return new B(machInst);
 							default:
@@ -1018,7 +1216,8 @@ class MipsISA : ISA {
 						return new Unknown(machInst);
 				}
 			case 0x1:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x0:
 						return new Addi(machInst);
 					case 0x1:
@@ -1026,7 +1225,8 @@ class MipsISA : ISA {
 					case 0x2:
 						return new Slti(machInst);
 					case 0x3:
-						switch(machInst[RS_RT_INTIMM]) {
+						switch(machInst[RS_RT_INTIMM]) 
+						{
 							case 0xabc1:
 								return new FailUnimplemented("Fail", machInst);
 							case 0xabc2:
@@ -1041,7 +1241,8 @@ class MipsISA : ISA {
 					case 0x6:
 						return new Xori(machInst);
 					case 0x7:
-						switch(machInst[RS]) {
+						switch(machInst[RS]) 
+						{
 							case 0x0:
 								return new Lui(machInst);
 							default:
@@ -1051,11 +1252,14 @@ class MipsISA : ISA {
 						return new Unknown(machInst);
 				}
 			case 0x2:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x0:
-						switch(machInst[RS_MSB]) {
+						switch(machInst[RS_MSB]) 
+						{
 							case 0x0:
-								switch(machInst[RS]) {
+								switch(machInst[RS]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Mfc0", machInst);
 									case 0x4:
@@ -1067,15 +1271,18 @@ class MipsISA : ISA {
 									default:
 										return new CP0Unimplemented("unknown", machInst);
 									case 0x8:
-										switch(machInst[MT_U]) {
+										switch(machInst[MT_U]) 
+										{
 											case 0x0:
 												return new FailUnimplemented("Mftc0", machInst);
 											case 0x1:
-												switch(machInst[SEL]) {
+												switch(machInst[SEL]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Mftgpr", machInst);
 													case 0x1:
-														switch(machInst[RT]) {
+														switch(machInst[RT]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Mftlo_dsp0", machInst);
 															case 0x1:
@@ -1106,7 +1313,8 @@ class MipsISA : ISA {
 																return new CP0Unimplemented("unknown", machInst);
 														}
 													case 0x2:
-														switch(machInst[MT_H]) {
+														switch(machInst[MT_H]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Mftc1", machInst);
 															case 0x1:
@@ -1123,15 +1331,18 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0xc:
-										switch(machInst[MT_U]) {
+										switch(machInst[MT_U]) 
+										{
 											case 0x0:
 												return new FailUnimplemented("Mttc0", machInst);
 											case 0x1:
-												switch(machInst[SEL]) {
+												switch(machInst[SEL]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Mttgpr", machInst);
 													case 0x1:
-														switch(machInst[RT]) {
+														switch(machInst[RT]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Mttlo_dsp0", machInst);
 															case 0x1:
@@ -1172,13 +1383,17 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0xb:
-										switch(machInst[RD]) {
+										switch(machInst[RD]) 
+										{
 											case 0x0:
-												switch(machInst[POS]) {
+												switch(machInst[POS]) 
+												{
 													case 0x0:
-														switch(machInst[SEL]) {
+														switch(machInst[SEL]) 
+														{
 															case 0x1:
-																switch(machInst[SC]) {
+																switch(machInst[SC]) 
+																{
 																	case 0x0:
 																		return new FailUnimplemented("Dvpe", machInst);
 																	case 0x1:
@@ -1193,11 +1408,14 @@ class MipsISA : ISA {
 														return new CP0Unimplemented("unknown", machInst);
 												}
 											case 0x1:
-												switch(machInst[POS]) {
+												switch(machInst[POS]) 
+												{
 													case 0xf:
-														switch(machInst[SEL]) {
+														switch(machInst[SEL]) 
+														{
 															case 0x1:
-																switch(machInst[SC]) {
+																switch(machInst[SC]) 
+																{
 																	case 0x0:
 																		return new FailUnimplemented("Dmt", machInst);
 																	case 0x1:
@@ -1212,9 +1430,11 @@ class MipsISA : ISA {
 														return new CP0Unimplemented("unknown", machInst);
 												}
 											case 0xc:
-												switch(machInst[POS]) {
+												switch(machInst[POS]) 
+												{
 													case 0x0:
-														switch(machInst[SC]) {
+														switch(machInst[SC]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Di", machInst);
 															case 0x1:
@@ -1234,7 +1454,8 @@ class MipsISA : ISA {
 										return new FailUnimplemented("Wrpgpr", machInst);
 								}
 							case 0x1:
-								switch(machInst[FUNC]) {
+								switch(machInst[FUNC]) 
+								{
 									case 0x18:
 										return new FailUnimplemented("Eret", machInst);
 									case 0x1f:
@@ -1256,11 +1477,14 @@ class MipsISA : ISA {
 								return new Unknown(machInst);
 						}
 					case 0x1:
-						switch(machInst[RS_MSB]) {
+						switch(machInst[RS_MSB]) 
+						{
 							case 0x0:
-								switch(machInst[RS_HI]) {
+								switch(machInst[RS_HI]) 
+								{
 									case 0x0:
-										switch(machInst[RS_LO]) {
+										switch(machInst[RS_LO]) 
+										{
 											case 0x0:
 												return new Mfc1(machInst);
 											case 0x2:
@@ -1281,11 +1505,14 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x1:
-										switch(machInst[RS_LO]) {
+										switch(machInst[RS_LO]) 
+										{
 											case 0x0:
-												switch(machInst[ND]) {
+												switch(machInst[ND]) 
+												{
 													case 0x0:
-														switch(machInst[TF]) {
+														switch(machInst[TF]) 
+														{
 															case 0x0:
 																return new Bc1f(machInst);
 															case 0x1:
@@ -1294,7 +1521,8 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x1:
-														switch(machInst[TF]) {
+														switch(machInst[TF]) 
+														{
 															case 0x0:
 																return new Bc1fl(machInst);
 															case 0x1:
@@ -1316,13 +1544,17 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x1:
-								switch(machInst[RS_HI]) {
+								switch(machInst[RS_HI]) 
+								{
 									case 0x2:
-										switch(machInst[RS_LO]) {
+										switch(machInst[RS_LO]) 
+										{
 											case 0x0:
-												switch(machInst[FUNC_HI]) {
+												switch(machInst[FUNC_HI]) 
+												{
 													case 0x0:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new Add_s(machInst);
 															case 0x1:
@@ -1343,7 +1575,8 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x1:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Round_l_s", machInst);
 															case 0x1:
@@ -1364,9 +1597,11 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x2:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x1:
-																switch(machInst[MOVCF]) {
+																switch(machInst[MOVCF]) 
+																{
 																	case 0x0:
 																		return new FailUnimplemented("Movf_s", machInst);
 																	case 0x1:
@@ -1388,7 +1623,8 @@ class MipsISA : ISA {
 													case 0x3:
 														return new CP1Unimplemented("unknown", machInst);
 													case 0x4:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x1:
 																return new Cvt_d_s(machInst);
 															case 0x4:
@@ -1403,7 +1639,8 @@ class MipsISA : ISA {
 													case 0x5:
 														return new CP1Unimplemented("unknown", machInst);
 													case 0x6:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new C_f_s(machInst);
 															case 0x1:
@@ -1424,7 +1661,8 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x7:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new C_sf_s(machInst);
 															case 0x1:
@@ -1448,9 +1686,11 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[FUNC_HI]) {
+												switch(machInst[FUNC_HI]) 
+												{
 													case 0x0:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new Add_d(machInst);
 															case 0x1:
@@ -1471,7 +1711,8 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x1:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Round_l_d", machInst);
 															case 0x1:
@@ -1492,9 +1733,11 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x2:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x1:
-																switch(machInst[MOVCF]) {
+																switch(machInst[MOVCF]) 
+																{
 																	case 0x0:
 																		return new FailUnimplemented("Movf_d", machInst);
 																	case 0x1:
@@ -1514,7 +1757,8 @@ class MipsISA : ISA {
 																return new CP1Unimplemented("unknown", machInst);
 														}
 													case 0x4:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new Cvt_s_d(machInst);
 															case 0x4:
@@ -1525,7 +1769,8 @@ class MipsISA : ISA {
 																return new CP1Unimplemented("unknown", machInst);
 														}
 													case 0x6:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new C_f_d(machInst);
 															case 0x1:
@@ -1546,7 +1791,8 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x7:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new C_sf_d(machInst);
 															case 0x1:
@@ -1576,7 +1822,8 @@ class MipsISA : ISA {
 											case 0x7:
 												return new CP1Unimplemented("unknown", machInst);
 											case 0x4:
-												switch(machInst[FUNC]) {
+												switch(machInst[FUNC]) 
+												{
 													case 0x20:
 														return new Cvt_s_w(machInst);
 													case 0x21:
@@ -1587,7 +1834,8 @@ class MipsISA : ISA {
 														return new CP1Unimplemented("unknown", machInst);
 												}
 											case 0x5:
-												switch(machInst[FUNC_HI]) {
+												switch(machInst[FUNC_HI]) 
+												{
 													case 0x20:
 														return new Cvt_s_l(machInst);
 													case 0x21:
@@ -1598,7 +1846,8 @@ class MipsISA : ISA {
 														return new CP1Unimplemented("unknown", machInst);
 												}
 											case 0x6:
-												switch(machInst[FUNC_HI]) {
+												switch(machInst[FUNC_HI]) 
+												{
 													case 0x0:
 														switch(machInst[FUNC_LO]) {
 															case 0x0:
@@ -1619,9 +1868,11 @@ class MipsISA : ISA {
 													case 0x1:
 														return new CP1Unimplemented("unknown", machInst);
 													case 0x2:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x1:
-																switch(machInst[MOVCF]) {
+																switch(machInst[MOVCF]) 
+																{
 																	case 0x0:
 																		return new FailUnimplemented("Movf_ps", machInst);
 																	case 0x1:
@@ -1639,14 +1890,16 @@ class MipsISA : ISA {
 													case 0x3:
 														return new CP1Unimplemented("unknown", machInst);
 													case 0x4:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Cvt_s_pu", machInst);
 															default:
 																return new CP1Unimplemented("unknown", machInst);
 														}
 													case 0x5:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("Cvt_s_pl", machInst);
 															case 0x4:
@@ -1661,7 +1914,8 @@ class MipsISA : ISA {
 																return new CP1Unimplemented("unknown", machInst);
 														}
 													case 0x6:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("C_f_ps", machInst);
 															case 0x1:
@@ -1682,7 +1936,8 @@ class MipsISA : ISA {
 																return new Unknown(machInst);
 														}
 													case 0x7:
-														switch(machInst[FUNC_LO]) {
+														switch(machInst[FUNC_LO]) 
+														{
 															case 0x0:
 																return new FailUnimplemented("C_sf_ps", machInst);
 															case 0x1:
@@ -1715,11 +1970,14 @@ class MipsISA : ISA {
 								return new Unknown(machInst);
 						}
 					case 0x2:
-						switch(machInst[RS_MSB]) {
+						switch(machInst[RS_MSB]) 
+						{
 							case 0x0:
-								switch(machInst[RS_HI]) {
+								switch(machInst[RS_HI]) 
+								{
 									case 0x0:
-										switch(machInst[RS_LO]) {
+										switch(machInst[RS_LO]) 
+										{
 											case 0x0:
 												return new CP2Unimplemented("mfc2", machInst);
 											case 0x2:
@@ -1736,9 +1994,11 @@ class MipsISA : ISA {
 												return new CP2Unimplemented("unknown", machInst);
 										}
 									case 0x1:
-										switch(machInst[ND]) {
+										switch(machInst[ND]) 
+										{
 											case 0x0:
-												switch(machInst[TF]) {
+												switch(machInst[TF]) 
+												{
 													case 0x0:
 														return new CP2Unimplemented("bc2f", machInst);
 													case 0x1:
@@ -1747,7 +2007,8 @@ class MipsISA : ISA {
 														return new CP2Unimplemented("unknown", machInst);
 												}
 											case 0x1:
-												switch(machInst[TF]) {
+												switch(machInst[TF]) 
+												{
 													case 0x0:
 														return new CP2Unimplemented("bc2fl", machInst);
 													case 0x1:
@@ -1765,23 +2026,23 @@ class MipsISA : ISA {
 								return new CP2Unimplemented("unknown", machInst);
 						}
 					case 0x3:
-						switch(machInst[FUNC_HI]) {
+						switch(machInst[FUNC_HI]) 
+						{
 							case 0x0:
-								switch(machInst[FUNC_LO]) {
-									case 0x0: {
+								switch(machInst[FUNC_LO]) 
+								{
+									case 0x0: 
 										return new FailUnimplemented("Lwxc1", machInst);
-									}
-									case 0x1: {
+									case 0x1: 
 										return new FailUnimplemented("Ldxc1", machInst);
-									}
-									case 0x5: {
+									case 0x5: 
 										return new FailUnimplemented("Luxc1", machInst);
-									}
 									default:
 										return new Unknown(machInst);
 								}
 							case 0x1:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Swxc1", machInst);
 									case 0x1:
@@ -1794,14 +2055,16 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x3:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x6:
 										return new FailUnimplemented("Alnv_ps", machInst);
 									default:
 										return new Unknown(machInst);
 								}
 							case 0x4:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Madd_s", machInst);
 									case 0x1:
@@ -1812,7 +2075,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x5:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Msub_s", machInst);
 									case 0x1:
@@ -1823,7 +2087,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x6:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Nmadd_s", machInst);
 									case 0x1:
@@ -1834,7 +2099,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x7:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Nmsub_s", machInst);
 									case 0x1:
@@ -1859,11 +2125,14 @@ class MipsISA : ISA {
 						return new Unknown(machInst);
 				}
 			case 0x3:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x4:
-						switch(machInst[FUNC_HI]) {
+						switch(machInst[FUNC_HI]) 
+						{
 							case 0x0:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x2:
 										return new FailUnimplemented("Mul", machInst);
 									case 0x0:
@@ -1878,7 +2147,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x4:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Clz", machInst);
 									case 0x1:
@@ -1887,7 +2157,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x7:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x7:
 										return new FailUnimplemented("sdbbp", machInst);
 									default:
@@ -1897,9 +2168,11 @@ class MipsISA : ISA {
 								return new Unknown(machInst);
 						}
 					case 0x7:
-						switch(machInst[FUNC_HI]) {
+						switch(machInst[FUNC_HI]) 
+						{
 							case 0x0:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Ext", machInst);
 									case 0x4:
@@ -1908,24 +2181,24 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x1:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
 										return new FailUnimplemented("Fork", machInst);
 									case 0x1:
 										return new FailUnimplemented("Yield", machInst);
 									case 0x2:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
-													case 0x0: {
+												switch(machInst[OP_LO]) 
+												{
+													case 0x0: 
 														return new FailUnimplemented("Lwx", machInst);
-													}
-													case 0x4: {
+													case 0x4: 
 														return new FailUnimplemented("Lhx", machInst);
-													}
-													case 0x6: {
+													case 0x6: 
 														return new FailUnimplemented("Lbux", machInst);
-													}
 													default:
 														return new Unknown(machInst);
 												}
@@ -1938,11 +2211,14 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x2:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Addu_qb", machInst);
 													case 0x1:
@@ -1959,7 +2235,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Addu_ph", machInst);
 													case 0x1:
@@ -1980,7 +2257,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Addsc", machInst);
 													case 0x1:
@@ -1997,7 +2275,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x3:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x4:
 														return new FailUnimplemented("Muleq_s_w_phl", machInst);
 													case 0x5:
@@ -2013,9 +2292,11 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x1:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Cmpu_eq_qb", machInst);
 													case 0x1:
@@ -2034,7 +2315,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Cmp_eq_ph", machInst);
 													case 0x1:
@@ -2055,7 +2337,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x4:
 														return new FailUnimplemented("Precrq_ph_w", machInst);
 													case 0x5:
@@ -2064,7 +2347,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x3:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Cmpgdu_eq_qb", machInst);
 													case 0x1:
@@ -2082,9 +2366,11 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x2:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x1:
 														return new FailUnimplemented("Absq_s_qb", machInst);
 													case 0x2:
@@ -2103,7 +2389,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x1:
 														return new FailUnimplemented("Absq_s_ph", machInst);
 													case 0x2:
@@ -2118,14 +2405,16 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x1:
 														return new FailUnimplemented("Absq_s_w", machInst);
 													default:
 														return new Unknown(machInst);
 												}
 											case 0x3:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x3:
 														return new FailUnimplemented("Bitrev", machInst);
 													case 0x4:
@@ -2143,9 +2432,11 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x3:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Shll_qb", machInst);
 													case 0x1:
@@ -2166,7 +2457,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Shll_ph", machInst);
 													case 0x1:
@@ -2187,7 +2479,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x4:
 														return new FailUnimplemented("Shll_s_w", machInst);
 													case 0x5:
@@ -2200,7 +2493,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x3:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x1:
 														return new FailUnimplemented("Shrl_ph", machInst);
 													case 0x3:
@@ -2215,11 +2509,14 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x3:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Adduh_qb", machInst);
 													case 0x1:
@@ -2232,7 +2529,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Addqh_ph", machInst);
 													case 0x1:
@@ -2249,7 +2547,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Addqh_w", machInst);
 													case 0x1:
@@ -2272,7 +2571,8 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x4:
-								switch(machInst[SA]) {
+								switch(machInst[SA]) 
+								{
 									case 0x2:
 										return new FailUnimplemented("Wsbh", machInst);
 									case 0x10:
@@ -2283,11 +2583,14 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x6:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Dpa_w_ph", machInst);
 													case 0x1:
@@ -2308,7 +2611,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Dpax_w_ph", machInst);
 													case 0x1:
@@ -2325,7 +2629,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Maq_sa_w_phl", machInst);
 													case 0x2:
@@ -2338,7 +2643,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x3:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Dpaqx_s_w_ph", machInst);
 													case 0x1:
@@ -2354,9 +2660,11 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x1:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Append", machInst);
 													case 0x1:
@@ -2365,7 +2673,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Balign", machInst);
 													default:
@@ -2378,11 +2687,14 @@ class MipsISA : ISA {
 										return new Unknown(machInst);
 								}
 							case 0x7:
-								switch(machInst[FUNC_LO]) {
+								switch(machInst[FUNC_LO]) 
+								{
 									case 0x0:
-										switch(machInst[OP_HI]) {
+										switch(machInst[OP_HI]) 
+										{
 											case 0x0:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x0:
 														return new FailUnimplemented("Extr_w", machInst);
 													case 0x1:
@@ -2403,7 +2715,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x1:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x2:
 														return new FailUnimplemented("Extpdp", machInst);
 													case 0x3:
@@ -2416,7 +2729,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x2:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x2:
 														return new FailUnimplemented("Rddsp", machInst);
 													case 0x3:
@@ -2425,7 +2739,8 @@ class MipsISA : ISA {
 														return new Unknown(machInst);
 												}
 											case 0x3:
-												switch(machInst[OP_LO]) {
+												switch(machInst[OP_LO]) 
+												{
 													case 0x2:
 														return new FailUnimplemented("Shilo", machInst);
 													case 0x3:
@@ -2439,9 +2754,11 @@ class MipsISA : ISA {
 												return new Unknown(machInst);
 										}
 									case 0x3:
-										switch(machInst[OP]) {
+										switch(machInst[OP]) 
+										{
 											case 0x0:
-												switch(machInst[RD]) {
+												switch(machInst[RD]) 
+												{
 													case 0x1d:
 														return new FailUnimplemented("Rdhwr", machInst);
 													default:
@@ -2460,7 +2777,8 @@ class MipsISA : ISA {
 						return new Unknown(machInst);
 				}
 			case 0x4:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x0:
 						return new Lb(machInst);
 					case 0x1:
@@ -2479,7 +2797,8 @@ class MipsISA : ISA {
 						return new Unknown(machInst);
 				}
 			case 0x5:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x0:
 						return new Sb(machInst);
 					case 0x1:
@@ -2496,7 +2815,8 @@ class MipsISA : ISA {
 						return new Unknown(machInst);
 				}
 			case 0x6:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x0:
 						return new Ll(machInst);
 					case 0x1:
@@ -2513,7 +2833,8 @@ class MipsISA : ISA {
 						return new Unknown(machInst);
 				}
 			case 0x7:
-				switch(machInst[OPCODE_LO]) {
+				switch(machInst[OPCODE_LO]) 
+				{
 					case 0x0:
 						return new Sc(machInst);
 					case 0x1:
@@ -2533,13 +2854,16 @@ class MipsISA : ISA {
 	}
 }
 
-class Syscall: StaticInst {
+class Syscall: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("syscall", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, 2);
 		}
 
@@ -2548,117 +2872,145 @@ class Syscall: StaticInst {
 		}
 }
 
-class Sll: StaticInst {
+class Sll: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sll", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RT]) << this[SA]);
 		}
 }
 
-class Sllv: StaticInst {
+class Sllv: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sllv", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RT]) << bits(thread.regs.intRegs.get(this[RS]), 4, 0));
 		}
 }
 
-class Sra: StaticInst {
+class Sra: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sra", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RT]) >> this[SA]);
 		}
 }
 
-class Srav: StaticInst {
+class Srav: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("srav", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RT]) >> bits(thread.regs.intRegs.get(this[RS]), 4, 0));
 		}
 }
 
-class Srl: StaticInst {
+class Srl: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("srl", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(uint) thread.regs.intRegs.get(this[RT]) >> this[SA]);
 		}
 }
 
-class Srlv: StaticInst {
+class Srlv: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("srlv", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(uint) thread.regs.intRegs.get(this[RT]) >> bits(thread.regs.intRegs.get(this[RS]), 4, 0));
 		}
 }
 
-abstract class Branch: StaticInst {
+abstract class Branch: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 			this.displacement = sext(this[OFFSET] << 2, 16);
 		}
 		
-		override uint targetPc(Thread thread) {
+		override uint targetPc(Thread thread) 
+		{
 			return thread.regs.npc + this.displacement;
 		}
 		
-		void branch(Thread thread) {
+		void branch(Thread thread) 
+		{
 			thread.regs.nnpc = this.targetPc(thread);
 		}
 
@@ -2666,224 +3018,283 @@ abstract class Branch: StaticInst {
 		int displacement;
 }
 
-class B: Branch {
+class B: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("b", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
-			
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			this.branch(thread);
 		}
 }
 
-class Bal: Branch {
+class Bal: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
 			this.branch(thread);
 		}
 }
 
-class Beq: Branch {
+class Beq: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("beq", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			if(cast(int) thread.regs.intRegs.get(this[RS]) == cast(int) thread.regs.intRegs.get(this[RT])) {
 				this.branch(thread);
 			}
 		}
 }
 
-class Beqz: Branch {
+class Beqz: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("beqz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void execute(Thread thread) {
-			if(cast(int) thread.regs.intRegs.get(this[RS]) == 0) {
+		override void execute(Thread thread) 
+		{
+			if(cast(int) thread.regs.intRegs.get(this[RS]) == 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bgez: Branch {
+class Bgez: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bgez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void execute(Thread thread) {
-			if(cast(int) thread.regs.intRegs.get(this[RS]) >= 0) {
+		override void execute(Thread thread) 
+		{
+			if(cast(int) thread.regs.intRegs.get(this[RS]) >= 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bgezal: Branch {
+class Bgezal: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bgezal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
-			if(cast(int) thread.regs.intRegs.get(this[RS]) >= 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) >= 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bgtz: Branch {
+class Bgtz: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bgtz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void execute(Thread thread) {
-			if(cast(int) thread.regs.intRegs.get(this[RS]) > 0) {
+		override void execute(Thread thread) 
+		{
+			if(cast(int) thread.regs.intRegs.get(this[RS]) > 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Blez: Branch {
+class Blez: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("blez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void execute(Thread thread) {
-			if(cast(int) thread.regs.intRegs.get(this[RS]) <= 0) {
+		override void execute(Thread thread) 
+		{
+			if(cast(int) thread.regs.intRegs.get(this[RS]) <= 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bltz: Branch {
+class Bltz: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bltz", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
 		override void execute(Thread thread) {
-			if(cast(int) thread.regs.intRegs.get(this[RS]) < 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) < 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bltzal: Branch {
+class Bltzal: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bltzal", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {			
+		override void setupDeps() 
+		{			
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
-			if(cast(int) thread.regs.intRegs.get(this[RS]) < 0) {
+			if(cast(int) thread.regs.intRegs.get(this[RS]) < 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bne: Branch {
+class Bne: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bne", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
-			if(cast(int) thread.regs.intRegs.get(this[RS]) != cast(int) thread.regs.intRegs.get(this[RT])) {
+		override void execute(Thread thread) 
+		{
+			if(cast(int) thread.regs.intRegs.get(this[RS]) != cast(int) thread.regs.intRegs.get(this[RT])) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bnez: Branch {
+class Bnez: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bnez", machInst, StaticInstFlag.ICOMP | StaticInstFlag.CTRL | StaticInstFlag.COND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void execute(Thread thread) {
-			if(cast(int) thread.regs.intRegs.get(this[RS]) != 0) {
+		override void execute(Thread thread) 
+		{
+			if(cast(int) thread.regs.intRegs.get(this[RS]) != 0) 
+			{
 				this.branch(thread);
 			}
 		}
 }
 
-class Bc1f: Branch {
+class Bc1f: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bc1f", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
@@ -2893,17 +3304,21 @@ class Bc1f: Branch {
 		}
 }
 
-class Bc1t: Branch {
+class Bc1t: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bc1t", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
@@ -2913,17 +3328,21 @@ class Bc1t: Branch {
 		}
 }
 
-class Bc1fl: Branch {
+class Bc1fl: Branch 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bc1fl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 0;
 			
@@ -2937,38 +3356,47 @@ class Bc1fl: Branch {
 		}
 }
 
-class Bc1tl: Branch {
+class Bc1tl: Branch
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("bc1tl", machInst, StaticInstFlag.CTRL | StaticInstFlag.COND, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			bool cond = getFCC(fcsr, this[BRANCH_CC]) == 1;
 			
-			if(cond) {
+			if(cond) 
+			{
 				this.branch(thread);
 			}
-			else {
+			else 
+			{
 				thread.regs.npc = thread.regs.nnpc;
 				thread.regs.nnpc = thread.regs.nnpc + uint.sizeof;
 			}
 		}
 }
 
-abstract class Jump: StaticInst {
+abstract class Jump: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 			this.target = this[JMPTARG] << 2;
 		}
 
-		void jump(Thread thread) {
+		void jump(Thread thread) 
+		{
 			thread.regs.nnpc = this.targetPc(thread);
 		}
 
@@ -2976,94 +3404,118 @@ abstract class Jump: StaticInst {
 		uint target;
 }
 
-class J: Jump {
+class J: Jump 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("j", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 		
-		override uint targetPc(Thread thread) {
+		override uint targetPc(Thread thread) 
+		{
 			return mbits(thread.regs.npc, 32, 28) | this.target;
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			this.jump(thread);
 		}
 }
 
-class Jal: Jump {
+class Jal: Jump 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("jal", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.CALL | StaticInstFlag.DIRJMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, ReturnAddressReg);
 		}
 
-		override uint targetPc(Thread thread) {
+		override uint targetPc(Thread thread) 
+		{
 			return mbits(thread.regs.npc, 32, 28) | this.target;
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(ReturnAddressReg, thread.regs.nnpc);
 			this.jump(thread);
 		}
 }
 
-class Jalr: Jump {
+class Jalr: Jump 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("jalr", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.CALL | StaticInstFlag.INDIRJMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 		
-		override uint targetPc(Thread thread) {
+		override uint targetPc(Thread thread) 
+		{
 			return thread.regs.intRegs.get(this[RS]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.nnpc);
 			this.jump(thread);
 		}
 }
 
-class Jr: Jump {
+class Jr: Jump 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("jr", machInst, StaticInstFlag.CTRL | StaticInstFlag.UNCOND | StaticInstFlag.RET | StaticInstFlag.INDIRJMP, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override uint targetPc(Thread thread) {
+		override uint targetPc(Thread thread) 
+		{
 			return thread.regs.intRegs.get(this[RS]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			this.jump(thread);
 		}
 }
 
-abstract class IntOp: StaticInst {
+abstract class IntOp: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 		}
 }
 
-abstract class IntImmOp: StaticInst {
+abstract class IntImmOp: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 
 			this.imm = cast(short) machInst[INTIMM];
@@ -3079,320 +3531,396 @@ abstract class IntImmOp: StaticInst {
 		uint zextImm;
 }
 
-class Add: IntOp {
+class Add: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("add", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) + cast(int) thread.regs.intRegs.get(this[RT]));
 			logging.warn(LogCategory.INSTRUCTION, "Add: overflow trap not implemented.");
 		}
 }
 
-class Addi: IntImmOp {
+class Addi: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("addi", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], cast(int) thread.regs.intRegs.get(this[RS]) + this.sextImm);
 			logging.warn(LogCategory.INSTRUCTION, "Addi: overflow trap not implemented.");
 		}
 }
 
-class Addiu: IntImmOp {
+class Addiu: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("addiu", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], cast(int) thread.regs.intRegs.get(this[RS]) + this.sextImm);
 		}
 }
 
-class Addu: IntOp {
+class Addu: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("addu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) + cast(int) thread.regs.intRegs.get(this[RT]));
 		}
 }
 
-class Sub: IntOp {
+class Sub: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sub", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) - cast(int) thread.regs.intRegs.get(this[RT]));
 			logging.warn(LogCategory.INSTRUCTION, "Sub: overflow trap not implemented.");
 		}
 }
 
-class Subu: IntOp {
+class Subu: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("subu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) - cast(int) thread.regs.intRegs.get(this[RT]));
 		}
 }
 
-class And: IntOp {
+class And: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("and", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RS]) & thread.regs.intRegs.get(this[RT]));
 		}
 }
 
-class Andi: IntImmOp {
+class Andi: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("andi", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], thread.regs.intRegs.get(this[RS]) & this.zextImm);
 		}
 }
 
-class Nor: IntOp {
+class Nor: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("nor", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], ~(thread.regs.intRegs.get(this[RS]) | thread.regs.intRegs.get(this[RT])));
 		}
 }
 
-class Or: IntOp {
+class Or: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst)
+		{
 			super("or", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RS]) | thread.regs.intRegs.get(this[RT]));
 		}
 }
 
-class Ori: IntImmOp {
+class Ori: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst)
+		 {
 			super("ori", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], thread.regs.intRegs.get(this[RS]) | this.zextImm);
 		}
 }
 
-class Xor: IntOp {
+class Xor: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("xor", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.intRegs.get(this[RS]) ^ thread.regs.intRegs.get(this[RT]));
 		}
 }
 
-class Xori: IntImmOp {
+class Xori: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("xori", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], thread.regs.intRegs.get(this[RS]) ^ this.zextImm);
 		}
 }
 
-class Slt: IntOp {
+class Slt: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("slt", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(int) thread.regs.intRegs.get(this[RS]) < cast(int) thread.regs.intRegs.get(this[RT]) ? 1 : 0);
 		}
 }
 
-class Slti: IntImmOp {
+class Slti: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("slti", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], cast(int) thread.regs.intRegs.get(this[RS]) < this.sextImm ? 1 : 0);
 		}
 }
 
-class Sltiu: IntImmOp {
+class Sltiu: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sltiu", machInst, StaticInstFlag.ICOMP | StaticInstFlag.IMM, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], cast(uint) thread.regs.intRegs.get(this[RS]) < this.zextImm ? 1 : 0);
 		}
 }
 
-class Sltu: IntOp {
+class Sltu: IntOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sltu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], cast(uint) thread.regs.intRegs.get(this[RS]) < cast(uint) thread.regs.intRegs.get(this[RT]) ? 1 : 0);
 		}
 }
 
-class Lui: IntImmOp {
+class Lui: IntImmOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lui", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RT], this.imm << 16);
 		}
 }
 
-class Divu: StaticInst {
+class Divu: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("divu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntDIV);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ulong rs = 0;
 			ulong rt = 0;
 
@@ -3412,20 +3940,24 @@ class Divu: StaticInst {
 		}
 }
 
-class Div: StaticInst {
+class Div: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("div", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntDIV);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			long rs = 0;
 			long rt = 0;
 
@@ -3445,84 +3977,104 @@ class Div: StaticInst {
 		}
 }
 
-class Mflo: StaticInst {
+class Mflo: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mflo", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.miscRegs.lo);
 		}
 }
 
-class Mfhi: StaticInst {
+class Mfhi: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mfhi", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.intRegs.set(this[RD], thread.regs.miscRegs.hi);
 		}
 }
 
-class Mtlo: StaticInst {
+class Mtlo: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mtlo", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.miscRegs.lo = thread.regs.intRegs.get(this[RD]);
 		}
 }
 
-class Mthi: StaticInst {
+class Mthi: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mthi", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RD]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			thread.regs.miscRegs.hi = thread.regs.intRegs.get(this[RD]);
 		}
 }
 
-class Mult: StaticInst {
+class Mult: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mult", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			long rs = 0;
 			long rt = 0;
 			
@@ -3539,20 +4091,24 @@ class Mult: StaticInst {
 		}
 }
 
-class Multu: StaticInst {
+class Multu: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("multu", machInst, StaticInstFlag.ICOMP, FunctionalUnitType.IntALU);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.LO);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.HI);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ulong rs = 0;
 			ulong rt = 0;
 			
@@ -3569,45 +4125,56 @@ class Multu: StaticInst {
 		}
 }
 
-abstract class FloatOp: StaticInst {
+abstract class FloatOp: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 		}
 }
 
-abstract class FloatBinaryOp: FloatOp {
+abstract class FloatBinaryOp: FloatOp 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
-abstract class FloatUnaryOp: FloatOp {
+abstract class FloatUnaryOp: FloatOp 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
-class Add_d: FloatBinaryOp {
+class Add_d: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("add_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
@@ -3617,13 +4184,16 @@ class Add_d: FloatBinaryOp {
 		}
 }
 
-class Sub_d: FloatBinaryOp {
+class Sub_d: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sub_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
@@ -3633,13 +4203,16 @@ class Sub_d: FloatBinaryOp {
 		}
 }
 
-class Mul_d: FloatBinaryOp {
+class Mul_d: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mul_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatMULT);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
@@ -3649,13 +4222,16 @@ class Mul_d: FloatBinaryOp {
 		}
 }
 
-class Div_d: FloatBinaryOp {
+class Div_d: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("div_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatDIV);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			
@@ -3665,13 +4241,16 @@ class Div_d: FloatBinaryOp {
 		}
 }
 
-class Sqrt_d: FloatUnaryOp {
+class Sqrt_d: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sqrt_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatSQRT);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			
 			double fd = sqrt(fs);
@@ -3680,13 +4259,16 @@ class Sqrt_d: FloatUnaryOp {
 		}
 }
 
-class Abs_d: FloatUnaryOp {
+class Abs_d: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("abs_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			
 			double fd = fabs(fs);
@@ -3695,13 +4277,16 @@ class Abs_d: FloatUnaryOp {
 		}
 }
 
-class Neg_d: FloatUnaryOp {
+class Neg_d: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("neg_d", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			
 			double fd = -1 * fs;
@@ -3710,13 +4295,16 @@ class Neg_d: FloatUnaryOp {
 		}
 }
 
-class Mov_d: FloatUnaryOp {
+class Mov_d: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mov_d", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			double fd = fs;
 			
@@ -3724,13 +4312,16 @@ class Mov_d: FloatUnaryOp {
 		}
 }
 
-class Add_s: FloatBinaryOp {
+class Add_s: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("add_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
@@ -3740,13 +4331,16 @@ class Add_s: FloatBinaryOp {
 		}
 }
 
-class Sub_s: FloatBinaryOp {
+class Sub_s: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sub_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatADD);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
@@ -3756,13 +4350,16 @@ class Sub_s: FloatBinaryOp {
 		}
 }
 
-class Mul_s: FloatBinaryOp {
+class Mul_s: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mul_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatMULT);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
@@ -3772,13 +4369,16 @@ class Mul_s: FloatBinaryOp {
 		}
 }
 
-class Div_s: FloatBinaryOp {
+class Div_s: FloatBinaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("div_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatDIV);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			
@@ -3788,13 +4388,16 @@ class Div_s: FloatBinaryOp {
 		}
 }
 
-class Sqrt_s: FloatUnaryOp {
+class Sqrt_s: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sqrt_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatSQRT);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			
 			float fd = sqrt(fs);
@@ -3803,13 +4406,16 @@ class Sqrt_s: FloatUnaryOp {
 		}
 }
 
-class Abs_s: FloatUnaryOp {
+class Abs_s: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("abs_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			
 			float fd = fabs(fs);
@@ -3818,13 +4424,16 @@ class Abs_s: FloatUnaryOp {
 		}
 }
 
-class Neg_s: FloatUnaryOp {
+class Neg_s: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("neg_s", machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			
 			float fd = -fs;
@@ -3833,13 +4442,16 @@ class Neg_s: FloatUnaryOp {
 		}
 }
 
-class Mov_s: FloatUnaryOp {
+class Mov_s: FloatUnaryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mov_s", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			float fd = fs;
 			
@@ -3847,25 +4459,31 @@ class Mov_s: FloatUnaryOp {
 		}
 }
 
-abstract class FloatConvertOp: FloatOp {
+abstract class FloatConvertOp: FloatOp 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCVT);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FD]);
 		}
 }
 
-class Cvt_d_s: FloatConvertOp {
+class Cvt_d_s: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_d_s", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			double fd = cast(double) fs;
 			
@@ -3873,13 +4491,16 @@ class Cvt_d_s: FloatConvertOp {
 		}
 }
 
-class Cvt_w_s: FloatConvertOp {
+class Cvt_w_s: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_w_s", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			uint fd = cast(uint) fs;
 			
@@ -3887,13 +4508,16 @@ class Cvt_w_s: FloatConvertOp {
 		}
 }
 
-class Cvt_l_s: FloatConvertOp {
+class Cvt_l_s: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_l_s", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			ulong fd = cast(ulong) fs;
 			
@@ -3901,13 +4525,16 @@ class Cvt_l_s: FloatConvertOp {
 		}
 }
 
-class Cvt_s_d: FloatConvertOp {
+class Cvt_s_d: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_s_d", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			float fd = cast(float) fs;
 			
@@ -3915,13 +4542,16 @@ class Cvt_s_d: FloatConvertOp {
 		}
 }
 
-class Cvt_w_d: FloatConvertOp {
+class Cvt_w_d: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_w_d", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			uint fd = cast(uint) fs;
 			
@@ -3929,13 +4559,16 @@ class Cvt_w_d: FloatConvertOp {
 		}
 }
 
-class Cvt_l_d: FloatConvertOp {
+class Cvt_l_d: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_l_d", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			ulong fd = cast(ulong) fs;
 			
@@ -3943,13 +4576,16 @@ class Cvt_l_d: FloatConvertOp {
 		}
 }
 
-class Cvt_s_w: FloatConvertOp {
+class Cvt_s_w: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_s_w", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint fs = thread.regs.floatRegs.getUint(this[FS]);
 			float fd = cast(float) fs;
 			
@@ -3957,13 +4593,16 @@ class Cvt_s_w: FloatConvertOp {
 		}
 }
 
-class Cvt_d_w: FloatConvertOp {
+class Cvt_d_w: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_d_w", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint fs = thread.regs.floatRegs.getUint(this[FS]);
 			double fd = cast(double) fs;
 			
@@ -3971,13 +4610,16 @@ class Cvt_d_w: FloatConvertOp {
 		}
 }
 
-class Cvt_s_l: FloatConvertOp {
+class Cvt_s_l: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_s_l", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ulong fs = thread.regs.floatRegs.getUlong(this[FS]);
 			float fd = cast(float) fs;
 			
@@ -3985,13 +4627,16 @@ class Cvt_s_l: FloatConvertOp {
 		}
 }
 
-class Cvt_d_l: FloatConvertOp {
+class Cvt_d_l: FloatConvertOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cvt_d_l", machInst);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ulong fs = thread.regs.floatRegs.getUlong(this[FS]);
 			double fd = cast(double) fs;
 			
@@ -3999,13 +4644,16 @@ class Cvt_d_l: FloatConvertOp {
 		}
 }
 
-abstract class FloatCompareOp: StaticInst {
+abstract class FloatCompareOp: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
@@ -4013,13 +4661,16 @@ abstract class FloatCompareOp: StaticInst {
 		}
 }
 
-class C_cond_d(alias mnemonic): FloatCompareOp {
+class C_cond_d(alias mnemonic): FloatCompareOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			double fs = thread.regs.floatRegs.getDouble(this[FS]);
 			double ft = thread.regs.floatRegs.getDouble(this[FT]);
 			uint fcsr = thread.regs.miscRegs.fcsr;
@@ -4028,21 +4679,25 @@ class C_cond_d(alias mnemonic): FloatCompareOp {
 			bool equal;
 			
 			bool unordered = isnan(fs) || isnan(ft);
-			if(unordered) {
+			if(unordered) 
+			{
 				equal = false;
 				less = false;
 			}
-			else {
+			else 
+			{
 				equal = fs == ft;
 				less = fs < ft;
 			}
 
 			uint cond = this[COND];
 			
-			if(((cond&0x4) && less)||((cond&0x2) && equal)||((cond&0x1) && unordered)) {
+			if(((cond&0x4) && less)||((cond&0x2) && equal)||((cond&0x1) && unordered)) 
+			{
 				setFCC(fcsr, this[CC]);
 			}
-			else {
+			else 
+			{
 				clearFCC(fcsr, this[CC]);
 			}
 			
@@ -4050,13 +4705,16 @@ class C_cond_d(alias mnemonic): FloatCompareOp {
 		}
 }
 
-class C_cond_s(alias mnemonic): FloatCompareOp {
+class C_cond_s(alias mnemonic): FloatCompareOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.FCOMP, FunctionalUnitType.FloatCMP);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			float fs = thread.regs.floatRegs.getFloat(this[FS]);
 			float ft = thread.regs.floatRegs.getFloat(this[FT]);
 			uint fcsr = thread.regs.miscRegs.fcsr;
@@ -4065,21 +4723,25 @@ class C_cond_s(alias mnemonic): FloatCompareOp {
 			bool equal;
 			
 			bool unordered = isnan(fs) || isnan(ft);
-			if(unordered) {
+			if(unordered) 
+			{
 				equal = false;
 				less = false;
 			}
-			else {
+			else 
+			{
 				equal = fs == ft;
 				less = fs < ft;
 			}
 
 			uint cond = this[COND];
 			
-			if(((cond&0x4) && less)||((cond&0x2) && equal)||((cond&0x1) && unordered)) {
+			if(((cond&0x4) && less)||((cond&0x2) && equal)||((cond&0x1) && unordered)) 
+			{
 				setFCC(fcsr, this[CC]);
 			}
-			else {
+			else 
+			{
 				clearFCC(fcsr, this[CC]);
 			}
 			
@@ -4121,24 +4783,29 @@ alias C_cond_s!("c_nge_s") C_nge_s;
 alias C_cond_s!("c_le_s") C_le_s;
 alias C_cond_s!("c_ngt_s") C_ngt_s;
 
-class MemoryOp: StaticInst {
+class MemoryOp: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 
 			this.displacement = sext(machInst[OFFSET], 16);
 		}
 
-		int displacement() {
+		int displacement() 
+		{
 			return this.m_displacement;
 		}
 
-		uint ea(Thread thread) {
+		uint ea(Thread thread) 
+		{
 			uint ea = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			return ea;
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.setupEaDeps();
 			
 			this.eaOdeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.EA);
@@ -4157,140 +4824,172 @@ class MemoryOp: StaticInst {
 		RegisterDependency[] memODeps;
 
 	private:
-		void displacement(int value) {
+		void displacement(int value) 
+		{
 			this.m_displacement = value;
 		}
 
 		int m_displacement;
 }
 
-class Lb: MemoryOp {
+class Lb: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lb", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
+		override void setupMemDeps() 
+		{			
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			byte mem = 0;
 			thread.mem.readByte(this.ea(thread), cast(ubyte*) &mem);
 			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
-class Lbu: MemoryOp {
+class Lbu: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lbu", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {			
+		override void setupMemDeps() 
+		{			
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ubyte mem = 0;
 			thread.mem.readByte(this.ea(thread), &mem);
 			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
-class Lh: MemoryOp {
+class Lh: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lh", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			short mem = 0;
 			thread.mem.readHalfWord(this.ea(thread), cast(ushort*) &mem);
 			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
-class Lhu: MemoryOp {
+class Lhu: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lhu", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ushort mem = 0;
 			thread.mem.readHalfWord(this.ea(thread), &mem);
 			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
-class Lw: MemoryOp {
+class Lw: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lw", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			int mem = 0;
 			thread.mem.readWord(this.ea(thread), cast(uint*) &mem);
 			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
-class Lwl: MemoryOp {
+class Lwl: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lwl", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
-		override uint ea(Thread thread) {
+		override uint ea(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;			
 			return ea;
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
@@ -4308,28 +5007,34 @@ class Lwl: MemoryOp {
 		}
 }
 
-class Lwr: MemoryOp {
+class Lwr: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lwr", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
-		override uint ea(Thread thread) {
+		override uint ea(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;
 			return ea;
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
@@ -4347,150 +5052,186 @@ class Lwr: MemoryOp {
 		}
 }
 
-class Ll: MemoryOp {
+class Ll: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("ll", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 	
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 	
-		override void execute(Thread thread) {		
+		override void execute(Thread thread) 
+		{		
 			uint mem = 0;		
 			thread.mem.readWord(this.ea(thread), &mem);		
 			thread.regs.intRegs.set(this[RT], mem);
 		}
 }
 
-class Lwc1: MemoryOp {
+class Lwc1: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("lwc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 	
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
-		override void execute(Thread thread) {			
+		override void execute(Thread thread) 
+		{			
 			uint mem = 0;
 			thread.mem.readWord(this.ea(thread), &mem);			
 			thread.regs.floatRegs.setUint(mem, this[FT]);
 		}
 }
 
-class Ldc1: MemoryOp {
+class Ldc1: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("ldc1", machInst, StaticInstFlag.MEM | StaticInstFlag.LOAD | StaticInstFlag.DISP, FunctionalUnitType.RdPort);
 		}
 	
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
-		override void execute(Thread thread) {			
+		override void execute(Thread thread) 
+		{			
 			ulong mem = 0;
 			thread.mem.readDoubleWord(this.ea(thread), &mem);			
 			thread.regs.floatRegs.setUlong(mem, this[FT]);
 		}
 }
 
-class Sb: MemoryOp {
+class Sb: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sb", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ubyte mem = cast(ubyte) bits(thread.regs.intRegs.get(this[RT]), 7, 0);
 			thread.mem.writeByte(this.ea(thread), mem);
 		}
 }
 
-class Sh: MemoryOp {
+class Sh: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sh", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			ushort mem = cast(ushort) bits(thread.regs.intRegs.get(this[RT]), 15, 0);
 			thread.mem.writeHalfWord(this.ea(thread), mem);
 		}
 }
 
-class Sw: MemoryOp {
+class Sw: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sw", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint mem = thread.regs.intRegs.get(this[RT]);
 			thread.mem.writeWord(this.ea(thread), mem);
 		}
 }
 
-class Swl: MemoryOp {
+class Swl: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("swl", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
-		override uint ea(Thread thread) {
+		override uint ea(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;
 			return ea;
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
@@ -4509,27 +5250,33 @@ class Swl: MemoryOp {
 		}
 }
 
-class Swr: MemoryOp {
+class Swr: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("swr", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 		
-		override uint ea(Thread thread) {
+		override uint ea(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 			uint ea = addr & ~3;
 			return ea;
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint addr = thread.regs.intRegs.get(this[RS]) + this.displacement;
 
 			uint ea = addr & ~3;
@@ -4547,285 +5294,350 @@ class Swr: MemoryOp {
 		}
 }
 
-class Sc: MemoryOp {
+class Sc: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sc", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 	
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 	
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memODeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 	
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint rt = thread.regs.intRegs.get(this[RT]);
 			thread.mem.writeWord(this.ea(thread), rt);
 			thread.regs.intRegs.set(this[RT], 1);
 		}
 }
 
-class Swc1: MemoryOp {
+class Swc1: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("swc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 	
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
-		override void execute(Thread thread) {			
+		override void execute(Thread thread) 
+		{			
 			uint ft = thread.regs.floatRegs.getUint(this[FT]);			
 			thread.mem.writeWord(this.ea(thread), ft);
 		}
 }
 
-class Sdc1: MemoryOp {
+class Sdc1: MemoryOp 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("sdc1", machInst, StaticInstFlag.MEM | StaticInstFlag.STORE | StaticInstFlag.DISP, FunctionalUnitType.WrPort);
 		}
 	
-		override void setupEaDeps() {
+		override void setupEaDeps() 
+		{
 			this.eaIdeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RS]);
 		}
 	
-		override void setupMemDeps() {
+		override void setupMemDeps() 
+		{
 			this.memIDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FT]);
 		}
 	
-		override void execute(Thread thread) {		
+		override void execute(Thread thread) 
+		{		
 			ulong ft = thread.regs.floatRegs.getUlong(this[FT]);			
 			thread.mem.writeDoubleWord(this.ea(thread), ft);
 		}
 }
 
-class CP1Control: StaticInst {
+class CP1Control: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) {
+		this(string mnemonic, MachInst machInst, StaticInstFlag flags, FunctionalUnitType fuType) 
+		{
 			super(mnemonic, machInst, flags, fuType);
 		}
 }
 
-class Mfc1: CP1Control {
+class Mfc1: CP1Control 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mfc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {			
+		override void execute(Thread thread) 
+		{			
 			uint fs = thread.regs.floatRegs.getUint(this[FS]);
 			thread.regs.intRegs.set(this[RT], fs);
 		}
 }
 
-class Cfc1: CP1Control {
+class Cfc1: CP1Control 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("cfc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 		}
 
-		override void execute(Thread thread) {			
+		override void execute(Thread thread) 
+		{			
 			uint fcsr = thread.regs.miscRegs.fcsr;
 			
 			uint rt = 0;
 			
-			if(this[FS] == 31) {
+			if(this[FS] == 31) 
+			{
 				rt = fcsr;
 				thread.regs.intRegs.set(this[RT], rt);
 			}
 		}
 }
 
-class Mtc1: CP1Control {
+class Mtc1: CP1Control 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("mtc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.FP, this[FS]);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint rt = thread.regs.intRegs.get(this[RT]);
 			thread.regs.floatRegs.setUint(rt, this[FS]);
 		}
 }
 
-class Ctc1: CP1Control {
+class Ctc1: CP1Control 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("ctc1", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 			this.iDeps ~= new RegisterDependency(RegisterDependencyType.INT, this[RT]);
 			this.oDeps ~= new RegisterDependency(RegisterDependencyType.MISC, MiscRegNums.FCSR);
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			uint rt = thread.regs.intRegs.get(this[RT]);
 			
-			if(this[FS]) {
+			if(this[FS]) 
+			{
 				thread.regs.miscRegs.fcsr = rt;
 			}
 		}
 }
 
-class Nop: StaticInst {
+class Nop: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("nop", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 		}
 }
 
-class FailUnimplemented: StaticInst {
+class FailUnimplemented: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
-
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			Fault fault = new UnimplFault(format("[%s] machInst: 0x%08x, mnemonic: \"%s\"", typeof(this).stringof, this.machInst.data, this.mnemonic));
 			fault.invoke(thread);
 		}
 }
 
-class CP0Unimplemented: StaticInst {
+class CP0Unimplemented: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
-
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			Fault fault = new UnimplFault(format("[%s] machInst: 0x%08x, mnemonic: \"%s\"", typeof(this).stringof, this.machInst.data, this.mnemonic));
 			fault.invoke(thread);
 		}
 }
 
-class CP1Unimplemented: StaticInst {
+class CP1Unimplemented: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
-
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			Fault fault = new UnimplFault(format("[%s] machInst: 0x%08x, mnemonic: \"%s\"", typeof(this).stringof, this.machInst.data, this.mnemonic));
 			fault.invoke(thread);
 		}
 }
 
-class CP2Unimplemented: StaticInst {
+class CP2Unimplemented: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
-
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			Fault fault = new UnimplFault(format("[%s] machInst: 0x%08x, mnemonic: \"%s\"", typeof(this).stringof, this.machInst.data, this.mnemonic));
 			fault.invoke(thread);
 		}
 }
 
-class WarnUnimplemented: StaticInst {
+class WarnUnimplemented: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
-
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			Fault fault = new UnimplFault(format("[%s] machInst: 0x%08x, mnemonic: \"%s\"", typeof(this).stringof, this.machInst.data, this.mnemonic));
 			fault.invoke(thread);
 		}
 }
 
-class Unknown: StaticInst {
+class Unknown: StaticInst 
+{
 	public:
-		this(MachInst machInst) {
+		this(MachInst machInst) 
+		{
 			super("unknown", machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
-		override void execute(Thread thread) {
+		override void execute(Thread thread) 
+		{
 			new ReservedInstructionFault();
 		}
 }
 
-class Trap: StaticInst {
+class Trap: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 }
 
-class TrapImm: StaticInst {
+class TrapImm: StaticInst 
+{
 	public:
-		this(string mnemonic, MachInst machInst) {
+		this(string mnemonic, MachInst machInst) 
+		{
 			super(mnemonic, machInst, StaticInstFlag.NONE, FunctionalUnitType.NONE);
 
 			this.imm = cast(short) machInst[INTIMM];
 		}
 		
-		override void setupDeps() {
+		override void setupDeps() 
+		{
 		}
 
 	protected:
 		short imm;
 }
 
-class Fault {
+class Fault 
+{
 	public:
 		abstract string getName();
 
@@ -4834,31 +5646,38 @@ class Fault {
 		}
 }
 
-class UnimplFault: Fault {
+class UnimplFault: Fault 
+{
 	public:
-		this(string panicStr) {
-			this.panicStr = panicStr;
+		this(string text) 
+		{
+			this.text = text;
 		}
 
-		override string getName() {
+		override string getName() 
+		{
 			return "Unimplemented simulator feature";
 		}
 
-		override void invoke(Thread thread) {
-			logging.panicf(LogCategory.INSTRUCTION, "UnimplFault (%s)\n", this.panicStr);
+		override void invoke(Thread thread) 
+		{
+			logging.panicf(LogCategory.INSTRUCTION, "UnimplFault (%s)\n", this.text);
 		}
 
 	private:
-		string panicStr;
+		string text;
 }
 
-class ReservedInstructionFault: Fault {
+class ReservedInstructionFault: Fault 
+{
 	public:
-		override string getName() {
+		override string getName() 
+		{
 			return "Reserved Instruction Fault";
 		}
 
-		override void invoke(Thread thread) {
+		override void invoke(Thread thread) 
+		{
 			logging.panicf(LogCategory.INSTRUCTION, "ReservedInstructionFault (%s)\n", this.getName());
 		}
 }
