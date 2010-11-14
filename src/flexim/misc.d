@@ -26,44 +26,6 @@ import flexim.all;
 import std.file;
 import std.xml;
 
-import dcollections.model.List;
-import dcollections.LinkList;
-
-const string PUBLIC = "public";
-const string PROTECTED = "protected";
-const string PRIVATE = "private";
-
-template declareProperty(T, string _name, string setter_modifier = PUBLIC, string getter_modifier = PUBLIC, string field_modifier = PRIVATE) 
-{
-	mixin(setter_modifier ~ ": " ~ "void " ~ _name ~ "(" ~ T.stringof ~ " v) { m_" ~ _name ~ " = v; }");
-	mixin(getter_modifier ~ ": " ~ T.stringof ~ " " ~ _name ~ "() { return m_" ~ _name ~ ";}");
-	mixin(field_modifier ~ ": " ~ T.stringof ~ " m_" ~ _name ~ ";");
-}
-
-class ListenerSupport(SenderT, ContextT) 
-{
-	alias void delegate(SenderT, ContextT) ListenerT;
-	
-	this() 
-	{
-	}
-	
-	void addListener(ListenerT listener) 
-	{
-		this.listeners ~= listener;
-	}
-    
-	void dispatch(SenderT sender, ContextT context) 
-	{
-		foreach(listener; this.listeners) 
-		{
-			listener(sender, context);
-		}
-	}
-    
-	ListenerT[] listeners;
-}
-
 /// Generate a 32-bit mask of 'nbits' 1s, right justified.
 uint mask(int nbits) 
 {
@@ -241,6 +203,71 @@ genCCVector(uint fcsr, int cc_num, uint cc_val)
     return fcsr;
 }
 
+const string PUBLIC = "public";
+const string PROTECTED = "protected";
+const string PRIVATE = "private";
+
+template declareProperty(T, string _name, string setter_modifier = PUBLIC, string getter_modifier = PUBLIC, string field_modifier = PRIVATE) 
+{
+	mixin(setter_modifier ~ ": " ~ "void " ~ _name ~ "(" ~ T.stringof ~ " v) { m_" ~ _name ~ " = v; }");
+	mixin(getter_modifier ~ ": " ~ T.stringof ~ " " ~ _name ~ "() { return m_" ~ _name ~ ";}");
+	mixin(field_modifier ~ ": " ~ T.stringof ~ " m_" ~ _name ~ ";");
+}
+
+class ListenerSupport(SenderT, ContextT) 
+{
+	alias void delegate(SenderT, ContextT) ListenerT;
+	
+	this() 
+	{
+	}
+	
+	void addListener(ListenerT listener) 
+	{
+		this.listeners ~= listener;
+	}
+    
+	void dispatch(SenderT sender, ContextT context) 
+	{
+		foreach(listener; this.listeners) 
+		{
+			listener(sender, context);
+		}
+	}
+    
+	ListenerT[] listeners;
+}
+
+class Property(T) 
+{
+	alias T ContextT;
+	alias ListenerSupport!(typeof(this), ContextT) ListenerSupportT;
+	
+	this(T v) 
+	{
+		this.value = v;
+		this.listenerSupport = new ListenerSupportT();
+	}
+	
+	void addListener(ListenerSupportT.ListenerT listener) 
+	{
+		this.listenerSupport.addListener(listener);
+	}
+    
+	void dispatch() 
+	{
+		this.listenerSupport.dispatch(this, this.value);
+	}
+	
+	override string toString() 
+	{
+		return to!(string)(this.value);
+	}
+    
+	T value;
+	ListenerSupportT listenerSupport;
+}
+
 class List(EntryT, ListT) 
 {
 	alias EntryT ContextT;
@@ -250,7 +277,6 @@ class List(EntryT, ListT)
 	this(string name) 
 	{
 		this.name = name;
-		this.entries = new LinkList!(EntryT)();
 		
 		this.listenerSupportTakeFront = new ListenerSupportT();
 		this.listenerSupportTakeBack = new ListenerSupportT();
@@ -260,7 +286,7 @@ class List(EntryT, ListT)
 	
 	bool empty() 
 	{
-		return this.entries.length == 0;
+		return this.entries.empty;
 	}
 	
 	uint size() 
@@ -297,13 +323,13 @@ class List(EntryT, ListT)
 	void takeFront() 
 	{
 		this.listenerSupportTakeFront.dispatch(cast(ListT) this, this.front);
-		this.entries.takeFront();
+		this.entries.popFront();
 	}
 	
 	void takeBack() 
 	{
 		this.listenerSupportTakeBack.dispatch(cast(ListT) this, this.back);
-		this.entries.takeBack();
+		this.entries.popBack();
 	}
 	
 	EntryT front() 
@@ -327,8 +353,7 @@ class List(EntryT, ListT)
 	void remove(EntryT value) 
 	{
 		this.listenerSupportRemove.dispatch(cast(ListT) this, value);
-		auto c = find(this.entries[], value).begin;
-		this.entries.remove(c);
+		this.entries = std.algorithm.remove(this.entries, this.entries.indexOf(value));
 	}
 	
 	void opOpAssign(string op, EntryT)(EntryT value)
@@ -369,7 +394,7 @@ class List(EntryT, ListT)
 	}
 	
 	string name;
-	LinkList!(EntryT) entries;
+	EntryT[] entries;
 	
 	ListenerSupportT listenerSupportTakeFront;
 	ListenerSupportT listenerSupportTakeBack;
@@ -437,8 +462,7 @@ interface EventProcessor
 
 class DelegateEventQueue: EventProcessor 
 {
-	alias void delegate() DelegateT;
-	alias LinkList!(EventT) LinkListT; 
+	alias void delegate() DelegateT; 
 	
 	class EventT {
 		this(DelegateT del, ulong when) 
@@ -453,32 +477,28 @@ class DelegateEventQueue: EventProcessor
 	
 	this() 
 	{
-		this.events = new LinkListT();
 	}
 			
 	void processEvents() 
 	{
-		foreach(ref bool doRemove, EventT event; &this.events.purge) 
+		if(currentCycle in this.events)
 		{
-			if(event.when == currentCycle) 
+			foreach(event; this.events[currentCycle])
 			{
 				event.del();
-				doRemove = true;
 			}
-			else 
-			{
-				doRemove = false;
-			}
+			this.events.remove(currentCycle);
 		}
 	}
 	
 	void schedule(void delegate() del, ulong delay = 0) 
 	{
 		ulong when = currentCycle + delay;
-		this.events ~= new EventT(del, when);
+				
+		this.events[when] ~= new EventT(del, when);
 	}
 	
-	dcollections.model.List.List!(EventT) events;
+	EventT[][ulong] events;
 }
 
 enum LogCategory: string 

@@ -2089,8 +2089,7 @@ class CPUSimulator : Simulator
 			{
 				ContextConfig context = simulationConfig.contexts[i * simulationConfig.architecture.processor.numThreadsPerCore + j];
 				
-				writefln("context.cwd: %s, args: %s", context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
-				Process process = new Process(context.cwd, split(join(context.cwd, context.exe ~ ".mipsel") ~ " " ~ context.args));
+				Process process = new Process(context.workload.cwd, split(join(context.workload.cwd, context.workload.exe ~ ".mipsel") ~ " " ~ context.workload.args));
 
 				uint threadNum = i * simulationConfig.architecture.processor.numThreadsPerCore + j;
 				ContextStat contextStat = simulation.stat.processor.contexts[threadNum];

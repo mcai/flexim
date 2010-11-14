@@ -193,16 +193,6 @@ class CacheConfig: Config!(CacheConfig)
 	string name;
 	uint level, numSets, assoc, blockSize, hitLatency, missLatency;
 	CacheReplacementPolicy policy;
-	
-	static CacheConfig newL1(string name) 
-	{
-		return new CacheConfig(name, 0, 64, 4, 64, 1, 3, CacheReplacementPolicy.LRU);
-	}
-	
-	static CacheConfig newL2() 
-	{
-		return new CacheConfig("l2", 1, 1024, 4, 64, 4, 7, CacheReplacementPolicy.LRU);
-	}
 }
 
 class CacheConfigXMLSerializer: XMLSerializer!(CacheConfig) 
@@ -301,31 +291,6 @@ class ContextConfig: Config!(ContextConfig)
 	this(Benchmark workload) 
 	{
 		this.workload = workload;
-	}
-	
-	string exe() 
-	{
-		return this.workload.exe;
-	}
-	
-	string args() 
-	{
-		return this.workload.args;
-	}
-	
-	string cwd() 
-	{
-		return this.workload.cwd;
-	}
-	
-	string stdin() 
-	{
-		return this.workload.stdin;
-	}
-	
-	string stdout() 
-	{
-		return this.workload.stdout;
 	}
 	
 	override string toString() 
@@ -675,36 +640,6 @@ class SimulationConfigXMLSerializer: XMLSerializer!(SimulationConfig)
 	}
 	
 	static SimulationConfigXMLSerializer singleInstance;
-}
-
-class Property(T) 
-{
-	alias T ContextT;
-	alias ListenerSupport!(typeof(this), ContextT) ListenerSupportT;
-	
-	this(T v) 
-	{
-		this.value = v;
-		this.listenerSupport = new ListenerSupportT();
-	}
-	
-	void addListener(ListenerSupportT.ListenerT listener) 
-	{
-		this.listenerSupport.addListener(listener);
-	}
-    
-	void dispatch() 
-	{
-		this.listenerSupport.dispatch(this, this.value);
-	}
-	
-	override string toString() 
-	{
-		return to!(string)(this.value);
-	}
-    
-	T value;
-	ListenerSupportT listenerSupport;
 }
 
 abstract class Stat(StatT) 
