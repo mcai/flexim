@@ -702,7 +702,7 @@ class XMLConfigFile: XMLConfig
 		super(typeName);
 	}
 }
-	
+
 void serialize(XMLConfig entry, Element rootElement) 
 {
 	Element element = new Element(entry.typeName);

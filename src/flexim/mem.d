@@ -77,13 +77,6 @@ class Memory
 		this() 
 		{
 			this.safe = true;
-			//			this.safe = false;
-		}
-
-		~this() 
-		{
-			this.pages.clear();
-			this.pages = null;
 		}
 
 		void initByte(uint addr, ubyte data) 

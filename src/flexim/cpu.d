@@ -607,8 +607,15 @@ class FunctionalUnitPool
 	
 	FunctionalUnit findFree(FunctionalUnitType type) 
 	{
-		auto res = filter!((FunctionalUnit fu){return !fu.busy;})(this.entities[type]);
-		return !res.empty ? res.front: null;
+		foreach(fu; this.entities[type])
+		{
+			if(!fu.busy)
+			{
+				return fu;
+			}
+		}
+		
+		return null;
 	}
 	
 	void acquire(ReorderBufferEntry reorderBufferEntry, void delegate(ReorderBufferEntry reorderBufferEntry) onCompletedCallback2) 
@@ -754,8 +761,15 @@ class PhysicalRegisterFile
 	
 	PhysicalRegister findFree() 
 	{
-		auto res = filter!((PhysicalRegister physReg){return physReg.state == PhysicalRegisterState.FREE;})(this.entries);
-		return !res.empty ? res.front : null;
+		foreach(physReg; this.entries)
+		{
+			if(physReg.state == PhysicalRegisterState.FREE)
+			{
+				return physReg;
+			}
+		}
+		
+		return null;
 	}
 	
 	PhysicalRegister alloc(ReorderBufferEntry reorderBufferEntry) 
@@ -933,14 +947,22 @@ class ReorderBufferEntry
 		this.isValid = true;
 	}
 	
-	void signalExecutionCompleted() 
+	void signalCompleted() 
 	{
 		this.dynamicInst.thread.core.oooEventQueue ~= this;
 	}
 	
 	bool allOperandsReady()
 	{
-		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(this.iDeps).empty;
+		foreach(iDep; this.iDeps)
+		{
+			if(!this.srcPhysRegs[iDep].isReady)
+			{
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	bool storeAddressReady()
@@ -956,7 +978,15 @@ class ReorderBufferEntry
 		MemoryOp memOp = (cast(MemoryOp)(this.dynamicInst.staticInst));		
 		assert(memOp !is null);	
 		
-		return filter!((RegisterDependency iDep){return !this.srcPhysRegs[iDep].isReady;})(memOp.memIDeps[1..$]).empty;
+		foreach(iDep; memOp.memIDeps[1..$])
+		{
+			if(!this.srcPhysRegs[iDep].isReady)
+			{
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	bool isInLoadStoreQueue()
@@ -1088,15 +1118,9 @@ class LoadStoreQueue: Queue!(ReorderBufferEntry, LoadStoreQueue)
 class Processor 
 {
 	public:
-		this(CPUSimulator simulator) 
-		{
-			this(simulator, "");
-		}
-
-		this(CPUSimulator simulator, string name)
+		this(CPUSimulator simulator)
 		{
 			this.simulator = simulator;
-			this.name = name;
 			
 			this.activeThreadCount = 0;
 		}
@@ -1115,7 +1139,6 @@ class Processor
 		}
 
 		CPUSimulator simulator;
-		string name;
 		Core[] cores;
 		
 		int activeThreadCount;
@@ -1429,14 +1452,14 @@ class Core
 						
 						if(hitInLoadStoreQueue) 
 						{
-							readyQueueEntry.signalExecutionCompleted();
+							readyQueueEntry.signalCompleted();
 						}
 						else 
 						{
 							this.seqD.load(this.mmu.translate(readyQueueEntry.ea), false, readyQueueEntry,
 								(ReorderBufferEntry readyQueueEntry)
 								{
-									readyQueueEntry.signalExecutionCompleted();
+									readyQueueEntry.signalCompleted();
 								});
 						}
 					});
@@ -1450,7 +1473,7 @@ class Core
 					this.fuPool.acquire(readyQueueEntry,
 						(ReorderBufferEntry readyQueueEntry)
 						{
-							readyQueueEntry.signalExecutionCompleted();
+							readyQueueEntry.signalCompleted();
 						});
 					readyQueueEntry.isIssued = true;
 				}
@@ -1548,11 +1571,6 @@ class Core
 		{
 			return this.miscRegFile;
 		}
-	}
-	
-	uint numThreadsPerCore()
-	{
-		return this.threads.length;
 	}
 
 	Sequencer seqI() 

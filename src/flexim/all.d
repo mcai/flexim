@@ -21,22 +21,25 @@
 
 module flexim.all;
 
-public import std.algorithm;
-public import std.array;
-public import std.container;
-public import std.conv;
-public import std.datetime;
-public import std.math;
-public import std.random;
-public import std.range;
-public import std.stdio;
-public import std.string;
-public import std.typecons;
+public
+{
+	import std.algorithm;
+	import std.array;
+	import std.container;
+	import std.conv;
+	import std.datetime;
+	import std.math;
+	import std.random;
+	import std.range;
+	import std.stdio;
+	import std.string;
+	import std.typecons;
 
-public import flexim.cpu;
-public import flexim.isa;
-public import flexim.kernel;
-public import flexim.mem;
-public import flexim.misc;
-public import flexim.sim;
-public import flexim.main;
+	import flexim.cpu;
+	import flexim.isa;
+	import flexim.kernel;
+	import flexim.main;
+	import flexim.mem;
+	import flexim.misc;
+	import flexim.sim;
+}
